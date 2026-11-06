@@ -68,14 +68,23 @@ public class FinderSafetyTest {
             s.press(v -> s.g1().a = v);                  // "claw", first in the list
             SimRobot.SimServo claw = s.robot().servos.get("claw");
             double before = claw.target();
-            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_right = v);   // start point 0.53, no move
+            s.press(v -> s.g1().dpad_left = v);          // a smaller step: 0.05 -> 0.01
+            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_up = v);   // start point 0.53, no move
             assertEquals("nothing moves before A", before, claw.target(), 1e-9);
             s.press(v -> s.g1().a = v);                  // move there
             assertEquals(0.53, claw.target(), 1e-6);
+            // The smallest step, for an exact spot: 0.01 -> 0.005 -> 0.001 (a third press stays at 0.001).
+            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_left = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Step") && s.screenHas("0.001"), 1));
+            s.press(v -> s.g1().dpad_down = v);          // 0.529
+            assertEquals(0.529, claw.target(), 1e-6);
+            s.press(v -> s.g1().dpad_right = v);         // back to 0.005
+            s.press(v -> s.g1().dpad_up = v);            // 0.534
+            assertEquals(0.534, claw.target(), 1e-6);
             s.press(v -> s.g1().a = v);                  // save it as P1
             // The line for the older helpers, and the one for the robot in five files.
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(".position(\"P1\", 0.530)"), 1));
-            assertTrue(String.join("\n", s.screen()), s.screenHas("Tunables.Claw: P1 = 0.530"));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(".position(\"P1\", 0.534)"), 1));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Tunables.Claw: P1 = 0.534"));
             assertEquals("", s.error());
         }
     }
@@ -99,7 +108,8 @@ public class FinderSafetyTest {
             s.sim.ds.register("Reversed Finder", "TeleOp", ReversedFinder.class);
             s.init("Reversed Finder").start();
             s.press(v -> s.g1().a = v);                  // "claw"
-            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_right = v);   // start point 0.53
+            s.press(v -> s.g1().dpad_left = v);          // step 0.01
+            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_up = v);   // start point 0.53
             s.press(v -> s.g1().a = v);
             assertEquals("0.53 reversed is 0.47 at the servo", 0.47, s.robot().servos.get("claw").target(), 1e-6);
             // goBILDA says clockwise for a bigger number; reversed, it is counterclockwise.
@@ -115,7 +125,8 @@ public class FinderSafetyTest {
             s.init("Pair Finder").start();
             s.press(v -> s.g1().a = v);                  // "claw", first in the list
             SimRobot.SimServo claw = s.robot().servos.get("claw"), wrist = s.robot().servos.get("wrist");
-            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_right = v);   // start point 0.53
+            s.press(v -> s.g1().dpad_left = v);          // step 0.01
+            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_up = v);   // start point 0.53
             s.press(v -> s.g1().a = v);                  // move there
             assertEquals(0.53, claw.target(), 1e-6);
             assertEquals("the second servo, mirrored", 0.47, wrist.target(), 1e-6);

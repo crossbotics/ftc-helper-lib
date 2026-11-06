@@ -386,7 +386,7 @@ public final class Shape {
         String what = "Robot.java: shape " + lineName + " (" + type + (passive ? ", passive" : "") + "): ";
         boolean servoArm = type.equals("arm") && !passive && driver != null && driver.startsWith("servo=");
         if (!angles.isEmpty() && !servoArm) {
-            throw new IllegalStateException(what + ".angle(...) is for an arm moved by a servo part (a Positioner); "
+            throw new IllegalStateException(what + ".angle(...) is for an arm moved by a servo part (a Positioner, or a push servo: Indexer.servo); "
                     + (passive ? "a passive arm takes .range(...) and .startAt(...)" : "this one is not"));
         }
         if (angles.size() > 2) throw new IllegalStateException(what + "give exactly two .angle(...), not " + angles.size());

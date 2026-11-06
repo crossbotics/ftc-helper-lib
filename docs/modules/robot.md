@@ -942,6 +942,12 @@ wheel: the wheel's own `feedOne()` and `stop()` do nothing.
 A cancelled fire stops the wheel (only while firing) and the arm never pushes. In the simulator a push sends a
 piece only if the wheel ran just before it.
 
+**A squeeze feeder** is a common kind: the feed wheel pinches the piece against pads on the arm, so the arm's
+`rest` position also sets the gap the piece is squeezed through (too wide: it slips; too tight: it jams or the
+wheel stalls). Find it with the Servo Finder's smallest step (0.001) and a real piece. To draw it in the
+simulator, give the arm `looks(Shape.arm()...angle("rest", 0).angle("push", 40))` (its angle at the two
+positions; it tilts with the servo) and the wheel a roller: `looks(Shape.roller("gobilda-gecko-48-rex-15a")...axis("up"))`.
+
 ```java
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("feeder_arm").part("gobilda-2000-torque"))        // pushes up, comes back

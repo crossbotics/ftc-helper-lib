@@ -384,11 +384,32 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         return true;
     }
 
-    // A feeder wheel spins with its CR servo or motor.
+    // A feeder wheel spins with its CR servo or motor. A push servo swings an arm shape between "rest" and
+    // "push" (the simulator turns it with the servo), the same way a Positioner's arm moves.
     @Override
     String driverFor(Shape s, TunableSection t) {
         if (s.spins() && kind != Kind.SERVO) return (kind == Kind.CR_SERVO ? "crservo=" : "motor=") + device;
-        throw new IllegalStateException("Robot.java: " + name() + " can only spin a roller (on a CR servo or a motor)");
+        if (kind == Kind.SERVO && s.type.equals("arm")) return armWords(s, t);
+        throw new IllegalStateException("Robot.java: " + name() + (kind == Kind.SERVO
+                ? " is a push servo: it swings an arm shape (Shape.arm()...angle(\"rest\", 0).angle(\"push\", 40)), not a " + s.type
+                : " can only spin a roller (on a CR servo or a motor)"));
+    }
+
+    // "servo=feeder_arm, pos0=..., pos1=...": the arm's angle at servo position 0 and 1, from its angles at
+    // rest and push (Tunables.java), as the simulated servo sees them (reversed() swaps 0 and 1).
+    private String armWords(Shape s, TunableSection t) {
+        if (!s.angles.containsKey("rest") || !s.angles.containsKey("push") || s.angles.size() != 2) {
+            throw new IllegalStateException("Robot.java: " + name() + "'s arm needs its angle at rest and at push: "
+                    + ".angle(\"rest\", 0).angle(\"push\", 40) (degrees: 0 = level forward, +90 = straight up)");
+        }
+        double rest = t.number("rest", 0), push = t.number("push", 0.5);
+        double vr = reversed ? 1 - rest : rest, vp = reversed ? 1 - push : push;
+        if (vr == vp) {
+            throw new IllegalStateException("Robot.java: " + name() + ": rest and push are the same servo position, so the arm's angles can't be worked out");
+        }
+        double perUnit = (s.angles.get("push") - s.angles.get("rest")) / (vp - vr);
+        double pos0 = s.angles.get("rest") - perUnit * vr;
+        return "servo=" + device + ", pos0=" + Shape.n(pos0) + ", pos1=" + Shape.n(pos0 + perUnit);
     }
 
     /**
@@ -458,6 +479,15 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     List<String> deviceNames() {
         if (alsoServo == null) return super.deviceNames();
         return java.util.Arrays.asList(device, alsoServo);
+    }
+
+    // ", feederPush=0.40": where a push servo goes to push, as the simulated servo sees it (reversed()
+    // swaps 0 and 1). The simulator counts a push once the arm is half way there, so a short push (0.1)
+    // fires too. Empty for a CR servo or motor feeder.
+    String pushWords() {
+        if (kind != Kind.SERVO || simSection == null) return "";
+        double push = simSection.number("push", 0.5);
+        return fmt(", feederPush=%.2f", reversed ? 1 - push : push);
     }
 
     @Override

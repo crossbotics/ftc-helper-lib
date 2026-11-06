@@ -41,6 +41,7 @@ device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 | [`FinderResults`](#finderresults) | the code lines a finder shows and saves | |
 | [`FinderMath`](#findermath) | the arithmetic behind the finders | |
 | [`Chooser`](#chooser) | a list to choose from with the D-pad | |
+| [`NudgeStep`](#nudgestep) | the step size for nudging a servo (D-pad left/right changes it) | |
 | [`ShotPoints`](#shotpoints) | the saved good shots of the shot tuner | |
 | [`CharacterizeMath`](#characterizemath) | the math behind the Characterizer (it fits numbers to the measurements) | |
 
@@ -108,8 +109,8 @@ Lists every servo in the configuration. Nudge the chosen one and mark what you f
 | D-pad up/down (list) | choose a servo; **A** = use it |
 | **Y** (list) | full range on/off: 500-2500 us instead of the SDK's normal 600-2400 (a goBILDA 2000 servo turns 300 degrees, not 270). Turn it on when the part has [`.fullRange()`](robot.md#claw) in Robot.java, so the numbers fit. The lines then say `.fullRange()` |
 | D-pad, then **A** (first) | choose a START POINT near where the servo sits now (it does not move), then **A** moves it there |
-| D-pad right/left | +/- 0.01 (hold **RB**: 10 times finer) |
-| D-pad up/down | +/- 0.05 |
+| D-pad up/down | move by the step (also the start point, before the first move) |
+| D-pad left/right | a smaller / bigger step: 0.1, 0.05, 0.01, 0.005, 0.001 ([`NudgeStep`](#nudgestep); it starts at 0.05, the screen shows it) |
 | **X** / **B** | mark one END / the other END (where it just stops pushing on the frame). Then it stays between them (hold **LB** to go past, e.g. to mark again) |
 | **A** | save this as a position (P1, P2...; rename them in your code) |
 | **Y** | undo the last position |
@@ -147,7 +148,7 @@ Without five files it uses the servo (or motor) called `hoodName()` ("hood").
 
 | Button | Does |
 | --- | --- |
-| D-pad (servo) | before the first move: a start point (nothing moves), **A** moves there. Then right/left +/- 0.01, up/down +/- 0.05, hold RB 10x finer |
+| D-pad (servo) | before the first move: a start point (nothing moves), **A** moves there. Then up/down moves it by the step, left/right = a smaller / bigger step ([`NudgeStep`](#nudgestep)) |
 | (motor) | nothing is powered: move the hood by hand and watch the encoder (0 = where it was at INIT, as in a match) |
 | **X** / **B** | this is stop A / stop B (a hair off it: a straining servo hums) |
 | hold **LB** + D-pad | the angle you measured here (up/down +/- 1, right/left +/- 0.1), before X, B or A |
@@ -580,6 +581,27 @@ count, NaN if the wheels disagree), `servoPosition(p)` (kept in 0..1).
 
 A D-pad list: `new Chooser(names)` (sorted A to Z), `next()`, `previous()`, `current()`,
 `isEmpty()`, `addTelemetry(t, emptyText)`.
+
+## NudgeStep
+
+The step size the servo finders (Servo, Feed Stop, Hood) nudge by: D-pad up/down moves the servo by the
+step, D-pad left/right makes the step smaller/bigger. Sizes (`NudgeStep.SIZES`): 0.1, 0.05, 0.01, 0.005,
+0.001. It starts at 0.05: a big step gets close fast, the smallest finds an exact spot (0.001 is about a
+quarter of a degree on a 270 degree servo).
+
+| Method | Does |
+| --- | --- |
+| `size()` | the step now |
+| `smaller()` / `bigger()` | the next step size (stops at the ends of the list) |
+| `reset()` | back to 0.05 |
+| `move(position, direction)` | the position one step up (`+1`) or down (`-1`), rounded to 0.001, kept in 0..1 |
+| `label()` | the step as text, e.g. `"0.005"` |
+
+```java
+NudgeStep step = new NudgeStep();   // 0.05
+step.smaller();                     // 0.01
+double p = step.move(0.500, +1);    // 0.510
+```
 
 ## ShotPoints
 

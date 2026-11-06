@@ -39,6 +39,7 @@ final class SimMotor {
     final java.util.List<SimMotor> partners = new java.util.ArrayList<>();
     // FLYWHEEL: the motor that feeds it, and how much a shot slows it (share of the speed).
     String feeder = null;
+    double feederPush = Double.NaN;   // a push servo feeder: where it goes to push (NaN = not given)
     double shotDrop = 0.15;
     // FLYWHEEL: its feed stop servo (stop=) and the position where it lets pieces through (stopOpen=); null = none.
     String stop = null;

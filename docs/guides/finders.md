@@ -190,10 +190,10 @@ angle). Keep hands clear.
    servo 300 degrees instead of 270, [why](../modules/hardware.md#full-range)), press **Y** while choosing
    the servo, so the finder uses the same range. Positions found with one range are wrong with the other.
 1. Choose the servo (D-pad, A). A servo cannot tell the program where it is, so first choose a START POINT near
-   where it sits now (D-pad; nothing moves), then press A: it moves there. Then nudge it with the
-   D-pad: right/left = 0.01, up/down = 0.05, hold RB for 10 times finer.
+   where it sits now (D-pad up/down; nothing moves), then press A: it moves there. Then nudge it with the
+   D-pad: up/down moves it by the step; left/right makes the step smaller/bigger (0.1, 0.05, 0.01, 0.005, 0.001; it starts at 0.05, and the screen shows it). Use a big step to get close, then a small one for the exact spot.
 2. Move it toward one end until it JUST stops pushing on the frame (listen: a straining servo hums).
-   Back off 0.01. Press **X**. Do the same at the other end and press **B**. From then on the finder
+   Back off a little (0.01). Press **X**. Do the same at the other end and press **B**. From then on the finder
    keeps the servo between them (hold **LB** while nudging to go past, e.g. to mark an end again). The ends
    are for you: keep every position you save between them (five files have no end lines to copy; the
    older helpers get them as the servo's limits).
@@ -228,8 +228,8 @@ pen, so the next horn goes on the same tooth. One spline tooth on a goBILDA serv
 For a launcher's [hood](../modules/robot.md#hood) (`Tunables.Hood`). It reads the hood from Robot.java,
 so it works before Tunables.Hood has numbers. A hood with `.fullRange()` gets the same full range here.
 
-1. **A servo hood:** choose a START POINT near where the hood sits (D-pad; nothing moves), press **A**.
-   Then nudge with the D-pad (right/left 0.01, up/down 0.05, hold RB for 10 times finer). **A motor
+1. **A servo hood:** choose a START POINT near where the hood sits (D-pad up/down; nothing moves), press **A**.
+   Then nudge with the D-pad (up/down moves it by the step; left/right makes the step smaller/bigger (0.1, 0.05, 0.01, 0.005, 0.001; it starts at 0.05, and the screen shows it)). **A motor
    hood:** nothing is powered; start the OpMode with the hood on the stop you want as 0 ticks (the same
    as before a match), then move the hood by hand and watch the encoder.
 2. Go to one stop until it JUST touches (a servo hums when it strains), back off a hair, press **X**
@@ -299,7 +299,7 @@ such a robot.
 1. Put a piece behind the feed stop. The wheel stays off.
 2. A servo's position is a number from 0 to 1. With the D-pad, pick a start number near where the feed
    stop sits now (nothing moves yet). **A** moves the servo there.
-3. D-pad right/left +/- 0.01, up/down +/- 0.05 (hold RB: 10 times finer).
+3. D-pad up/down moves it by the step; left/right makes the step smaller/bigger (0.1, 0.05, 0.01, 0.005, 0.001; it starts at 0.05, and the screen shows it).
 4. Where it holds the piece firmly, without straining on the frame: press **X** to save this as the
    hold position. Where the piece rolls through freely: press **B** to save this as the release
    position. **A** then goes between the two, to try them.

@@ -19,6 +19,28 @@ public class FindersTest {
 
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
+    @Test public void nudgeStepGetsSmallerAndBiggerAndStaysInRange() {
+        NudgeStep step = new NudgeStep();
+        assertEquals(0.05, step.size(), E);                    // starts at the old up/down step
+        assertEquals(0.55, step.move(0.5, 1), E);
+        step.smaller();
+        step.smaller();
+        assertEquals(0.005, step.size(), E);
+        assertEquals("0.005", step.label());
+        step.smaller();
+        step.smaller();                                        // stays at the smallest
+        assertEquals(0.001, step.size(), E);
+        assertEquals(0.501, step.move(0.5, 1), E);
+        assertEquals(0.499, step.move(0.5, -1), E);
+        assertEquals(0.3, step.move(0.2994, 1), E);            // rounded to 0.001: 0.300, not 0.3004
+        for (int i = 0; i < 9; i++) step.bigger();             // stays at the biggest
+        assertEquals(0.1, step.size(), E);
+        assertEquals(1, step.move(0.95, 1), E);                // kept inside 0..1
+        assertEquals(0, step.move(0.05, -1), E);
+        step.reset();
+        assertEquals(0.05, step.size(), E);
+    }
+
     @Test public void flywheelGainsFromTopSpeed() {
         double[] g = FinderMath.flywheelPidf(2800);            // ~6000 RPM at 28 counts per turn
         assertEquals(32767 / 2800.0, g[3], E);                 // F

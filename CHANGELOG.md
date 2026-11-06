@@ -2,6 +2,32 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **Finer servo steps in the finders (`NudgeStep`):** in the Servo Finder, Feed Stop Finder and Hood Finder, D-pad
+  up/down moves the servo by the step and D-pad left/right makes the step smaller/bigger: 0.1, 0.05, 0.01, 0.005,
+  0.001 (it starts at 0.05; the screen shows it). The smallest finds an exact spot, such as the gap two wheels
+  squeeze a piece through.
+- **A push servo's arm in the simulator:** `Indexer.servo(...)` takes an arm shape with its angle at rest and push
+  (`looks(Shape.arm()...angle("rest", 0).angle("push", 40))`); it tilts with the servo, like a Positioner's arm.
+  Pads or wheels can ride on it (`.on("feeder_arm")`). The robot module page shows a squeeze feeder.
+- **Every goBILDA GripForce Gecko wheel in the parts catalog** (all 8 on goBILDA's page): new are
+  `gobilda-gecko-32-rex` (32 mm, 30A) and the ultra-soft 15A ones, `gobilda-gecko-32-rex-15a`,
+  `gobilda-gecko-48-rex-15a`, `gobilda-gecko-72-15a` and `gobilda-gecko-96-15a`.
+
+### Fixed
+
+- **The simulator and a short push:** a push servo that moves less than 0.15 (for example rest 0.5, push 0.4)
+  never fired a piece in the simulator. `:sim:fromRobot` now writes where it pushes to (`feederPush=`), and a push
+  counts once the arm is half way there.
+
+### Changed
+
+- **The servo finders' D-pad:** right/left no longer nudge by 0.01, and holding RB no longer makes a step 10 times
+  finer. Use D-pad left/right to pick the step instead.
+
 ## v0.30.0 - 2026-11-05
 
 ### Added

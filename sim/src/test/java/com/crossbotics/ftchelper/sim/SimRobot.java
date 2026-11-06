@@ -141,8 +141,16 @@ final class SimRobot {
     private final Map<String, Boolean> pushStaged = new LinkedHashMap<>();
     // Each push servo's distance from its start last step (it grows while the arm moves out).
     private final Map<String, Double> pushDist = new LinkedHashMap<>();
-    // A servo feeder (an indexer) is feeding while it is this far (raw position) from where it starts.
+    // A servo feeder (an indexer) is feeding while it is this far (raw position) from where it starts, when
+    // the robot file does not say where it pushes to (feederPush=).
     static final double SERVO_FEED_MOVE = 0.15;
+
+    // How far a push servo must move from its start to count as pushing: half way to its push position
+    // (feederPush=, so a short push of 0.1 counts too), else SERVO_FEED_MOVE.
+    static double pushMove(SimMotor m, SimServo pusher) {
+        if (Double.isNaN(m.feederPush)) return SERVO_FEED_MOVE;
+        return Math.max(0.01, Math.abs(m.feederPush - pusher.start) / 2);
+    }
     private int shots = 0;
 
     // The parts catalog this robot uses: the library's, plus the team's own file if it names one (parts =).
@@ -241,6 +249,7 @@ final class SimRobot {
             if (s.containsKey("max")) m.maxTicks = dbl(s, "max", 0);
             m.gravity = dbl(s, "gravity", 0);
             m.feeder = s.get("feeder");
+            m.feederPush = dbl(s, "feederPush", Double.NaN);
             m.shotDrop = dbl(s, "shotDrop", 0.15);
             m.stop = s.get("stop");
             m.stopOpen = dbl(s, "stopOpen", 0.5);
@@ -840,7 +849,7 @@ final class SimRobot {
             SimServo pusher = servos.get(m.feeder);
             boolean on = feeder != null ? Math.abs(feeder.appliedPower) > 0.3
                     : cr != null ? Math.abs(cr[0]) > 0.3
-                    : pusher != null && Math.abs(pusher.actual - pusher.start) > SERVO_FEED_MOVE;
+                    : pusher != null && Math.abs(pusher.actual - pusher.start) > pushMove(m, pusher);
             // A feed stop: pieces get through only while it is (nearly) at its open position.
             SimServo gate = m.stop == null ? null : servos.get(m.stop);
             boolean open = gate == null || Math.abs(gate.actual - m.stopOpen) < STOP_OPEN_WITHIN;

@@ -152,6 +152,27 @@ public class SimBehaviorTest {
         java.nio.file.Files.delete(f);
     }
 
+    // A short push (0.1, as robot 1's arm: rest 0.5, push 0.4) fires once the robot file says where the arm
+    // pushes to (feederPush=): half way there counts. Without it, a push must move 0.15.
+    @Test public void aShortPushFiresWhenTheRobotFileGivesItsPushPosition() throws Exception {
+        String base = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("robots/starter.properties")), "UTF-8");
+        for (boolean given : new boolean[] {false, true}) {
+            SimRobot probe = SimRobot.load(java.nio.file.Paths.get("robots/starter.properties"));
+            double start = probe.servos.get("hood").start;
+            double push = start >= 0.5 ? start - 0.1 : start + 0.1;
+            java.nio.file.Path f = java.nio.file.Files.createTempFile("shortpush", ".properties");
+            String words = "feeder=hood" + (given ? String.format(java.util.Locale.ROOT, ", feederPush=%.2f", push) : "");
+            java.nio.file.Files.write(f, base.replace("feeder=feeder", words).getBytes("UTF-8"));
+            SimRobot robot = SimRobot.load(f);
+            robot.motors.get("flywheel").device.setPower(1);
+            for (int i = 0; i < 200; i++) robot.step(0.01);        // 2 s: the wheel spins up
+            ((com.qualcomm.robotcore.hardware.Servo) robot.servos.get("hood").device).setPosition(push);
+            for (int i = 0; i < 100; i++) robot.step(0.01);
+            assertEquals(given ? "feederPush given: the short push fires" : "no feederPush: 0.1 is too short", given ? 1 : 0, robot.shots());
+            java.nio.file.Files.delete(f);
+        }
+    }
+
     // A feed wheel (stage=): a push sends a piece only if the feed wheel ran just before (it brought the
     // piece up to the arm). Launcher.feedWheel(...) writes it.
     @Test public void aPushNeedsTheFeedWheelToRunFirst() throws Exception {

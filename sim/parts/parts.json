@@ -1276,6 +1276,30 @@
       "notes": "Silicone rubber (30A) on an acetal hex core, 14 g. Read on goBILDA's page and Core Electronics (GB-3615-4008-0072) through a web search; the page gives no width: give lengthMm."
     },
     {
+      "id": "gobilda-gecko-32-rex",
+      "name": "goBILDA GripForce Gecko Wheel 32 mm (8 mm REX bore, 30A)",
+      "partNumber": "3613-4008-0032",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-8mm-rex-bore-32mm-diameter-30a-durometer/",
+      "status": "in stock",
+      "diameterMm": 32,
+      "widthMm": null,
+      "checked": "2026-11-06",
+      "notes": "Silicone rubber (30A) on a plastic core, 8.3 g. The diameter is in the page's name; the page gives no width: give lengthMm."
+    },
+    {
+      "id": "gobilda-gecko-32-rex-15a",
+      "name": "goBILDA GripForce Gecko Wheel 32 mm (8 mm REX bore, 15A)",
+      "partNumber": "3632-4008-0032",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-8mm-rex-bore-32mm-diameter-15a-durometer/",
+      "status": "in stock",
+      "diameterMm": 32,
+      "widthMm": null,
+      "checked": "2026-11-06",
+      "notes": "The ultra-soft (15A) version of gobilda-gecko-32-rex: the same size, softer rubber, 7.9 g. The diameter is in the page's name; the page gives no width: give lengthMm."
+    },
+    {
       "id": "gobilda-gecko-48-rex",
       "name": "goBILDA GripForce Gecko Wheel 48 mm (8 mm REX bore, 30A)",
       "partNumber": "3613-4008-0048",
@@ -1286,6 +1310,18 @@
       "widthMm": null,
       "checked": "2026-10-20",
       "notes": "The page gives the diameter, not the width. Not measured yet: goBILDA's STEP CAD of its BIOBUZZ starter bot (3200-2627-0003) has these wheels, so it can be measured there as for the 72 and 96 mm wheels."
+    },
+    {
+      "id": "gobilda-gecko-48-rex-15a",
+      "name": "goBILDA GripForce Gecko Wheel 48 mm (8 mm REX bore, 15A)",
+      "partNumber": "3632-4008-0048",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-8mm-rex-bore-48mm-diameter-15a-durometer/",
+      "status": "in stock",
+      "diameterMm": 48,
+      "widthMm": null,
+      "checked": "2026-11-06",
+      "notes": "The ultra-soft (15A) version of gobilda-gecko-48-rex: the same size, softer rubber (better grip on a game piece it squeezes), 15 g. The diameter is in the page's name; the page gives no width: give lengthMm."
     },
     {
       "id": "gobilda-gecko-72",
@@ -1300,6 +1336,18 @@
       "notes": "widthMm measured in goBILDA's STEP CAD of its BIOBUZZ starter bot (3200-2627-0003, see sim/robots/starter-bot-gobilda.properties); the page gives the diameter only."
     },
     {
+      "id": "gobilda-gecko-72-15a",
+      "name": "goBILDA GripForce Gecko Wheel 72 mm (14 mm bore, 15A)",
+      "partNumber": "3632-0014-0072",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-14mm-bore-72mm-diameter-15a-durometer/",
+      "status": "in stock",
+      "diameterMm": 72,
+      "widthMm": null,
+      "checked": "2026-11-06",
+      "notes": "The ultra-soft (15A) version of gobilda-gecko-72, 49 g. The diameter is in the page's name; the page gives no width (the 30A one measured 24 mm in CAD; not checked for this one): give lengthMm."
+    },
+    {
       "id": "gobilda-gecko-96",
       "name": "goBILDA GripForce Gecko Wheel 96 mm (14 mm bore, 30A)",
       "partNumber": "3613-0014-0096",
@@ -1309,7 +1357,19 @@
       "diameterMm": 96,
       "widthMm": null,
       "checked": "2026-11-03",
-      "notes": "Traction wheel, 30A tread, 14 mm bore (a 15A version is 3632-0014-0096). The page gives no width; stock from the page's data (InStock)."
+      "notes": "Traction wheel, 30A tread, 14 mm bore (the 15A version: gobilda-gecko-96-15a). The page gives no width; stock from the page's data (InStock)."
+    },
+    {
+      "id": "gobilda-gecko-96-15a",
+      "name": "goBILDA GripForce Gecko Wheel 96 mm (14 mm bore, 15A)",
+      "partNumber": "3632-0014-0096",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-14mm-bore-96mm-diameter-15a-durometer/",
+      "status": "in stock",
+      "diameterMm": 96,
+      "widthMm": null,
+      "checked": "2026-11-06",
+      "notes": "The ultra-soft (15A) version of gobilda-gecko-96, 102 g. The diameter is in the page's name; the page gives no width: give lengthMm."
     },
     {
       "id": "gobilda-gripforce-mecanum-104",

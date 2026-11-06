@@ -45,8 +45,10 @@ the steps.
 ## 3. Use the Servo Finder
 
 1. Run it, choose the claw servo with the D-pad, press A. Choose a start point near where the claw
-   sits now (D-pad; nothing moves yet), press A: it moves there.
-2. Nudge it with the D-pad until the claw is fully open without straining. Press **X**.
+   sits now (D-pad up/down; nothing moves yet), press A: it moves there.
+2. Nudge it with D-pad up/down until the claw is fully open without straining. Press **X**.
+   D-pad left/right changes the step (shown on the screen): start big (0.05) to get close, then
+   go down to 0.005 or 0.001 for the exact spot.
 3. Nudge it to fully closed (on a game piece). Press **B**.
 4. Nudge it to "open just enough" and press **A** (saved as P1, "position 1").
 

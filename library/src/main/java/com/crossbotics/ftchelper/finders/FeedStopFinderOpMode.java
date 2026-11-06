@@ -40,6 +40,7 @@ public abstract class FeedStopFinderOpMode extends FinderOpMode {
     private double position = Double.NaN;   // NaN = not moved yet
     private double startAt = 0.5;
     private double hold = Double.NaN, release = Double.NaN;
+    private final NudgeStep step = new NudgeStep();   // D-pad left/right changes it
     private boolean atRelease = false;      // A after both are saved: which one it went to last
 
     @Override protected String finderName() { return "Feed stop finder"; }
@@ -68,10 +69,10 @@ public abstract class FeedStopFinderOpMode extends FinderOpMode {
 
     @Override
     protected void bind(ControllerBindings c) {
-        c.bindPress(Pad.G1, Btn.DPAD_UP, () -> nudge(0.05))
-         .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> nudge(-0.05))
-         .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> nudge(0.01))
-         .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> nudge(-0.01))
+        c.bindPress(Pad.G1, Btn.DPAD_UP, () -> nudge(1))
+         .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> nudge(-1))
+         .bindPress(Pad.G1, Btn.DPAD_RIGHT, step::bigger)
+         .bindPress(Pad.G1, Btn.DPAD_LEFT, step::smaller)
          .bindPress(Pad.G1, Btn.A, this::pressA)
          .bindPress(Pad.G1, Btn.X, () -> { if (moved()) { hold = position; writeResults(); } })
          .bindPress(Pad.G1, Btn.B, () -> { if (moved()) { release = position; writeResults(); } });
@@ -95,15 +96,14 @@ public abstract class FeedStopFinderOpMode extends FinderOpMode {
         servo.setPosition(position);
     }
 
-    // Before the first move only the start point changes. RB held: 10 times finer.
-    private void nudge(double amount) {
+    // One step up (+1) or down (-1). Before the first move only the start point changes.
+    private void nudge(int direction) {
         if (servo == null) return;
-        double step = gamepad1.right_bumper ? amount / 10 : amount;
         if (!moved()) {
-            startAt = FinderMath.servoPosition(startAt + step);
+            startAt = step.move(startAt, direction);
             return;
         }
-        position = FinderMath.servoPosition(position + step);
+        position = step.move(position, direction);
         servo.setPosition(position);
     }
 
@@ -123,14 +123,16 @@ public abstract class FeedStopFinderOpMode extends FinderOpMode {
             return;
         }
         if (!moved()) {
-            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad; A = move the feed stop there)");
+            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad up/down; A = move the feed stop there)");
+            t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
             t.text("Choose a start point near where it sits now. Nothing moves until A.");
             return;
         }
         t.line("Position", FinderResults.num(position, 3));
+        t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
         t.line("Hold (X)", Double.isNaN(hold) ? "-" : FinderResults.num(hold, 3));
         t.line("Release (B)", Double.isNaN(release) ? "-" : FinderResults.num(release, 3));
-        t.text("D-pad nudge (RB = finer), X = hold here, B = release here"
+        t.text("D-pad up/down = move, X = hold here, B = release here"
                 + (!Double.isNaN(hold) && !Double.isNaN(release) ? ", A = try hold / release" : ""));
     }
 
@@ -139,10 +141,10 @@ public abstract class FeedStopFinderOpMode extends FinderOpMode {
         return new String[] {
             "Finds the feed stop's hold and release positions.",
             "1. Put a piece behind the feed stop. Wheel off.",
-            "2. D-pad = a START POINT near where it sits now",
+            "2. D-pad up/down = a START POINT near where it is",
             "   (nothing moves), A = move it there.",
-            "3. D-pad right/left = +/-0.01, up/down = +/-0.05,",
-            "   hold RB = 10x finer.",
+            "3. D-pad up/down = move by the step; left/right =",
+            "   smaller/bigger step (0.1 to 0.001, starts 0.05).",
             "4. Where it holds the piece firmly (not straining",
             "   on the frame): X = hold.",
             "5. Where the piece rolls through freely: B = release.",
