@@ -66,7 +66,7 @@ public abstract class MotorDirectionCheckOpMode extends FinderOpMode {
     @Override
     protected void showInit(RobotTelemetry t) {
         t.warn("Wheels off the ground! Put the robot on a block.");
-        t.text("Then press START. Hold a button to spin one motor.");
+        t.text("Then press {PLAY}. Hold a button to spin one motor.");
     }
 
     @Override
@@ -89,7 +89,7 @@ public abstract class MotorDirectionCheckOpMode extends FinderOpMode {
     @Override
     protected void show(RobotTelemetry t) {
         t.section("Hold a button: that wheel must roll FORWARD");
-        String[] key = tank ? new String[] {"X left", "Y right", "A", "B"} : new String[] {"X front-left", "Y front-right", "A back-left", "B back-right"};
+        String[] key = tank ? new String[] {"{X} left", "{Y} right", "{A}", "{B}"} : new String[] {"{X} front-left", "{Y} front-right", "{A} back-left", "{B} back-right"};
         for (int i = 0; i < 4; i++) {
             if (motors[i] == null) continue;
             t.line(key[i], "\"" + names[i] + "\"" + (reversedNow[i] ? " (reversed)" : "") + (held[i] && heldCount() == 1 ? "  RUNNING" : ""));
@@ -109,9 +109,9 @@ public abstract class MotorDirectionCheckOpMode extends FinderOpMode {
         return new String[] {
             "Checks that each drive wheel rolls forward.",
             "1. Robot on a block: the wheels spin.",
-            "2. Hold X, Y, A or B: one motor runs at 30%.",
-            "   X = front-left, Y = front-right,",
-            "   A = back-left, B = back-right (tank: X, Y).",
+            "2. Hold {X}, {Y}, {A} or {B}: one motor runs at 30%.",
+            "   {X} = front-left, {Y} = front-right,",
+            "   {A} = back-left, {B} = back-right (tank: {X}, {Y}).",
             "3. Each wheel must roll the way that drives",
             "   the robot FORWARD.",
             "4. One backward: add its name to reversed(...)",

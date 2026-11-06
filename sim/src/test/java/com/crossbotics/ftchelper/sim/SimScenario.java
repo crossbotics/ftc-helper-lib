@@ -346,6 +346,19 @@ public final class SimScenario {
                         }
                         sim.robot.setMissing(t.get(2), t.get(3).equals("missing"));
                         break;
+                    // set gamepad 1|2 ps|letters: the kind of controller (the screens then name its buttons:
+                    // × ○ □ △ on a PS controller, A B X Y otherwise)
+                    case "gamepad": {
+                        if (t.size() < 4 || !(t.get(2).equals("1") || t.get(2).equals("2"))
+                                || !(t.get(3).equals("ps") || t.get(3).equals("letters"))) {
+                            throw new IllegalArgumentException("set gamepad 1|2 ps|letters");
+                        }
+                        SimGamepad pad = t.get(2).equals("2") ? sim.ds.pad2 : sim.ds.pad1;
+                        pad.kind = t.get(3).equals("ps") ? com.qualcomm.robotcore.hardware.Gamepad.Type.SONY_PS4
+                                : com.qualcomm.robotcore.hardware.Gamepad.Type.LOGITECH_F310;
+                        pad.gamepad.type = pad.kind;
+                        break;
+                    }
                     // set preload on|off: the robot holds the preload (now and after each reset) or starts empty
                     case "preload": sim.robot.pieces.setPreloaded(onOff(t.get(2))); break;
                     // set scatter off|realistic|rough|file: shot-to-shot scatter for every launcher

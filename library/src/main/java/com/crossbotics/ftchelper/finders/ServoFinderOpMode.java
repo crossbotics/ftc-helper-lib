@@ -117,7 +117,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     @Override
     protected void showInit(RobotTelemetry t) {
         t.text("Servo finder: finds a servo's safe ends and positions.");
-        t.text("Nothing moves until you nudge it. Press START.");
+        t.text("Nothing moves until you nudge it. Press {PLAY}.");
     }
 
     @Override
@@ -270,29 +270,29 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     @Override
     protected void show(RobotTelemetry t) {
         if (servo == null) {
-            t.section("Choose a servo (D-pad, then A)");
+            t.section("Choose a servo (D-pad, then {A})");
             chooser.addTelemetry(t, "No servos in the robot configuration.");
             if (!chooseNote.isEmpty()) t.warn(chooseNote);
-            t.line("Full range (Y)", fullRange ? "ON: 500-2500 us (goBILDA 2000: 300 deg)" : "off: 600-2400 us, the SDK's normal (goBILDA 2000: 270 deg)");
+            t.line("Full range ({Y})", fullRange ? "ON: 500-2500 us (goBILDA 2000: 300 deg)" : "off: 600-2400 us, the SDK's normal (goBILDA 2000: 270 deg)");
             return;
         }
-        t.section("Servo \"" + servoName + "\"  (BACK = another)" + (fullRange ? "  FULL RANGE" : ""));
+        t.section("Servo \"" + servoName + "\"  ({BACK} = another)" + (fullRange ? "  FULL RANGE" : ""));
         if (!pulseNote.isEmpty()) t.warn(pulseNote);
         if (Boolean.TRUE.equals(servoDirections().get(servoName))) t.line("Direction", "reversed, as in Robot.java");
         String hint = directionHint();
         if (!hint.isEmpty()) t.line("Hint", hint);
         if (other != null) t.line("Moves with it", otherName + (otherMirrored ? " (mirrored)" : " (same way)") + ", alsoTrim not used here");
         if (Double.isNaN(position)) {
-            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad up/down; A = move the servo there)");
+            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad up/down; {A} = move the servo there)");
             t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
-            t.text("Choose a start point near where the servo sits now. Nothing moves until A.");
+            t.text("Choose a start point near where the servo sits now. Nothing moves until {A}.");
             return;
         }
         t.line("Position", FinderResults.num(position, 3));
         t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
-        t.line("End X", Double.isNaN(endA) ? "-" : FinderResults.num(endA, 3));
-        t.line("End B", Double.isNaN(endB) ? "-" : FinderResults.num(endB, 3));
-        t.text("D-pad up/down = move (LB = past the ends), X/B = ends, A = save position, Y = undo");
+        t.line("End {X}", Double.isNaN(endA) ? "-" : FinderResults.num(endA, 3));
+        t.line("End {B}", Double.isNaN(endB) ? "-" : FinderResults.num(endB, 3));
+        t.text("D-pad up/down = move ({LB} = past the ends), {X}/{B} = ends, {A} = save position, {Y} = undo");
         if (!Double.isNaN(endA) && !Double.isNaN(endB)
                 && (position < Math.min(endA, endB) - 1e-9 || position > Math.max(endA, endB) + 1e-9)) {
             t.warn("Outside the marked ends");
@@ -303,18 +303,18 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     protected String[] helpLines() {
         return new String[] {
             "Finds a servo's safe ends and positions.",
-            "1. D-pad up/down = choose a servo, A = use it.",
-            "   Y = full range (if Robot.java has .fullRange()).",
+            "1. D-pad up/down = choose a servo, {A} = use it.",
+            "   {Y} = full range (if Robot.java has .fullRange()).",
             "2. D-pad up/down = a START POINT near where it is",
-            "   (nothing moves), A = move it there.",
+            "   (nothing moves), {A} = move it there.",
             "3. D-pad up/down = move by the step; left/right =",
             "   smaller/bigger step (0.1 to 0.001, starts 0.05).",
             "4. Move to one end until it JUST stops pushing on",
             "   the frame (a straining servo hums), back off a",
-            "   little: X. The other end: B. Then it stays",
-            "   between them (hold LB to go past).",
-            "5. Each position you need: A (P1, P2...). Y = undo.",
-            "BACK = another servo. STOP saves the code lines.",
+            "   little: {X}. The other end: {B}. Then it stays",
+            "   between them (hold {LB} to go past).",
+            "5. Each position you need: {A} (P1, P2...). {Y} = undo.",
+            "{BACK} = another servo. STOP saves the code lines.",
         };
     }
 

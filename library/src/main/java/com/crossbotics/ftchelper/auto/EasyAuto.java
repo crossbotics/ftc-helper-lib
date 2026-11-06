@@ -209,6 +209,8 @@ public abstract class EasyAuto extends LinearOpMode {
      */
     @Override
     public final void runOpMode() {
+        // The screens name the buttons printed on these controllers (A or ×): docs/modules/gamepad.md.
+        com.crossbotics.ftchelper.gamepad.ButtonNames.watch(gamepad1, gamepad2);
         // A mistake found at INIT: plain lines on the Driver Station, not the FTC app's red line.
         com.crossbotics.ftchelper.core.InitStop.run(this, this::runBody);
     }

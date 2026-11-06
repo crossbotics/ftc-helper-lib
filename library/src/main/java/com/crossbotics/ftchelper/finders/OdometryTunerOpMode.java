@@ -185,7 +185,7 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         if (podsAtStart == null) podsAtStart = podsNow;
         // (a hair less than 3 counts: nobody stops exactly on the mark)
         if (Math.abs(turnRad) < (SPIN_TURNS - 0.1) * 2 * Math.PI) {
-            lastResult = "Only " + FinderResults.num(Math.toDegrees(Math.abs(turnRad)) / 360, 1) + " turns: spin at least 3 (right stick), then B.";
+            lastResult = "Only " + FinderResults.num(Math.toDegrees(Math.abs(turnRad)) / 360, 1) + " turns: spin at least 3 (right stick), then {B}.";
             return;
         }
         double perMm = spec.podTicksPerMm();
@@ -236,7 +236,7 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         double err = Math.hypot(p.x, p.y), turn = Math.abs(Angles.wrapDegrees(p.headingDeg));
         if (farthestIn < LOOP_MIN_IN) {
             lastResult = "It went only " + FinderResults.num(farthestIn, 1) + " in from the mark: drive at least "
-                    + FinderResults.num(LOOP_MIN_IN, 0) + " in away (around the field is best), then back to the mark, then B.";
+                    + FinderResults.num(LOOP_MIN_IN, 0) + " in away (around the field is best), then back to the mark, then {B}.";
             return;
         }
         if (err <= 1.0 && turn <= 2.0) {
@@ -284,9 +284,9 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         if (running < 0) {
             t.section("Odometry Tuner (" + odo.kind() + ")");
             chooser.addTelemetry(t, "");
-            t.text("A = start the test. The sticks drive slowly.");
+            t.text("{A} = start the test. The sticks drive slowly.");
         } else {
-            t.section(TESTS[running] + ": B when done");
+            t.section(TESTS[running] + ": {B} when done");
             t.text(new String[]{
                     "Push or drive it 48 in straight forward along the tape.",
                     "Push or drive it 24 in straight to its LEFT.",
@@ -306,7 +306,7 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
     @Override
     protected String[] helpLines() {
         return new String[]{
-                "Sticks: drive slowly (30%). D-pad: choose a test. A: start. B: done.",
+                "Sticks: drive slowly (30%). D-pad: choose a test. {A}: start. {B}: done.",
                 "Forward: 48 in along the tape. Left: 24 in to the left. Spin: 3+ turns in place.",
                 "Loop: start on a tape mark, drive anywhere, come back to it. Within 1 in = checked.",
                 "Copy the lines it shows into Robot.java and Tunables.java (also saved in finder-results.txt)."};

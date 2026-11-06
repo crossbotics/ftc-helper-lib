@@ -145,7 +145,7 @@ public abstract class AimTunerOpMode extends FinderOpMode {
         t.text("Aim tuner: finds the camera offset so shots go in the middle.");
         t.warn("Nobody in the line of fire. Eye protection on.");
         t.line("Camera", camera.status());
-        t.text("Press START.");
+        t.text("Press {PLAY} on the Driver Hub.");
     }
 
     @Override
@@ -221,7 +221,7 @@ public abstract class AimTunerOpMode extends FinderOpMode {
 
     @Override
     protected void show(RobotTelemetry t) {
-        t.section("Aim tuner  (hold A = aim)");
+        t.section("Aim tuner  (hold {A} = aim)");
         t.line("Offset", FinderResults.num(offset, 1) + " deg  (D-pad right/up = aim more to the right)");
         if (target == null || !target.hasBearing()) {
             t.text("No target in view.");
@@ -233,12 +233,12 @@ public abstract class AimTunerOpMode extends FinderOpMode {
         if (turret != null) {
             t.line("Turret", FinderResults.num(turret.getAngle(), 1) + " deg");
             if (turret.isHoming()) t.text("Homing...");
-            else if (!turret.isHomed()) t.warn("Turret not homed: press X (it will not aim before)");
+            else if (!turret.isHomed()) t.warn("Turret not homed: press {X} (it will not aim before)");
             if (!turret.getFault().isEmpty()) t.warn(turret.getFault());
         }
         if (launcher != null) {
             t.line("Launcher", launcher.isReady() ? "ready" : launcher.whyNotReady());
-            t.text("RB = shoot one, LB = flywheel off. Shots go left: D-pad RIGHT. Shots go right: D-pad LEFT.");
+            t.text("{RB} = shoot one, {LB} = flywheel off. Shots go left: D-pad RIGHT. Shots go right: D-pad LEFT.");
         }
     }
 
@@ -248,8 +248,8 @@ public abstract class AimTunerOpMode extends FinderOpMode {
             "Finds the camera offset so shots go in the middle.",
             "Nobody in the line of fire. Eye protection on.",
             "1. Park 4-6 ft from the target, facing it.",
-            "   Turret with a home switch: X = home it first.",
-            "2. Hold A = aim. RB = shoot one. LB = flywheel off.",
+            "   Turret with a home switch: {X} = home it first.",
+            "2. Hold {A} = aim. {RB} = shoot one. {LB} = flywheel off.",
             "3. Shots go LEFT of the middle: D-pad RIGHT.",
             "   Shots go RIGHT: D-pad LEFT. (right/left = 0.5",
             "   deg, up/down = 2 deg.)",
@@ -257,7 +257,7 @@ public abstract class AimTunerOpMode extends FinderOpMode {
             "   works changes with distance, the camera is off",
             "   to the side: move it onto the launcher's line.",
             "Sticks = drive when not aiming. Help stops homing:",
-            "press X again after. STOP saves the line.",
+            "press {X} again after. STOP saves the line.",
         };
     }
 

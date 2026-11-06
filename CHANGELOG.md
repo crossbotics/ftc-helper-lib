@@ -2,6 +2,32 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.32.0 - 2026-11-06
+
+### Added
+
+- **The screens name the buttons on YOUR controller (`ButtonNames`):** on a PlayStation-style controller (PS4,
+  PS5, Etpark) the finders, Tune and check, the Hardware Check, the TeleOp button map and the tuning menu say
+  × ○ □ △, L1 R1 L2 R2, SHARE, OPTIONS and PS instead of A B X Y, LB RB LT RT, BACK, START and GUIDE. Each
+  gamepad has its own kind (the FTC SDK tells it once the controller is linked). In your own OpMode:
+  `ButtonNames.watch(gamepad1, gamepad2)` and write `{A}` in a `RobotTelemetry` line. In a scenario:
+  `set gamepad 1 ps`; on the simulator page a PS controller plugged into the laptop is seen by itself.
+- **`new AutoDrive(opMode, driveConfig, autoConfig, imu, isActive)`:** the usual constructor with your own "keep
+  going" check, for an OpMode that runs inside another one.
+
+### Changed
+
+- **▶ for the Driver Hub's start button:** the screens said "Press START" for the Driver Hub's start button
+  and "hold START" for the gamepad's button. Now the Driver Hub's is always **▶** ("Press ▶ on the Driver
+  Hub", "when ▶ is pressed") and START is only the gamepad button. A test that looks for "Press START" on a
+  library screen must look for "Press ▶".
+
+### Fixed
+
+- **Drive Tuner inside "Tune and check":** the Drive, Strafe and Turn tests ended at once with `STOPPED`. The
+  moves asked the tuner's own `opModeIsActive()`, which is always false inside the menu. They now ask the menu.
+  The Drive Tuner in its own file was not affected.
+
 ## v0.31.1 - 2026-11-06
 
 ### Fixed

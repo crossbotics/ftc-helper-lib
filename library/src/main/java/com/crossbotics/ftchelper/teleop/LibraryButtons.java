@@ -445,12 +445,12 @@ public final class LibraryButtons {
             if (pause != null && (pause.equals(s.key) || pause.equals(s.with))) {
                 // With the pause button: the other button first ("START: then BACK: debug lines").
                 Key other = pause.equals(s.key) ? s.with : s.key;
-                join(out, s.key, (s.key == other ? "then " + pause.name() : "after " + other.name()) + ": " + s.words());
-                join(out, s.with, (s.with == other ? "then " + pause.name() : "after " + other.name()) + ": " + s.words());
+                join(out, s.key, (s.key == other ? "then " + pause.said() : "after " + other.said()) + ": " + s.words());
+                join(out, s.with, (s.with == other ? "then " + pause.said() : "after " + other.said()) + ": " + s.words());
                 continue;
             }
-            join(out, s.key, "with " + s.with.name() + ": " + s.words());
-            join(out, s.with, "with " + s.key.name() + ": " + s.words());
+            join(out, s.key, "with " + s.with.said() + ": " + s.words());
+            join(out, s.with, "with " + s.key.said() + ": " + s.words());
         }
         Key slow = jobs.contains(Job.SLOW) ? keys.get(Job.SLOW) : null;
         if (slow != null) join(out, slow, slow.isTrigger() ? Job.SLOW.words : "slow (hold)");

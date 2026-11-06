@@ -449,7 +449,7 @@ the trim, so the tables stay clean.
 
 The trim starts at 0 at every INIT. The one you used last time is remembered (until the robot app
 restarts) and offered, never put back by itself: at INIT the Driver Station says
-`Trim last time : +3% (double-tap D-pad up after START to use it)`.
+`Trim last time : +3% (double-tap D-pad up after ▶ to use it)`.
 
 **A trim you need again and again** points at the wheel or the balls: the table is off. Make the trim part of the table
 and go back to no trim. Say it was +3% all season: every speed in the table times 1.03, so the row

@@ -742,7 +742,15 @@ function merged(n) {
   const a = pads[n], b = screenPads[n], out = {};
   BUTTONS.forEach(k => out[k] = (a[k] || b[k]) ? 1 : 0);
   AXES.forEach(k => out[k] = b[k] !== 0 ? b[k] : a[k]);
+  out.kind = padKind(n);
   return out;
+}
+// The kind of controller, so the screens name its buttons (× ○ □ △ on a PS controller): a real
+// controller whose name says Sony or PlayStation (Sony's USB id is 054c) is "ps"; the rest "letters".
+function padKind(n) {
+  if (!source[n].startsWith("controller:") || !navigator.getGamepads) return "letters";
+  const g = navigator.getGamepads()[+source[n].split(":")[1]];
+  return g && /054c|sony|playstation|dualshock|dualsense/i.test(g.id) ? "ps" : "letters";
 }
 const source = { 1: "screen", 2: "screen" };      // screen | keyboard | controller:N | remote
 if (phonePad) { source[1] = phonePad === "1" ? "screen" : "remote"; source[2] = phonePad === "2" ? "screen" : "remote"; }

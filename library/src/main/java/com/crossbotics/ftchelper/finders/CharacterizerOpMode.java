@@ -176,7 +176,7 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
     private final List<String> wheelNames = new ArrayList<>();
     private DcMotorEx mechMotor;
     private double startPos;
-    private String status = "Choose a test (D-pad), then A.";
+    private String status = "Choose a test (D-pad), then {A}.";
     // The log of the running test: t, volts, power, pos, vel, turnVel, headingDeg.
     private final List<double[]> log = new ArrayList<>();
     private static BackgroundWorker saver;
@@ -219,14 +219,14 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
     protected void showInit(RobotTelemetry t) {
         t.text("Characterizer: measures the drive, lifts and flywheels for the simulator and feedforward.");
         t.warn("Drive test: about 5 ft clear in front and behind. Lifts start at the bottom.");
-        t.text("Press START.");
+        t.text("Press {PLAY} on the Driver Hub.");
     }
 
     @Override
     protected String[] helpLines() {
         return new String[] {
-            "D-pad up/down: choose a test. A: run it.",
-            "B: stop the test now (everything stops).",
+            "D-pad up/down: choose a test. {A}: run it.",
+            "{B}: stop the test now (everything stops).",
             "Drive: ramps forward, back, then quick steps.",
             "  Needs ~5 ft clear in front and behind.",
             "Turn: turns in place both ways (IMU).",
@@ -244,7 +244,7 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
         c.bindPress(Pad.G1, Btn.DPAD_UP, () -> { if (running == null) chosen = (chosen + tests.size() - 1) % tests.size(); })
          .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> { if (running == null) chosen = (chosen + 1) % tests.size(); })
          .bindPress(Pad.G1, Btn.A, () -> { if (running == null && inputsReady()) begin(tests.get(chosen)); })
-         .bindPress(Pad.G1, Btn.B, () -> { if (running != null) finish("Stopped with B: nothing was fitted."); });
+         .bindPress(Pad.G1, Btn.B, () -> { if (running != null) finish("Stopped with {B}: nothing was fitted."); });
     }
 
     private double now() {
@@ -330,7 +330,7 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
         if (running == null) return;
         // GUIDE or START (the help keys) stops a moving test at once, before help opens.
         if (helpKeyDown()) {
-            finish("Stopped: GUIDE/START pressed. Nothing was fitted.");
+            finish("Stopped: {GUIDE}/{START} pressed. Nothing was fitted.");
             return;
         }
         double t = now(), s = t - phaseStart, loopSec = t - lastLoop;
@@ -422,7 +422,7 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
             stalledSec = 0;
             if (phase >= phases.size()) finish(null);
         }
-        if (running != null) status = running.name + ": " + phases.get(phase).name + " (B = stop)";
+        if (running != null) status = running.name + ": " + phases.get(phase).name + " ({B} = stop)";
     }
 
     private void apply(double power) {

@@ -453,9 +453,9 @@ public final class Turret extends Module<Turret> {
         double[] kept = remembered(t);
         double first = kept != null ? Math.max(min, Math.min(max, kept[0])) : t.has("startAngle") ? startAngle : (min + max) / 2;
         angleFrom = kept != null
-                ? Module.fmt("servo: at START it goes to %.0f deg, where the last program left it", first)
-                : t.has("startAngle") ? Module.fmt("servo: at START it goes to startAngle %.0f deg", first)
-                : Module.fmt("servo: at START it goes to %.0f deg (the middle of its range: no startAngle)", first);
+                ? Module.fmt("servo: when {PLAY} is pressed it goes to %.0f deg, where the last program left it", first)
+                : t.has("startAngle") ? Module.fmt("servo: when {PLAY} is pressed it goes to startAngle %.0f deg", first)
+                : Module.fmt("servo: when {PLAY} is pressed it goes to %.0f deg (the middle of its range: no startAngle)", first);
         return com.crossbotics.ftchelper.launcher.Turret.servo(name(), ps).limits(min, max)
                 .servoStickSec(travelSec).startAngle(first);
     }
@@ -516,7 +516,7 @@ public final class Turret extends Module<Turret> {
                 if (analog || kept != null) {
                     p.markHomed();
                 } else {
-                    angleFrom = Module.fmt("home switch at %.0f deg: found at START", homeAngle);
+                    angleFrom = Module.fmt("home switch at %.0f deg: found when {PLAY} is pressed", homeAngle);
                 }
             }
         }
@@ -658,7 +658,7 @@ public final class Turret extends Module<Turret> {
         if (part == null) return;
         t.line(name(), angleFrom);
         if (hasSwitch && !part.isHomed()) {
-            t.line(name() + " homing", fmt("at START it turns %s slowly to find the switch",
+            t.line(name() + " homing", fmt("when {PLAY} is pressed it turns %s slowly to find the switch",
                     homeDirection > 0 ? "counterclockwise" : "clockwise"));
         }
     }
@@ -866,7 +866,7 @@ public final class Turret extends Module<Turret> {
         // One line: the angle, AIMED (this module's isAimed: while following, at the goal now) and what
         // it follows. The launcher.Turret inside adds only its warnings.
         if (part.isHoming()) t.line(name(), part.isWaitingUnknown() ? "homing waits for an interlock rule (see its line)" : "homing: looking for the switch");
-        else if (Double.isNaN(angle())) t.line(name(), fmt("not sent anywhere yet (at START: %.0f deg)", part.servoStartAngle()));
+        else if (Double.isNaN(angle())) t.line(name(), fmt("not sent anywhere yet (at {PLAY}: %.0f deg)", part.servoStartAngle()));
         else t.line(name(), fmt("%.0f deg%s%s", angle(), isAimed() ? "  AIMED" : "", follow.isOn() ? "  following: " + source.words() : ""));
         part.addWarnings(t);
         t.debug(name() + " target", Double.isNaN(part.getTargetAngle()) ? "-" : fmt("%.1f deg", part.getTargetAngle()));
@@ -902,7 +902,7 @@ public final class Turret extends Module<Turret> {
 
     @Override
     String zoneUnknownWords() {
-        if (kind == Kind.SERVO) return "not sent anywhere yet: it goes to its start angle at START";
+        if (kind == Kind.SERVO) return "not sent anywhere yet: it goes to its start angle when {PLAY} is pressed";
         return hasSwitch ? "not homed yet" : "no angle yet";
     }
 

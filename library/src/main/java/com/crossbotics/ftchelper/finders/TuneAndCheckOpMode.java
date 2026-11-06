@@ -78,6 +78,8 @@ public class TuneAndCheckOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        // The screens name the buttons printed on these controllers (A or ×): docs/modules/gamepad.md.
+        com.crossbotics.ftchelper.gamepad.ButtonNames.watch(gamepad1, gamepad2);
         // A mistake found at INIT: plain lines on the Driver Station, not the FTC app's red line.
         com.crossbotics.ftchelper.core.InitStop.run(this, this::runBody);
     }
@@ -125,7 +127,7 @@ public class TuneAndCheckOpMode extends LinearOpMode {
                 if (opModeInInit()) continue;   // another robot: make its menu
                 // START with no tool opened: nothing runs.
                 while (opModeIsActive()) {
-                    t.warn("No tool was opened. Press STOP, then INIT: pick a tool with the D-pad, open it with A.");
+                    t.warn("No tool was opened. Press STOP, then INIT: pick a tool with the D-pad, open it with {A}.");
                     t.update();
                 }
                 return;
@@ -163,8 +165,8 @@ public class TuneAndCheckOpMode extends LinearOpMode {
             Tool tool = tools.get(i);
             t.text((i == at ? "> " : "  ") + tool.name + ": " + tool.what);
         }
-        t.text("D-pad up/down = pick, A = open it. Then START.");
-        t.text("In the tool's INIT: BACK = back to this menu.");
+        t.text("D-pad up/down = pick, {A} = open it. Then {PLAY}.");
+        t.text("In the tool's INIT: {BACK} = back to this menu.");
         t.update();
     }
 

@@ -70,7 +70,7 @@ public abstract class FinderOpMode extends LinearOpMode {
 
     /** What INIT shows (the controls, a safety note). */
     protected void showInit(RobotTelemetry t) {
-        t.text(finderName() + ": press START.");
+        t.text(finderName() + ": press {PLAY} on the Driver Hub.");
     }
 
     // The help page, or the normal screen. Toggled by GUIDE.
@@ -148,7 +148,7 @@ public abstract class FinderOpMode extends LinearOpMode {
     }
 
     private void showHelp(RobotTelemetry t) {
-        t.section(finderName() + " help  (GUIDE = back)");
+        t.section(finderName() + " help  ({GUIDE} = back)");
         for (String line : helpLines()) t.text(line);
     }
 
@@ -182,6 +182,8 @@ public abstract class FinderOpMode extends LinearOpMode {
      */
     @Override
     public final void runOpMode() {
+        // The screens name the buttons printed on these controllers (A or ×): docs/modules/gamepad.md.
+        com.crossbotics.ftchelper.gamepad.ButtonNames.watch(gamepad1, gamepad2);
         // A mistake found at INIT: plain lines on the Driver Station (inside "Tune and check", the host shows it).
         if (hosting != null) runBody();
         else com.crossbotics.ftchelper.core.InitStop.run(this, this::runBody);
@@ -202,11 +204,11 @@ public abstract class FinderOpMode extends LinearOpMode {
                 updateHelpKeys();
                 if (helpOpen) {
                     showHelp(t);
-                    t.text("Press START on the Driver Station to begin.");
+                    t.text("Press {PLAY} on the Driver Hub to begin.");
                 } else {
                     if (batteryMatters()) showBattery(t, battery.getAsDouble(), false);
                     showInit(t);
-                    t.text("GUIDE (center button), or hold START 1 s = help.");
+                    t.text("{GUIDE} (center button), or hold {START} 1 s = help.");
                 }
                 t.update();
             }
@@ -250,7 +252,7 @@ public abstract class FinderOpMode extends LinearOpMode {
                 if (waitingForNeutral) t.warn("Let go of every stick, trigger and button on gamepad 1 to go on.");
                 if (!controls.getSlowActionWarning().isEmpty()) t.warn(controls.getSlowActionWarning());
                 show(t);
-                t.text("GUIDE (or hold START) = help");
+                t.text("{GUIDE} (or hold {START}) = help");
                 results.addTelemetry(t);
                 if (!results.isEmpty()) t.text("(saved to the hub when you press STOP)");
                 t.update();

@@ -9,6 +9,9 @@ import java.util.Map;
  */
 final class SimGamepad {
     final Gamepad gamepad = new Gamepad();
+    // The kind of controller (a PS one names its buttons × ○ □ △): kept through every copy below,
+    // because the SDK's copy() also copies the kind. Set by "set gamepad 1 ps" or the page ("kind": "ps").
+    volatile Gamepad.Type kind = Gamepad.Type.UNKNOWN;
     // When the page last sent this gamepad (System.nanoTime). Silence = let go of everything.
     private long lastSeen = 0;
     /** True while a test runs on the page: the test holds the gamepad, the page's updates are ignored. */
@@ -74,7 +77,9 @@ final class SimGamepad {
         g.right_stick_y = axis(s, "ry");
         g.left_trigger = Math.max(0, axis(s, "lt"));
         g.right_trigger = Math.max(0, axis(s, "rt"));
+        if (s.containsKey("kind")) kind = "ps".equals(s.get("kind")) ? Gamepad.Type.SONY_PS4 : Gamepad.Type.LOGITECH_F310;
         gamepad.copy(g);
+        gamepad.type = kind;
         lastSeen = fromPage ? System.nanoTime() : 0;
         java.util.function.Consumer<Map<String, String>> tell = onPage;
         if (fromPage && tell != null) tell.accept(s);
@@ -158,6 +163,7 @@ final class SimGamepad {
     synchronized void releaseIfSilent(double seconds) {
         if (lastSeen != 0 && (System.nanoTime() - lastSeen) / 1e9 > seconds) {
             gamepad.copy(new Gamepad());
+            gamepad.type = kind;
             lastSeen = 0;
             java.util.function.Consumer<Map<String, String>> tell = onPage;
             if (tell != null) tell.accept(new java.util.HashMap<String, String>());

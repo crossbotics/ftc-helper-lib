@@ -439,7 +439,7 @@ public final class ShotPoints {
          */
         public String mark(boolean hit) {
             double[] shot = unmarked.pollFirst();
-            if (shot == null) return "No shot to mark: shoot first (RB), then A = HIT or B = MISS.";
+            if (shot == null) return "No shot to mark: shoot first ({RB}), then {A} = HIT or {B} = MISS.";
             if (tally.isEmpty()) tally.setSpot(shot[3]);
             else if (Double.isNaN(tally.spotIn())) tally.setSpot(shot[3]);
             tally.mark(shot[0], shot[1], hit, shot[2]);
@@ -460,7 +460,7 @@ public final class ShotPoints {
             boolean hit = m[4] == 1;
             tally.unmark(m[0], m[1], hit, m[2]);
             unmarked.addFirst(new double[] {m[0], m[1], m[2], m[3]});
-            return "Took back the " + (hit ? "HIT" : "MISS") + " at " + what(m) + ": mark that shot again (A / B).";
+            return "Took back the " + (hit ? "HIT" : "MISS") + " at " + what(m) + ": mark that shot again ({A} / {B}).";
         }
 
         /**

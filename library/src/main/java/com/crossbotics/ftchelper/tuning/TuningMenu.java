@@ -165,10 +165,10 @@ public class TuningMenu {
         }
         if (showCode) {
             List<String> lines = Tunable.changedAsCode();
-            t.text("Copy into Tunables.java (then Y = reset all):");
+            t.text("Copy into Tunables.java (then {Y} = reset all):");
             if (lines.isEmpty()) t.text("  nothing differs from the code");
             for (String line : lines) t.text("  " + line);
-            t.text("B back to the list");
+            t.text("{B} back to the list");
             return;
         }
         // Show only the page that holds the chosen tunable (8 per page), so the list fits on screen.
@@ -184,7 +184,7 @@ public class TuningMenu {
             t.text(mark + tu.name() + " = " + tu.display() + changed);
         }
         t.text(String.format(java.util.Locale.US, "%d/%d  D-pad: choose/change  bumper: x10", selected + 1, all.size()));
-        t.text("A save   X reset this   Y reset all   B as code");
+        t.text("{A} save   {X} reset this   {Y} reset all   {B} as code");
         if (!message.isEmpty()) t.text(message);
     }
 

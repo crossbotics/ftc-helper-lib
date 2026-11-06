@@ -1231,6 +1231,8 @@ set touch lift_bottom on               # hold a switch pressed (off = let go)
 set pose -56 -61.55 0                  # put the robot somewhere (x y heading)
 set autotimer off                      # no 30 s autonomous stop
 set teletimer off                      # no 2:00 TeleOp stop
+set gamepad 1 ps                       # gamepad 1 is a PS controller: the screens say × ○ □ △ (letters = A B X Y;
+                                       # the recorder does not write it: add it by hand)
 set preload off                        # the robot holds no preload (now and after each reset); on: it does
 set field start                        # every game piece back where the match starts it (the robot stays)
 set device intake_deploy missing       # take a device out of the configuration from the next INIT

@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.robot;
 
+import com.crossbotics.ftchelper.gamepad.ButtonNames;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings;
 import com.crossbotics.ftchelper.gamepad.StickShaping;
@@ -256,14 +257,14 @@ final class ButtonPlan {
                 Entry e = jobs.get(input);
                 String name = input instanceof Pad.Button ? ((Pad.Button) input).label : ((Pad.Stick) input).label;
                 if (e == null || e.kind == Kind.FREE) {
-                    free.append(free.length() == 0 ? "" : ", ").append(name);
+                    free.append(free.length() == 0 ? "" : ", ").append(ButtonNames.mark(p == g2 ? 2 : 1, name));
                     continue;
                 }
                 String who = e.source.equals(TEAM) ? "" : " [" + e.source + "]";
                 out.add(p + " " + name + ": " + words(e) + who + offWords(e));
             }
             for (Entry pair : pairs) {
-                if (pair.shift.pad == p) out.add(p + " " + pair.shift.label + " + " + pair.with.label + ": " + words(pair) + offWords(pair));
+                if (pair.shift.pad == p) out.add(p + " " + pair.shift.label + " + " + ButtonNames.mark(p == g2 ? 2 : 1, pair.with.label) + ": " + words(pair) + offWords(pair));
             }
             if (withFree && free.length() > 0) out.add(p + " free: " + free);
         }

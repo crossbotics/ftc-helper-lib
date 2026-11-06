@@ -160,13 +160,13 @@ public class InitMenu {
 
     /** Shows the menu. */
     public void addTelemetry(RobotTelemetry t) {
-        t.section("Choose (D-pad), then START");
+        t.section("Choose (D-pad), then {PLAY}");
         for (int i = 0; i < items.size(); i++) {
             Item item = items.get(i);
             // "> " marks the line the cursor is on.
             t.text((i == selected ? "> " : "  ") + item.label + ": " + item.show());
         }
-        if (find("Alliance") != null) t.text("X = BLUE   B = RED");
+        if (find("Alliance") != null) t.text("{X} = BLUE   {B} = RED");
     }
 
     /** The chosen alliance (BLUE if there is no alliance line). */

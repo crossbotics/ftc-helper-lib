@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.telemetry;
 
+import com.crossbotics.ftchelper.gamepad.ButtonNames;
 import com.crossbotics.ftchelper.core.Profile;
 import java.util.ArrayList;
 import java.util.List;
@@ -194,11 +195,12 @@ public class RobotTelemetry {
         boolean send = now - lastSentNanos >= minIntervalMs * 1_000_000L;
         if (send) {
             // Warnings first, so the drivers see them at the top of the screen.
-            for (String w : warnings) telemetry.addLine(w);
+            // ButtonNames.say: button marks such as {A} become the names on the driver's controller.
+            for (String w : warnings) telemetry.addLine(ButtonNames.say(w));
             for (String[] l : lines) {
                 // No value: a plain text line. Otherwise "label : value".
-                if (l[1] == null) telemetry.addLine(l[0]);
-                else telemetry.addData(l[0], l[1]);
+                if (l[1] == null) telemetry.addLine(ButtonNames.say(l[0]));
+                else telemetry.addData(ButtonNames.say(l[0]), ButtonNames.say(l[1]));
             }
             telemetry.update();
             lastSentNanos = now;
@@ -217,8 +219,9 @@ public class RobotTelemetry {
     /** The lines waiting to be sent, as text (used by tests and the hardware check). */
     public List<String> pending() {
         // Start with a copy of the warnings, then add each line as "label : value" (or plain text).
-        List<String> out = new ArrayList<>(warnings);
-        for (String[] l : lines) out.add(l[1] == null ? l[0] : l[0] + " : " + l[1]);
+        List<String> out = new ArrayList<>();
+        for (String w : warnings) out.add(ButtonNames.say(w));
+        for (String[] l : lines) out.add(ButtonNames.say(l[1] == null ? l[0] : l[0] + " : " + l[1]));
         return out;
     }
 

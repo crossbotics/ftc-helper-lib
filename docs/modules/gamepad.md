@@ -17,6 +17,7 @@ in a shorter way. New to buttons? Start with tutorial 03.
 | [`StickShaping`](#stickshaping) | make sticks feel smooth: ignore tiny stick moves, add a curve, slow down with a trigger |
 | [`ToggleRumble`](#togglerumble) | buzz to confirm a toggle (2 buzzes = ON, 1 = OFF). In `Controls.java`: `.rumble()` ([the button menu](../guides/buttons.md)) |
 | [`AimRumble`](#aimrumble) | buzz when an error is small, e.g. "aimed at the target" |
+| [`ButtonNames`](#buttonnames) | write the button names printed on each driver's controller (A or ×) on the screen |
 
 ---
 
@@ -199,3 +200,48 @@ if (!confirm.isPlaying()) aimFeel.update(headingErrorDeg);
 
 In the robot in five files it is one line in `Controls.java`: `g2.rumbleWhenAimed();` (the error is
 the turret's or the whole robot's aim; see [Aim](robot.md#aim)).
+
+---
+
+## ButtonNames
+
+A student with a PlayStation controller has no button called "A", and "START" on a screen could mean
+the Driver Hub's ▶ or the small START button on the gamepad. So the library's screens (the finders,
+Tune and check, the Hardware Check, the TeleOp button map, the tuning menu) write each button as a
+short mark, and `ButtonNames` turns it into the name printed on the controller in use, just before the
+screen is sent. The FTC SDK says which kind each controller is (`gamepad.type`) once it is linked.
+
+| Mark | Logitech / Xbox (and before a controller is linked) | PlayStation (PS4, PS5, Etpark) |
+| --- | --- | --- |
+| `{A}` `{B}` `{X}` `{Y}` | A B X Y | × ○ □ △ |
+| `{LB}` `{RB}` `{LT}` `{RT}` | LB RB LT RT | L1 R1 L2 R2 |
+| `{BACK}` `{START}` `{GUIDE}` | BACK START GUIDE | SHARE OPTIONS PS |
+| `{2:A}` (any button) | gamepad 2's button, by gamepad 2's own kind | |
+| `{PLAY}` | ▶, the Driver Hub's start button (never a gamepad button) | ▶ |
+
+A generated line such as `G2 RT: intake in` needs no marks: "G1 " or "G2 " before a button name is
+changed too (`G2 R2: intake in`).
+
+```java
+// In your own OpMode (the library's OpModes do this by themselves):
+ButtonNames.watch(gamepad1, gamepad2);
+RobotTelemetry t = new RobotTelemetry(telemetry);
+t.text("{A} = score high, {B} = stop");   // "× = score high, ○ = stop" on a PS controller
+t.update();                               // RobotTelemetry turns the marks into names
+```
+
+| Method | What it does |
+| --- | --- |
+| `watch(gamepad1, gamepad2)` | use these gamepads' kinds from now on. Every library OpMode calls it at INIT |
+| `say(text)` | the text with its marks (and "G1 A" names) turned into the controllers' names. `RobotTelemetry` calls it on every line |
+| `name(pad, button)` | one name: `name(1, "A")` is "A" or "×" |
+| `mark(pad, button)` | one mark for a line built in code: `mark(2, "RT")` is `"{2:RT}"`; a D-pad or stick name comes back as it is |
+| `style(pad)`, `styleOf(gamepad)` | `LETTERS` or `PLAYSTATION` |
+| `force(pad, style)` | for tests: names as if that gamepad were this kind (`null` = ask the gamepad) |
+
+Plain `telemetry.addLine(...)` does not change marks: write your own lines with real names, or send
+them through `RobotTelemetry` (or `ButtonNames.say`). In the simulator, a scenario line
+`set gamepad 1 ps` makes gamepad 1 a PS controller; on the page, a Sony PS controller plugged into the
+laptop is seen by itself (an Etpark is not: use the scenario line). The test recorder does not write
+`set gamepad` lines: add one by hand to a recorded test that checks PS names.
+

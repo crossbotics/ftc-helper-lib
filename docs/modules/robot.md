@@ -982,7 +982,7 @@ balls). `trimBy(+2)` makes every shot speed 2% faster than the table (or `speedR
 starts at 0 at every INIT, is the same for every shot table, stops at +/- `trimMaxPercent` (15) and at
 the motor's top speed (`(motor limit)`), and is the launcher's first line: `Speed trim: +3%  READY`. The
 trim used last time is remembered until the robot app restarts and offered at INIT
-(`Trim last time: +3% (double-tap D-pad up after START to use it)`), never applied by itself. The Shot
+(`Trim last time: +3% (double-tap D-pad up after ▶ to use it)`), never applied by itself. The Shot
 Tuner never uses it, so tables are recorded clean.
 
 With `kF` set (and battery compensation on, below, or a charged battery), a trim you need match after match points

@@ -558,7 +558,7 @@ public final class Hood extends Module<Hood> {
     // "12.5 deg (table, trim +1.0)  moving", for the Driver Station.
     String words() {
         double a = part.getTargetDegrees();
-        if (Double.isNaN(a)) return "not moved yet (goes to " + num(startAt) + " at START)";
+        if (Double.isNaN(a)) return "not moved yet (goes to " + num(startAt) + " when {PLAY} is pressed)";
         String how = following ? "table" + (trimAmount != 0 ? ", trim " + (trimAmount > 0 ? "+" : "") + num(trimAmount) : "") : "by hand";
         boolean atEnd = a <= lo() + 1e-9 || a >= hi() - 1e-9;
         return num(a) + " (" + how + ")" + (atEnd ? " at its stop" : "") + (part.isDone() ? "" : "  moving");
@@ -750,7 +750,7 @@ public final class Hood extends Module<Hood> {
     // A servo hood not sent anywhere yet may be anywhere: its first move waits while the rule says so.
     @Override boolean zoneKnown() { return part == null || missing || !part.unknown(); }
 
-    @Override String zoneUnknownWords() { return "not sent anywhere yet: it goes to its startAngle at START"; }
+    @Override String zoneUnknownWords() { return "not sent anywhere yet: it goes to its startAngle when {PLAY} is pressed"; }
 
     @Override
     void zoneWait(boolean wait) {

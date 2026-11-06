@@ -137,6 +137,11 @@ public class Key {
         return other == pad ? this : new Key(other, btn, trigger);
     }
 
+    /** The name for a screen line: a mark that becomes the name on this pad's controller ("{BACK}", "{2:A}"). */
+    public final String said() {
+        return com.crossbotics.ftchelper.gamepad.ButtonNames.mark(pad == ControllerBindings.Pad.G2 ? 2 : 1, name());
+    }
+
     /** "G1 BACK". */
     @Override
     public String toString() {

@@ -196,8 +196,8 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
             }
         }
         // The safe range must be the team's own numbers (from the Motor Finder), never a default.
-        t.require("min", "the bottom of the safe range, in " + unit() + ": Motor Finder, X");
-        t.require("max", "the top of the safe range, in " + unit() + ": Motor Finder, B");
+        t.require("min", "the bottom of the safe range, in " + unit() + ": Motor Finder, {X}");
+        t.require("max", "the top of the safe range, in " + unit() + ": Motor Finder, {B}");
         min = t.number("min", d[0]);
         max = t.number("max", d[1]);
         if (!(max > min)) throw new IllegalStateException("Tunables." + name() + ": max (" + max + ") must be more than min (" + min + ")");
@@ -232,7 +232,7 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         }
         t.fromCatalog(catalogFields.toArray(new String[0]));
         catalogNote = fromCatalog.isEmpty() ? "" : defaultsNote(catalogMotor(), fromCatalog,
-                "Tune them live in the tuning menu (PRACTICE, hold GUIDE)");
+                "Tune them live in the tuning menu (PRACTICE, hold {GUIDE})");
         if (cat == null && !unknownMotorNote().isEmpty() && !t.has("kP")) {
             catalogNote = unknownMotorNote();
             // Their values are the general ones that note names: not listed again as library defaults.
@@ -246,9 +246,9 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
 
     @Override
     String toolFor(String field) {
-        if (field.equals("min")) return "the Motor Finder (X at the bottom stop), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
-        if (field.equals("max")) return "the Motor Finder (B at the top stop), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
-        if (KNOWN.contains(field)) return "test it, live in the tuning menu (PRACTICE, hold GUIDE)";
+        if (field.equals("min")) return "the Motor Finder ({X} at the bottom stop), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
+        if (field.equals("max")) return "the Motor Finder ({B} at the top stop), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
+        if (KNOWN.contains(field)) return "test it, live in the tuning menu (PRACTICE, hold {GUIDE})";
         return "the Motor Finder (a position: P1, P2...), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
     }
 

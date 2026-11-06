@@ -127,7 +127,7 @@ public class StartingWordsTest {
     }
 
     @Test public void aSafetyNumberNeverComesFromTheCatalog() {
-        String m = stopMessage(bot(LiftMaxFromCatalog.class, d -> d.add(Lift.slide("lift").part("gobilda-5203-435"))));
+        String m = com.crossbotics.ftchelper.gamepad.ButtonNames.say(stopMessage(bot(LiftMaxFromCatalog.class, d -> d.add(Lift.slide("lift").part("gobilda-5203-435")))));
         assertTrue(m, m.startsWith("Tunables.Lift.max = DEFAULT, but it is a safety number"));
         assertTrue(m, m.contains("Motor Finder, B"));
     }
@@ -141,7 +141,7 @@ public class StartingWordsTest {
     }
 
     @Test public void measureStopsInitAndNamesTheTool() {
-        String m = stopMessage(bot(LiftMeasure.class, d -> d.add(Lift.slide("lift"))));
+        String m = com.crossbotics.ftchelper.gamepad.ButtonNames.say(stopMessage(bot(LiftMeasure.class, d -> d.add(Lift.slide("lift")))));
         assertTrue(m, m.startsWith("Tunables.Lift.min = MEASURE: find it on the robot: "));
         assertTrue(m, m.contains("Motor Finder, X"));
     }
@@ -153,7 +153,7 @@ public class StartingWordsTest {
     }
 
     @Test public void measureOnAnyNumberNamesItsTool() {
-        String m = stopMessage(bot(GainsMeasure.class, d -> d.add(Launcher.flywheel("launcher", "gobilda-5203-6000"))));
+        String m = com.crossbotics.ftchelper.gamepad.ButtonNames.say(stopMessage(bot(GainsMeasure.class, d -> d.add(Launcher.flywheel("launcher", "gobilda-5203-6000")))));
         assertTrue(m, m.startsWith("Tunables.Launcher.kF = MEASURE: a number you find on the robot: the Flywheel Finder"));
     }
 
@@ -164,7 +164,7 @@ public class StartingWordsTest {
     }
 
     @Test public void aPositionToMeasureNamesTheServoFinder() {
-        String m = stopMessage(bot(ClawMeasure.class, d -> d.add(Claw.servo("claw"))));
+        String m = com.crossbotics.ftchelper.gamepad.ButtonNames.say(stopMessage(bot(ClawMeasure.class, d -> d.add(Claw.servo("claw")))));
         assertTrue(m, m.startsWith("Tunables.Claw.open = MEASURE: a number you find on the robot: the Servo Finder"));
     }
 

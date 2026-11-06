@@ -217,7 +217,7 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
 
     @Override
     protected void showInit(RobotTelemetry t) {
-        t.text("Piece Tuner: " + sensors.size() + " sensor(s). Nothing moves. Press START.");
+        t.text("Piece Tuner: " + sensors.size() + " sensor(s). Nothing moves. Press {PLAY}.");
     }
 
     @Override
@@ -230,7 +230,7 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
         t.line("It sees", s.kind() + (s.rawKind().equals(s.kind()) ? "" : " (now " + s.rawKind() + ")"));
         t.section("In front of it: < " + choices().get(kindIndex) + " >   (D-pad left/right)");
         if (sampling != null) t.text("Measuring " + samplingWhat + ": " + sampling.size() + "/" + SAMPLES + " (hold still)");
-        else t.text("A = measure it, B = forget this sensor's, D-pad up/down = another sensor");
+        else t.text("{A} = measure it, {B} = forget this sensor's, D-pad up/down = another sensor");
         if (!lastNote.isEmpty()) t.text(lastNote);
         if (!results.isEmpty()) t.text("Copy the lines below into Tunables.java (then rebuild): changes made only in the tuning menu are lost.");
     }
@@ -243,8 +243,8 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
                 "D-pad up/down: choose the sensor.",
                 "D-pad left/right: what is in front of it",
                 "  (a kind of piece, or EMPTY).",
-                "A: measure (hold the piece where it sits).",
-                "B: forget this sensor's measurements.",
+                "{A}: measure (hold the piece where it sits).",
+                "{B}: forget this sensor's measurements.",
                 "Measure every kind and EMPTY, then copy the",
                 "lines into Tunables.java and rebuild.",
                 "Tuning-menu changes: copy them into",

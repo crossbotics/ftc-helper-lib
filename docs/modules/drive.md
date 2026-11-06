@@ -309,6 +309,11 @@ auto.turnTo(0, 0.5);      // face the start direction
 - `autoConfig`: tuning. Throws an error if `calibrationConfirmed` is false.
 - `imu`: from `ImuSetup.get(...)`.
 
+`new AutoDrive(opMode, driveConfig, autoConfig, imu, isActive)` is the same, with your own "keep going"
+check (`isActive`, true while the moves may run). For an OpMode that runs inside another one, such as a
+finder inside "Tune and check": its own `opModeIsActive()` is always false there, so every move would end
+at once with `STOPPED`.
+
 It resets the drive encoders, uses RUN_USING_ENCODER and brake, and sets power to 0.
 
 ### Methods
