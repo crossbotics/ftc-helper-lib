@@ -1341,10 +1341,25 @@ public abstract class RobotDefinition {
             t.text(n);
         }
         if (!starting.isEmpty()) {
-            StringBuilder names = new StringBuilder();
-            for (String p : starting) names.append(names.length() == 0 ? "" : ", ").append(p);
-            t.text("Starting numbers in use (fine for a first test; measure them later): " + names
-                    + ". Each value and where it came from: the tuning menu");
+            // On the screen: only the numbers left at a LIBRARY guess (written DEFAULT), by name, and only in
+            // PRACTICE (where the team tunes). The parts catalog's numbers (the seller's, such as a servo's
+            // speed) and numbers not written at all are fine as they are: robot log only.
+            List<String> guesses = libraryGuesses(startingLines);
+            // Control gains from the catalog (a flywheel's kF/kP, a lift's kP) are worked out, not tuned: they
+            // stay on the screen in every profile, so a team never goes to an event on them unknowingly.
+            List<String> gains = catalogGains(startingLines);
+            if (!gains.isEmpty()) {
+                StringBuilder g = new StringBuilder();
+                for (String p : gains) g.append(g.length() == 0 ? "" : ", ").append(p);
+                t.text("Starting gains (worked out, not tuned): " + g + ". Tune them (Flywheel Finder, tuning menu)");
+            }
+            if (!loud && !guesses.isEmpty()) {
+                StringBuilder names = new StringBuilder();
+                int shown = Math.min(guesses.size(), STARTING_NAMES_SHOWN);
+                for (int i = 0; i < shown; i++) names.append(i == 0 ? "" : ", ").append(guesses.get(i));
+                if (guesses.size() > shown) names.append(" and ").append(guesses.size() - shown).append(" more");
+                t.text("Library starting values (DEFAULT): " + names + ". Fine to test; the tuning menu shows them");
+            }
             if (!startingLogged) {
                 startingLogged = true;
                 try {
@@ -1361,6 +1376,37 @@ public abstract class RobotDefinition {
     // The part a "starting numbers" note is about ("Tunables.Launcher: DEFAULT, library defaults: ...",
     // "Launcher: defaults from the catalog (...)", "Tunables.Intake not written: library defaults used (fine)"),
     // or null for any other note.
+    // The parts whose control GAINS came from the parts catalog: "Launcher" from "Launcher: defaults from the
+    // catalog (gobilda-5203-6000): kF 11.7, kP 1.17, ...". A servo's travelSec (a speed) is not a gain.
+    static List<String> catalogGains(List<String> notes) {
+        List<String> out = new ArrayList<>();
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("^(\\w+): defaults from [^:]+: (.*)$");
+        for (String note : notes) for (String n : note.split(";\\s+")) {
+            java.util.regex.Matcher m = p.matcher(n.trim());
+            if (m.find() && m.group(2).matches("(?s).*\\bk[PIDF] .*") && !out.contains(m.group(1))) out.add(m.group(1));
+        }
+        return out;
+    }
+
+    /** How many "Part.field" names the INIT line shows before "and N more". */
+    static final int STARTING_NAMES_SHOWN = 4;
+
+    // "Launcher.stepRpm", "Launcher.readyBandRpm" from "Tunables.Launcher: DEFAULT, library defaults: stepRpm 100,
+    // readyBandRpm 60". Only these notes: the catalog's numbers and fields not written are fine as they are.
+    static List<String> libraryGuesses(List<String> notes) {
+        List<String> out = new ArrayList<>();
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("^(?:Tunables\\.)?(\\w+): DEFAULT, library defaults: (.*)$");
+        for (String note : notes) for (String n : note.split(";\\s+")) {   // one note may hold two parts, "...; ..."
+            java.util.regex.Matcher m = p.matcher(n.trim());
+            if (!m.find()) continue;
+            for (String pair : m.group(2).split(",\\s*")) {
+                String field = pair.trim().split("\\s+")[0];
+                if (field.matches("\\w+")) out.add(m.group(1) + "." + field);
+            }
+        }
+        return out;
+    }
+
     static String startingPart(String note) {
         java.util.regex.Matcher m = java.util.regex.Pattern.compile(
                 "^(?:Tunables\\.)?(\\w+)(?::| not written)[^!]*?(?:DEFAULT, library defaults|defaults from the catalog|defaults? from \\S+ \\(custom\\)|library defaults used)")

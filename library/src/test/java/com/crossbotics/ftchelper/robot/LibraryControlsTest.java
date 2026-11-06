@@ -77,13 +77,13 @@ public class LibraryControlsTest {
         // Field-centric on X: Y is the team's now, and X is the library's.
         ButtonPlan q = plan(false, LibraryButtons.twoDrivers().fieldCentric(new ButtonPlan(false).g1.x),
                 (g1, g2) -> g1.y.press(robot.claw::open).says("open"));
-        assertEquals("G1 X: field-centric on/off [library]", line(q.help(), "G1 X"));
+        assertEquals("G1 X: double-tap: field-centric on/off [library]", line(q.help(), "G1 X"));
         assertEquals("G1 Y: open", line(q.help(), "G1 Y"));
         try {
             plan(false, LibraryButtons.twoDrivers().fieldCentric(new ButtonPlan(false).g1.x), (g1, g2) -> g1.x.press(robot.claw::open));
             fail("expected an error");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("G1 X is the library's \"field-centric on/off\" button"));
+            assertTrue(e.getMessage(), e.getMessage().contains("G1 X is the library's \"double-tap: field-centric on/off\" button"));
             assertTrue(e.getMessage(), e.getMessage().contains("libraryButtons"));
         }
     }
@@ -123,7 +123,7 @@ public class LibraryControlsTest {
         LibraryButtons lib = LibraryButtons.oneDriver().fieldCentric(new ButtonPlan(false).g2.dpadLeft).moveAllToGamepad1();
         ButtonPlan p = plan(true, lib, (g1, g2) -> { });
         assertEquals("G1 left stick click: slow on/off [library]", line(p.help(), "G1 left stick click"));
-        assertTrue(line(p.help(), "G1 D-pad left"), line(p.help(), "G1 D-pad left").startsWith("G1 D-pad left: field-centric on/off [library]"));
+        assertTrue(line(p.help(), "G1 D-pad left"), line(p.help(), "G1 D-pad left").startsWith("G1 D-pad left: double-tap: field-centric on/off [library]"));
         assertEquals("the right stick click is free for the parts", "", line(p.help(), "G1 right stick click: field"));
         assertEquals("G1 RT: in (hold) [Intake]", line(p.help(), "G1 RT"));
     }

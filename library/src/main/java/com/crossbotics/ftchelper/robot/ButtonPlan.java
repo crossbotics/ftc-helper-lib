@@ -225,6 +225,17 @@ final class ButtonPlan {
         replaced.removeIf(r -> key.equals(r[0].job));
     }
 
+    /**
+     * The notes for the INIT screen: only a part's suggestion that lost its button to ANOTHER PART (by
+     * accident). One that Controls.java took or freed on purpose is in {@link #notes()} (and the robot log),
+     * not on the screen: the team chose it, so it only filled the screen.
+     */
+    List<String> screenNotes() {
+        List<String> out = new ArrayList<>();
+        for (Entry e : rejected) out.add(e.source + " " + e.says + ": no button (" + e.input + " is taken by " + e.takenBy + ")");
+        return out;
+    }
+
     /** Notes for INIT, e.g. a module suggestion that found no free button. */
     List<String> notes() {
         List<String> out = new ArrayList<>();

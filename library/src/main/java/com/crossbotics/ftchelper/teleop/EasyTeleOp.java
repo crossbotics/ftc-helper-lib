@@ -30,7 +30,7 @@ import java.util.List;
  *
  * <ul>
  *   <li>Driving on gamepad 1 ({@link DriverControls}): left stick drive, right stick X turn, left
- *       trigger slow. Mecanum and tank. Robot-centric to start; Y = field-centric on/off (mecanum).</li>
+ *       trigger slow. Mecanum and tank. Robot-centric to start; Y double-tap = field-centric on/off (mecanum).</li>
  *   <li>Field-centric "forward" continues from autonomous ({@link DriverHeading}); BACK resets it.</li>
  *   <li>The alliance from autonomous ({@link #alliance()}; chosen in INIT if no autonomous ran; a
  *       switch during TeleOp only if you turn it on), the 2:00 match timer with gamepad buzzes at 1:00
@@ -692,7 +692,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     t.warn("Choose the alliance: " + choose);
                     t.line("Alliance", alliance + " until you choose");
                 }
-                t.line("Switch alliance", switchWords);
+                // Said only when it is on: "off" is the usual case and only filled the screen.
+                if (lib.key(LibraryButtons.Job.SWITCH_ALLIANCE) != null) t.line("Switch alliance", switchWords);
                 if (menu) {
                     t.section("Choose (D-pad), then {PLAY}");
                     if (!choose.isEmpty()) t.text((menuLine == 0 ? "> " : "  ") + "Alliance: " + alliance);

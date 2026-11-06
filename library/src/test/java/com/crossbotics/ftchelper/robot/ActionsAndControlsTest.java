@@ -190,7 +190,7 @@ public class ActionsAndControlsTest {
         assertEquals("G2 X: low [Lift]", line(help, "G2 X"));
         assertEquals("G2 Y: high [Lift]", line(help, "G2 Y"));
         assertEquals("G2 B: open / close [Claw]", line(help, "G2 B"));
-        assertEquals("G1 Y: field-centric on/off [library]", line(help, "G1 Y"));
+        assertEquals("G1 Y: double-tap: field-centric on/off [library]", line(help, "G1 Y"));
         assertTrue(line(help, "G1 free").contains("A"));
     }
 

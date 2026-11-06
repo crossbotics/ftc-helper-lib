@@ -67,7 +67,7 @@ gets this map (two drivers):
 | Left stick | drive (and strafe) | lift by hand |
 | Right stick X | turn | free |
 | LT / RT | slow / free | intake out (hold) / intake in (hold) |
-| A / X / Y | free / free / field-centric on/off | lift down / low / high |
+| A / X / Y | free / free / double-tap: field-centric on/off | lift down / low / high |
 | B | free | claw open / close |
 | D-pad up / down | free | lift next height up / down |
 | BACK | pause at the press / a tap: go on (held 1 s, field-centric only: also reset "forward") | free |

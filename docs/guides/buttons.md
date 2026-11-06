@@ -41,7 +41,9 @@ Write the gamepad, a dot, then the button.
 Some of gamepad 1's buttons are the library's own: the left stick, right stick X, BACK, START, GUIDE,
 LT (slow, with two drivers) and Y (field-centric, on a mecanum with an IMU or odometry, with two
 drivers). With `oneDriver = true`, the left stick click (slow on/off) and the right stick click
-(field-centric on/off) instead of LT and Y. INIT stops with a message if you use one. Every one of
+(field-centric on/off) instead of LT and Y. Field-centric on/off needs a **double tap** (two presses within
+0.35 s, a fixed time: `Buttons.tapGapSec` does not change it): one tap by accident would turn the sticks
+around. INIT stops with a message if you use one. Every one of
 them can be moved or freed: [Moving the library's buttons](#moving-the-librarys-buttons).
 
 ## 2. How it starts
@@ -89,7 +91,9 @@ launcher's RB firing (taps, hold, tap then hold) on Y, and `spinOn(...)` moves L
 ([cookbook](../cookbook.md#how-do-i-put-the-launchers-fire-button-on-another-button)).
 
 Taps on `fire` (and on the launcher's own RB) add up: at most `maxFiringQueue` shots wait (Tunables, default 4), so many nervous taps do
-not fire many pieces later ([Tunables](tunables.md#launcher)).
+not fire many pieces later ([Tunables](tunables.md#launcher)). `maxFiringQueue = 0`: no queue at all, a press
+while a shot is still on its way does nothing. The launcher's LB (or wherever you move its on/off) switches the
+wheel off; a fire press then spins it up, fires, and switches it off again.
 
 **When does a gesture's job run?** At once, unless the same button has a longer gesture that starts
 the same way. Then the library waits only until it knows:

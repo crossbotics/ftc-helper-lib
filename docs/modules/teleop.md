@@ -101,7 +101,7 @@ Note: the bindings name the gamepad (`Pad.G1`, `Pad.G2`) themselves. A `Pad.G1` 
 | --- | --- | --- |
 | `startFieldCentric()` | false | true = start in field-centric |
 | `slowSpeed()` | 0.3 | speed at a full squeeze of the slow trigger |
-| `fieldCentricButton()` | `Btn.Y` | the gamepad 1 button for field-centric on/off; null = none (a shortcut: `libraryButtons` can put it anywhere) |
+| `fieldCentricButton()` | `Btn.Y` | the gamepad 1 button for field-centric on/off (a double tap: one tap does nothing); null = none (a shortcut: `libraryButtons` can put it anywhere) |
 | `standardLibraryButtons()` | `LibraryButtons.twoDrivers()` | the defaults before `libraryButtons(lib)` (`Controls.java`: the one-driver ones with `oneDriver`) |
 | `buzzAtSecondsLeft()` | {60, 20} | when both gamepads buzz |
 | `drive(gamepad)` | the standard controls | replace it to drive your own way, e.g. two-stick tank style: `driving().tank(-gamepad.left_stick_y, -gamepad.right_stick_y, 1)` |

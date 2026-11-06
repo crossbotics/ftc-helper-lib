@@ -49,7 +49,7 @@ public class LibraryButtonsTest {
         assertEquals("hold 1 s: set pose here; then BACK: debug lines", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.START))));
         assertNull("switching the alliance in TeleOp is off until the team turns it on",
                 LibraryButtons.twoDrivers().key(Job.SWITCH_ALLIANCE));
-        assertEquals("field-centric on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.Y))));
+        assertEquals("double-tap: field-centric on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.Y))));
         assertEquals("slow (squeeze: the further, the slower)", w.get(Key.g1(Trigger.LT)));
         assertEquals("button map; hold 1 s: tuning menu", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.GUIDE))));
         assertEquals(Key.g1(Btn.X), LibraryButtons.twoDrivers().initBlue());
@@ -68,7 +68,7 @@ public class LibraryButtonsTest {
     @Test public void oneDriverHasSlowAndFieldCentricOnTheStickClicks() {
         Map<Key, String> w = LibraryButtons.oneDriver().words(all());
         assertEquals("slow on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.L_STICK_BTN))));
-        assertEquals("field-centric on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.R_STICK_BTN))));
+        assertEquals("double-tap: field-centric on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.R_STICK_BTN))));
         assertNull(w.get(Key.g1(Trigger.LT)));
         assertNull(com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.Y))));
     }
@@ -83,7 +83,7 @@ public class LibraryButtonsTest {
         Map<Key, String> w = lib.words(all());
         assertEquals("pause / go on", w.get(Key.g2(Btn.BACK)));
         assertEquals("forward = away from you now", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.DPAD_DOWN))));
-        assertEquals("field-centric on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.X))));
+        assertEquals("double-tap: field-centric on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.X))));
         assertEquals("slow (squeeze: the further, the slower)", w.get(Key.g1(Trigger.RT)));
         assertEquals("tuning menu", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.R_STICK_BTN))));
         assertEquals("debug lines", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.START))));
@@ -188,12 +188,16 @@ public class LibraryButtonsTest {
         g1.y = false;
         loop(k, 0.1);
         assertEquals("[]", ran.toString());
-        // Going on: Y works again.
+        // Going on: Y works again (a double tap: field-centric needs two presses).
         g1.back = true;
         loop(k, 0.02);
         g1.back = false;
         loop(k, 0.1);
         ran.clear();
+        g1.y = true;
+        loop(k, 0.02);
+        g1.y = false;
+        loop(k, 0.1);
         g1.y = true;
         loop(k, 0.02);
         g1.y = false;
@@ -385,11 +389,23 @@ public class LibraryButtonsTest {
         assertTrue(ran.toString(), ran.isEmpty());
     }
 
+    // Field-centric on/off: one tap by accident does nothing; the second press soon after runs it, at the press.
     @Test public void aQuickJobAloneRunsAtThePress() {
         LibraryKeys k = keys(LibraryButtons.twoDrivers(), all());
         g1.y = true;
         loop(k, 0.02);
-        assertEquals("[FIELD_CENTRIC]", ran.toString());
+        g1.y = false;
+        loop(k, 0.1);
+        assertEquals("one tap: nothing", "[]", ran.toString());
+        loop(k, 1.0);
+        g1.y = true;
+        loop(k, 0.02);
+        g1.y = false;
+        loop(k, 0.1);
+        assertEquals("a tap long after: still nothing", "[]", ran.toString());
+        g1.y = true;
+        loop(k, 0.02);
+        assertEquals("the second quick press runs it", "[FIELD_CENTRIC]", ran.toString());
         loop(k, 2);
         g1.y = false;
         loop(k, 0.02);
@@ -430,6 +446,10 @@ public class LibraryButtonsTest {
         k.update(g1, g2, true);
         loop(k, 0.02);
         assertEquals("[BUTTON_MAP]", ran.toString());
+        g1.y = false;
+        loop(k, 0.02);
+        g1.y = true;
+        loop(k, 0.02);
         g1.y = false;
         loop(k, 0.02);
         g1.y = true;

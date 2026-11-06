@@ -60,6 +60,11 @@ public final class LibraryButtons {
 
     /** How long a "hold" job takes: reset forward, set pose here, the tuning menu (seconds). */
     public static final double HOLD_SEC = 1.0;
+    /**
+     * Field-centric on/off needs a DOUBLE tap: two presses closer together than this (seconds). WHY: one
+     * tap by accident turns the sticks' meaning around, and the driver drives the wrong way.
+     */
+    public static final double FIELD_CENTRIC_DOUBLE_TAP_SEC = 0.35;
     /** How long both "switch alliance" buttons are held (seconds): long, so it never happens by accident. */
     public static final double SWITCH_ALLIANCE_SEC = 1.5;
 
@@ -312,7 +317,7 @@ public final class LibraryButtons {
 
         // "pause / go on; hold 1 s: forward = away from you now"
         String words() {
-            String quick = tap == null ? "" : tap.words;
+            String quick = tap == null ? "" : tap == Job.FIELD_CENTRIC ? "double-tap: " + tap.words : tap.words;
             if (hold == null) return quick;
             String held = (isPair() ? "hold both " : "hold ") + secs(holdSec) + ": " + hold.words;
             return quick.isEmpty() ? held : quick + "; " + held;

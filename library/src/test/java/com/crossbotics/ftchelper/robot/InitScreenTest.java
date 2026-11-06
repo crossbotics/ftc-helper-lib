@@ -34,6 +34,7 @@ public class InitScreenTest {
     public static class Numbers {
         public static class Drive { public static boolean calibrated = true; }
         public static class Claw { public static double open = 0.25, closed = 0.70; }
+        public static class Launcher { public static double stepRpm = Starting.DEFAULT, readyBandRpm = Starting.DEFAULT; }
     }
 
     public static class Bot extends RobotDefinition {
@@ -46,19 +47,37 @@ public class InitScreenTest {
         }
     }
 
-    @Test public void oneShortLineForEveryPartOnStartingNumbers() {
-        Bot r = new Bot();
-        r.setup(new PretendDevices());
-        assertTrue("the full notes are still there: " + r.notes(), r.notes().toString().contains("defaults from the catalog"));
-        PretendTelemetry screen = new PretendTelemetry();
-        RobotTelemetry t = new RobotTelemetry(screen.telemetry);
-        r.showNotes(t);
-        List<String> lines = t.pending();
-        String all = lines.toString();
-        assertFalse("no long per-part lines on the screen: " + all, all.contains("defaults from the catalog ("));
-        int summary = 0;
-        for (String l : lines) if (l.startsWith("Starting numbers in use")) summary++;
-        assertEquals(all, 1, summary);
-        assertTrue(all, all.contains("Intake") && all.contains("Launcher") && all.contains("Claw"));
+    // Only the numbers left at a LIBRARY guess (written DEFAULT) are on the screen, by name, and only in
+    // PRACTICE. The parts catalog's numbers (the seller's) and numbers not written are fine: robot log only.
+    @Test public void onlyLibraryGuessesAreNamedAndOnlyInPractice() {
+        com.crossbotics.ftchelper.core.Profile.set(com.crossbotics.ftchelper.core.Profile.PRACTICE);
+        try {
+            Bot r = new Bot();
+            r.setup(new PretendDevices());
+            assertTrue("the full notes are still there: " + r.notes(), r.notes().toString().contains("defaults from the catalog"));
+            PretendTelemetry screen = new PretendTelemetry();
+            RobotTelemetry t = new RobotTelemetry(screen.telemetry);
+            r.showNotes(t);
+            String all = t.pending().toString();
+            assertFalse("no long per-part lines on the screen: " + all, all.contains("defaults from the catalog ("));
+            assertTrue(all + " notes " + r.notes(), all.contains("Library starting values (DEFAULT): Launcher.stepRpm, Launcher.readyBandRpm"));
+            assertFalse("the catalog's numbers are not named: " + all, all.contains("Claw.") || all.contains("Intake."));
+            assertTrue("catalog GAINS stay on the screen: " + all, all.contains("Starting gains (worked out, not tuned): Launcher"));
+
+            com.crossbotics.ftchelper.core.Profile.set(com.crossbotics.ftchelper.core.Profile.COMPETITION);
+            RobotTelemetry t2 = new RobotTelemetry(new PretendTelemetry().telemetry);
+            r.showNotes(t2);
+            assertFalse("not at an event: " + t2.pending(), t2.pending().toString().contains("Library starting values"));
+            assertTrue("gains also at an event: " + t2.pending(), t2.pending().toString().contains("Starting gains"));
+        } finally {
+            com.crossbotics.ftchelper.core.Profile.resetForTests();
+        }
+    }
+
+    @Test public void theGuessesAreReadFromTheNotes() {
+        assertEquals(java.util.Arrays.asList("Launcher.stepRpm", "Launcher.readyBandRpm"), RobotDefinition.libraryGuesses(
+                java.util.Arrays.asList("Tunables.Launcher: DEFAULT, library defaults: stepRpm 100, readyBandRpm 60",
+                        "Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7. Run the Flywheel Finder",
+                        "Tunables.Intake not written: library defaults used (fine)")));
     }
 }

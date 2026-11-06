@@ -54,6 +54,7 @@ final class ShotGate implements Feeder {
     private double wheelOffAt = -1;        // only while firing: when the feed wheel stops, seconds (-1 = off)
     private double wheelFrom = 0;          // only while firing: when the feed wheel starts, seconds
     private double wheelSent = Double.NaN; // the feed wheel's last power sent (NaN = none yet)
+    private BooleanSupplier backOut = null; // true: run the feed wheel backward (an intake pushes out), or null
 
     ShotGate(Servo stop, double hold, double release, double openSec, Feeder indexer, boolean pusherIndexer,
              List<Intake> pushers, double assistSec, double moveSec, Flywheel flywheel, BooleanSupplier stream,
@@ -165,14 +166,27 @@ final class ShotGate implements Feeder {
         if (wheel != null) {
             boolean on = wheel.wheelAlwaysOn() ? started && spunUp.getAsBoolean()
                     : wheelOffAt >= 0 && t >= wheelFrom && t < wheelOffAt;
-            sendWheel(on);
+            // Not firing and the intake pushes out (Launcher.feedWheelOutWith): backward, so the pieces
+            // in the feeder go out too. A feed always wins: a shot is never pushed backward.
+            // Not while a feed's forward time still runs (wheelOffAt) or the indexer is still busy.
+            boolean feedDone = !feeding && (wheelOffAt < 0 || t >= wheelOffAt) && (indexer == null || !indexer.isBusy());
+            if (feedDone && started && backOut != null && backOut.getAsBoolean()) sendWheelPower(-wheel.wheelPower());
+            else sendWheel(on);
         }
+    }
+
+    /** The feed wheel runs backward while this is true and nothing is being fed (Launcher.feedWheelOutWith). */
+    void wheelBacksOutWhile(BooleanSupplier when) {
+        backOut = when;
     }
 
     // Sends the feed wheel's power only when it changes (on/off, or a new power from the tuning menu).
     private void sendWheel(boolean on) {
         if (wheel == null) return;
-        double p = on ? wheel.wheelPower() : 0;
+        sendWheelPower(on ? wheel.wheelPower() : 0);
+    }
+
+    private void sendWheelPower(double p) {
         if (p == wheelSent) return;
         wheelSent = p;
         wheel.runWheel(p);

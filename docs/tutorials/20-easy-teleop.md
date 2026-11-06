@@ -57,7 +57,7 @@ You get these on gamepad 1 without writing anything:
 | left stick | drive (mecanum: any direction; tank: forward/back) |
 | right stick X | turn |
 | left trigger | slow: squeeze for fine moves |
-| Y | field-centric on/off (starts off) |
+| Y | double-tap: field-centric on/off (starts off) |
 | BACK (alone, on release) | "the robot now faces away from me" (one buzz) |
 | GUIDE | tuning menu (PRACTICE profile) |
 | BACK + START together | debug telemetry on/off when let go (does not reset "forward"). Switching the alliance in TeleOp is off unless `lib.switchAlliance(Key.g1(Btn.BACK), Key.g1(Btn.START))` turns it on: then both held 1.5 s switch it |
