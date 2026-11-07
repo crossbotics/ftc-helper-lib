@@ -38,7 +38,7 @@ public class Tunables {
         public static double kF = DEFAULT;                          // steady power for a speed (from the motor)
     }
 
-    /** The flap. It goes to rest at START: measure rest and push with the Servo Finder BEFORE the first TeleOp. */
+    /** The flap. It goes to rest at ▶: measure rest and push with the Servo Finder BEFORE the first TeleOp. */
     public static class FwActuator {
         public static double rest = 0.0;                            // servo position, out of the way: Studica (X)
         public static double push = 0.2;                            // servo position, piece pushed: Studica (A)

@@ -32,7 +32,7 @@ public class Tut10AutoWithLift extends LinearOpMode {
 
     // Fields, because the button actions and the loop hook change or read them.
     private boolean red = false;         // which alliance: false = blue, true = red
-    private double delaySec = 0;         // how long to wait after START, seconds (0 to 10)
+    private double delaySec = 0;         // how long to wait after ▶, seconds (0 to 10)
     private int liftTarget = LIFT_DOWN;  // where the lift should go, ticks. Changing it moves the lift.
 
     @Override
@@ -61,7 +61,7 @@ public class Tut10AutoWithLift extends LinearOpMode {
                 .bindPress(Pad.G1, Btn.B, () -> red = true)
                 .bindPress(Pad.G1, Btn.DPAD_UP, () -> delaySec = Math.min(delaySec + 1, 10))
                 .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> delaySec = Math.max(delaySec - 1, 0));
-        // Instead of waitForStart(): the drivers can change the plan until START.
+        // Instead of waitForStart(): the drivers can change the plan until ▶.
         while (opModeInInit()) {
             setup.update(gamepad1, gamepad2);
             telemetry.addData("Alliance (X blue / B red)", red ? "RED" : "BLUE");

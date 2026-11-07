@@ -86,7 +86,7 @@ public class ExampleTeleOp extends LinearOpMode {
                 .bindPress(Pad.G2, Btn.Y, () -> setLiftTarget(LIFT_UP, liftPid));
 
         LoopTimer loopTimer = new LoopTimer();
-        telemetry.addLine("Ready. Press START.");
+        telemetry.addLine("Ready. Press ▶.");
         telemetry.update();
 
         waitForStart();

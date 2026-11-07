@@ -25,7 +25,7 @@ The simulator commands with `-PteamCode=none` run the library's examples. For yo
 Three more complete robots are next to it:
 [`flywheelbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 (an intake that runs from the start, a flywheel the driver speeds up and down, an indexer servo, a
-deploy servo at START) and
+deploy servo at ▶, the start on the Driver Hub) and
 [`turretbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot)
 (a turret with a Limelight that follows the goal inside its range, speed from distance, a folding claw),
 and [`v2bot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot) (a turret shooter
@@ -123,7 +123,7 @@ public class Robot extends RobotDefinition {
 - `add(...)` hands the module back, so `intake = add(...)` keeps it in a field (a variable that
   belongs to the class, like `public Intake intake;` at the top). Controls, Actions and the autos
   reach it as `robot.intake`.
-- `define()` only DESCRIBES the robot. Nothing moves in INIT; the modules move only after START.
+- `define()` only DESCRIBES the robot. Nothing moves in INIT; the modules move only after ▶.
 - **A part that is not built yet?** Write its line anyway and add `.optional()`:
   `intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque").optional());`.
   Until "intake_deploy" is in the configuration, INIT says the part is off instead of stopping, and its buttons and actions skip it.
@@ -241,7 +241,7 @@ public class Tunables {
   Fix the name, or delete the line. **Why stop?** Without it, the part would quietly use its default
   and you would never know your number was not used. A number for your own code (a distance for an
   autonomous) goes in a section of your own, like `Tunables.Auto`.
-- **Tune on the robot:** in the PRACTICE profile, after START, holding GUIDE for a second opens the tuning menu (D-pad to choose and
+- **Tune on the robot:** in the PRACTICE profile, after ▶, holding GUIDE for a second opens the tuning menu (D-pad to choose and
   change, A to save on the hub). At the next INIT the Driver Station lists every value that differs
   from this file, for example `Tunables.Launcher.speedRpm = 2750 (code 2679)`. Copy the good ones
   into this file: the file stays the record. The `Auto` section is in the menu too (`Auto/backInches`):
@@ -362,7 +362,7 @@ The examples are built into the simulator, so:
 ```
 
 `-PteamCode=none` lists the library's examples instead of your own TeamCode's OpModes. (On a real robot
-the examples are hidden: they are marked `@Disabled`.) Open http://localhost:8780, pick "goBILDA Bot TeleOp", INIT (read the button map), START. LB spins
+the examples are hidden: they are marked `@Disabled`.) Open http://localhost:8780, pick "goBILDA Bot TeleOp", INIT (read the button map), ▶. LB spins
 up, RB fires (hold it to keep firing). ([Simulator guide](../../guides/simulator.md).)
 
 **Your own robot** (the five files in your TeamCode): in Android Studio, pick **Simulator** in the list
@@ -374,7 +374,7 @@ Or, in the Terminal, from the `ftc-helper-lib` folder:
 ```
 
 When it starts, the simulator writes your robot's simulator file, `simulator/robot.properties`, from
-`Robot.java` (see below). Open http://localhost:8780, pick your TeleOp, INIT, START. To stop the simulator:
+`Robot.java` (see below). Open http://localhost:8780, pick your TeleOp, INIT, ▶. To stop the simulator:
 the red **Stop** button (or **Ctrl+C** in the Terminal). Changed your code? Stop it and start it again.
 
 ### Draw your robot from Robot.java
@@ -407,7 +407,7 @@ In BIOBUZZ a robot may not hold more than 4 pieces at a time (G407).
 Then start the simulator again (the **Simulator** button, or `./gradlew :sim:run`): it writes the robot
 file from `Robot.java` first. Open http://localhost:8780: the roller spins when the intake runs, a piece is picked up and fired, and the
 size rules are checked on your shapes. The flywheel example (`examples/.../flywheelbot/Robot.java`) also
-has an intake that folds up at the start and falls over at START. An arm on a servo names its angle at
+has an intake that folds up at the start and falls over at ▶. An arm on a servo names its angle at
 two positions, `angle("stowed", 90).angle("deployed", 20)`: those names must be positions in that part's
 Tunables section (here `Tunables.IntakeDeploy`).
 
@@ -441,7 +441,7 @@ of written instructions an AI coding agent, like Claude Code, follows). Your mea
 - Where would you change the launcher's speed? (Tunables.java, section `Launcher`.)
 - The operator wants the claw on X instead of B. Which file? (Controls.java: `g2.x.toggle(robot.claw)`.)
 - An action is lifting the lift and the operator moves the lift stick. What happens? (The action stops: the driver wins.)
-- Why does `define()` not move anything? (It runs in INIT, and the library moves nothing before START: its safety choice, see Lesson 5.)
+- Why does `define()` not move anything? (It runs in INIT, and the library moves nothing before ▶: its safety choice, see Lesson 5.)
 
 ## Next
 

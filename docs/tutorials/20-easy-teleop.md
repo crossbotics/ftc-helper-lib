@@ -111,7 +111,7 @@ The lift and claw already show their own lines, and the time and drive mode are 
 ## Run it
 
 1. Run tutorial 16's autonomous first, then this TeleOp. INIT shows "Forward: from autonomous".
-2. START. Drive robot-centric. Press Y (two buzzes): field-centric. Push the stick up: the robot
+2. Press ▶ (start on the Driver Hub). Drive robot-centric. Press Y (two buzzes): field-centric. Push the stick up: the robot
    drives away from you, whichever way it faces.
 3. Gamepad 2: A / Y move the lift, right bumper opens and closes the claw, the left stick moves the
    lift by hand.

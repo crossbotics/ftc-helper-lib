@@ -7,7 +7,7 @@ import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 
 /**
- * Example robot 2, file 5 of 5: the turret follows the goal from START, so the steps only drive
+ * Example robot 2, file 5 of 5: the turret follows the goal from ▶, so the steps only drive
  * into range, get ready, wait for the turret to aim, and fire. Each shot waits for the right speed
  * and the turret aimed. The goal is our HIVE's up CELL: at the start it is on the HIVE's right side
  * (seen from our wall), so the robot starts to the right of it.

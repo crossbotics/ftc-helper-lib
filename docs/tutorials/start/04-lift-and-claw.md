@@ -224,7 +224,7 @@ public class MotorFinder extends MotorFinderOpMode {
   in the Servo Finder before choosing the servo. Decide this BEFORE you measure: the numbers change with
   the range. Most claws do not need it. ([Why](../../modules/hardware.md#full-range).)
 - **Motor Finder, for the lift:**
-  1. On the Driver Station, choose **Motor Finder**, press INIT, then START.
+  1. On the Driver Station, choose **Motor Finder**, press INIT, then ▶ (start on the Driver Hub).
   2. Put the lift at the bottom (the count starts at 0 there). Choose `lift` (D-pad, then A).
   3. Move it slowly with gamepad 1's **right** stick (up and down; the left stick does nothing here).
   4. Press **X** just before the bottom block (`min`) and **B** just before the top block (`max`).
@@ -274,7 +274,7 @@ and [tutorial 21](../21-finders.md).
 `kP` to `kF` and the named heights change **while the robot runs**, so you do not rebuild for each
 try.
 
-1. INIT the TeleOp with the **PRACTICE** profile, then press START. (The profile is chosen in any
+1. INIT the TeleOp with the **PRACTICE** profile, then press ▶. (The profile is chosen in any
    autonomous's INIT menu, on its last line, and the hub remembers it:
    [lesson 2, section 5](02-drive.md#5-the-numbers-tunablesdrive).)
 2. **Hold GUIDE for 1 second:** the tuning menu opens on gamepad 1 (the wheels hold still).
@@ -356,7 +356,7 @@ to the simulator) from the lesson robot's `Robot.java`, then run it:
 For your own robot: pick **Simulator** in the list next to Android Studio's green Run button and
 click Run (or `./gradlew :sim:run`). Open http://localhost:8780 and pick the TeleOp: for the
 lesson robot "Lesson Bot TeleOp"; for your own robot, your own TeleOp's name (the `name = "..."` in
-`Controls.java`). INIT, read the button map, START. The lesson robot's buttons, on gamepad 2: Y lifts,
+`Controls.java`). INIT, read the button map, ▶. The lesson robot's buttons, on gamepad 2: Y lifts,
 A lowers, B opens and closes the claw, hold RT to run the intake (your own robot: the buttons on its
 button map). The Control Hub panel shows the lift motor's count and the
 `lift_bottom` switch: pressed at the bottom, so the lift homes at once. Before the first B the claw's
@@ -366,7 +366,7 @@ the claw starts open, so it seems to do nothing); the next B closes it. ([Simula
 ## Check it on the robot
 
 1. Wheels off the floor, hand near STOP. Lift at the bottom, on its switch.
-2. INIT: no warnings about missing devices. START.
+2. INIT: no warnings about missing devices. Press ▶.
 3. Gamepad 2 left stick up a little: the lift goes **up**. If it goes down, add `.reversed()` to the lift.
 4. X, then Y, then A: each height is reached and held; the telemetry line shows `OK`.
 5. B a few times: the claw opens and closes without humming (a humming servo is pushing on something).

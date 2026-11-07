@@ -25,7 +25,7 @@ public class Tut09FirstAuto extends LinearOpMode {
         AutoDrive auto = new AutoDrive(this, RobotSettings.drive(), RobotSettings.auto(),
                 RobotSettings.imu(hardwareMap));
 
-        telemetry.addLine("Ready. Press START.");
+        telemetry.addLine("Ready. Press ▶.");
         telemetry.update();
         waitForStart();
 

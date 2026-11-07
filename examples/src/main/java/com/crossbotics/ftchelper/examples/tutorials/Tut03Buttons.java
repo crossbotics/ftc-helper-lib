@@ -54,7 +54,7 @@ public class Tut03Buttons extends LinearOpMode {
                 .bindTriggerPress(Pad.G1, Trigger.RT, () -> shots++)
                 .bindTriggerAxis(Pad.G1, Trigger.LT, value -> leftTrigger = value);
 
-        telemetry.addLine("Try holding A while you press START.");
+        telemetry.addLine("Try holding A while you press ▶.");
         telemetry.update();
         waitForStart();
         controls.ignoreHeldButtons(gamepad1, gamepad2);

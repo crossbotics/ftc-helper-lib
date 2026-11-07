@@ -2,6 +2,12 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- Docs: "START" now says which start: ▶ on the Driver Hub, or the gamepad's START button.
+
 ## v0.35.0 - 2026-11-06
 
 ### Added

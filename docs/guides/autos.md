@@ -46,7 +46,7 @@ Driver Station's Autonomous list. `@Disabled` hides a class from the list (handy
 to keep).
 
 **The INIT menu** comes free with every `Auto`. After INIT, the Driver Station shows it. The drivers
-use gamepad 1: D-pad up/down chooses a line, D-pad left/right changes it. Then they press START.
+use gamepad 1: D-pad up/down chooses a line, D-pad left/right changes it. Then they press ▶ (start on the Driver Hub).
 
 ## What the INIT menu can choose
 
@@ -209,7 +209,7 @@ find.
 - **Hide old autos** with `@Disabled` (or delete them; git keeps the old version, see
   [Git and GitHub](github.md)). A short list is a safe list.
 - **The "Place robot" note** starts with the start spot in CAPITALS: `"NEAR: against our wall, 2nd tile
-  left of centre, facing the field"`. The drivers check the note against the robot before START.
+  left of centre, facing the field"`. The drivers check the note against the robot before ▶.
 
 ## Example 1: two OpModes from the same pieces
 
@@ -348,7 +348,7 @@ What the drivers see after INIT:
 
 ```text
 Place robot : NEAR: against our wall, 2nd tile left of centre, facing the field
---- Choose (D-pad), then START ---
+--- Choose (D-pad), then ▶ ---
 > Alliance: BLUE
   Start delay: 0 s
   Start: Near
@@ -416,7 +416,7 @@ plan, and writes the Java and a scenario file. Good for a new route; then put it
 
 Open http://localhost:8780, choose the autonomous, press INIT. Change the menu with the on-screen
 D-pad. Watch the "Place robot" line and the robot on the field map move when you change the start.
-Press START and read the report at the end. ([Simulator guide](simulator.md).)
+Press ▶ and read the report at the end. ([Simulator guide](simulator.md).)
 
 **With a scenario file** (no clicking, the same checks every time). Make one file per plan, for example
 `simulator/scenarios/choose-far-cycle.sim` in your robot project:
@@ -482,7 +482,7 @@ More scenario lines: [scenario files](simulator.md#scenario-files-test-without-a
 5. Check that **Profile** says **COMPETITION** (a `!! PRACTICE profile` warning at the top means it does not).
 6. Place the robot where the **Place robot** note says. A second person checks the note against the robot.
 7. Look for warnings on the screen (a camera, the odometry, tuned values that differ from the code).
-8. Hands off. Press START when the match starts.
+8. Hands off. Press ▶ when the match starts.
 
 **After the match**
 
@@ -494,7 +494,7 @@ More scenario lines: [scenario files](simulator.md#scenario-files-test-without-a
 
 | What happens | Why, and the fix |
 | --- | --- |
-| The robot ran the wrong plan | the default option ran because nobody changed the menu. Read the menu out loud before START. |
+| The robot ran the wrong plan | the default option ran because nobody changed the menu. Read the menu out loud before ▶. |
 | The robot started in the wrong place | the note was not checked. Start the note with the spot in capitals; a second person checks it. |
 | A menu option does nothing | the option is spelled differently in `menuChoice` and `onlyIf`. Test every option in the simulator. |
 | One auto is fixed, another is not | the route was copied. Move it into `Routes.java`. |

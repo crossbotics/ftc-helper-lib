@@ -97,7 +97,7 @@ How to read it:
 > counts up). The word tells you which ([signs and units](../../conventions.md)).
 
 **Two new words.** A **field point** is a place on the field written as x and y (and, for `driveTo`,
-a heading). The **start spot** is the field point where you put the robot before START. You write it
+a heading). The **start spot** is the field point where you put the robot before ▶ (start on the Driver Hub). You write it
 in `s.start(note, x, y, heading)`: the same `start` as lesson 6, with x and y added (section 6, and
 [the autonomous builder](../../guides/autonomous-builder.md#1-placing-the-robot)).
 
@@ -293,8 +293,8 @@ public class ToTheGoal extends Auto<Robot> {
 - `start("...", -56, -61, 0)`: the note for the drive team, and **the start spot**: x -56 (left of the
   centre line), y -61 (against your wall), heading 0 (facing away). Lesson 6's `start(note, heading)`
   had no spot; `start(note, x, y, heading)` adds it. With odometry the spot matters: the
-  pose starts there after START. **Why:** the points below are field places, so the robot must know
-  where it starts. Find a spot by dragging the robot on the simulator's map before START (the line to
+  pose starts there after ▶. **Why:** the points below are field places, so the robot must know
+  where it starts. Find a spot by dragging the robot on the simulator's map before ▶ (the line to
   copy is under the map, [how](../../guides/autonomous-builder.md#1-placing-the-robot)).
 - `driveTo("To the goal", x, y, heading, 0.6)`: drive to that field point and turn to that heading at
   the same time, at most 60% power. It checks the pose every loop and keeps correcting. In the last
@@ -372,7 +372,7 @@ public static double parkY = -36;                           // park spot: inches
 report says why: `To the goal: skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)`.
 
 **In INIT**, the Driver Station shows `Odometry: Pinpoint ready`, or a warning with the reason, like
-`Odometry (Pinpoint): X pod not found: check its cable`. Look for it before START: a missing pod is
+`Odometry (Pinpoint): X pod not found: check its cable`. Look for it before ▶: a missing pod is
 much easier to fix before the match than after.
 
 **When a `driveTo` cannot finish**, it stops and the report shows a word:
@@ -448,7 +448,7 @@ You write nothing for this:
 
 **No autonomous, or it was stopped early?** Then TeleOp does not know where the robot is (the aim's
 odometry backup stays off and says why). Set the pose by hand: park the robot on a spot you know (the
-start tile against your wall is easiest), let go of the sticks, then hold gamepad 1 **START** for 1
+start tile against your wall is easiest), let go of the sticks, then hold gamepad 1 **START** (OPTIONS on a PS controller) for 1
 second. Best in INIT, before the match starts: it works there too, so it is done before the buzzer.
 Gamepad 1 buzzes twice and the Driver Station says `Pose set: x -56, y -61 in, heading 0 (BLUE)`.
 While the robot drives (a drive stick pushed, or whole-robot aim on) it says `Pose NOT set: stop
@@ -507,7 +507,7 @@ then start the simulator with the library's examples:
 ```
 
 Open http://localhost:8780, choose **"Odometry Bot To the Goal"**, press INIT, choose **RED** in the
-INIT menu (gamepad 1 B), then START. Watch it drive diagonally to the goal while it turns to 45
+INIT menu (gamepad 1 B), then ▶. Watch it drive diagonally to the goal while it turns to 45
 degrees, then park. (The simulator runs `driveTo` even with `checked = false`, and INIT says
 `!! Odometry not checked (Tunables.Odometry.checked = false): driveTo and path steps run in the simulator only`;
 on the robot those steps are skipped until you set it.) When it ends, choose "Odometry Bot
@@ -545,7 +545,7 @@ kind of error. `odometry.driftDegPerMin` makes the heading creep instead
 ```
 
 When it starts, the simulator writes the odometry lines into your `simulator/robot.properties` from
-the odometry line in `Robot.java`. Choose "To the Goal", INIT, START, and read the report at the end.
+the odometry line in `Robot.java`. Choose "To the Goal", INIT, ▶, and read the report at the end.
 
 You can also run your "Odometry Tuner" in the simulator, to learn the tests before you try them on the
 robot. **Spin** and **Loop** work with the sticks. **Forward**: use the page's "48 in forward" push
@@ -587,9 +587,9 @@ offsets come from the real robot.
 | INIT stops: `odometry .reversed("...")` | a name in `.reversed(...)` that is not a pod: a Pinpoint's pods are `"x"` and `"y"` |
 | It circles the point or stops just short | `Tunables.Drive.turnKp`/`turnKd`, or `moveMinPower` (lesson 6) |
 | TeleOp's field-centric is wrong after autonomous | the heading in `s.start(...)` is wrong |
-| `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` when START is held | the "set pose here" spot is missing: section 7 |
+| `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` when gamepad 1 START is held | the "set pose here" spot is missing: section 7 |
 | After "set pose here" the pose is mirrored the wrong way on RED | on a field turned half a turn (BIOBUZZ) add `public static boolean mirrorForRed = false;` to `Tunables.Odometry` (INIT's `Reset spot for RED` line shows which is used) |
-| `Pose NOT set: stop first` | the robot was driving (or aiming by itself) when START was held: stop, then hold START 1 s again |
+| `Pose NOT set: stop first` | the robot was driving (or aiming by itself) when gamepad 1 START was held: stop, then hold it 1 s again |
 
 ## Next
 

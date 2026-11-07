@@ -7,7 +7,7 @@ The main track puts buttons in one file for you: [Buttons](start/03-buttons.md).
 
 **You will learn:** every kind of button job (press, hold, release, toggle, triggers), how to
 give the driver feedback with rumble, how to step through a list with the D-pad, and why the
-"held through START" guard matters.
+"held through ▶" guard matters (▶ is the start button on the Driver Hub).
 
 **You need:** a Control Hub and gamepads 1 and 2. No motors: everything shows on telemetry.
 
@@ -105,7 +105,7 @@ Triggers are not on/off; they give a number from 0 (let go) to 1 (fully pulled).
   Change that with `.setTriggerThreshold(0.8)` if drivers fire by accident.
 - `bindTriggerAxis` hands you the number every loop. `value -> ...` is a lambda with one input.
 
-## 6. The "held through START" guard
+## 6. The "held through ▶" guard
 
 ```java
 waitForStart();
@@ -114,7 +114,7 @@ controls.ignoreHeldButtons(gamepad1, gamepad2);
 
 Drivers often hold a button while the match starts. Without this line, a held button's press
 job runs in the very first loop: a surprise action at the start of the match. With it, **any
-button held at START does nothing until it is let go once.**
+button held at ▶ does nothing until it is let go once.**
 
 ## 7. The loop
 
@@ -130,7 +130,7 @@ it has no motors to stop.
 
 ## Run it
 
-1. INIT. **Hold A**, press START, keep holding: the A count stays 0. Let go and press: 1.
+1. INIT. **Hold A**, press ▶, keep holding: the A count stays 0. Let go and press: 1.
 2. Tap A quickly many times: exactly one per tap.
 3. Hold B: the "loops held" count runs up fast. That is `bindHold`.
 4. Press and hold X: nothing. Let go: +1. That is `bindRelease`.

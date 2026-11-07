@@ -210,7 +210,7 @@ Want two things on one button? Put them in one lambda:
   autonomous, its alliance is already set. The INIT screen also has a small menu, like an autonomous's:
   D-pad up/down picks **Alliance** or **Profile**, left/right changes it. A practice round that starts
   straight in TeleOp can switch to PRACTICE there (the drive's `practiceMaxPower` and the debug lines
-  apply from START). Your own INIT code uses gamepad 1's D-pad? Turn the menu off: `@Override protected
+  apply from ▶). Your own INIT code uses gamepad 1's D-pad? Turn the menu off: `@Override protected
   boolean initMenu() { return false; }`.
 - **A PlayStation controller?** The map names the buttons printed on it: `G2 ×: down [Lift]`,
   `G2 R1: score high`, and × ○ □ △, L1 R1 L2 R2, SHARE OPTIONS PS for the rest. Controls.java still uses
@@ -299,7 +299,7 @@ From the `ftc-helper-lib` folder (skip the first line if you did it in lesson 2)
 ./gradlew :sim:run -PteamCode=none -Probot=build/lessonbot.properties
 ```
 
-Open http://localhost:8780, pick "Lesson Bot TeleOp" and INIT: read the map. START. Use the on-screen
+Open http://localhost:8780, pick "Lesson Bot TeleOp" and INIT: read the map. Press ▶. Use the on-screen
 gamepad 2, or the keyboard (set gamepad 2's list to "Keyboard" first; A/B/X/Y are K L J I, LB/RB are Q E, LT/RT are Z C, GUIDE is M, BACK is
 Backspace). Press RB and watch the lift rise. Press RB again while it moves: it cancels. Tap GUIDE.
 Then add one job of your own to Controls.java, and one on a button that already has one, to see the
@@ -318,7 +318,7 @@ Driver Station. ([Simulator guide](../../guides/simulator.md).)
 ## Check it on the robot
 
 1. INIT: read the map. Is every job on the button you planned? Any notes about parts with no button?
-2. START. Press each of your buttons once. Does each do what its words say?
+2. Press ▶. Press each of your buttons once. Does each do what its words say?
 3. Tap GUIDE: the map shows. Tap again: it closes.
 4. Start an action, then press its button again: it stops, and the lift holds where it is.
 5. Press BACK: everything stops at once (before you let go). Tap again: everything goes on.
@@ -333,7 +333,7 @@ Driver Station. ([Simulator guide](../../guides/simulator.md).)
 | INIT stops: "slow() is for one driver" | With two drivers, G1 LT is slow already. Delete the line, or free the library's slow first (`lib.slow(null)`). |
 | A part's button does nothing | Your job replaced its suggestion, or INIT says it has no button (one driver). |
 | No button does anything | The robot is paused: tap BACK. |
-| A button held at START does nothing | Let it go and press again: a button held through START does not count. |
+| A button held at ▶ does nothing | Let it go and press again: a button held through ▶ does not count. |
 | The help says "press" | Add `.says("...")` to that job. |
 | Warning: `... took N ms: the whole robot stopped that long` | A job has `sleep(...)` or a `while` loop. Use an Action with `waitSeconds` (lesson 5). |
 

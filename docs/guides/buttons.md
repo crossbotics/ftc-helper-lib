@@ -242,7 +242,7 @@ writes `libraryButtons(LibraryButtons lib)` with `Key.g1(Btn.X)` instead of `g1.
 | Set pose here | G1 START | same | held 1 s with the drive sticks let go (robots with odometry); also in INIT | `lib.setPose(key)` |
 | Button map | G1 GUIDE | same | a tap | `lib.buttonMap(key)` |
 | Tuning menu | G1 GUIDE | same | held 1 s (a tap if its button has no other quick job) | `lib.tuningMenu(key)` |
-| Choose the alliance (INIT only) | G1 X = BLUE, G1 B = RED | same | a press, before START | `lib.allianceInInit(blue, red)` |
+| Choose the alliance (INIT only) | G1 X = BLUE, G1 B = RED | same | a press, before ▶ (start on the Driver Hub) | `lib.allianceInInit(blue, red)` |
 
 **BACK, step by step.** A press of BACK pauses the robot **at once** (every motor stops on brake), so a
 driver who grabs BACK in a panic gets the stop. Let go quickly: it stays paused; a tap again goes on.
@@ -306,7 +306,7 @@ frees the button for `buttons(...)`.
   `Launcher fire one; hold: keep firing: no button (G2 RB is your "score high" in Controls.java)`: that
   job of the part has no button now (give it another one if you need it). `.free()` clears a button.
 - A shift key has no job of its own. `.free()` on a shift key removes its pairs too.
-- A button held when START is pressed (or when the tuning menu closes) does nothing until it is let go.
+- A button held when ▶ is pressed (or when the tuning menu closes) does nothing until it is let go.
 
 ## Before this library: how it was done
 

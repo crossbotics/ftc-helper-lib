@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * The lesson robot in a plain FTC OpMode: your own INIT, START, loop and STOP, with the same
+ * The lesson robot in a plain FTC OpMode: your own INIT, ▶, loop and STOP, with the same
  * Robot.java, Tunables.java and Actions.java as the library's TeleOp (Controls.java).
  * more: https://crossbotics.com/ftc-helper/docs/guides/your-own-code/
  */
@@ -21,7 +21,7 @@ public class OwnTeleOp extends LinearOpMode {
         boolean aBefore = false;
 
         while (opModeInInit()) {
-            robot.show("Press START", "A scores high");
+            robot.show("Press ▶", "A scores high");
             robot.initLoop();                   // sends the screen
         }
 

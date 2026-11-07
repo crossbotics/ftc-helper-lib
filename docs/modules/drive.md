@@ -182,7 +182,7 @@ drive.driveFieldCentric(forward, strafe, turn, heading.degrees(), speed);
 | Method | What it does |
 | --- | --- |
 | `new DriverHeading(imu)` | call in TeleOp INIT, after the IMU is set up. Reads the heading autonomous saved (only if less than 5 minutes old). Otherwise 0 = the way the robot faces now. |
-| `forgetSaved()` | call right after START: clears the saved heading, so a later TeleOp run does not use it. (Not in INIT, so INIT, STOP, INIT again still works.) EasyTeleOp does this for you. |
+| `forgetSaved()` | call right after ▶ (start on the Driver Hub): clears the saved heading, so a later TeleOp run does not use it. (Not in INIT, so INIT, STOP, INIT again still works.) EasyTeleOp does this for you. |
 | `degrees()` | the heading compared with the driver, -180 to 180. Call every loop. |
 | `reset()` | "the robot now faces away from me": now = 0. For a button. |
 | `isFromAuto()` | true while it still counts from autonomous (no reset since) |

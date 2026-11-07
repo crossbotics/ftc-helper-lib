@@ -116,7 +116,7 @@ the other way round (a range like -190 to 190, or a slip ring), it turns clockwi
 waits. If not (a range of -90 to 90 cannot reach either), it stops at 103 (two margins of 3 before 109)
 and waits while the lift is up.
 
-**Both in their zones.** This should never happen, but it can: at START, after the robot was pushed, or
+**Both in their zones.** This should never happen, but it can: at ▶ (start on the Driver Hub), after the robot was pushed, or
 when a part was moved by hand. Then nobody keeps a zone: neither part may go deeper, each may only move
 out. As soon as one is out, the other keeps its zone.
 
@@ -128,11 +128,11 @@ before the lift moves. The Driver Station says why the other part waits:
 
 ```text
 TurretLift : Lift held at 110 counts: Turret angle unknown (not homed yet)
-TurretLift : LiftLeft held at 268 counts: Turret angle unknown (not sent anywhere yet: it goes to its start angle at START)
+TurretLift : LiftLeft held at 268 counts: Turret angle unknown (not sent anywhere yet: it goes to its start angle when ▶ is pressed)
 ```
 
-A servo turret is sent to its `startAngle` (or the middle of its range) at START, so this lasts only until
-the first loop after START.
+A servo turret is sent to its `startAngle` (or the middle of its range) at ▶, so this lasts only until
+the first loop after ▶.
 
 **And the other way round:** a part whose position is not known does not move at all (no homing, no
 stick, no first servo move) while the other part is in its zone: from "anywhere" it could sweep through
@@ -144,8 +144,8 @@ below a zone at the top of its range) does not wait.
 TurretLift : Turret waits (not homed yet): Lift is above 620 counts; move Lift out of its zone first
 ```
 
-**At START** the rules look first, before any START command is sent (a hood going to its `startAngle`, a
-turret homing, an `atStart` action): a START command into a zone the other part is in waits at the fence
+**At ▶** the rules look first, before any start command is sent (a hood going to its `startAngle`, a
+turret homing, an `atStart` action): a start command into a zone the other part is in waits at the fence
 like any other command.
 
 ## More examples
@@ -237,7 +237,7 @@ The robot, part by part:
   servo that feeds the launcher. The `Pieces` line comes **above** the intake line, so the count is up to
   date before the intake asks "full?".
 - A turret on a goBILDA Gear-Driven Turret bearing, turned by a 312 RPM motor (2.75 motor turns per
-  turret turn). It turns -190 to +190 degrees and finds its angle on a magnetic home switch at START
+  turret turn). It turns -190 to +190 degrees and finds its angle on a magnetic home switch at ▶
   ([Setting up a turret](turret-setup.md#four-complete-examples), example A).
 - A flywheel launcher with a hood on a servo: speed and hood angle from the distance to the goal. It
   fires only when the turret is aimed and there is a piece to fire.

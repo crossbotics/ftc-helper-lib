@@ -93,7 +93,7 @@ The starter kit's `MainTeleOp` already has it.
 
 | Button | Does |
 | --- | --- |
-| GUIDE (or whatever you bound) | open / close (a Controls.java TeleOp, after START: hold GUIDE 1 s; a tap shows the button map) |
+| GUIDE (or whatever you bound) | open / close (a Controls.java TeleOp, after ▶ (start on the Driver Hub): hold GUIDE 1 s; a tap shows the button map) |
 | D-pad up / down | choose |
 | D-pad right / left | +/- one step (hold a bumper: x10) |
 | A | save all on the hub |

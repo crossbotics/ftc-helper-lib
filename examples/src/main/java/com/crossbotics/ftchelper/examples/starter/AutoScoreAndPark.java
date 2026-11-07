@@ -46,7 +46,7 @@ public class AutoScoreAndPark extends StarterAuto {
         return 4;   // the last 4 s are kept for parking
     }
 
-    // The route, run in order after START. Written for BLUE: RED flips the turns and sideways moves.
+    // The route, run in order after ▶. Written for BLUE: RED flips the turns and sideways moves.
     // move(name, inches, direction, power): direction 0 = forward, 90 = right, 180 = back, -90 = left.
     // turn(name, degrees, power): positive = left.
     @Override

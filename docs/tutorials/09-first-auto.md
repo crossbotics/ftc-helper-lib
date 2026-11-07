@@ -95,7 +95,7 @@ while (opModeInInit()) {
 ```
 
 It is an **Autonomous**, so you choose the test with the gamepad during INIT (the robot does not
-move in INIT), press START, it runs that one test and shows the result.
+move in INIT), press ▶ (start on the Driver Hub), it runs that one test and shows the result.
 
 - The tuner sets `calibrationConfirmed = true` for itself only: it is how you check the calibration.
 - Every test runs at half power (0.5): steady, so the measurements repeat well.
@@ -106,7 +106,7 @@ move in INIT), press START, it runs that one test and shows the result.
 
 **Distance (all robots):**
 
-1. Mark the floor at the front wheel. Choose A (forward 48), START.
+1. Mark the floor at the front wheel. Choose A (forward 48), then press ▶.
 2. Measure how far it really went.
 3. New `wheelDiameterIn` = old x (real distance / 48).
    Example: it went 50 in with 3.78 -> 3.78 x 50/48 = 3.94.
@@ -149,7 +149,7 @@ move stops the wheels when it ends.
 ## Run it
 
 1. Robot on a field tile corner, facing along a seam.
-2. INIT, START. It drives the square.
+2. INIT, ▶. It drives the square.
 3. Measure how far from the start it ends. Under 2 inches is good.
 
 ## If something goes wrong

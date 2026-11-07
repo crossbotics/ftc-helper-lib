@@ -68,7 +68,7 @@ This lesson's program offers only the other two in its menu. Its bearing comes f
 it cannot do so well: [the HuskyLens section](../modules/vision.md#huskylenscamera).
 
 The webcam needs 1-2 s to start, so start it in INIT. The INIT loop shows `camera.status()` and how
-many tags it sees: check that before START.
+many tags it sees: check that before ▶ (start on the Driver Hub).
 
 ## 3. Aim the drivetrain
 
@@ -149,7 +149,7 @@ and [robot.md: Aim](../modules/robot.md#aim).
 
 1. INIT: choose the camera and the target with the D-pad, press A. Wait for "STREAMING" (webcam) or
    "pipeline 0" (Limelight) and "Targets seen: 1" or more (a Limelight shows each tag and the group).
-2. START. Point the robot so the tag is off to the left. Hold RB: the robot turns left until aimed;
+2. Press ▶. Point the robot so the tag is off to the left. Hold RB: the robot turns left until aimed;
    a buzz; "Aimed: true".
 3. Cover the camera while holding RB: the robot stops turning (no target = 0 power).
 

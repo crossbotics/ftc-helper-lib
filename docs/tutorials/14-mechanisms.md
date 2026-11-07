@@ -72,7 +72,7 @@ Servo positions go from 0 to 1; find yours by testing. With `maxSpeed(1.5)`, STO
 takes about half a second, instead of a sudden snap that could fling a game piece.
 
 `wrist::next` and `wrist::previous` on the bumpers walk through the positions in the order you
-added them. A servo does not move until you tell it to: here, `wrist.goTo("STOW")` right after START.
+added them. A servo does not move until you tell it to: here, `wrist.goTo("STOW")` right after ▶ (start on the Driver Hub).
 
 ## 4. An intake: `SpinMotor`
 
@@ -122,7 +122,7 @@ where it is.
 
 ## Run it
 
-1. Robot on a block, lift at the bottom. START.
+1. Robot on a block, lift at the bottom. Press ▶.
 2. Telemetry shows each part. If the lift says "push it DOWN to home it", do so with the stick.
 3. Y: lift to HIGH. Push the stick: you take over. Let go: it holds.
 4. Bumpers: the wrist walks through its positions slowly.

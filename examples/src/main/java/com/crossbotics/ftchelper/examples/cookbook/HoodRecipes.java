@@ -38,7 +38,7 @@ public class HoodRecipes {
             public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
             public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
             public static double travelSec = DEFAULT;                   // stop to stop, seconds (0.5, or the servo's)
-            public static double startAngle = DEFAULT;                  // where it goes at START (angle A)
+            public static double startAngle = DEFAULT;                  // where it goes at ▶ (angle A)
         }
         // end recipe
 

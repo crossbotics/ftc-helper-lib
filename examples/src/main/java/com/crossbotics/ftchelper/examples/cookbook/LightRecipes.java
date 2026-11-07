@@ -85,7 +85,7 @@ public class LightRecipes {
         @Override
         protected void buttons(Robot robot, Pad g1, Pad g2) {
             // recipe: light-alliance
-            // On by default: the alliance at INIT (solid RED or BLUE), flashed for 1 s at START.
+            // On by default: the alliance at INIT (solid RED or BLUE), flashed for 1 s at ▶.
             // Your light shows red badly? Other colors for the alliance at INIT (BLUE, and PURPLE for RED):
             robot.lights.allianceColors(LightColor.BLUE, LightColor.PURPLE);
             // No alliance color at INIT at all? Delete the line above and write:

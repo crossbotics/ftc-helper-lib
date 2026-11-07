@@ -93,8 +93,8 @@ Words used on this page:
 
 - **Configuration:** the list of motors, servos and sensors you set up on the Driver Station, each
   with a name. Your code finds each part by that name.
-- **INIT** and **START:** the two buttons on the Driver Station. INIT gets the program ready (nothing
-  may move yet); START begins the match part.
+- **INIT** and **▶** (start)**:** the two buttons on the Driver Station. INIT gets the program ready (nothing
+  may move yet); ▶ begins the match part. (The gamepad's small START button is a different button.)
 - **TeleOp:** the program the drivers drive with. **Autonomous:** the program that runs on its own.
 - **Field-centric:** stick up drives the robot away from the driver, whichever way the robot faces.
   (Robot-centric, the start: stick up drives the way the robot faces.)
@@ -374,9 +374,9 @@ How:
    `0.4`. (The `quickstart` template has 0.4 already. The starter bots have `DEFAULT`, which is full
    power.) Build and install. **Why:** a slow first drive is a safe first drive.
 2. **Pick the PRACTICE profile** (the gentle limits): INIT any autonomous, choose **Profile** with the
-   D-pad (the last line), choose PRACTICE, then STOP. Do not START it. The hub remembers the profile.
+   D-pad (the last line), choose PRACTICE, then STOP. Do not press ▶. The hub remembers the profile.
    ([Profiles](guides/profiles.md).)
-3. **Robot on a block, wheels off the ground.** INIT your TeleOp, START. **Why:** a wrong motor
+3. **Robot on a block, wheels off the ground.** INIT your TeleOp, ▶. **Why:** a wrong motor
    direction can make the robot spin or drive off the table.
 4. Left stick up: every wheel must roll the way that moves the robot forward. A wheel rolls backward?
    Fix STEP 4 ([how to check each wheel](tutorials/start/02-drive.md#7-check-the-motor-directions)).
@@ -392,7 +392,7 @@ It drives? Raise `maxPower` and `practiceMaxPower` in `Tunables.java` (1.0 and 0
 `DEFAULT` again). `practiceMaxPower` is used in the PRACTICE profile (the gentle mode for the shop),
 `maxPower` in COMPETITION. A hub that was never set uses COMPETITION.
 
-**Changed a number live?** The tuning menu (hold GUIDE 1 s after START, in the PRACTICE profile) changes a
+**Changed a number live?** The tuning menu (hold GUIDE 1 s after ▶, in the PRACTICE profile) changes a
 number on the hub only. **Copy each new value back into `Tunables.java`**: INIT lists the values that
 differ. If you do not, the hub keeps using its saved value, even after you edit that number in `Tunables.java`, and another hub does not have it. ([The tuning menu](guides/tunables.md#the-live-column-the-tuning-menu).)
 
@@ -413,7 +413,7 @@ The red **Stop** button stops it.
 ./gradlew :sim:run
 ```
 
-Then open http://localhost:8780, pick your TeleOp, INIT, START, set gamepad 1's list to "Keyboard", and drive with the keyboard
+Then open http://localhost:8780, pick your TeleOp, INIT, ▶, set gamepad 1's list to "Keyboard", and drive with the keyboard
 (W A S D, arrows). The simulator builds the robot from your code, so it cannot find a wrong motor direction: only
 the real robot can. ([Simulator guide](guides/simulator.md).)
 
@@ -503,7 +503,7 @@ An autonomous drives by counting wheel turns. So the library has a safety rule: 
 the robot until you say the drive is tuned.** Until then, INIT shows
 `AUTONOMOUS IS OFF: the drive is not tuned yet`.
 
-1. **Try it in the simulator first.** Start the Simulator, pick your autonomous, INIT, START. It runs
+1. **Try it in the simulator first.** Start the Simulator, pick your autonomous, INIT, ▶. It runs
    there before the drive is tuned, with the line `Drive not tuned: runs in the simulator only`.
    Your autonomous is in `autos/`: `LeaveStart.java` (way A), `FirstAuto.java` (way B), or your starter
    bot's file (way C, [where it starts](guides/starter-bots.md)).

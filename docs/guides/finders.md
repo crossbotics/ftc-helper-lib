@@ -190,7 +190,7 @@ Use **Tune and check > Servo Finder**: it knows Robot.java (`reversed()`, a seco
 Then put both arms on at the middle (step 3), so they match, and go on from step 4. If they do not quite meet, set
 `alsoTrim` after (in TeleOp).
 
-**At START** the part goes straight to its first position from wherever it is (a servo always knows its own
+**At ▶** the part goes straight to its first position from wherever it is (a servo always knows its own
 angle). Keep hands clear.
 
 ### The finder's buttons
