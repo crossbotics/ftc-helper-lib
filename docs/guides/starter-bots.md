@@ -337,7 +337,7 @@ comments in the code do not say:
   runs the flywheel at the right trigger's power, with no set speed; the motor's top speed is 6100 RPM,
   so 4000 is a starting guess with room to speed up. Tune it by watching shots.
 - **The flap** (`fwActuator`) pushes each piece into the wheels: rest = 0 and push = 0.2, from Studica's
-  code (X and A). The flap goes to rest at START, and your servo's horn may sit differently from
+  code (X and A). The flap goes to rest when the OpMode starts (▶), and your servo's horn may sit differently from
   Studica's: measure both with the [Servo Finder](finders.md#servo-finder-ends-and-positions) BEFORE the
   first TeleOp. The push and return times are guesses.
 - **Fire all (Y):** spins up, then pushes the pieces in one by one with the flap as soon as the wheel is
@@ -421,7 +421,7 @@ What they changed, and what each change needed:
 
 | Change | Configuration | Code |
 | --- | --- | --- |
-| an intake that folds up at the start, pushed over by a servo at START | `intake_deploy` (Servo) added | a `Positioner` with `.optional()`; `Tunables.IntakeDeploy`: `stowed` and `deployed` are `MEASURE` (Servo Finder); an action that pushes it over at START, and X to push it again |
+| an intake that folds up at the start, pushed over by a servo at ▶ | `intake_deploy` (Servo) added | a `Positioner` with `.optional()`; `Tunables.IntakeDeploy`: `stowed` and `deployed` are `MEASURE` (Servo Finder); an action that pushes it over at ▶, and X to push it again |
 | corner wheels driven from the intake through gears, not by servos | `left_intake_servo`, `right_intake_servo` taken out | the `.withCrServos(...)` part of the intake line deleted; the new wheels are only shapes for the simulator |
 | a flywheel on a sliding mount and a ramp that sends shots out of the back | none | only shapes and the shot angle (`.shotAngle(147)`) for the simulator |
 | new buttons (B: intake on/off) | none | `Controls.java` |

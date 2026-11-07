@@ -2,6 +2,24 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.36.0 - 2026-11-06
+
+### Added
+
+- **Auto sheet (PDF) in the auto builder:** one page to show another team what an autonomous does: the field
+  with the start spot, the whole route, the robot's outline after each step that moves it, a number where each
+  step ends, and the steps in plain words ("Fire all pieces", "drive 42.8 in forward and left") with their planned
+  times. Print it or save it as a PDF from the print window. In `setupcard.js` (`openAutoSheet`, `sheetMarkers`,
+  `placeMarkers`, `numsLabel`, `sheetOutlines`, `sheetTime`) and `stepscore.js` (`sheetWords`, `actionWords`,
+  `dirWords`), so the web builder can use it too.
+
+### Changed
+
+- Docs: "START" now says which start: ▶ on the Driver Hub, or the gamepad's START button. Example screens say
+  "Press ▶". Five headings changed: the cookbook's "How do I run an action when the OpMode starts?", lesson 5's
+  "7. An action when the OpMode starts", lesson 3's "6. The "held through ▶" guard", every-loop's "▶ start (once)"
+  and the your-own-code page title (old links to them from outside the docs break).
+
 ## v0.35.0 - 2026-11-06
 
 ### Added

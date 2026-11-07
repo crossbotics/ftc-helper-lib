@@ -49,7 +49,7 @@ MatchTimer timer = MatchTimer.teleOp()            // 2:00   (autonomous(): 0:30)
         .rumbleAt(60, gamepad1, gamepad2)         // buzz both gamepads at 1:00 left...
         .rumbleAt(20, gamepad1, gamepad2);        // ...and at 0:20 left
 waitForStart();
-timer.start();                                    // counts from START, not from INIT
+timer.start();                                    // counts from ▶ (start), not from INIT
 while (opModeIsActive()) {
     timer.update();                               // checks the clock, buzzes when due
     t.line("Time", timer.format());               // "1:23"
@@ -78,7 +78,7 @@ InitMenu menu = new InitMenu(gamepad1)
         .choice("Route", "Near", "Far")
         .yesNo("Park", true)
         .profile();                      // practice / competition
-while (opModeInInit()) {                 // repeats until START (instead of waitForStart())
+while (opModeInInit()) {                 // repeats until ▶ is pressed (instead of waitForStart())
     menu.update();                       // reads the D-pad and changes the choices
     menu.addTelemetry(t);
     t.update();

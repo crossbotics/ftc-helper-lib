@@ -136,9 +136,9 @@ lift up while driving).
 
 **Why write it once:** fix the scoring in `Actions.java`, and TeleOp and autonomous both get the fix.
 
-## 7. An action at START
+## 7. An action when the OpMode starts
 
-An action can also run once, right after START, in autonomous and TeleOp. Add it in `Robot.java`'s
+An action can also run once, right after ▶ (start on the Driver Hub), in autonomous and TeleOp. Add it in `Robot.java`'s
 `define()`. The [flywheel robot](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java)
 uses this to fold its intake down:
 
@@ -146,7 +146,7 @@ uses this to fold its intake down:
 atStart(() -> Actions.deployIntake(this));
 ```
 
-Never in INIT: the library never moves anything before START. That is the library's safety choice
+Never in INIT: the library never moves anything before ▶. That is the library's safety choice
 (people are still next to the robot in INIT), not a game rule: BIOBUZZ allows an OpMode to pre-position
 servos and motors in INIT (R103.B), as long as the robot is still once INIT is done (G304.H).
 
@@ -159,7 +159,7 @@ From the `ftc-helper-lib` folder (the first line once, as in lesson 4):
 ./gradlew :sim:run -PteamCode=none -Probot=build/lessonbot.properties
 ```
 
-Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, START. Then try each rule:
+Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, ▶. Then try each rule:
 
 1. Gamepad 2 RB: the lift rises, the claw opens at the top, the lift comes down. Watch the
    `Score high: step ...` line.
@@ -183,7 +183,7 @@ check the result every time you change the code. That is an advanced topic:
 
 ## Check it on the robot
 
-1. Lift down, a piece in the claw, hand near STOP. INIT, START.
+1. Lift down, a piece in the claw, hand near STOP. INIT, ▶.
 2. RB: the lift goes up, the claw opens only at the top, the lift comes down.
 3. RB, then move the lift stick: the action stops and the lift holds.
 4. LB with the claw over a piece: it closes, then lifts to `low`.

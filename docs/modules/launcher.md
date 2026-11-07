@@ -209,7 +209,7 @@ counterclockwise (else `.reversed()`).
 | --- | --- |
 | `.countsPerDegree(c)` | encoder counts per turret degree (motor counts x gear ratio / 360) |
 | `.limits(min, max)` | allowed range; may be more than 360 in total (e.g. -190..190) |
-| `.startAngle(deg)` | the angle at power-on (no switch). It reads the encoder when called: call it after `countsPerDegree` and `reversed`. A servo turret: where it counts from before its first command (a servo cannot say where it is): send it there at START with `aimAt(servoStartAngle())` |
+| `.startAngle(deg)` | the angle at power-on (no switch). It reads the encoder when called: call it after `countsPerDegree` and `reversed`. A servo turret: where it counts from before its first command (a servo cannot say where it is): send it there when the OpMode starts (▶) with `aimAt(servoStartAngle())` |
 | `servoStartAngle()` | a servo turret: `startAngle`, or the middle of its range when none was given (0 with no limits); others: `getAngle()`. The stick and `aimBy` start from it before the first command |
 | `.homeSwitch(hardwareMap, name, angle)` / `.homeSwitch(reader, angle)` | a switch that closes at a known angle |
 | `.homingPower(p)`, `.pid(...)`, `.tolerance(deg)`, `.maxPower(p)`, `.slowZone(deg, power)` | tuning. Before homing, manual power is kept to the homing power |

@@ -8,7 +8,7 @@ import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 
 /**
- * The V2 robot, file 5 of 5: an autonomous. At START the turret finds its home switch, then follows
+ * The V2 robot, file 5 of 5: an autonomous. At ▶ the turret finds its home switch, then follows
  * the goal. Drive into range, fire the preload, stow the lifter, and leave. TeleOp keeps the
  * turret's angle.
  * more: https://crossbotics.com/ftc-helper/docs/guides/turret-setup/#from-autonomous-to-teleop

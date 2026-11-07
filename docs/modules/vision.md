@@ -83,7 +83,7 @@ camera.start();                  // in INIT: a webcam needs 1-2 s to start
 | `.exposure(ms, gain)` | manual exposure; `status()` says if the camera refused |
 | `.autoExposure()` / `.autoExposure(6, 3, 12, 0)` | [venue lighting](#venue-lighting): tries exposures in INIT (ms; 0 = the camera's own automatic), keeps the best |
 | `.gain(g)` | the gain for `autoExposure`'s manual exposures (default: the camera's highest) |
-| `lighting()` / `matchStarted()` | the lighting test (null without `autoExposure`); tell it START happened |
+| `lighting()` / `matchStarted()` | the lighting test (null without `autoExposure`); tell it ▶ (start on the Driver Hub) was pressed |
 | `.keepTargetsMs(ms)` | how long targets stay in `targets()` without a new picture (default 500) |
 | `WebcamTags.convert(detection)` | turns an SDK detection into a TargetObservation |
 
@@ -107,7 +107,7 @@ on the robot network). Set the correct tag size there for distances.
 | --- | --- |
 | `.pipeline(n)` | which pipeline (also switches at once if already started) |
 | `.autoPipelines(0, 1, 2)` | [venue lighting](#venue-lighting): tries these pipelines in INIT, keeps the best (replaces `.pipeline`) |
-| `lighting()` / `matchStarted()` | the lighting test (null without `autoPipelines`); tell it START happened |
+| `lighting()` / `matchStarted()` | the lighting test (null without `autoPipelines`); tell it ▶ was pressed |
 | `.pollRate(hz)` | results per second |
 | `setRobotHeading(deg)` | for the Limelight's MegaTag2 position feature (not needed to aim). Safe every loop: sent in the background |
 | `fieldSighting()` | **alpha**: the robot's field position from the newest picture (`FieldSighting`: `mt2XIn`, `mt2YIn`, `mt1XIn`, `mt1YIn`, `mt1YawDeg`, `tags`, `timeNanos`, `number`), in the Limelight's field frame; NaN when none. The [camera fix](odometry.md#camera-fix-alpha) uses it |
@@ -203,7 +203,7 @@ setting for the place you are in, by itself, during INIT:
    **put your usual setting first**.
 4. If no setting saw at least 3 pictures with tags (the robot is not facing a tag yet), it starts over
    and keeps trying, all through INIT.
-5. **At START it stops at once** and keeps the best setting so far (the first one if none saw a tag).
+5. **At ▶ it stops at once** and keeps the best setting so far (the first one if none saw a tag).
    So the robot never aims with a setting it is only trying. **Have a tag in view at INIT** (where the
    robot starts the match is fine), or the test cannot help.
 
@@ -268,8 +268,8 @@ pictures see the most tags. `LimelightTags` and `WebcamTags` make one for you; g
 | `.trialMs(ms)` | most time per setting once switched (default 2000) |
 | `.switchTimeoutMs(ms)` | most time for the camera to switch (default 1500); pictures only from another setting then = "missing" |
 | `.minPictures(n)` | pictures with tags needed to count as good (default 3; `lightingMinPictures`) |
-| `.giveUpAfterStartMs(ms)` | after START, how long to keep trying (default 0 = stop at START with the best so far; Tunables `lightingAfterStartMs`). The cameras report no targets while it tries after START |
-| `matchStarted()`, `matchHasStarted()` | START happened |
+| `.giveUpAfterStartMs(ms)` | after ▶, how long to keep trying (default 0 = stop at ▶ with the best so far; Tunables `lightingAfterStartMs`). The cameras report no targets while it tries after ▶ |
+| `matchStarted()`, `matchHasStarted()` | ▶ was pressed |
 | `restart()` | try every setting again during the match (it gets `giveUpAfterStartMs` from now) |
 | `newSession()` | the camera was closed and started again: INIT again (the cameras call it in `close()`) |
 | `isDone()`, `gaveUp()`, `chosen()`, `chosenLabel()`, `current()`, `noTagsYet()`, `skipped(i)` | the result |

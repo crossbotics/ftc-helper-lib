@@ -149,7 +149,7 @@ In `finally`: `arm.setPower(0);`.
 **Safety:** this arm has no limits in code yet, and only you stop it at its hard stop (the metal or plastic end
 of its travel). Know where that stop is, keep hands clear, and use short, gentle pushes.
 
-1. With the arm in its rest position, INIT and START. Position shows 0.
+1. With the arm in its rest position, INIT and ▶ (start on the Driver Hub). Position shows 0.
 2. Push the stick up gently. The arm moves up and the position goes UP.
    **If the position goes down when the arm goes up**, add `.reversed()` to the motor chain.
    Positive power must move the mechanism in its "positive" direction. Later tutorials depend on it.

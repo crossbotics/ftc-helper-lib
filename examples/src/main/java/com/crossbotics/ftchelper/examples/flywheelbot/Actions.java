@@ -4,12 +4,12 @@ import com.crossbotics.ftchelper.robot.Action;
 
 /**
  * Example robot 1, file 4 of 5: steps that use parts together, used by a button, an autonomous,
- * or at START.
+ * or at ▶.
  * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/05-actions/
  */
 public class Actions {
 
-    /** Pushes the intake down into its working position, then pulls the servo back. Runs at START. */
+    /** Pushes the intake down into its working position, then pulls the servo back. Runs at ▶. */
     public static Action deployIntake(Robot r) {
         return Action.named("Deploy intake")
                 .then(() -> r.intakeDeploy.goTo("deployed"))   // push it down

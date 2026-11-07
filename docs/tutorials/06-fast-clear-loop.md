@@ -103,7 +103,7 @@ telemetry.update();
 
 ## Run it
 
-1. START. Note the Hz with bulk reads ON.
+1. Press ▶ (start on the Driver Hub). Note the Hz with bulk reads ON.
 2. Press A (bulk reads OFF). The Hz drops, because each wheel read is now a separate message.
 3. Press B to show the debug section: the Hz drops a little more. Telemetry is not free either.
 

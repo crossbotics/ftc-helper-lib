@@ -54,7 +54,7 @@ listed, not an error. With every device there: `Robot.java: every device is in t
 | Servo: D-pad right / left | +/- 0.01 |
 | Servo: bumpers | +/- 0.1 |
 | Servo: X | go to 0.5 |
-| GUIDE (or hold START 1 s) | the help page with every button, like the finders (motors stop while it is open; `helpLines()` gives its lines, override it to add your own) |
+| GUIDE (or hold the gamepad's START button 1 s) | the help page with every button, like the finders (motors stop while it is open; `helpLines()` gives its lines, override it to add your own) |
 
 **A servo does not move until you press A at its start point.** A servo cannot tell where it is, so
 the code does not know where it sits. Before the first move, the servo buttons only change the start

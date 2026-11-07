@@ -27,7 +27,7 @@ public class Tut01HelloLibrary extends LinearOpMode {
     public void runOpMode() {
         // 1. INIT: runs once, when the driver presses INIT. Set up hardware here.
 
-        waitForStart();     // 2. waits here until the driver presses START
+        waitForStart();     // 2. waits here until the driver presses ▶ (start)
 
         try {
             while (opModeIsActive()) {
@@ -158,7 +158,7 @@ while (opModeIsActive()) {
 1. `isDown` asks "is B held right now?" (yes or no). It does not bind an action to B.
 2. Loops per second (Hz). Higher is better: the robot reacts faster.
 
-- `ignoreHeldButtons` right after START: if someone holds A while pressing START, it does not
+- `ignoreHeldButtons` right after ▶ (start on the Driver Hub): if someone holds A while pressing ▶, it does not
   count until they let go. (Tutorial 03 explains.)
 - `controls.update(...)` once per loop reads the gamepads and runs the jobs.
 - Telemetry: add lines, then **one** `telemetry.update()` at the end of the loop.
@@ -166,7 +166,7 @@ while (opModeIsActive()) {
 ## Run it
 
 1. INIT: the screen says "Ready".
-2. START. Press A a few times: the count goes up by exactly one per press, even if you hold it.
+2. Press ▶. Press A a few times: the count goes up by exactly one per press, even if you hold it.
 3. Hold B: "B held : yes".
 4. Loop speed: probably 100+ Hz with nothing connected. (Hz means "times per second".)
 

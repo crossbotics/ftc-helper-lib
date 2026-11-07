@@ -721,7 +721,7 @@ public class SimFromRobotTest {
         Path file = generate(com.crossbotics.ftchelper.examples.lessonbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
             s.init("Lesson Bot: own OpMode");
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Press START : A scores high"), 3));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Press ▶ : A scores high"), 3));
             s.start();
             s.press(v -> s.g1().a = v);                               // score high (an action: never waits)
             s.g1().left_stick_y = -1;                                 // and drive at the same time

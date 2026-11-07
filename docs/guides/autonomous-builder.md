@@ -94,7 +94,7 @@ Every autonomous built this way gets, with no code:
    `parkWithSeconds(...)` inside an `onlyIf` follows the menu: the "Place robot" note changes with the
    choice ([choose the start in INIT](autos.md#example-2-one-opmode-the-drivers-choose-in-init)).
    Still no step runs.
-3. **After START**, with the drivers' choices, to build the real list. Then it runs.
+3. **After ▶** (start on the Driver Hub), with the drivers' choices, to build the real list. Then it runs.
 
 So put only steps in `steps(...)`. Code with side effects (moving a servo, printing, counting) placed
 between the steps would run several times, already in INIT. Put such code inside a step instead
@@ -113,7 +113,7 @@ s.start("Back against our goal, facing away from it", -56, -61.1, 0)
   your drivers' wall and written for BLUE: `x` to the right of the field's centre line, `y` from the
   centre toward the far wall (negative = your half). The simulator puts the robot there in INIT.
 
-**Find the numbers in the simulator:** before START, drag the robot on the field map (or double-click
+**Find the numbers in the simulator:** before ▶, drag the robot on the field map (or double-click
 it in the 3D view, then drag it and turn its ring). The spot is written under the map, ready to copy:
 `s.start("...", -56.0, -61.1, 0.0)`.
 
@@ -172,7 +172,7 @@ the inches are only right on a tuned robot.
 
 **Put route numbers in `Tunables.java`** (`Tunables.Auto.collectInches`): every number is in one place,
 named, and easy to find at an event. A section that is not a part, like `Auto`, is in the tuning menu
-too: change `Auto/collectInches` in the TeleOp (PRACTICE profile, after START hold GUIDE 1 s), save with A, and run
+too: change `Auto/collectInches` in the TeleOp (PRACTICE profile, after ▶ hold GUIDE 1 s), save with A, and run
 the autonomous again with no rebuild. Its INIT lists the values that differ from the file: copy the
 good ones back ([how](../modules/robot.md#tunablesjava)).
 
@@ -399,10 +399,10 @@ the match while they set up.
 
 **Or draw it first:** the simulator's [auto builder](simulator.md#the-auto-builder) builds the list on the
 field, runs it with your code, and writes this Java for you (the start note and a setup card for the drive
-team too).
+team too). Its **Auto sheet (PDF)** is one page that shows another team the route and every step.
 
 1. **In the simulator** ([guide](simulator.md)): INIT it, choose in the menu with the D-pad (on screen, or the
-   keyboard after you set gamepad 1 to Keyboard), START, and watch. The report shows at the end. An untuned drive still runs there, with a
+   keyboard after you set gamepad 1 to Keyboard), ▶, and watch. The report shows at the end. An untuned drive still runs there, with a
    warning, so you can try routes before tuning.
 2. **A scenario file** checks it every time, with no clicking:
 

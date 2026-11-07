@@ -114,6 +114,32 @@ const S = await importFrom(dir, 'stepscore.js');
 const P = await importFrom(dir, 'pathcore.js');
 const C = await importFrom(dir, 'simcore.js');
 
+// The auto sheet (setupcard.js openAutoSheet): its words for other teams and its step numbers on the map.
+{
+	const SC = await importFrom(dir, 'setupcard.js');
+	ok(S.actionWords('robot.launcher.fireAllAction()') === 'Fire all pieces', 'actionWords: fireAllAction()');
+	ok(S.actionWords('robot.launcher.fireAllAction(2525)') === 'Fire all pieces at 2525 RPM', 'actionWords: fireAllAction(2525)');
+	ok(S.actionWords('robot.launcher.fireAction(1)') === 'Fire 1 piece', 'actionWords: fireAction(1)');
+	ok(S.actionWords('Actions.deployIntake(robot)') === 'Deploy intake', 'actionWords: Actions.deployIntake(robot) -> ' + S.actionWords('Actions.deployIntake(robot)'));
+	ok(S.dirWords(0) === 'forward' && S.dirWords(-90) === 'left' && S.dirWords(308) === 'forward and left (308°)' && S.dirWords(135) === 'back and right (135°)', 'dirWords');
+	ok(S.sheetWords({ kind: 'move', label: 'Off the wall', inches: 42.8, dir: 308 }) === 'Off the wall: drive 42.8 in forward and left (308°)', 'sheetWords: a move');
+	ok(S.sheetWords({ kind: 'action', code: 'robot.launcher.fireAllAction()', timeout: 12 }) === 'Fire all pieces (up to 12 s)', 'sheetWords: an action');
+	ok(S.sheetWords({ kind: 'turn', label: 'Turn', deg: 90 }) === S.stepWords({ kind: 'turn', label: 'Turn', deg: 90 }), 'sheetWords: other steps as stepWords');
+	const marks = SC.sheetMarkers([{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 20, y: 0 }, { x: NaN, y: 0 }, { x: 20.5, y: 0 }]);
+	ok(marks.length === 2 && marks[0].nums.join() === '1,2' && marks[1].nums.join() === '3,5', 'sheetMarkers: steps at one spot share a marker, ' + JSON.stringify(marks));
+	const placed = SC.placeMarkers([{ x: 0, y: 0, nums: [1, 2, 3] }, { x: 0, y: 2, nums: [5] }, { x: 40, y: 0, nums: [6] }]);
+	ok(!placed[0].moved && placed[1].moved && Math.abs(placed[1].ly - placed[0].ly) >= 5.6 && !placed[2].moved, 'placeMarkers: a label that would cover another moves, ' + JSON.stringify(placed));
+	const outl = SC.sheetOutlines([{ x: 0, y: 0, h: 0 }, { x: 0, y: 0, h: 0 }, { x: 10, y: 0, h: 0 }, { x: 10, y: 0, h: 90 }, { x: 10, y: 0, h: 90 }], { x: 0, y: 0, h: 0 });
+	ok(outl.map((o) => o.step).join() === '3,4', 'sheetOutlines: only steps that move or turn the robot, ' + JSON.stringify(outl));
+	ok(SC.numsLabel([1, 2, 3, 5]) === '1-3, 5' && SC.numsLabel([1, 2]) === '1, 2' && SC.numsLabel([4]) === '4' && SC.numsLabel([1, 2, 3, 4, 5, 6, 7]) === '1-7', 'numsLabel');
+	const edge = SC.placeMarkers([{ x: -69, y: 0, nums: [1, 2, 3, 4, 5, 6, 7, 9] }]);
+	ok(edge[0].lx - edge[0].w / 2 >= -70.01, 'placeMarkers: a label stays inside the field, ' + JSON.stringify(edge));
+	ok(S.sheetWords({ kind: 'moveTurn', label: 'Back up', inches: -12, dir: 0, heading: 90 }).includes('12 in back'), 'sheetWords: a moveTurn with minus inches goes back');
+	const top = SC.placeMarkers([{ x: 0, y: 70, nums: [10] }, { x: 4, y: 70, nums: [11] }, { x: 8, y: 70, nums: [12] }]);
+	ok(top.every((m) => m.ly + 2.8 <= 70.01 && m.ly - 2.8 >= -70.01), 'placeMarkers: labels stay inside top to bottom, ' + JSON.stringify(top.map((m) => m.ly)));
+	ok(SC.sheetTime(0, 12) === '0-12 s' && SC.sheetTime(12, 12) === '12 s' && SC.sheetTime(undefined, 1) === '', 'sheetTime');
+}
+
 // ------------------------------------------------------------------ 1. the same output as the web builder
 
 const fixtures = JSON.parse(fs.readFileSync(fixturesFile, 'utf8'));

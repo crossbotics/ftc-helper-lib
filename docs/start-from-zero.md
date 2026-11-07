@@ -30,8 +30,9 @@ These words are on every page of these docs.
   drive, one or more autonomous ones, some test ones.
 - **TeleOp** and **Autonomous:** the two kinds of OpMode. A TeleOp is driven by people with gamepads.
   An Autonomous runs on its own, with no gamepads, at the start of the match.
-- **INIT**, **START** and **STOP:** the buttons on the Driver Station. INIT gets the OpMode ready
-  (nothing may move yet). START begins it. STOP ends it.
+- **INIT**, **▶** (start) and **STOP:** the buttons on the Driver Station. INIT gets the OpMode ready
+  (nothing may move yet). ▶ begins it. STOP ends it. (The gamepad's small START button is a
+  different button.)
 
 ## 2. Install Android Studio and get the robot project
 
@@ -114,7 +115,7 @@ or the two do not connect. Robot inspectors check this at events too.
 5. **Check on the Driver Station.** It connects to the robot and shows the OpMode lists (the
    TeleOp list and the Autonomous list).
    - Your team's project already has OpModes? Ask your code lead which one moves nothing (a test
-     OpMode, for example), then press INIT, START, then STOP. Not sure? Skip this: in section 5 you
+     OpMode, for example), then press INIT, ▶, then STOP. Not sure? Skip this: in section 5 you
      install **Concept: NullOp**, a program that moves nothing.
    - FTC's new project shows **empty** lists: its sample OpModes are hidden. You run your first one in
      [section 5](#5-copy-a-file-into-teamcode-and-change-one-line) below.
@@ -219,7 +220,7 @@ Now run your own first OpMode: a copy of the FTC sample above. It needs no motor
 4. Delete the whole line `@Disabled`. **Why:** with it, the Driver Station hides the OpMode.
 5. Build (hammer), then Run (triangle) to install it.
 6. On the Driver Station, pick **Concept: NullOp** in the TeleOp list. INIT: it shows
-   `Status: Initialized`. START: it shows the run time. STOP.
+   `Status: Initialized`. ▶: it shows the run time. STOP.
 
 Common mistakes:
 

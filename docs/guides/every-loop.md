@@ -26,14 +26,14 @@ EasyTeleOp that fills in the hooks.
    from `Tunables.java`, and the INIT checks (a missing Lift `max`, a misspelled field...) stop here.
 5. `bindButtons(...)`, then `buttonHelp()`.
 
-Then the **INIT loop**, until START: gamepad 1 X/B choose the alliance, the warnings (PRACTICE
+Then the **INIT loop**, until ▶ (start on the Driver Hub): gamepad 1 X/B choose the alliance, the warnings (PRACTICE
 profile, tuned values), your `addInitTelemetry`, `t.update()`. **No part is updated and no motor
 gets power in the INIT loop.**
 
-### START (once)
+### ▶ start (once)
 
-`timer.start()`, the saved heading is forgotten (it belongs to this run now), buttons held through
-START are ignored until let go, then `onStart()` (ControlMap: each module's start, like an intake
+`timer.start()`, the saved heading is forgotten (it belongs to this run now), buttons held through ▶
+are ignored until let go, then `onStart()` (ControlMap: each module's start, like an intake
 "on at the start", and the `atStart` actions).
 
 ### Each loop, in this order
@@ -123,7 +123,7 @@ Each warning goes away 5 s after the last slow update or job. Fixes: [troublesho
 
 ### Show the loop time
 
-Every EasyTeleOp and `Controls.java` TeleOp shows it in the debug lines (hold START, then press BACK):
+Every EasyTeleOp and `Controls.java` TeleOp shows it in the debug lines (hold the gamepad's START button, then press BACK):
 `Loop: 12.3 ms (81 Hz)`. Lower is better; under 20 ms is good. To show it all the time, or in your own
 OpMode, use [`LoopTimer`](../modules/util.md#looptimer).
 
@@ -158,7 +158,7 @@ private final LoopTimer loop = new LoopTimer();
 - **INIT:** `BulkReads.auto`, the IMU (none = it stops with a message), "not tuned" = it shows
   "AUTONOMOUS IS OFF" and never moves. Then the mechanisms (`createSubsystems()`; Auto:
   `robot.setup(...)`), the INIT menu, and the INIT loop (menu, warnings, lines). No part is updated.
-- **START:** if the profile changed in INIT, the drive and the mechanisms are made again. Then the
+- **▶:** if the profile changed in INIT, the drive and the mechanisms are made again. Then the
   30 s timer starts and `AutoRoutine.runAll()` runs each step. Steps block on purpose.
 - **Each loop while a step drives or waits:** `AutoDrive` reads what the move needs (the four
   wheel encoders for a move, the IMU for a turn), sets the wheel powers, then calls the routine's
@@ -169,7 +169,7 @@ private final LoopTimer loop = new LoopTimer();
 - **`tick()`:** `robot.update()` (the same as TeleOp's, odometry first), `timer.update()`, the step's line, the
   time left, every part's telemetry, `t.update()`.
 - **End:** when the steps are done, everything is stopped and the report goes to `MatchMemory`.
-  After any end (done, STOP or an error) everything is stopped again, and, only if START was
+  After any end (done, STOP or an error) everything is stopped again, and, only if ▶ was
   pressed, the alliance and the end heading go to `MatchMemory` for TeleOp (with odometry: the whole
   end pose, and TeleOp's INIT starts the odometry there).
 
@@ -200,15 +200,15 @@ next, until the app restarts. The library keeps these:
 | the `Tunable` registry (`Tunable.ALL`) | the tuning menu finds tunables made anywhere | a value changed in the menu stays in the next OpMode run, even unsaved, until the app restarts. `Tunable.number(name, ...)` returns the existing one: the second default is ignored (`fromCode` takes the new code value if the old one was not tuned) |
 | `Profile.current` | read from the file once | changing the file by hand needs an app restart |
 | `SettingsFile.shared` | one settings file for the app | loaded once |
-| `MatchMemory` (alliance, report, placement) | autonomous hands them to TeleOp | ignored after 5 minutes (`MAX_AGE_SEC`). The remembered alliance is written only after an autonomous's START; the "chosen" alliance and the placement are set in every INIT loop (the simulator reads them) |
-| `PoseStore` | autonomous hands the end heading to TeleOp | EasyTeleOp forgets it at START, so a later TeleOp run does not use it |
+| `MatchMemory` (alliance, report, placement) | autonomous hands them to TeleOp | ignored after 5 minutes (`MAX_AGE_SEC`). The remembered alliance is written only after ▶ in an autonomous; the "chosen" alliance and the placement are set in every INIT loop (the simulator reads them) |
+| `PoseStore` | autonomous hands the end heading to TeleOp | EasyTeleOp forgets it at ▶, so a later TeleOp run does not use it |
 | `ButtonPlan.buzzer` | a test hook: tests count buzzes instead of buzzing | package-private; robot code never changes it |
 | `SafeMotor.READ_KEEP_NANOS`, `Turret.READ_KEEP_NANOS` | the 3 ms reuse time | package-private. Tests change `SafeMotor`'s with the public hook `SafeMotor.freshReadingsForTests(boolean)` (true = read every time); robot code never needs it |
 | background threads (`SettingsFile`, finders) | one thread for file writes | made on first use |
 
 ## See also
 
-- [Your own code at INIT, START, every loop and STOP](your-own-code.md): where your code goes in each
+- [Your own code at INIT, ▶, every loop and STOP](your-own-code.md): where your code goes in each
   step, and how to write the whole OpMode yourself with the library's robot.
 - [Non-blocking code](non-blocking.md): what blocks and what never does.
 - [Use only what you need](use-only-what-you-need.md): the building blocks in your own loop.

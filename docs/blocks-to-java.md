@@ -23,7 +23,7 @@ different:
 1. `buttons(...)` in `Controls.java` runs **once**, at INIT.
 2. Each line in it **plugs a job into a button**, like snapping a script under a
    `when [space] key pressed` hat block. Nothing runs yet.
-3. After START, the library's loop watches the buttons and **runs the jobs** at the right moment.
+3. After ▶ (start on the Driver Hub), the library's loop watches the buttons and **runs the jobs** at the right moment.
 
 ```java
 @Override
@@ -81,7 +81,7 @@ Notes on the table:
   Then copy the good value back into `Tunables.java`.
 - `atStart(...)` comes from the example robot
   [`flywheelbot/Robot.java`](../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java):
-  its `deployIntake` Action drops the intake into place once, right after START (never in INIT).
+  its `deployIntake` Action drops the intake into place once, right after ▶ (never in INIT).
 - `show(...)` goes inside `buttons(...)`, like `rumbleWhen`, as a line of its own. It is in the
   TeleOp (`Controls.java`) only.
 
@@ -91,7 +91,7 @@ The FTC Blocks editor has blocks for the robot itself. Here is where each one we
 
 | FTC Blocks block | In Java with this library | Where |
 | --- | --- | --- |
-| `waitForStart` | nothing: the library waits for START. Something right after START: `atStart(...)` ([cookbook](cookbook.md#how-do-i-run-an-action-right-after-start)) | `Robot.java`, in `define()` |
+| `waitForStart` | nothing: the library waits for ▶. Something right after ▶: `atStart(...)` ([cookbook](cookbook.md#how-do-i-run-an-action-when-the-opmode-starts)) | `Robot.java`, in `define()` |
 | `repeat while opModeIsActive` | nothing: the library's loop | |
 | `telemetry.addData("key", value)` and `telemetry.update` | `show("Lift ticks", robot.lift::position);` once, in `buttons(...)`. The library shows it every loop as `Lift ticks : 350`; no `update` needed | `Controls.java` |
 | `gamepad1.left_stick_y` (and the other sticks) | driving is built in. For your own part: `g2.leftStickY.use(robot.lift::manual);` | `Controls.java` |

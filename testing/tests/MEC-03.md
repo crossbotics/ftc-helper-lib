@@ -29,7 +29,7 @@ If one moves and the other does not, they fight: a servo burns out, or the part 
 ## Steps
 
 1. INIT. Neither servo must move.
-2. Press START, then close the claw (operator B). Both fingers must close at the same moment and meet in the
+2. Press ▶ (start on the Driver Hub), then close the claw (operator B). Both fingers must close at the same moment and meet in the
    middle.
 3. Open it. Both must open together.
 4. Open and close it 5 times fast. Neither finger may ever move alone: both must end at the same place each

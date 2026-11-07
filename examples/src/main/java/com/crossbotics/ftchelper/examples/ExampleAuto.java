@@ -43,7 +43,7 @@ public class ExampleAuto extends LinearOpMode {
         // "this" = this program, so AutoDrive can notice STOP.
         AutoDrive auto = new AutoDrive(this, driveConfig, autoConfig, imu);
 
-        telemetry.addLine("Ready. Press START.");
+        telemetry.addLine("Ready. Press ▶.");
         telemetry.update();
         waitForStart();
 

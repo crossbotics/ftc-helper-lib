@@ -110,7 +110,7 @@ public static class Windmill {
 | `power`, `feedSec` (Windmill) | the feeder's power, and how long it runs per piece |
 
 A servo feeder (`Indexer.servo`) has `rest`, `push`, `pushSec`, `returnSec` instead. It goes to `rest`
-at START, never in INIT.
+at ▶ (start on the Driver Hub), never in INIT.
 
 ### The first spin-up with no numbers
 
@@ -196,8 +196,8 @@ no spin-up and no fire button. INIT says so, for example
 Move your own jobs to free buttons (INIT lists them: `G2 free: ...`), so the launcher gets its
 buttons back.
 
-**Spin up at START.** A launcher with a feeder of its own (an indexer, as here, or a feed stop) spins
-up right after START, in autonomous and TeleOp, so the first shot does not wait. That is safe: a
+**Spin up at ▶.** A launcher with a feeder of its own (an indexer, as here, or a feed stop) spins
+up right after ▶, in autonomous and TeleOp, so the first shot does not wait. That is safe: a
 spinning wheel cannot throw a piece the feeder has not pushed in. LB still spins it down (to coast
 while you park). A launcher that the intake pushes pieces into (`pushedBy` only) waits for LB, because
 the intake would push pieces into a spinning wheel. To change it, write `spinAtStart = true` or `false`
@@ -271,7 +271,7 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
   pipelines). How it works: [vision.md](../../modules/vision.md#venue-lighting).
 - Its numbers: `Tunables.Limelight.pipeline` (the pipeline to use when the test is off) and
   `autoLighting` (true = run the test; false = skip it and use `pipeline`).
-- The camera starts in INIT, so it is already looking at START. It has no buttons.
+- The camera starts in INIT, so it is already looking when ▶ is pressed. It has no buttons.
 
 **Set up the three pipelines** (every step, with the settings and why:
 [Setting up Limelight lighting pipelines](../../guides/limelight-lighting.md)). Plug the Limelight into a
@@ -287,9 +287,9 @@ laptop with its USB-C cable and open its page: http://limelight.local:5801. Then
 4. Leave the ID filter empty (the robot aims at the middle of a CELL's 4 tags and needs at least 2).
    There is no save button: the Limelight keeps the changes by itself.
 
-**At INIT and at START.** Have a tag in view at INIT (where the robot starts the match is fine), or the
+**At INIT and at ▶.** Have a tag in view at INIT (where the robot starts the match is fine), or the
 test cannot help. The Driver Station shows the result, e.g.
-`limelight lighting : pipeline 2 (9 of 10 pictures saw tags)`. At START the test stops at once and keeps
+`limelight lighting : pipeline 2 (9 of 10 pictures saw tags)`. At ▶ the test stops at once and keeps
 the best pipeline so far (the first one if none saw a tag), so the robot never aims with a pipeline
 it is only trying.
 
@@ -317,7 +317,7 @@ turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(cam
 - `Turret.motor("turret", "gobilda-5203-117")`: the motor's name and its catalog id.
 - `.gearRatio(5)`: the motor turns 5 times per turret turn (the gears or belt). It must be right, or
   every angle is wrong.
-- `.follows(camera)`: from START, every loop, the turret turns toward the goal. The camera is on the
+- `.follows(camera)`: from ▶, every loop, the turret turns toward the goal. The camera is on the
   turret. (One on the robot's body: add `.cameraOnBody()`.)
 
 ```java
@@ -343,7 +343,7 @@ public static class Turret {
 - `tolerance`: how many degrees off still counts as "aimed". `cameraOffset`: if shots land to one side,
   the [Aim Tuner](../../guides/finders.md#aim-tuner-camera-offset) finds it.
 - **0 degrees is where the turret points when you press INIT** (`startAngle`, default 0). Point it
-  straight forward first, or add a home switch so it finds its angle by itself at START. That is why
+  straight forward first, or add a home switch so it finds its angle by itself at ▶. That is why
   INIT says, on a turret with no home switch:
   `Turret : no angle from a program before: turn it to startAngle 0 deg by hand and INIT again, or every angle is off`.
   A TeleOp right after a program (within 5 minutes) goes on from that program's angle instead and says
@@ -510,7 +510,7 @@ public static class Hood {
     public static double angleA = 0;                            // hood angle at posA, degrees: the steep end
     public static double angleB = 25;                           // hood angle at posB, degrees: the flat end
     public static double travelSec = 0.45;                      // stop to stop, seconds (worked out from the gears) (2)!
-    public static double startAngle = 0;                        // where it goes at START: the steep end
+    public static double startAngle = 0;                        // where it goes at ▶: the steep end
 }
 ```
 
@@ -536,7 +536,7 @@ public static class Hood {
   stop-to-stop move takes `travelSec`, a shorter move a share of it, and it does not fire until then
   (`Launcher waits for: hood`). A piece fired while the hood is still moving flies wrong. A hood on a
   motor with an encoder (`Hood.motor("hood", "gobilda-5203-117")`) knows instead.
-- **`startAngle`:** where it goes at START (here the steep end, so the robot fits the start box).
+- **`startAngle`:** where it goes at ▶ (here the steep end, so the robot fits the start box).
   Nothing moves in INIT.
 
 **From the table.** The launcher blends the hood between rows like the speed: at 60 in the POLLEN
@@ -768,8 +768,8 @@ robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().
 and of `Actions.java` too if an action sets a color (Alt+Enter on the red word adds it). No turret (section 10)? Purple while whole-robot aim is on:
 `robot.lights.show(LightColor.PURPLE).when(() -> robot.aimMode().isOn());`.
 
-**Before START the light shows the alliance** (the library does it, no line needed): solid red or blue
-once it is picked in INIT, white blinking once a second until then, and a 1 s flash of it at START. A
+**Before ▶ the light shows the alliance** (the library does it, no line needed): solid red or blue
+once it is picked in INIT, white blinking once a second until then, and a 1 s flash of it at ▶. A
 wrong pick is then seen from the field before the match. That is why the rules above use purple and
 orange. The game manual has no rule against an alliance-colored light; the ROBOT SIGNS are still
 required. To turn it off: `public static boolean allianceAtInit = false;` in `Tunables.Light`
@@ -852,7 +852,7 @@ The goBILDA bot has a measured simulator robot. From the `ftc-helper-lib` folder
 ./gradlew :sim:run -PteamCode=none -Probot=sim/robots/starter-bot-gobilda.properties
 ```
 
-Open http://localhost:8780, choose "goBILDA Bot TeleOp", INIT, START. Tap LB and watch the speed rise,
+Open http://localhost:8780, choose "goBILDA Bot TeleOp", INIT, ▶. Tap LB and watch the speed rise,
 then tap RB; hold RB to keep firing. Tap RB before the wheel is at speed: the piece waits.
 
 The turret robot: write its robot file from `Robot.java`, then run it:
@@ -862,7 +862,7 @@ The turret robot: write its robot file from `Robot.java`, then run it:
 ./gradlew :sim:run -PteamCode=none -Probot=build/turretbot.properties
 ```
 
-Choose "TurretBot TeleOp", pick the alliance in INIT (gamepad 1 X = BLUE, B = RED) and START. Drive until
+Choose "TurretBot TeleOp", pick the alliance in INIT (gamepad 1 X = BLUE, B = RED) and ▶. Drive until
 the goal is in view and watch the turret follow it and the speed change with the distance. Where to
 look: each alliance's goal is the up CELL of its HIVE in the middle of the field, and the tags are on
 the CELL's underside, so the camera must be **below and in front of** them, looking up. At the start the
@@ -887,7 +887,7 @@ choose "FlywheelBot TeleOp", drive until the goal is in view, and press RB on ga
 ./gradlew :sim:run
 ```
 
-Pick your TeleOp, INIT (read the map: the launcher's standard buttons are there), START, and fire.
+Pick your TeleOp, INIT (read the map: the launcher's standard buttons are there), ▶, and fire.
 For pieces to be picked up and shot, the simulator needs to know where your intake and flywheel are:
 give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from Robot.java](01-robot-in-five-files.md#draw-your-robot-from-robotjava)).
 
@@ -902,7 +902,7 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 4. Turret: point it forward, INIT, and turn it by hand to each end. It must stop before the hard stops.
 5. Only then turn following on, and fill `speedByDistance` at 4 to 6 distances on a charged battery
    (each table, with its game piece).
-   A hood: the Hood Finder first (`posA`, `posB`), then check on the robot that START sends it to
+   A hood: the Hood Finder first (`posA`, `posB`), then check on the robot that ▶ sends it to
    `startAngle` and the left stick (gamepad 2) never pushes it into a stop.
 6. Odometry backup: run your autonomous first (or set the pose), then TeleOp. Check INIT's `Aim:` line
    (the alliance and `mirrorForRed`). Cover the camera with your hand. The turret should keep pointing
@@ -937,8 +937,8 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 | INIT stops: `robot.aimMode() ... separate modes` | the turret follows the goal: remove the `aimMode()` line (the turret aims), or `follows(...)` for whole-robot aim. |
 | "goal out of turret range (behind the robot: holding)" | the odometry says the goal is behind: turn the robot toward it. |
 | Whole-robot aim stops a few degrees off | raise `turnKp`, or set `minTurnPower` (the least power that turns the robot). |
-| `limelight lighting: trying 1 of 3: pipeline 0 (no tags yet: face a tag)` (INIT) | the test has tried every pipeline and none saw a tag. Turn the robot toward a tag; the test keeps going until START. |
-| `limelight lighting: NO TAGS SEEN` (after START) | no pipeline saw a tag in INIT, so the first one is kept. Next time have a tag in view at INIT; check each pipeline on the Limelight's web page. |
+| `limelight lighting: trying 1 of 3: pipeline 0 (no tags yet: face a tag)` (INIT) | the test has tried every pipeline and none saw a tag. Turn the robot toward a tag; the test keeps going until ▶. |
+| `limelight lighting: NO TAGS SEEN` (after ▶) | no pipeline saw a tag in INIT, so the first one is kept. Next time have a tag in view at INIT; check each pipeline on the Limelight's web page. |
 | `limelight lighting: no pictures from pipeline 2 (missing?)` | that pipeline is not set up on the Limelight: make it (see above), or take it out of `autoPipelines(...)`. |
 | `limelight: not found: no Limelight called "limelight"` | the name in the robot configuration is different (case counts), or the Limelight is not in it. The OpMode still runs, without the camera. |
 

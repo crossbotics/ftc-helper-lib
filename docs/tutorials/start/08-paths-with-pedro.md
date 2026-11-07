@@ -318,7 +318,7 @@ The simulator runs Pedro like the real robot. It is the safe place to find a pat
 ```
 
 Open http://localhost:8780, choose **"Pedro Bot Curve to the Goal"**, press INIT, choose **RED** in the
-INIT menu (gamepad 1 B), then START.
+INIT menu (gamepad 1 B), then ▶ (start on the Driver Hub).
 
 **What you should see:** the robot drives a short straight line, then curves to the goal without
 stopping, turning to 45 degrees. Halfway, the intake starts. It stays still there for half a second (the Driver Station shows
@@ -343,7 +343,7 @@ point, or slow that part with `maxSpeed(0.5)`), press **Clear lines**, and run i
 ./gradlew :sim:run
 ```
 
-Choose your autonomous, INIT, START, and read the report at the end. (The example has `@Disabled`
+Choose your autonomous, INIT, ▶, and read the report at the end. (The example has `@Disabled`
 so it does not show up on your real robot's list; the simulator shows it anyway. Your own autonomous
 must not have `@Disabled`.)
 
@@ -448,7 +448,7 @@ not work here). Keep clear of the robot, and keep a hand on STOP.
    [testing page](https://pedropathing.com/docs/pathing/tuning/test).
 1. Make the path short: one straight `PedroPath.line(...)` of about 24 in, in open floor.
 2. Use the **PRACTICE** profile: the wheels get at most `practiceMaxPower` (0.6).
-3. Put the robot on the start spot, facing the start heading. INIT, then START. Hand on STOP.
+3. Put the robot on the start spot, facing the start heading. INIT, then ▶. Hand on STOP.
 4. Watch: it drives the line and stops near the end. Pedro calls it done within about 2.5 in and
    11.25 degrees ([how to make that tighter](../../modules/pedro.md#when-is-a-path-done)).
 5. Then try your real path, still in PRACTICE. Then COMPETITION.

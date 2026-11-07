@@ -33,7 +33,7 @@ flowchart LR
    in `update()`, once per loop: call `update()` every loop (or put them in a `Subsystems` group).
 2. **Servo commands move the servo AT ONCE.** That is how servos work. (With `.maxSpeed()`, the
    first move happens at once and `update()` does the rest in small steps.) So never call a command
-   in INIT unless that movement is allowed and safe: nothing may move before START.
+   in INIT unless that movement is allowed and safe: nothing may move before ▶ (start on the Driver Hub).
 
 **A typo in a position name** (`goTo("HGIH")`) does nothing and shows a warning on the Driver
 Station, so it can never stop the OpMode in a match. `getWarning()` returns it.

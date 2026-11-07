@@ -128,7 +128,7 @@ Run them before every commit (each time you save a version of the code in git), 
 
 With the robot in five files (`Robot.java`, `Tunables.java`, ...), the library's **test kit** gives your
 robot pretend devices: motors whose encoder you set, servos that remember where they were sent. The
-test does INIT, START and a loop, then checks what each motor got:
+test does INIT, ▶ (start on the Driver Hub) and a loop, then checks what each motor got:
 
 ```java
 import com.crossbotics.ftchelper.testkit.PretendDevices;
@@ -137,7 +137,7 @@ import com.crossbotics.ftchelper.testkit.PretendDevices;
     PretendDevices devices = new PretendDevices();   // a fresh pretend robot
     Robot robot = new Robot();
     robot.setup(devices);                            // INIT: Tunables.java is checked like on the robot
-    robot.startForTests();                           // START
+    robot.startForTests();                           // ▶ (start)
     robot.lift.goTo("high");
     robot.all().update();                            // one loop
     assertTrue(devices.motor("lift").power > 0);     // "lift" = the motor's configuration name

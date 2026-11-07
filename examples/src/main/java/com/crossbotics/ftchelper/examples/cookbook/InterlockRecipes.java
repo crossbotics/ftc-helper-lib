@@ -79,7 +79,7 @@ public class InterlockRecipes {
             camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
             // recipe: turret-home-switch
             // "turret", "turret_home" = the motor's and the home switch's names in the robot configuration.
-            // At START the turret turns slowly until it finds the switch.
+            // At ▶ the turret turns slowly until it finds the switch.
             turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
                     .homeSwitch("turret_home")
                     .follows(camera));
@@ -140,7 +140,7 @@ public class InterlockRecipes {
             public static double posB = MEASURE;                        // servo position, other end (Servo Finder)
             public static double angleB = MEASURE;                      // the turret's angle there (an angle app)
             public static double travelSec = DEFAULT;                   // posA to posB, seconds (0.6, or the servo's)
-            public static double startAngle = DEFAULT;                  // sent here at START (0)
+            public static double startAngle = DEFAULT;                  // sent here at ▶ (0)
         }
         // end recipe
     }

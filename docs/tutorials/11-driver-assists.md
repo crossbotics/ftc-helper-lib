@@ -102,7 +102,7 @@ usually left without one, so aiming stays quick.
 
 ## Run it
 
-1. START facing away from you (or press BACK to reset "forward").
+1. Press ▶ (start on the Driver Hub) with the robot facing away from you (or press BACK to reset "forward").
 2. Turn the robot by hand, then press D-pad up: it turns back to face forward and stops.
 3. Hold the left stick forward while pressing D-pad left: it drives AND turns to face left.
 4. Push the right stick during a snap: the snap stops, you turn by hand.

@@ -27,7 +27,7 @@ sequenceDiagram
     DS->>E: INIT
     E->>E: set up drive, IMU, mechanisms
     E->>DS: menu: alliance, delay, choices, profile, "place robot"
-    DS->>E: START
+    DS->>E: ▶ (start)
     E->>R: build steps (mirrored for RED), run
     loop every step
         R->>M: update() every loop, during moves and waits

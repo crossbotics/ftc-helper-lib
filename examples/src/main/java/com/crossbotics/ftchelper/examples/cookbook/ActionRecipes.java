@@ -40,7 +40,7 @@ public class ActionRecipes {
             claw = add(Claw.servo("claw"));
             intakeDeploy = add(Positioner.servo("intake_deploy"));
             // recipe: action-at-start
-            // In Robot.java's define(): this action runs once, right after START (autonomous and TeleOp).
+            // In Robot.java's define(): this action runs once, right after ▶ (autonomous and TeleOp).
             atStart(() -> Actions.deployIntake(this));
             // end recipe
         }

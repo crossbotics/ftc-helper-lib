@@ -736,6 +736,43 @@ export function stepWords(s) {
 	}
 }
 
+/**
+ * An action's code in words for people who do not read our code (the auto sheet): "robot.launcher.fireAllAction(2525)"
+ * -> "Fire all pieces at 2525 RPM", "Actions.deployIntake(robot)" -> "Deploy intake".
+ */
+export function actionWords(code) {
+	const c = String(code || '').trim();
+	let m = c.match(/fireAllAction\(\s*([\d.]*)\s*\)/);
+	if (m) return 'Fire all pieces' + (m[1] ? ` at ${m[1]} RPM` : '');
+	m = c.match(/fireAction\(\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)/);
+	if (m) return `Fire ${m[1]} piece${m[1] === '1' ? '' : 's'}` + (m[2] ? ` at ${m[2]} RPM` : '');
+	// The last call's name, split at the capitals: "deployIntake" -> "Deploy intake".
+	const name = (c.replace(/\([^()]*\)/g, '').split('.').filter(Boolean).pop() || c).replace(/Action$/, '');
+	const words = name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
+	return words ? words[0].toUpperCase() + words.slice(1) : c;
+}
+
+/** A drive direction in words (degrees clockwise from forward): "forward", "forward and left (308°)". */
+export function dirWords(d) {
+	const a = ((Math.round(+d) % 360) + 360) % 360;
+	const exact = { 0: 'forward', 90: 'right', 180: 'back', 270: 'left' }[a];
+	if (exact) return exact;
+	const fb = a < 90 || a > 270 ? 'forward' : 'back', lr = a < 180 ? 'right' : 'left';
+	return `${fb} and ${lr} (${num(a)}°)`;
+}
+
+/** One step in words for another team (the auto sheet): stepWords, with actions and directions in plain words. */
+export function sheetWords(s) {
+	switch (s.kind) {
+		case 'move': return `${s.label}: drive ${num(Math.abs(+s.inches))} in ${dirWords((+s.dir || 0) + (+s.inches < 0 ? 180 : 0))}`;
+		case 'moveTurn': return `${s.label}: drive ${num(Math.abs(+s.inches))} in ${dirWords((+s.dir || 0) + (+s.inches < 0 ? 180 : 0))} and turn to ${num(+s.heading)}° on the way (from the start heading)`;
+		case 'action': return `${actionWords(s.code)} (up to ${num(+s.timeout)} s)`;
+		case 'alongside': return `${actionWords(s.code)}, while the next steps run`;
+		case 'run': return `${s.label}: started, it keeps running`;
+		default: return stepWords(s);
+	}
+}
+
 // ------------------------------------------------------------------ warnings
 
 const stepName = (s) => (s.kind === 'action' || s.kind === 'alongside' ? s.code : s.kind === 'park' ? 'park' : s.label) || '(no name)';

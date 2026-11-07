@@ -174,12 +174,12 @@ lines on the Driver Station instead of the FTC app's red line:
 <samp>Fix it, then press INIT again. Press STOP now.</samp>
 
 Then it waits for STOP; nothing moves. The library's OpModes (EasyTeleOp, EasyAuto, the finders, the
-Hardware Check, Tune and check) and `robot.init(this)` use it already. A mistake after START is not
+Hardware Check, Tune and check) and `robot.init(this)` use it already. A mistake after ▶ (start on the Driver Hub) is not
 caught: the FTC app shows it as before. The robot log keeps the full error.
 
 | Method | What it does |
 | --- | --- |
-| `InitStop.run(this, () -> { ... })` | in your own `LinearOpMode`: runs the code; a mistake before START is shown and waits for STOP |
+| `InitStop.run(this, () -> { ... })` | in your own `LinearOpMode`: runs the code; a mistake before ▶ is shown and waits for STOP |
 | `InitStop.showAndWait(this, e)` | show one error now and wait for STOP (false in the simulator) |
 | `InitStop.words(e)` | the plain words for an error: a library message as it is; another error with where it happened, e.g. "NullPointerException in Robot.java line 42" |
 

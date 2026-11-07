@@ -111,7 +111,7 @@ an API changes, update the cookbook recipes that use it too; a new user-facing f
   have a time limit, and stop motors in `finally`. Examples never call `sleep()`.
   `tools/check_blocking.py` enforces this; a new method that blocks on purpose must be added to its
   allow-list with the reason. It cannot see a wait for a lock: never hold a lock the loop needs during slow work.
-- Hardware setup leaves motors at power 0. Nothing moves before START.
+- Hardware setup leaves motors at power 0. Nothing moves before ▶.
 - Safety stays on in every profile (limits, timeouts, jam checks, stale-target rejection).
 - Extend through the interfaces (`Subsystem`, `AutoStep`, `Feeder`, `TargetSource`); keep new parts
   testable (devices and a clock in the constructor).

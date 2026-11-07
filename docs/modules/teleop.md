@@ -8,7 +8,7 @@ Learn it hands-on: [20 Easy TeleOp](../tutorials/20-easy-teleop.md). Ready to co
 [starter kit](../starter-kit.md)'s `MainTeleOp`.
 
 A whole TeleOp (the driver-controlled part of the match) where you only write what is special
-about your robot. Driving, the match timer, safety at START and STOP, and the tuning menu come
+about your robot. Driving, the match timer, safety at ▶ (start on the Driver Hub) and STOP, and the tuning menu come
 ready-made. The [robot in five files](robot.md#controlmap)'s `Controls.java` is built on it, so with
 five files start there. Use `EasyTeleOp` directly with the [starter kit](../starter-kit.md) or your own classes.
 
@@ -19,7 +19,7 @@ five files start there. Use `EasyTeleOp` directly with the [starter kit](../star
 
 ```mermaid
 flowchart LR
-    I["INIT<br/>drive, IMU, 'forward' from auto,<br/>your mechanisms + buttons,<br/>warnings, alliance"] --> S["START<br/>match timer starts"]
+    I["INIT<br/>drive, IMU, 'forward' from auto,<br/>your mechanisms + buttons,<br/>warnings, alliance"] --> S["▶ start<br/>match timer starts"]
     S --> L["every loop:<br/>buttons -> driving -> everyLoop() -><br/>mechanisms update() -> telemetry"]
     L --> L
     L --> E["STOP (or an error)<br/>wheels and every mechanism stopped"]
@@ -68,7 +68,7 @@ public class MainTeleOp extends EasyTeleOp {
 | Telemetry | your mechanisms' lines, drive mode, time; **START + BACK together** = debug lines on/off, when you let go (with the alliance switch on: held 1.5 s, the pair switches the alliance instead). With a pause on BACK (`backTap()` and `pauseState()`, a Controls.java TeleOp), hold START first, then press BACK: BACK first is just a pause. Without a pause job, either order works. |
 | Moving the buttons | every one of the buttons above can move to another button or be freed: [`libraryButtons(lib)`](#moving-the-librarys-buttons). |
 | Warnings | PRACTICE profile, tuned values that differ from the code, slow button actions or `update()`s, and at INIT a freed pause button ("No pause button": nothing pauses the robot) or field-centric button. |
-| Safety | buttons held through START are ignored; the wheels and every mechanism stop at the end, even after an error. |
+| Safety | buttons held through ▶ are ignored; the wheels and every mechanism stop at the end, even after an error. |
 
 ### Fill in
 
@@ -78,7 +78,7 @@ public class MainTeleOp extends EasyTeleOp {
 | `createSubsystems()` | no | your mechanisms. Default: none |
 | `bindButtons(driver, operator)` | no | your buttons. Gamepad 2 on `operator`; extra gamepad 1 buttons on `driver` (they pause while the tuning menu is open). Taken on gamepad 1 (unless you move them): LT, Y (field-centric, when the drive has it), BACK, START (with BACK: debug lines; START first when BACK pauses), GUIDE. |
 | `libraryButtons(lib)` | no | move or free the library's buttons ([below](#moving-the-librarys-buttons)) |
-| `setPoseJob()` | no | the "set pose here" job (returns the words to show), or null (default). `Controls.java` gives one on a robot with odometry. Its button works in INIT too (held 1 s before START) |
+| `setPoseJob()` | no | the "set pose here" job (returns the words to show), or null (default). `Controls.java` gives one on a robot with odometry. Its button works in INIT too (held 1 s before ▶) |
 | `allianceChanged(now)` | no | update what uses the alliance when it is switched during the match (`Controls.java`: `robot.setAlliance(now)`) |
 | `everyLoop()` | no | your code for every loop (sticks for mechanisms, simple rules). Must not wait. |
 | `addTelemetry(t)` | no | extra screen lines |
@@ -86,7 +86,7 @@ public class MainTeleOp extends EasyTeleOp {
 | `pauseState()` | no | how to read "paused now" (a `BooleanSupplier`), or null (default). With one, the pause button pauses at the PRESS (going on stays a tap), even though BACK also has a held job. `Controls.java` gives one |
 | `buttonHelp()` | no | the button map's lines: then a tap of GUIDE shows them, and holding GUIDE 1 s opens the tuning menu |
 | `addInitTelemetry(t)` | no | extra screen lines during INIT |
-| `onStart()` | no | runs once right after START, before the first loop (the first moment anything may move) |
+| `onStart()` | no | runs once right after ▶, before the first loop (the first moment anything may move) |
 
 \* Starter kit: `return new RobotSettings();`. Tutorials (09-20): `return RobotSettings.config();`
 (the tutorial `RobotSettings` keeps its settings in `static` methods, so `config()` wraps them).

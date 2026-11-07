@@ -100,7 +100,7 @@ All `bind...` methods return the same `ControllerBindings`, so you can chain the
 | Method | What it does |
 | --- | --- |
 | `update(gamepad1, gamepad2)` | **Call once every loop.** Reads the gamepads and runs the actions. |
-| `ignoreHeldButtons(gamepad1, gamepad2)` | Call once right after `waitForStart()`. A button or trigger held down through START does NOTHING (press, release, hold or toggle) until it is let go once. This stops surprises. `bindTriggerAxis` still works. |
+| `ignoreHeldButtons(gamepad1, gamepad2)` | Call once right after `waitForStart()`. A button or trigger held down through ▶ (start on the Driver Hub) does NOTHING (press, release, hold or toggle) until it is let go once. This stops surprises. `bindTriggerAxis` still works. |
 | `releaseAll()` | Acts as if every button and trigger were let go: "release" actions run for held buttons, and `bindTriggerAxis` code gets 0. Call it before you stop calling `update()` for a while (e.g. while a menu uses the gamepad). Call `ignoreHeldButtons` when you start again. |
 | `isDown(pad, btn)` | True if the button was down at the last `update`. |
 | `getSlowActionWarning()` | "" or a note that a button job took more than 20 ms (it waited or slept), like `G2:A button job took 40 ms: the whole robot stopped that long. ...`. It goes away 5 s after the last slow action. Show it with `t.warn(...)`. See [Non-blocking code](../guides/non-blocking.md). |
@@ -194,7 +194,7 @@ if (!confirm.isPlaying()) aimFeel.update(headingErrorDeg);
 | --- | --- |
 | `new AimRumble(gamepad)` | the gamepad to buzz |
 | `setThreshold(value)` | buzzing starts when the error is this small. Default 2.5. |
-| `setFeel(minStrength, maxStrength, minPulseMs, maxPulseMs, minCooldownMs, maxCooldownMs)` | "min" values are used at the edge of the threshold, "max" values at zero error. Defaults: 0.10, 0.65, 120, 200, 120, 350. The cooldown is the time from the START of one buzz to the start of the next, so at the edge (120 ms buzz, 120 ms cooldown) the buzzes run together. |
+| `setFeel(minStrength, maxStrength, minPulseMs, maxPulseMs, minCooldownMs, maxCooldownMs)` | "min" values are used at the edge of the threshold, "max" values at zero error. Defaults: 0.10, 0.65, 120, 200, 120, 350. The cooldown is the time from the start of one buzz to the start of the next, so at the edge (120 ms buzz, 120 ms cooldown) the buzzes run together. |
 | `setEnabled(on)` / `isEnabled()` | turn buzzing on or off (for a driver who does not want it) |
 | `update(error)` | call every loop. Returns true if it started a buzz. `NaN` (no target) does nothing. |
 

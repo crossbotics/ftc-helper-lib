@@ -57,12 +57,12 @@ public static class Turret {
 
 A motor's encoder counts from where it was at INIT, so the turret must learn where "0" is. Pick one:
 
-| How | `Robot.java` | `Tunables.Turret` | Homing at START? |
+| How | `Robot.java` | `Tunables.Turret` | Homing at ▶ (start)? |
 | --- | --- | --- | --- |
 | **Start position** (no switch): you put it there by hand before INIT | nothing extra | `startAngle = 0` (the default: straight forward) | no |
 | **Home switch**: a touch sensor or a magnetic switch | `.homeSwitch("turret_home")` | `homeAngle = 45` (needed), optional `homeDirection = 1`, `homingPower = 0.2`, `homingTimeout = 5` | yes, slowly |
 | **Absolute encoder** (CR servo turret) | `.analogEncoder("turret_pos")` | `encoderOffset = 117` (its reading, 0 to 360, with the turret at 0) | no |
-| **Servo** | `Turret.servo(...)` | `posA`, `angleA`, `posB`, `angleB`; optional `startAngle`: at START it is sent there (default: the middle of its range), since a servo cannot say where it is | no |
+| **Servo** | `Turret.servo(...)` | `posA`, `angleA`, `posB`, `angleB`; optional `startAngle`: at ▶ it is sent there (default: the middle of its range), since a servo cannot say where it is | no |
 
 **Start position.** Make a mark (or a small printed jig) that holds the turret at `startAngle` and put it
 there before every INIT. If it was somewhere else, every angle is off by the difference, and the
@@ -75,7 +75,7 @@ there by hand before INIT, or every angle is off`.
 - a magnetic switch (e.g. REV Magnetic Limit Switch, with a magnet on the turret) configured as a
   **Digital Device**. It reads LOW near the magnet; the library knows.
 
-At **START** (never in INIT: the library never moves anything before START, a safety choice; the game rules also
+At **▶** (start on the Driver Hub; never in INIT: the library never moves anything before ▶, a safety choice; the game rules also
 want the robot standing still once INIT is done, G304.H), if the switch is not closed already, the turret turns slowly
 (`homingPower`) toward it and the Driver Station says `homing: looking for the switch`. (A turret that
 starts ON the switch is homed at once: no turning, no "looking" line.) It turns from `startAngle` toward
@@ -88,7 +88,7 @@ during the match. A switch missing from the configuration: the INIT screen says 
 start angle is used.
 
 **How to find `homeAngle`:** without the `homeSwitch` line, put the turret at `startAngle` (straight
-forward), INIT, START, turn it by hand with the stick until the switch clicks (or the magnetic switch's
+forward), INIT, ▶, turn it by hand with the stick until the switch clicks (or the magnetic switch's
 light comes on), and read the angle on the Driver Station (`Turret : 43 deg`). That is `homeAngle`.
 Then add the line.
 
@@ -111,7 +111,7 @@ between). Turned the turret by hand between programs? Restart the robot app, or 
 finished homing): with no switch the turret starts from `startAngle`, and TeleOp's INIT says so plainly:
 `no angle from a program before: turn it to startAngle 0 deg by hand and INIT again`. Do it: otherwise
 the angle on the Driver Station is off by however far the turret was turned (in a test, it said 4 degrees
-while the turret pointed at -12). A home switch avoids this: it finds the real angle at START.
+while the turret pointed at -12). A home switch avoids this: it finds the real angle at ▶.
 
 ## 3. How far can it turn?
 
@@ -138,7 +138,7 @@ Put a hard stop there too (software is not a hard stop). A servo turret's range 
 | On the robot's body | `.follows(camera).cameraOnBody()` |
 | None: aim from where the robot is ([odometry](../tutorials/start/07-odometry.md)) | `.followsOdometry()` with `Tunables.Aim.goalX, goalY` |
 
-`follows` turns follow mode on at START (operator BACK switches it). With odometry and the goal point,
+`follows` turns follow mode on at ▶ (operator BACK switches it). With odometry and the goal point,
 the odometry takes over while the camera does not see the goal ([Aim](../modules/robot.md#aim)).
 `cameraOffset` (Tunables.Turret): the goal's bearing in the camera's picture when the launcher points
 straight at it (a camera beside the launcher). Find it with the Aim Tuner ([finders](finders.md)).
@@ -188,9 +188,9 @@ encoder (default 0, so the turret would think it starts straight forward).
 | You have | `Robot.java` | `Tunables.Turret`: required | Write too (defaults) | Homing |
 | --- | --- | --- | --- | --- |
 | Motor, no switch | `Turret.motor(name, motorId).gearRatio(r)` | nothing | `min`, `max` (-90, 90), `startAngle` (0, or the middle when 0 is outside `min` to `max`) | none: start it at `startAngle` |
-| Motor + touch or magnetic switch | `... .homeSwitch("turret_home")` | `homeAngle` | `min`, `max` (-90, 90) | at START |
+| Motor + touch or magnetic switch | `... .homeSwitch("turret_home")` | `homeAngle` | `min`, `max` (-90, 90) | at ▶ |
 | Motor, slip ring | `... .continuous()` | nothing | `startAngle` (0) | none, or a switch |
-| Servo | `Turret.servo(name)` | `posA`, `angleA`, `posB`, `angleB` | `travelSec` (0.6), `startAngle` (the middle of its range) | none: sent to `startAngle` (or its middle) at START |
+| Servo | `Turret.servo(name)` | `posA`, `angleA`, `posB`, `angleB` | `travelSec` (0.6), `startAngle` (the middle of its range) | none: sent to `startAngle` (or its middle) at ▶ |
 | CR servo + Through Bore | `Turret.crServo(name).encoder(port, 8192)` | nothing | `min`, `max` (-90, 90), `startAngle` (0) | none, or a switch |
 | CR servo + absolute encoder | `Turret.crServo(name).analogEncoder(port)` | nothing | `min`, `max` (-90, 90), `encoderOffset` (0) | none |
 
@@ -283,10 +283,10 @@ g1.rb.toggle(robot.aimMode()).says("aim at the goal");
 - `Turret : no angle from a program before: turn it to startAngle 0 deg by hand and INIT again, or every
   angle is off` (a TeleOp with nothing carried over: the robot app restarted, more than 5 minutes, or
   `keepAngle = false`)
-- `Turret : home switch at 0 deg: found at START` and `Turret homing : at START it turns clockwise slowly to find the switch`
+- `Turret : home switch at 0 deg: found when ▶ is pressed` and `Turret homing : when ▶ is pressed it turns clockwise slowly to find the switch`
 - `Turret : -37 deg, carried from the last program (12 s ago; keepAngle = false to turn this off)`
 - `Turret : absolute encoder: 31 deg (encoderOffset 117)`
-- After START, while homing: `Turret : homing: looking for the switch`; then `Turret : 12 deg following: camera`.
+- After ▶, while homing: `Turret : homing: looking for the switch`; then `Turret : 12 deg following: camera`.
 - With interlock rules: `Interlock TurretLift: Turret between 109 and 239 deg / Lift above 270 counts`.
 
 ## Common mistakes

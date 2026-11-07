@@ -58,8 +58,8 @@ public class Robot extends RobotDefinition {
         // The intake roller's motor: a 1150 RPM motor (an example, like every part here: use yours).
         intake = add(Intake.motor("intake").part("gobilda-5203-1150").stopsWhen(() -> pieces.isFull()));
 
-        // homeSwitch: a REV Magnetic Limit Switch (REV-31-1462), a "Digital Device"; homed at START.
-        // follows(camera): it follows the goal from START.
+        // homeSwitch: a REV Magnetic Limit Switch (REV-31-1462), a "Digital Device"; homed at ▶.
+        // follows(camera): it follows the goal from ▶.
         turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
                 .homeSwitch("turret_home")
                 .follows(camera));

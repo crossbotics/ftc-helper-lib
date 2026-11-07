@@ -28,7 +28,7 @@ public class AutoCookbook extends Auto<Robot> {
         // 1. Where to put the robot: a note for the drive team, and the spot. Heading 0 = away from the drivers.
         s.start("Back against our goal, facing away from it", -56, -61.1, 0)
 
-         // 2. The INIT menu: the drivers choose with the D-pad before START.
+         // 2. The INIT menu: the drivers choose with the D-pad before ▶.
          .menuChoice("Then", "Leave", "Collect more", "Stay")
          .menuYesNo("Spin up early", true)
 

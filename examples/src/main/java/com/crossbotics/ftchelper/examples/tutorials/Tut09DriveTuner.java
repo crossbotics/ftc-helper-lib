@@ -11,7 +11,7 @@ import com.crossbotics.ftchelper.drive.DriveConfig;
 import com.crossbotics.ftchelper.hardware.BulkReads;
 
 /**
- * Tutorial 09, step 2: the drive tuner. Choose a test in INIT, then START. It runs it once.
+ * Tutorial 09, step 2: the drive tuner. Choose a test in INIT, then ▶. It runs it once.
  * A = 48 in forward, B = 48 in right (mecanum only), X = turn 90 left, Y = turn 90 right.
  * Measure, change the number in RobotSettings.auto(), and run the test again.
  * more: https://crossbotics.com/ftc-helper/docs/tutorials/09-first-auto/#3-tune-it

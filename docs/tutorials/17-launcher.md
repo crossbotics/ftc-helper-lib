@@ -116,7 +116,7 @@ not ready within `readyTimeout`, it gives up and says why: "gave up: flywheel".
 
 ## Run it
 
-1. Safety glasses. No game piece first. START.
+1. Safety glasses. No game piece first. Press ▶ (start on the Driver Hub).
 2. A: the flywheel spins up; telemetry shows about "2850 / 2850 rpm READY". (The program starts at
    36 in, halfway between the 24 and 48 in rows of the table.)
 3. RB without a piece: the feeder runs once. LB: three times, 0.3 s apart.

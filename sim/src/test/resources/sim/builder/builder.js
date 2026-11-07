@@ -10,7 +10,7 @@ import * as P from './pathcore.js';
 import * as S from './stepscore.js';
 import * as C from './simcore.js';
 import { el, pts, drawField, drawRobot, handleRadius, toField } from './mapdraw.js';
-import { openSetupCard } from './setupcard.js';
+import { openSetupCard, openAutoSheet } from './setupcard.js';
 
 const page = window.simPage;
 const $ = (id) => document.getElementById(id);
@@ -199,7 +199,8 @@ panel.innerHTML = `
   <div class="muted" id="bInches"></div>
   <label class="b-note">Note for the drive team <input type="text" id="bNote" maxlength="120" placeholder="Our wall, left corner tile, facing the field"></label>
   <div class="row"><button id="bWrite" title="Write the note from the spot: the wall, the tile, the way it faces">Write it for me</button>
-    <button id="bCard" title="One page for the drive team: the note, the spot on the field, red and blue">Print setup card</button></div>
+    <button id="bCard" title="One page for the drive team: the note, the spot on the field, red and blue">Print setup card</button>
+    <button id="bSheet" title="One page to show another team what this auto does: the route on the field and every step. Print it or save it as a PDF">Auto sheet (PDF)</button></div>
   <div class="muted" id="bNoteHelp"></div>
   <label class="muted" id="bStartOnRow"><input type="checkbox" id="bStartOn"> s.start(...) line in the Java (the note and the spot)</label>
 </details>
@@ -1062,6 +1063,36 @@ $('bCard').onclick = () => {
 	}
 	openSetupCard({ title, note: st.note, x: +st.x, y: +st.y, h: +st.h || 0, robot: lw, mirror: mirrorNow(), spot: B.mode === 'pedro' || st.spot !== false,
 		delay: B.mode === 'pedro' ? null : 0, first, warn, field });
+};
+
+$('bSheet').onclick = () => {
+	const st = startNow(), lw = robotLW();
+	const tl = view?.tl || C.timeline(B, B.steps.speeds);
+	const route = tl.samples.map((p) => [p.x, p.y]);
+	const last = tl.samples[tl.samples.length - 1];
+	let title, steps, warn = '', kind;
+	if (B.mode === 'pedro') {
+		const s = B.pedro;
+		kind = 'path';
+		title = s.opmode || ('Path: ' + (s.label || 'My path'));
+		const n = s.path.parts.length;
+		if (s.mode === 'driveTo') {
+			steps = tl.ends.map((e, i) => ({ text: `${n === 1 ? s.label : s.label + ' ' + (i + 1)}: drive to (${P.num(e.x)}, ${P.num(e.y)}), facing ${P.num(e.h)}°`, t0: e.t0, t1: e.t1, x: e.x, y: e.y, h: e.h }));
+		} else {
+			const e = tl.ends[0];
+			steps = e ? [{ text: `${s.label}: follow the path (${n} part${n === 1 ? '' : 's'}) to (${P.num(e.x)}, ${P.num(e.y)})`, t0: 0, t1: e.t1, x: e.x, y: e.y, h: e.h }] : [];
+		}
+		if (!s.start.on) warn = 'The s.start(...) line is off: the Driver Station does not show the start note.';
+	} else {
+		kind = 'steps';
+		title = B.steps.plan.opmode || 'My Auto';
+		steps = B.steps.plan.steps.map((step, i) => {
+			const e = tl.ends[i] || {};
+			return { text: S.sheetWords(step), t0: e.t0, t1: e.t1, x: e.x, y: e.y, h: e.h };
+		});
+	}
+	openAutoSheet({ title, note: st.note, x: +st.x, y: +st.y, h: +st.h || 0, robot: lw, mirror: mirrorNow(), field, warn,
+		route, steps, total: tl.total, kind, end: last ? { x: last.x, y: last.y, h: last.h } : null });
 };
 
 // ------------------------------------------------------------------ Simple steps: the list
