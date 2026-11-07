@@ -261,7 +261,10 @@ public class AutoDrive {
             double[] command = tank ? new double[]{Math.signum(Math.cos(rad)), 0} : commandFor(Math.cos(rad), Math.sin(rad));
 
             // Remember where the wheels started, so we can measure how far we have gone.
-            int[] start = getWheelTicks();
+            int[] last = getWheelTicks();
+            // Added up a little piece at a time (since the last loop): with a different strafe correction
+            // to the left and to the right, a sideways drift that changes side is corrected piece by piece.
+            double movedForward = 0, movedRight = 0;
             StallDetector stall = new StallDetector(cfg.stallProgressIn, cfg.stallTimeSec);
 
             // Loop until one of the "return" lines ends the move. Each pass is one short step.
@@ -272,8 +275,12 @@ public class AutoDrive {
 
                 // How far have we gone so far, in inches? hypot() gives the straight-line
                 // distance from the forward and sideways parts (like the long side of a triangle).
-                double[] moved = displacementIn(start, getWheelTicks());
-                double traveled = Math.hypot(moved[0], moved[1]);
+                int[] now = getWheelTicks();
+                double[] step = displacementIn(last, now);
+                last = now;
+                movedForward += step[0];
+                movedRight += step[1];
+                double traveled = Math.hypot(movedForward, movedRight);
                 // There: brake, and wait (briefly) until the robot has really stopped, so the next step
                 // does not start while it still rolls on (see settle()).
                 if (traveled >= distanceIn) return settle(deadline);
@@ -768,7 +775,8 @@ public class AutoDrive {
 
     /**
      * How far the robot moved between two encoder readings, robot-relative:
-     * {forward inches, right inches}. Sideways wheel travel is divided by {@code strafeCorrection},
+     * {forward inches, right inches}. Sideways wheel travel is divided by {@code strafeCorrection}
+     * ({@code strafeCorrectionLeft} for travel to the left, when set),
      * because mecanum wheels turn more than the robot moves sideways.
      * (No "public" or "private": only code in this package, like the tests, can use it.)
      */
@@ -783,7 +791,8 @@ public class AutoDrive {
         double forward = (d[0] + d[1] + d[2] + d[3]) / 4.0 / tpi;
         // Right: when strafing right, front-left and back-right turn forward and the other two
         // turn backward (the same pattern as MecanumMixer), so this mix picks out the sideways part.
-        double right = (d[0] - d[1] - d[2] + d[3]) / 4.0 / tpi / cfg.strafeCorrection;
+        double rawRight = (d[0] - d[1] - d[2] + d[3]) / 4.0 / tpi;
+        double right = rawRight / cfg.strafeCorrectionFor(rawRight);
         return new double[]{forward, right};
     }
 
@@ -792,7 +801,7 @@ public class AutoDrive {
      * {@code strafeCorrection} so the robot really travels in the wanted direction.
      */
     private double[] commandFor(double forward, double right) {
-        double lateral = right * cfg.strafeCorrection;
+        double lateral = right * cfg.strafeCorrectionFor(right);
         // The boost can push a value past 1. If so, shrink both parts by the same amount,
         // so the direction (the ratio of forward to sideways) stays the same.
         double largest = Math.max(1.0, Math.max(Math.abs(forward), Math.abs(lateral)));

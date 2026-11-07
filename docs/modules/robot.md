@@ -1023,7 +1023,7 @@ public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional (th
 
 ## Indexer
 
-`Indexer.servo(name)` (Tunables: `rest`, `push`, `pushSec`, `returnSec`), `Indexer.crServo(name)` and
+`Indexer.servo(name)` (Tunables: `rest`, `push`, `pushSec`, `returnSec`, `alsoTrim`, `pushStep` for `adjustPush(steps)`, a D-pad trim of the push in TeleOp), `Indexer.crServo(name)` and
 `Indexer.motor(name)` (`power`, `feedSec` per piece), `.reversed()`, and for a servo indexer
 `.alsoServoReversed(name)` (two arms, one on each side, that pinch together behind the piece and push it in:
 see [two servos on one part](#claw)) and `.fullRange()` (the servo's whole turn: [full range](#claw); set `rest` and `push` again after). Usually given to a launcher with

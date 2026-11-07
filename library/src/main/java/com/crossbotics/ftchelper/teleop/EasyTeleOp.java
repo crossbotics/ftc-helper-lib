@@ -505,7 +505,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
     /** The INIT note when field-centric is possible but has no button, or null (tests). */
     static String noFieldCentricNote(LibraryButtons lib, boolean startsFieldCentric) {
         if (lib.key(LibraryButtons.Job.FIELD_CENTRIC) != null) return null;
-        return "No field-centric button (libraryButtons): driving stays " + (startsFieldCentric ? "field-centric" : "robot-centric");
+        return "No field-centric button (libraryButtons): driving stays " + (startsFieldCentric ? "field-centric" : "robot-centric")
+                + " (unless a button of your own calls driving().toggleFieldCentric())";
     }
 
     // In INIT: the other button of a pair this key is in (debug, switch alliance) is down too, or

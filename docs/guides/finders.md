@@ -327,10 +327,10 @@ wheel slows by less than 150 RPM per shot (a heavy wheel).
 
 **You need:** a charged battery, tape, 5 ft of clear floor. **Done when:** the Drive test (and on a mecanum the Strafe test) measures 48 within 0.5 in, and `calibrated = true` is copied.
 
-![The Drive Tuner floor from above: a tape line marked 0 and 48 in along the robot's left wheels, the push and drive arrow along it, the strafe arrow to the right, and 5 ft of clear floor ahead and to the right](../images/finder-drive-tuner.svg)
+![The Drive Tuner floor from above: a tape line marked 0 and 48 in along the robot's left wheels, the push and drive arrow along it, the strafe arrow to the right, and 5 ft of clear floor ahead and to the right (to the left too for the optional Strafe left test)](../images/finder-drive-tuner.svg)
 
 **Set up the floor:** a straight line of tape, marked **0** and **48 in**, and 5 ft of clear floor ahead
-of the robot and to its right. **Start each test** with the robot's **left wheels touching the tape**
+of the robot and to its right (and its left, for the optional Strafe left test). **Start each test** with the robot's **left wheels touching the tape**
 (their outside edge) and the front left wheel's front edge on **0**. **Why the left wheels:** a wheel
 edge against a line is easy to keep straight when you push by hand, and easy to measure from: forward
 from 0 to that wheel's front edge, sideways from the tape to the left wheels.
@@ -353,6 +353,10 @@ from 0 to that wheel's front edge, sideways from the tape to the left wheels.
    No push test sideways: pushed sideways by hand, a mecanum wheel's rollers spin and its encoder
    counts almost nothing. The strafe correction is about the slip of a **powered** strafe, so only the
    robot strafing by itself can measure it.
+   **Strafe left** (only if moves to the left come up short or long while moves to the right are
+   right): start with the robot's **right** wheels on the tape; it strafes left. Measure from the tape to the
+   right wheels. The same steps, for
+   `Tunables.Drive: strafeCorrectionLeft`. Not written, the left uses `strafeCorrection` too.
 5. **Turn 90 left** (a check, nothing to copy): it turns 90 degrees left; put a square against the
    robot to see it, and the screen shows the IMU's heading (it should say 90).
 6. Copy the lines, then switch autonomous on:

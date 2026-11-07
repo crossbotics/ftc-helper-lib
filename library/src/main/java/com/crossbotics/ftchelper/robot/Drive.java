@@ -25,7 +25,7 @@ import java.util.List;
  *
  * <p>Its numbers are in {@code Tunables.Drive}: {@code maxPower}, {@code practiceMaxPower} (the
  * PRACTICE profile's limit), {@code slowSpeed} (the slow trigger), and the autonomous ones
- * ({@code strafeCorrection}, {@code turnKp}, {@code turnKd}, {@code moveMinPower}, {@code slowDownIn}) with
+ * ({@code strafeCorrection}, {@code strafeCorrectionLeft} if left slips differently, {@code turnKp}, {@code turnKd}, {@code moveMinPower}, {@code slowDownIn}) with
  * {@code calibrated = true} once the Drive Tuner is done (autonomous refuses to run before).
  *
  * <p>Motor directions: the left side is reversed by default (the usual way motors are mounted). If
@@ -172,6 +172,9 @@ public final class Drive {
         final double maxPower = t.tunable("maxPower", 1.0, 0.05).range(0.1, 1).get();
         final double practiceMax = t.tunable("practiceMaxPower", 0.6, 0.05).range(0.1, 1).get();
         final double strafe = t.tunable("strafeCorrection", 1.15, 0.01).range(0.5, 2).get();
+        // Strafing left: its own number only when written (else the same as right).
+        final double strafeLeft = t.has("strafeCorrectionLeft")
+                ? t.tunable("strafeCorrectionLeft", strafe, 0.01).range(0.5, 2).get() : Double.NaN;
         final double turnKp = t.tunable("turnKp", 0.012, 0.001).range(0, 1).get();
         final double turnKd = t.tunable("turnKd", 0.003, 0.0005).range(0, 1).get();
         final double moveMin = t.tunable("moveMinPower", 0.30, 0.02).range(0, 1).get();
@@ -198,6 +201,7 @@ public final class Drive {
                 c.wheelDiameterIn = wheelMm / 25.4;
                 c.gearRatio = gearRatio;
                 c.strafeCorrection = strafe;
+                c.strafeCorrectionLeft = strafeLeft;
                 c.turnKp = turnKp;
                 c.turnKd = turnKd;
                 c.moveMinPower = moveMin;

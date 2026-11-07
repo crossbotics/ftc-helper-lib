@@ -259,6 +259,7 @@ results file says which power the numbers fit.
 | Push | roll the robot BY HAND exactly 48 in along a tape, press **B** | the wheel size, from the counts. Every wheel must count up about the same; if not, it says so (a wrong motor direction or encoder cable) |
 | Drive | it drives 48 in; measure, set the real distance (D-pad +/- 1 / 0.25 in), **A** | a corrected wheel size |
 | Strafe (mecanum) | it drives 48 in right; measure, set it, **A** | a corrected strafe correction |
+| Strafe left (mecanum, if needed) | it drives 48 in left; measure, set it, **A** | `strafeCorrectionLeft`, for a robot that slips differently to the left |
 | Turn | it turns 90 left; check with a square | (the IMU's heading, to compare) |
 
 The Drive, Strafe and Turn tests WAIT while the robot moves, like autonomous (STOP still works).

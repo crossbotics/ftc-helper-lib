@@ -1671,6 +1671,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             t.line("Speed trim", trimWords() + (part.isReady() ? "  READY" : ""));
         }
         if (offered != null) t.line("Trim last time", lastTrimOffered() + " (double-tap D-pad up to use it)");
+        if (indexer != null) indexer.addPushTrim(t);
         // While it fires: how strict it is, and why ("Fire: QUICK (12 s left)").
         if (part.isShooting()) t.line("Fire", modeNow + (modeWhy.isEmpty() ? "" : " (" + modeWhy + ")"));
         // The distance and where it came from, e.g. "48 in (camera)"; "(last seen)" while no goal is seen.

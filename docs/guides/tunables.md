@@ -319,6 +319,7 @@ Section `Drive` (fixed name). Read once at INIT. Module: [Drive](../modules/robo
 | `practiceMaxPower` | the most power in the PRACTICE profile | 0 to 1 | 0.6 | yes, next INIT | test | new drivers need it slower |
 | `slowSpeed` | a power: the most power while the slow trigger is pulled all the way (a little squeeze is a little slower) | 0 to 1 | 0.3 | yes, next INIT | test | fine moves are too slow or too fast |
 | `strafeCorrection` | makes a sideways move in autonomous as long as asked (mecanum wheels slip sideways) | times | 1.15 | yes, next INIT | Drive Tuner | sideways moves are short or long |
+| `strafeCorrectionLeft` | the same for moves to the LEFT, when the robot slips differently that way (not written: `strafeCorrection` both ways) | times | `strafeCorrection` | yes, next INIT | Drive Tuner (Strafe left) | moves to the left are short or long, moves to the right are right |
 | `turnKp` | autonomous turn: how hard it turns per degree off | power per degree | 0.012 | yes, next INIT | test | turns stop short (more) or wobble (less) |
 | `turnKd` | autonomous turn: brakes the turn as it gets close | power per degree/s | 0.003 | yes, next INIT | test | turns overshoot (more) |
 | `moveMinPower` | the least power that still moves the robot (autonomous) | 0 to 1 | 0.30 | yes, next INIT | test | the robot stops just before the end of a move |
@@ -527,6 +528,7 @@ Section: the device's name in CamelCase: `Indexer.servo("feeder")` reads **`Feed
 | --- | --- | --- | --- | --- | --- | --- |
 | `rest` | a servo indexer: where it waits | 0 to 1 | 0.0 | yes, at once | Servo Finder | it blocks the pieces |
 | `push` | a servo indexer: where it pushes a piece into the wheel | 0 to 1 | 0.5 | yes, at once | Servo Finder | pieces are not pushed far enough |
+| `pushStep` | a servo indexer: one step of `adjustPush(...)` (a D-pad trim of `push` in TeleOp) | servo position | 0.01 | yes, at once | test | a step is too big or too small |
 | `pushSec` | a servo indexer: time to push | seconds | 0.25 (with `.part(...)`: the servo's catalog time from `rest` to `push`, at least 0.25) | yes, at once | test | it comes back before the piece is gone (more) |
 | `alsoTrim` | a servo indexer with a second servo (`alsoServoReversed`): raw position added for it, so the two arms meet | raw position, -0.2 to 0.2 | 0 | yes, at the next move | test: watch both arms | one arm pushes further than the other |
 | `returnSec` | a servo indexer: time to come back | seconds | 0.25 (with `.part(...)`: the same as `pushSec`) | yes, at once | test | the next piece jams on it (more) |

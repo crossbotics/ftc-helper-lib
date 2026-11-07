@@ -388,6 +388,26 @@ public class RobotModulesTest {
         assertEquals(0.0, kit.servos.get("indexer").position, 1e-9);   // indexer at rest after START
     }
 
+    @Test public void adjustPushMovesThePushFurtherFromRestAndNeverPastIt() {
+        final Indexer i = Indexer.servo("indexer");
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(i));
+            }
+        };
+        r.setup(new RobotTestKit());
+        assertEquals("no Tunables: push 0.5", 0.5, i.pushNow(), 1e-9);
+        i.adjustPush(+2);
+        assertEquals("rest 0: further = higher", 0.52, i.pushNow(), 1e-9);
+        i.adjustPush(-60);
+        assertEquals("a step past rest is ignored", 0.52, i.pushNow(), 1e-9);
+        i.adjustPush(-51);
+        assertEquals(0.01, i.pushNow(), 1e-9);
+        i.adjustPush(-1);
+        assertEquals("not onto rest", 0.01, i.pushNow(), 1e-9);
+    }
+
     @Test public void anIndexerInsideALauncherCannotBeAddedAgain() {
         RobotDefinition r = new RobotDefinition() {
             @Override protected void define() {

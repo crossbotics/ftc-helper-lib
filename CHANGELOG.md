@@ -2,6 +2,17 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **`Tunables.Drive.strafeCorrectionLeft`:** its own strafe correction for autonomous moves to the left, for a
+  robot that slips more one way. Not written: `strafeCorrection` both ways, as before. The Drive Tuner has a
+  **Strafe left** test that finds it.
+- **`feeder().adjustPush(steps)`:** a D-pad trim for a servo feeder's push position during TeleOp (+ = a longer
+  push, - = shorter), in steps of `Tunables pushStep` (0.01). Kept until the program ends; the screen shows the
+  number to copy into `Tunables push`. For a push that stops getting the piece all the way.
+
 ## v0.34.0 - 2026-11-06
 
 ### Added

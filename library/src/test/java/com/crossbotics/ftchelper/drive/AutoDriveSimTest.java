@@ -144,6 +144,23 @@ public class AutoDriveSimTest {
         assertEquals(24 * 1.2, wheelRight, 0.6);
     }
 
+    @Test public void strafeCorrectionLeftIsUsedOnlyForMovesToTheLeft() {
+        AutoDriveConfig c = config();
+        c.strafeCorrection = 1.1;
+        c.strafeCorrectionLeft = 1.3;
+        SimRobot left = new SimRobot();
+        left.auto(c, 1).move(24, -90, 0.6);
+        double wheelLeft = -(left.fl.position - left.fr.position - left.bl.position + left.br.position) / 4 / c.ticksPerInch();
+        assertEquals(24 * 1.3, wheelLeft, 0.6);
+        SimRobot right = new SimRobot();
+        right.auto(c, 1).move(24, 90, 0.6);
+        double wheelRight = (right.fl.position - right.fr.position - right.bl.position + right.br.position) / 4 / c.ticksPerInch();
+        assertEquals(24 * 1.1, wheelRight, 0.6);
+        // Not set: the same number both ways.
+        c.strafeCorrectionLeft = Double.NaN;
+        assertEquals(1.1, c.strafeCorrectionFor(-1), 1e-12);
+    }
+
     @Test public void negativeDistanceGoesBackward() {
         SimRobot r = new SimRobot();
         r.auto(config(), 1).move(-12, 0, 0.5);
