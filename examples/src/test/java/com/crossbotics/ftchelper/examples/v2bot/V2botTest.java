@@ -10,7 +10,7 @@ import org.junit.Test;
 /**
  * Tests for a robot in five files (the V2 robot), on a laptop with no robot: the library's test kit
  * gives Robot.java pretend motors, servos and switches. Each test does what the robot app does (INIT,
- * START, a loop) and checks what the motors and servos were sent. Run them:
+ * ▶, a loop) and checks what the motors and servos were sent. Run them:
  *   ./gradlew :examples:testDebugUnitTest
  * Your own: copy this file into TeamCode/src/test/java/org/firstinspires/ftc/teamcode/ (fix the package
  * line) and change the names to your robot's. Guide: docs/guides/testing.md. Tutorial 13, section 7.
@@ -34,7 +34,7 @@ public class V2botTest {
         PretendDevices devices = new PretendDevices();   // a fresh pretend robot for each test
         Robot robot = new Robot();
         robot.setup(devices);                            // INIT
-        robot.startForTests();                           // START
+        robot.startForTests();                           // ▶ (start)
         robot.lift.goTo("flower");
         robot.all().update();                            // one loop
         assertTrue("power up", devices.motor("lift").power > 0);
@@ -44,7 +44,7 @@ public class V2botTest {
         assertTrue(robot.lift.isAt("flower"));
     }
 
-    // At START the turret looks for its home switch: until then its angle is unknown, so the
+    // At ▶ the turret looks for its home switch: until then its angle is unknown, so the
     // interlock rule keeps the wrist out of its zone and the Driver Station says why.
     @Test public void theWristWaitsUntilTheTurretIsHomed() {
         PretendDevices devices = new PretendDevices();

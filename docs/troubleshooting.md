@@ -35,7 +35,7 @@ See [A new FTC SDK version](02-keep-up-to-date.md#a-new-ftc-sdk-version).
 **<samp>INIT STOPPED: the robot did not start.</samp>**
 
 The library found a mistake at INIT. The line under it says what is wrong and how to fix it: find it
-below. Nothing moves. Press STOP, fix it, then press INIT again. (After START, a mistake still shows as
+below. Nothing moves. Press STOP, fix it, then press INIT again. (After ▶ on the Driver Hub, a mistake still shows as
 the FTC app's red line, <samp>User code threw an uncaught exception: ...</samp>, after every part has
 stopped. The words after the dash are the same messages as below.)
 
@@ -115,7 +115,7 @@ part's.) An interlock rule's fields follow the same name: `liftLeftAbove`, not `
 **The interlock line says <samp>... held ...: Turret angle unknown (...)</samp>**
 
 The other part's position is not
-known yet (a turret looking for its home switch, a servo turret before START), so it counts as maybe in
+known yet (a turret looking for its home switch, a servo turret before ▶), so it counts as maybe in
 its zone and this part waits. It goes on by itself once the angle is known.
 
 **<samp>AutoDriveConfig.calibrationConfirmed is false</samp>**
@@ -136,12 +136,12 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | <samp>Launcher gave up: flywheel</samp> (or <samp>hood</samp>, <samp>Turret</samp>...) | it was not ready in time: that part is the problem |
 | <samp>Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, ...</samp> | normal on a first run: no gains written, so it starts from the motor's catalog numbers. The wheel gets to speed, but slower after each shot than when tuned: run the [Flywheel Finder](guides/finders.md#flywheel-finder-gains-and-recovery) and write its line ([First run](guides/tunables.md#first-run-what-you-get-before-tuning)) |
 | <samp>Aim odometry: the pose was never set ...</samp> | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended)) |
-| <samp>No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry</samp> | START was held 1 s ("set pose here") but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
-| <samp>Alliance now RED (was BLUE)</samp> | the alliance switch is on (`lib.switchAlliance(...)`) and someone held START, then BACK, 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
-| <samp>Alliance now RED: odometry aim OFF until the pose is set (...)</samp> | the alliance was switched on a turned field (`mirrorForRed = false`): the pose from autonomous cannot be fixed. Park on the reset spot and hold START 1 s ([buttons guide](guides/buttons.md#switching-the-alliance-in-teleop)) |
-| <samp>Set pose here needs odometry: ...</samp> | START was held 1 s, but the robot has no `odometry(...)` line in Robot.java, so it cannot know where it is ([lesson 7](tutorials/start/07-odometry.md)). Nothing changed |
+| <samp>No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry</samp> | gamepad 1 START was held 1 s ("set pose here") but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
+| <samp>Alliance now RED (was BLUE)</samp> | the alliance switch is on (`lib.switchAlliance(...)`) and someone held gamepad 1 START, then BACK, 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
+| <samp>Alliance now RED: odometry aim OFF until the pose is set (...)</samp> | the alliance was switched on a turned field (`mirrorForRed = false`): the pose from autonomous cannot be fixed. Park on the reset spot and hold gamepad 1 START 1 s ([buttons guide](guides/buttons.md#switching-the-alliance-in-teleop)) |
+| <samp>Set pose here needs odometry: ...</samp> | gamepad 1 START was held 1 s, but the robot has no `odometry(...)` line in Robot.java, so it cannot know where it is ([lesson 7](tutorials/start/07-odometry.md)). Nothing changed |
 | <samp>Launcher : WAITING_READY  left 1  waits for: turret aimed</samp> | the launcher holds the piece until that check is true (here: the turret on the goal). <samp>Launcher gave up: ...</samp> shows for 5 s when it waited too long |
-| <samp>Pose NOT set: stop first ...</samp> | "set pose here" was held while the robot drove (a drive stick pushed) or whole-robot aim was on. Stop, then hold START 1 s again |
+| <samp>Pose NOT set: stop first ...</samp> | "set pose here" was held while the robot drove (a drive stick pushed) or whole-robot aim was on. Stop, then hold gamepad 1 START 1 s again |
 | <samp>No pause button (libraryButtons freed it): ...</samp> | `lib.pause(null)` in `libraryButtons`: nothing pauses the robot. Put it on a button: `lib.pause(g1.back)` |
 | <samp>No slow button (libraryButtons freed it): ...</samp> | `lib.slow(null)` with no `slow()` of your own: add one, e.g. `g1.rt.slow()` |
 | <samp>COMPETITION: "intake_deploy" not in the configuration: IntakeDeploy is OFF (optional part). On the robot? ...</samp> | the same as the note below, loud because the COMPETITION profile is on: at an event a part that is off is most likely a misspelled or lost configuration name. Fix the name (or plug it in) and INIT again; if the part really is not built, it is safe to play |
@@ -224,7 +224,7 @@ left drives into it. Start farther away (the example robots use x 44 to 48), or 
 simulator the robot box turns red on a bump, and a scenario can check `expect bumped none`
 ([autos guide](guides/autos.md)).
 
-**The robot paused when I used START + BACK** (the debug lines, or the alliance switch)
+**The robot paused when I used the gamepad's START + BACK** (the debug lines, or the alliance switch)
 BACK was pressed first. BACK is the pause button, and it pauses the moment it goes down; START joining
 later does not undo that, so you get a plain pause (and no debug lines or switch). Tap BACK to go on.
 Next time **hold START first, then press BACK** ([the button menu](guides/buttons.md#moving-the-librarys-buttons)).
@@ -259,7 +259,7 @@ negative number.) With the robot in five files, every direction is flipped: reve
 - In `Controls.java`: is it on the right gamepad (`g1` = the driver, `g2` = the operator)?
 - Is it a hold where you pressed (or a press you hold)? `heldFor(1.0, ...)` needs 1 s; a `tap` waits
   to know it is not a double-tap.
-- Was it held through START (or while the tuning menu closed)? Let it go and press again.
+- Was it held through ▶ (or while the tuning menu closed)? Let it go and press again.
 - Is the robot paused (PAUSED on the screen)? Tap BACK.
 - Old style (`ControllerBindings`): is `controls.update(gamepad1, gamepad2)` in the loop? Is it the
   right pad (`Pad.G1` = gamepad1, `Pad.G2` = gamepad2)? After `ignoreHeldButtons`, let it go and press again.
@@ -321,7 +321,7 @@ for every later test. Fix: put `PretendClock.stopUsing()` in that test class's `
 
 **The robot ran the wrong autonomous plan, or started in the wrong place**
 The first option of each INIT menu line runs when nobody changes it, and the "Place robot" note says
-where the robot must stand. Read the menu and the note out loud before START:
+where the robot must stand. Read the menu and the note out loud before ▶:
 [match day checklist](guides/autos.md#match-day).
 
 **An INIT menu option does nothing**

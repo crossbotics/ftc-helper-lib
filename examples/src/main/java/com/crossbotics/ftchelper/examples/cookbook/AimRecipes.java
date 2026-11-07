@@ -200,7 +200,7 @@ public class AimRecipes {
             // end recipe
 
             // recipe: moving-shot-button
-            // Shooting on the move on/off (on from START when Tunables.Aim.shootOnMove = true): if
+            // Shooting on the move on/off (on from ▶ when Tunables.Aim.shootOnMove = true): if
             // the shots go wide while driving, switch it off and shoot standing still.
             g2.a.toggle(robot.aim().movingShotMode()).says("shoot on the move on/off").rumble();
             // end recipe

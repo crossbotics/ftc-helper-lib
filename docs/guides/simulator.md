@@ -53,7 +53,7 @@ simulator builds your code and makes the robot file only when it starts.
 
 **What you see:** the Driver Hub on the left, the field in 3D in the middle with the gamepads under it,
 and the Control Hub's panels on the right. Try it: pick an OpMode with the TeleOp button, press INIT,
-then START (the same big button), and drive with the keyboard (set gamepad 1's list to "Keyboard"; left
+then ▶ (start, the same big button), and drive with the keyboard (set gamepad 1's list to "Keyboard"; left
 stick W A S D, right stick the arrows). [The page](#the-page) explains every part.
 
 It works on Windows, macOS and Linux, and on a Chromebook with Linux turned on.
@@ -125,7 +125,7 @@ The page fits one laptop screen. On a narrow screen the parts stack and the page
 
 - **Left: the Driver Hub**, drawn like the Driver Station app. It shows the robot battery, gamepad 1
   and 2 (lit while used), the Auto and TeleOp buttons (each lists the OpModes of that kind), one big
-  button that is INIT, then START (play), then STOP, the match time, and the telemetry.
+  button that is INIT, then ▶ (start), then STOP, the match time, and the telemetry.
 - **Middle: the field in 3D**, with the gamepads under it. The on-screen gamepads look like a real
   controller (Xbox 360 / Logitech layout, with the button names the SDK uses). A pressed button gets a
   white ring. **Hide gamepads** gives the field more room when you drive with the keyboard, a
@@ -141,7 +141,7 @@ Android Studio), a red bar across the top of the page says so and how to start i
 **Simulator** next to the green Run button and click Run (or `./gradlew :sim:run`). The page connects
 again by itself; you do not need to reload it.
 
-**Driver Hub** (left): choose an OpMode, then INIT, START, STOP, like the real one. The screen shows
+**Driver Hub** (left): choose an OpMode, then INIT, ▶, STOP, like the real one. The screen shows
 the telemetry about as wide as a real Driver Hub. OpModes marked "(hidden on robot)" have `@Disabled`:
 the simulator shows them anyway. Autonomous stops by itself after 30 s, and TeleOp after 2:00, like the
 real Driver Station with its timer on (the clock counts down; a box under it turns each timer off).
@@ -164,7 +164,7 @@ gamepad updates only once a second, and after 2.5 s without news the simulator l
 button (like a pulled cable): keep the simulator tab visible while you drive.
 
 The GUIDE (PS) button often does not reach the browser (Windows and macOS keep it): use the on-screen
-GUIDE, the M key, or hold START for 1 second (the finders accept that too).
+GUIDE, the M key, or hold the gamepad's START (the Enter key) for 1 second (the finders accept that too).
 
 **Control Hub** (right): the field from above (the drivers are at the bottom; drag the robot on it to
 move it, or type **x**, **y** and **heading**, use the **Face** buttons, and tick **Snap** to go against a wall and
@@ -206,7 +206,7 @@ In INIT the robot is put where the program says: an autonomous that names its
 start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) puts it there for the
 alliance chosen in its menu; an autonomous with its spot only in words (`startPosition()`, or
 `s.start(note, heading)`) puts it on the chosen alliance's side (the robot file's start), and the Driver
-Hub asks you to drag it to the exact spot. At START the simulator remembers that spot for this
+Hub asks you to drag it to the exact spot. At ▶ the simulator remembers that spot for this
 autonomous (in `sim-start-spots.properties`, next to the simulator's settings), and the next INIT puts
 the robot there; for the other alliance, the same spot on its side. Or give the spot in inches in the
 code (`s.start(note, x, y, heading)`), so it goes there by itself; a TeleOp with no autonomous before it puts it at the robot file's start for
@@ -451,7 +451,7 @@ What a team does, step by step:
 6. **Run in the simulator.** The simulator INITs the **Built Auto** (its own autonomous, listed in the
    Driver Hub under "Builder") with your plan, puts the field's pieces back and the preload in the robot (a
    fresh match, whatever a TeleOp did before), chooses the alliance, puts the robot on the start spot and
-   presses START. Each Run is one INIT: to run the plan again, press Run again (an INIT of the Built Auto from the Driver Hub's list has no plan, and says so). The last run's results go away when a new run starts. The clock beside Run counts the autonomous's seconds (real time, like a match: no fast
+   presses ▶. Each Run is one INIT: to run the plan again, press Run again (an INIT of the Built Auto from the Driver Hub's list has no plan, and says so). The last run's results go away when a new run starts. The clock beside Run counts the autonomous's seconds (real time, like a match: no fast
    forward). A **purple robot** drives the plan beside your robot; each of its steps starts when your
    robot's step starts, so you see where they part. The green line is where your robot really went.
 7. **Read the result:** a table with each step's word from the report (done, STALLED, timed out, skipped
@@ -624,7 +624,7 @@ default):
 | `odometry.scaleError` | 0 | noise: 0.01 = it measures 1% too far (wheel slip, a wrong pod size) |
 | `odometry.driftDegPerMin` | 0 | noise: the heading creeps this many degrees per minute |
 | `motor.NAME = KIND, ...` | | a motor: `free`, `lift` or `flywheel`, then `part=`, `ticksPerRev=` (catalog, else 537.7 or 28 for a flywheel), `rpm=` or `maxTicksPerSec=` (catalog, else 2780), `min=`, `max=` (counts), `gravity=` (0), `kS=` (0), `accelSec=`, `coastSec=`, `feeder=` (a motor, CR servo or servo that feeds a flywheel), `feederPush=` (a servo feeder: where it goes to push; a push counts once it is half way there. Without it, once it is 0.15 from its start. `:sim:fromRobot` writes it from `Tunables` `push`), `shotDrop=` (0.15: how much a shot slows the wheel), `stage=CRSERVO` (a feed wheel that brings the pieces to a servo `feeder`: a push sends a piece only if this wheel ran at least 0.05 s before the arm started to move out; `:sim:fromRobot` writes it for [`feedWheel(...)`](../modules/robot.md)), `stop=SERVO`, `stopOpen=` (0.5) (a feed stop: pieces get through only while that servo is within 0.05 of `stopOpen`; `:sim:fromRobot` writes it for [`feedStop(...)`](../modules/robot.md#firing-shot-modes-feed-stop-piece-path)), `drivenBy=CRSERVO` (no motor on this port: only an encoder, on a shaft that CR servo turns, e.g. a CR servo turret's Through Bore), `with=FIRST` (a second motor on the same slide or arm as the motor `FIRST`: both turn one shaft and both push, so each carries half its `gravity`; `mirrored=true`: its shaft turns the other way, two motors facing each other. `:sim:fromRobot` writes it for [`alsoMotor`](../modules/robot.md#two-motors-on-one-lift-or-arm)) |
-| `servo.NAME = START, ...` | start 0.5 | a servo: `part=` (catalog), or `rangeDeg=` and `secPer60=` for one not in the catalog. `pwm=500-2500`: the robot's code uses the servo's full range (`.fullRange()`; `:sim:fromRobot` writes it); START and every position in the file are then in that range. Like the hub, the simulated servo gets the normal 600-2400 us at each INIT and the code's `setPwmRange` after, so 0 to 1 turns a goBILDA 2000 servo 270 degrees, or 300 with full range |
+| `servo.NAME = START, ...` | start 0.5 | a servo: `part=` (catalog), or `rangeDeg=` and `secPer60=` for one not in the catalog. `pwm=500-2500`: the robot's code uses the servo's full range (`.fullRange()`; `:sim:fromRobot` writes it); the start position and every position in the file are then in that range. Like the hub, the simulated servo gets the normal 600-2400 us at each INIT and the code's `setPwmRange` after, so 0 to 1 turns a goBILDA 2000 servo 270 degrees, or 300 with full range |
 | `servo.speed` | 1.0 | positions per second for a servo with no part |
 | `crservo.NAME =` | | a continuous servo (the value is not used) |
 | `light.NAME = gobilda` or `blinkin` | | a colored light ([`Lights`](../modules/robot.md#lights)): a goBILDA RGB Indicator Light (a servo) or a REV Blinkin; the page shows its color on the robot, on the 3D view and in the Servos tab |
@@ -788,7 +788,7 @@ Notes:
 - `passive=yes` (arm or slide): gravity or springs move it, not the code (a floating intake, a sprung
   flywheel mount). It is drawn at `start=`; the size rules try its whole range (`minDeg=`/`maxDeg=` or
   `travel=`). `drop=SERVO>0.6` (or `<`) with `fallsTo=`: once that servo passes the position, it falls to
-  that end and stays (an intake folded up at the start and pushed over at START); a new match puts it back.
+  that end and stays (an intake folded up at the start and pushed over at ▶); a new match puts it back.
   `Robot.java` writes these with `Shape.passive()` and `Shape.dropsWhen(...)` ([robot module](../modules/robot.md#shapes-and-parts)).
 - `on=` puts a part on another (default: the chassis). A part on a slide rides on its moving stage
   (`at=0,0,<stage length>` is the moving stage's top); a part on an arm turns with it (`at=` from the
@@ -1000,7 +1000,7 @@ What it models (BIOBUZZ, Competition Manual TU01):
 
 The robot is the alliance its program chose (the INIT menu; red when none). The match clock comes from the
 Driver Station: a running autonomous is AUTO (30 s), a running TeleOp is TELEOP (2:00; "seconds left" counts
-down from its START, even with the TeleOp timer off). With no OpMode running it is free play: no fouls, and
+down from its ▶, even with the TeleOp timer off). With no OpMode running it is free play: no fouls, and
 tips count as TELEOP. The score is live ("if the match ended now") and starts again at "Back to start",
 "Reset field" and when an autonomous starts.
 
@@ -1156,13 +1156,13 @@ Over the 3D view, **Tests**:
 
 - **Record a test**: the field starts fresh (the OpMode running stops, the robot to its start spot, every
   piece back, the Tunables numbers as the code wrote them: a test runs with the code, not with numbers
-  tuned on the page). A red bar shows the time. Choose an OpMode, INIT, choose the alliance, START, and
+  tuned on the page). A red bar shows the time. Choose an OpMode, INIT, choose the alliance, ▶, and
   do the job; then **Stop recording**. **Record from now** starts with the robot where it is (a `set pose`
   line): quicker, but less reliable.
 - What it writes: `init`, `start`, `stop`; every gamepad change from any source (keyboard, controller,
   on-screen, phone) as `press` (a tap shorter than 0.35 s), `hold` and `release` (a stick in steps of
   0.25; a sweep counts where it ended; three or more let go at once: `release g1.all`); the time between
-  them as `wait` (before START at most 1 s: it changes nothing); the robot or a piece moved by hand
+  them as `wait` (before ▶ at most 1 s: it changes nothing); the robot or a piece moved by hand
   (`set pose`, `set piece`, `push`, `set field start`); the page's settings that differ from a fresh
   simulator (`set battery`, `set preload off`, `set scatter`, `set autotimer off`). An autonomous that
   ends by itself in the middle of the recording becomes `expect within T phase STOPPED`. Only commands
@@ -1173,7 +1173,7 @@ Over the 3D view, **Tests**:
   report that is `done`, pieces shot, scored or picked up and the points (`>=`), no error, not bumping into
   anything, a TeleOp still running; for a driving test with no pieces, where the robot ends. **Details**
   (not ticked): where the robot ends (x and y give or take 3 in, the heading 5 degrees), the time since
-  START (`<` 1.5 times), Driver Station lines (only their steady part: from the first number on, the
+  ▶ (`<` 1.5 times), Driver Station lines (only their steady part: from the first number on, the
   line is cut off, because numbers change from run to run). Every check's numbers, operator and
   `within` time can be changed before saving. The checks that wait come first, then the others.
 - **Save** writes `simulator/scenarios/NAME.sim` in the robot project (letters, digits, `-` and `_`;
@@ -1222,7 +1222,7 @@ numbers are the ones in your code. Several files end with a list of which passed
 robot ../robots/starter-bot-rev.properties  # optional: run this scenario with this robot file (path from
                                        # the scenario's folder) instead of the usual one
 init "Main TeleOp"                     # INIT an OpMode (waits for its first screen)
-start                                  # START
+start                                  # press ▶
 press g1.a                             # press and let go (held until the OpMode surely saw it)
 hold g1.left_stick_y -1                # set a stick or button and keep it
 release g1.left_stick_y                # let go (release g1.all / release all)
@@ -1243,7 +1243,7 @@ set device intake_deploy missing       # take a device out of the configuration 
 set tunable IntakeDeploy.deployed 0.6  # a Tunables number for this file only (before init; see below)
 expect screen has "Ready"              # or: screen not "..."
 expect value "Lift" > 500              # the number on the screen line that starts with Lift
-expect time < 25                       # seconds since START (e.g. how long an autonomous took)
+expect time < 25                       # seconds since ▶ (e.g. how long an autonomous took)
 expect touch lift_bottom pressed       # or: open
 expect error none                      # or: error has "..."
 expect phase RUNNING                   # IDLE | INIT | RUNNING | STOPPED

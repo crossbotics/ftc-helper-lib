@@ -42,7 +42,7 @@ public class Robot extends RobotDefinition {
         // .part(...) = which motor or servo it is (the id on its label; these are examples).
         intake = add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
 
-        // 5 motor turns per turret turn. follows(camera): follow mode is on from START.
+        // 5 motor turns per turret turn. follows(camera): follow mode is on from ▶.
         turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
 
         // Speed and hood angle from the distance, starting on the POLLEN table. Fires only when aimed.

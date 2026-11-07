@@ -19,7 +19,7 @@ flowchart TB
         I1["set up drive, IMU, mechanisms"] --> I2["menu: alliance, start delay, your choices, profile"]
         I2 --> I3["show where to place the robot<br/>warn: practice profile, tuned values"]
     end
-    subgraph RUN["START (30 s)"]
+    subgraph RUN["▶ start (30 s)"]
         R1["start the timer, wait the delay"] --> R2["YOUR STEPS<br/>(mirrored for RED,<br/>mechanisms always updating)"]
         R2 --> R3["park steps<br/>(always get their time)"]
     end

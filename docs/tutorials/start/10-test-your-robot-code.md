@@ -23,7 +23,7 @@ command and check), [Record a test](../../guides/simulator.md#record-a-test) (th
 ## 1. Why tests?
 
 You change one number for the lift, and the autonomous stops scoring. You find out at the next event.
-A **test** finds it in a minute, on your laptop: it does what a driver would do (INIT, START, sticks,
+A **test** finds it in a minute, on your laptop: it does what a driver would do (INIT, ▶ on the Driver Hub, sticks,
 buttons) and then checks the result ("the autonomous finished", "4 pieces were shot").
 
 A test does not prove the robot is good. It proves that **what worked yesterday still works today**.
@@ -40,7 +40,7 @@ section. The test catches it before the robot does.
 3. Choose your OpMode and press **INIT**. In the INIT menu, choose the alliance (gamepad 1 **B** for RED,
    **X** for BLUE). On the keyboard (set gamepad 1's list to "Keyboard") B is the **L** key and X is
    the **J** key; or click B or X on the on-screen gamepad 1.
-4. Press **START** and do the job, as in a match: drive to a piece, pick it up, shoot. For an
+4. Press **▶** and do the job, as in a match: drive to a piece, pick it up, shoot. For an
    autonomous: do nothing, let it run to its end.
 5. Press **Stop recording** in the red bar. A window opens: **Your test: choose the checks**.
 6. Leave the ticked checks ticked (section 5 says why). Type a name, e.g. `main-teleop`, and press
@@ -52,7 +52,7 @@ section. The test catches it before the robot does.
    drives) and shows **PASSED**, or **FAILED** with the line that failed.
 
 The recorder writes down every gamepad button and stick (from the keyboard, a real controller or the
-on-screen gamepad), how long you waited, INIT, START, STOP, and the robot or a piece moved by hand. A
+on-screen gamepad), how long you waited, INIT, ▶, STOP, and the robot or a piece moved by hand. A
 quick tap becomes a `press`; a button held down becomes `hold` and `release`; a stick becomes
 `hold g1.left_stick_y -0.5`, in steps of 0.25 (nobody holds a stick at exactly 0.53 twice).
 
@@ -85,10 +85,10 @@ expect bumped none
 | --- | --- |
 | `# ...` | a note for people; the test skips it |
 | `init "goBILDA Bot Launch and Back Up"` | INIT this OpMode (the name exactly as on the Driver Station) |
-| `wait 1` | wait 1 second (waits before START are cut to 1 s: they change nothing) |
+| `wait 1` | wait 1 second (waits before ▶ are cut to 1 s: they change nothing) |
 | `press g1.b` | press and let go of gamepad 1's B: RED in the INIT menu |
-| `start` | START |
-| `expect within 6 phase STOPPED` | **a check:** within 6 s, the OpMode stops by itself (the autonomous ends). The **phase** is where the OpMode is: `INIT`, `RUNNING` (after START) or `STOPPED` (`IDLE` before INIT) |
+| `start` | press ▶ |
+| `expect within 6 phase STOPPED` | **a check:** within 6 s, the OpMode stops by itself (the autonomous ends). The **phase** is where the OpMode is: `INIT`, `RUNNING` (after ▶) or `STOPPED` (`IDLE` before INIT) |
 | `expect within 3 launched >= 4` | within 3 s, at least 4 pieces were shot |
 | `expect within 3 points "red" >= 13` | RED has at least 13 points |
 | `expect step 1 done` | the autonomous report's first step says `done` (the **report** is the list of steps the Driver Station shows when the autonomous ends: [lesson 6](06-first-autonomous.md#4-what-you-get-for-free)) |
@@ -108,7 +108,7 @@ close is close enough:
 | `expect robot y = -36 3` | y is -36, give or take 3 inches (between -39 and -33) | where the robot ends |
 | `expect robot heading = 90 5` | 90 degrees, give or take 5 | which way it faces |
 | `expect launched >= 4` | 4 or more | counts: pieces, points |
-| `expect time < 25` | less than 25 s since START | "fast enough" |
+| `expect time < 25` | less than 25 s since ▶ | "fast enough" |
 | `expect within 4 stored >= 1` | wait up to 4 s for it to become true | anything that takes time |
 
 The number after `=` is the value; the next number is the **tolerance** (how far off it may be).
@@ -232,14 +232,14 @@ No robot project yet? Try the recorder with goBILDA's starter bot, from the `ftc
 
 1. Open http://localhost:8780. **Tests > Record a test**.
 2. Choose "goBILDA Bot Launch and Back Up", INIT, press gamepad 1 **B** (RED; the **L** key on the
-   keyboard), START. Wait until the Driver Station says `Autonomous finished`.
+   keyboard), ▶. Wait until the Driver Station says `Autonomous finished`.
 3. **Stop recording.** Look at the goal checks: it finishes, steps 1 and 2 are done, 4 pieces shot.
 4. With `-PteamCode=none` there is no robot project, so **Download** saves the file in your browser's
    downloads. Press **Run it now**: PASSED.
 5. Run the same test without the page:
    `./gradlew :sim:scenario -PteamCode=none -Pfile=sim/scenarios/recorded-gobilda-auto.sim`.
    This runs the library's own copy of the same test (in `sim/scenarios`), not the file you downloaded.
-6. Record a TeleOp test the same way: "goBILDA Bot TeleOp", B, START, hold the left stick forward for
+6. Record a TeleOp test the same way: "goBILDA Bot TeleOp", B, ▶, hold the left stick forward for
    a second, let go, **Stop recording**. The goal is where the robot ends.
 
 ## If something goes wrong

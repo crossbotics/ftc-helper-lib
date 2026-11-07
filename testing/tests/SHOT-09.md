@@ -29,11 +29,11 @@ into the flywheel. The wheel must run before the arm pushes, or the arm pushes n
 
 ## Steps
 
-1. Press START. Spin up. The feed wheel must not turn yet.
+1. Press ▶ (start on the Driver Hub). Spin up. The feed wheel must not turn yet.
 2. Fire one piece. The feed wheel must start first. The arm must push about 0.2 s later, while the wheel still
    turns. The wheel must stop about 0.3 s after the push starts. The piece must leave.
 3. Set `stopSec = -0.1` in the tuning menu. Fire again. The wheel must stop just before the arm pushes. The piece still goes: the wheel ran 0.1 s.
-4. Set `alwaysOn = true` in `Tunables.java` and INIT again. After START with the flywheel on, the wheel must
+4. Set `alwaysOn = true` in `Tunables.java` and INIT again. After ▶ with the flywheel on, the wheel must
    turn all the time. A fire must push at once.
 5. Press LB (the flywheel coasts down). The wheel must stop.
 

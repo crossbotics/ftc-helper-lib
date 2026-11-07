@@ -33,12 +33,12 @@ public class Tut01HelloLibrary extends LinearOpMode {
                 .bindPress(Pad.G1, Btn.A, () -> presses++);
 
         // Nothing shows until update() sends it.
-        telemetry.addLine("Ready. Press START.");
+        telemetry.addLine("Ready. Press ▶.");
         telemetry.update();
 
-        // ---------- wait for START (or STOP) ----------
+        // ---------- wait for ▶ (or STOP) ----------
         waitForStart();
-        // A button held while START was pressed is not a press.
+        // A button held while ▶ was pressed is not a press.
         controls.ignoreHeldButtons(gamepad1, gamepad2);
 
         // ---------- RUN: repeats until STOP ----------

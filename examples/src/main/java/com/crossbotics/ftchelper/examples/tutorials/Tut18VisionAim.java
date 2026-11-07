@@ -53,7 +53,7 @@ public class Tut18VisionAim extends LinearOpMode {
         AimController aim = new AimController(0.02, 0.003).deadband(1.5).maxPower(0.5).maxAgeMs(150);
         AimRumble feel = new AimRumble(gamepad1).setThreshold(3);   // buzz within 3 degrees
 
-        // Until START: show what the camera sees, so the team can check it before the match.
+        // Until ▶: show what the camera sees, so the team can check it before the match.
         while (opModeInInit()) {
             camera.update();
             t.line("Camera", camera.status());

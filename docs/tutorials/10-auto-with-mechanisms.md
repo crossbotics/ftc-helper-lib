@@ -72,7 +72,7 @@ Keep the hook quick: no `sleep`, no waiting loops.
 
 ## 4. Choose the plan in INIT
 
-Before START, the drivers set up the robot and choose things. Use a small `ControllerBindings`
+Before ▶ (start on the Driver Hub), the drivers set up the robot and choose things. Use a small `ControllerBindings`
 in an INIT loop:
 
 ```java
@@ -90,7 +90,7 @@ while (opModeInInit()) {
 if (isStopRequested()) return;
 ```
 
-`opModeInInit()` is true until START (or STOP). The library's rule is that the robot does not move in INIT (a safety choice; the game asks only that it
+`opModeInInit()` is true until ▶ (or STOP). The library's rule is that the robot does not move in INIT (a safety choice; the game asks only that it
 is still once INIT is done); reading buttons and showing choices is fine. Blue = X (the blue button on many pads), red = B.
 `Math.min` and `Math.max` keep the delay between 0 and 10 seconds.
 
@@ -174,7 +174,7 @@ heading; with odometry pods (extra unpowered wheels with encoders that track x a
 ## Run it
 
 1. INIT: press B (red), D-pad up twice (2 s delay). The screen shows your choices.
-2. START: waits 2 s, drives forward while the lift rises, turns RIGHT (red), drives on.
+2. Press ▶. It waits 2 s, drives forward while the lift rises, turns RIGHT (red), drives on.
 3. Run it again as blue: it turns LEFT.
 4. Put a box in the way of the first move: it backs off and tries again.
 

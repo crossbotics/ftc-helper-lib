@@ -76,7 +76,7 @@ public class Tunables {
         public static double angleA = 0;                            // hood angle at posA, degrees: the steep end
         public static double angleB = 25;                           // hood angle at posB, degrees: the flat end
         public static double travelSec = 0.45;                      // stop to stop, seconds (worked out from the gears)
-        public static double startAngle = 0;                        // where it goes at START: the steep end
+        public static double startAngle = 0;                        // where it goes at ▶: the steep end
     }
 
     /**

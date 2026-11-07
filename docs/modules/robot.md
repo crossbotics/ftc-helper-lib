@@ -84,7 +84,7 @@ public class Robot extends RobotDefinition {
         intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
         lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
         claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
-        atStart(() -> Actions.deployIntake(this));   // optional: an action right after START
+        atStart(() -> Actions.deployIntake(this));   // optional: an action right after ▶ (start)
     }
 }
 ```
@@ -106,7 +106,7 @@ part each loop. Nothing moves in INIT.
 | `follower(PathFollower.Maker m)` | optional: a path follower, e.g. `follower(Pedro.follower(...))` ([PathFollower](#pathfollower)); needs an `odometry(...)` line |
 | `T add(T module)` | a mechanism; hands it back, so you can keep it in a field (`lift = add(...)`) |
 | `add(...optional())` | a part that may not be on the robot yet: off (not a stop) while its device is not in the configuration ([Parts not on the robot yet](#parts-not-on-the-robot-yet)) |
-| `atStart(Supplier<Action>)` | an action that runs once right after START, in autonomous and TeleOp |
+| `atStart(Supplier<Action>)` | an action that runs once right after ▶ (start on the Driver Hub), in autonomous and TeleOp |
 | `Interlock keepApart(name, zoneA, zoneB)` | an interlock rule: two parts never in their zones at the same time (after the parts' `add` lines; numbers in `Tunables.<name>`) ([Interlock](#interlock)) |
 | `tunables(Class)` | the Tunables class if it is not `Tunables` in the same folder |
 | `addOwn(Subsystem)`, `everyLoop(Runnable)` | your own code with the robot's loop (also after INIT, from `Controls.java`): see [Your own code every loop](#your-own-code-every-loop) |
@@ -116,7 +116,7 @@ part each loop. Nothing moves in INIT.
 | --- | --- |
 | `run(Action)`, `cancel(Action)`, `cancelAll()` | start or stop actions |
 | `atInit(Runnable)`, `duringInit(Runnable)`, `atStop(Runnable)` | your own code once at INIT, every pass of INIT, and at STOP |
-| `wasStarted()` | true once START was pressed |
+| `wasStarted()` | true once ▶ was pressed |
 | `pauseAll()`, `resume()`, `togglePause()`, `isPaused()` | stop every part and hold it stopped, go on again, and ask which it is |
 | `setAlliance(Alliance)` | sets this match's alliance. The OpMode classes do this for you: only for your own plain OpMode |
 | `driveWith(gamepad)`, `driveWith(forward, strafeRight, turnRight)` | drives from a gamepad, or from your own numbers (forward, strafe right and turn right are +). Only in your own plain OpMode, after `robot.init(this)`: anywhere else it stops with an error |
@@ -133,7 +133,7 @@ part each loop. Nothing moves in INIT.
 | `robotConfig()` | the drive settings for `EasyTeleOp`/`EasyAuto` |
 | `simLines()` | the simulator robot file's lines from the code |
 | `setup(hardwareMap)` | makes every module's hardware (the OpMode classes call it in INIT); `setup(devices)` with [pretend devices](testkit.md) in a test |
-| `startForTests()` | in a JUnit test only: what START does (each part's start, the `atStart` actions); the OpMode classes do it themselves ([testkit](testkit.md)) |
+| `startForTests()` | in a JUnit test only: what ▶ does (each part's start, the `atStart` actions); the OpMode classes do it themselves ([testkit](testkit.md)) |
 | `checkTunables()` | the Tunables name checks of INIT, without a robot: one line per problem (a field no part reads, a section that looks meant for a part). `:sim:fromRobot` prints them |
 | `sectionWarnings()` | after `setup`: INIT's warnings about Tunables sections no part reads that look meant for one |
 | `tunablesClass()` | the Tunables class found (null if none) |
@@ -181,7 +181,7 @@ public class Tunables {
   `Tunables.java`** (INIT lists it): a value saved only on the hub is lost with a new Control Hub.
   True/false settings and tables stay as written.
 - **The code is the record.** The numbers you tune most become [`Tunable`](tuning.md)s ("Lift/kP"):
-  the tuning menu (PRACTICE profile, after START hold GUIDE 1 s) changes them and saves them on the Control Hub. INIT then
+  the tuning menu (PRACTICE profile, after ▶ hold GUIDE 1 s) changes them and saves them on the Control Hub. INIT then
   shows "Tuned on this robot (copy into Tunables.java)" with the lines to copy back.
 - **A part that is not on the robot** ([`optional()`](#parts-not-on-the-robot-yet), device not in the
   configuration) needs no section: nothing about its numbers stops INIT, not even a Lift's `min`/`max`.
@@ -273,8 +273,8 @@ robot.everyLoop(() -> lastHeight = robot.lift.position());  // a small piece of 
 
 | | |
 | --- | --- |
-| `addOwn(part)` | your part (a class that `implements Subsystem`): its `update()` every loop after START, after the library's parts; its `stop()` at STOP **and when the robot pauses** (BACK), so a motor in it stops with the rest. Not updated while paused; nothing runs in INIT (make its hardware in its constructor, never move anything there). In `define()` for a part with no hardware, or after INIT |
-| `everyLoop(code)` | a `Runnable` every loop after START (not while paused). It has no `stop()`: for code that moves a motor use `addOwn` |
+| `addOwn(part)` | your part (a class that `implements Subsystem`): its `update()` every loop after ▶, after the library's parts; its `stop()` at STOP **and when the robot pauses** (BACK), so a motor in it stops with the rest. Not updated while paused; nothing runs in INIT (make its hardware in its constructor, never move anything there). In `define()` for a part with no hardware, or after INIT |
+| `everyLoop(code)` | a `Runnable` every loop after ▶ (not while paused). It has no `stop()`: for code that moves a motor use `addOwn` |
 
 Pause stops every part in `all()` that is not the library's own, also one added the old way with
 `robot.all().add(...)`. A second motor on a lift or arm needs none of this: `alsoMotor` (see [Lift](#lift)).
@@ -539,7 +539,7 @@ intake = add(Intake.motor("intake").part("gobilda-5203-117")
 | `in()`, `out()`, `stop()`, `toggle()` | run in / out until stopped; on/off |
 | `reverse()`, `endReverse()` | push out while a button is held, then back to what it was doing |
 | `isRunning()`, `isPushingOut()` | running at all; pushing out now (`out()`, or `reverse()` held) |
-| `onAtStart()` | runs in from START until stopped |
+| `onAtStart()` | runs in from ▶ until stopped |
 | `holds(n)` | how many pieces it carries: count them by hand (load pieces until no more fit). The simulator uses it, and so does [Pieces](#pieces-and-piecesensor): "full" at this number unless its `max` says another. INIT warns above the game's limit. Without it the simulator guesses 4. It does not stop the real intake by itself: to stop at a count, use [Pieces](#pieces-and-piecesensor) and `stopsWhen(...)` ([cookbook](../cookbook.md#how-do-i-stop-the-intake-when-the-robot-is-full)). BIOBUZZ: no more than 4 at a time (G407) |
 | `holds(n, "KIND")` | how many of one kind it carries, when the kinds differ: `0` = it cannot take that kind (goBILDA's starter bot and a NECTAR: `.holds(4).holds(0, "NECTAR")`). A name matches every kind that contains it ("NECTAR": red and blue). With `holds(n)` too it is a mix: `.holds(4).holds(1, "NECTAR")` = 4 pieces, at most 1 NECTAR. The simulator does not take a kind that does not fit; [Pieces](#pieces-and-piecesensor) warns when one is in anyway and has `isFullFor(kind)` |
 | `stopsWhen(condition)`, `isHeldBack()`, `heldBackSec()` | never runs IN while the condition is true (pushing out still works), e.g. `stopsWhen(() -> pieces.isFull())` ([Pieces](#pieces-and-piecesensor)); how long it has been held back |
@@ -624,7 +624,7 @@ when the program starts. Button: operator right stick Y by hand.
 [`ServoPositions`](#claw) is what Claw, Wrist and Positioner share: `goTo(name)`, `isDone()` (it should
 have arrived: a guess from `travelSec`), `isAt(name)`, `positions()`, `part()` (the
 [`PositionServo`](mechanism.md#positionservo) inside), `reversed()`. In Tunables every number is a
-named position (0 to 1) except `travelSec` ([reference](../guides/tunables.md#claw-wrist-and-positioner)). A servo does not move until the first command after START.
+named position (0 to 1) except `travelSec` ([reference](../guides/tunables.md#claw-wrist-and-positioner)). A servo does not move until the first command after ▶.
 With `.part("gobilda-2000-torque")` an unwritten `travelSec` comes from the servo's catalog speed; with no
 positions written, INIT says the library's positions are guesses (find yours with the Servo Finder).
 
@@ -704,7 +704,7 @@ turret = add(Turret.crServo("turret").part("axon-max-mk2").analogEncoder("turret
 | Made with | |
 | --- | --- |
 | `Turret.motor(name, motorId)` | a motor; its encoder counts the angle |
-| `Turret.servo(name)` | a standard servo (it goes to an angle by itself): `posA`, `angleA`, `posB`, `angleB`, `travelSec` in Tunables; no PID, no homing. A servo cannot say where it is, so **at START it is sent to `startAngle`** (or the middle of its range when there is none; in TeleOp after autonomous: where autonomous left it, so it does not jump). From then on its angle is known: the stick, following and interlock rules work from the first loop |
+| `Turret.servo(name)` | a standard servo (it goes to an angle by itself): `posA`, `angleA`, `posB`, `angleB`, `travelSec` in Tunables; no PID, no homing. A servo cannot say where it is, so **at ▶ it is sent to `startAngle`** (or the middle of its range when there is none; in TeleOp after autonomous: where autonomous left it, so it does not jump). From then on its angle is known: the stick, following and interlock rules work from the first loop |
 | `Turret.crServo(name)` + `encoder(port, countsPerRev)` | a CR servo with an encoder on a motor port (REV Through Bore: 8192); the port may also run another part's motor (only its count is read) |
 | `Turret.crServo(name)` + `analogEncoder(port)` | a CR servo with an absolute encoder on an analog port: it knows its angle at once (`encoderOffset`) |
 
@@ -712,7 +712,7 @@ turret = add(Turret.crServo("turret").part("axon-max-mk2").analogEncoder("turret
 | --- | --- |
 | `gearRatio(r)` | turns per turret turn of what counts: the motor (a motor turret), the encoder (a CR servo turret) |
 | `reversed()`, `encoderReversed()` | + power turns it clockwise: flip it; a CR servo's encoder counts the wrong way |
-| `homeSwitch(name)` | a touch sensor or a magnetic switch (a "Digital Device", active low): it homes at START, slowly (`homeAngle`, `homeDirection`, `homingPower`, `homingTimeout`), and sets its angle again each time it passes the switch. Missing from the configuration: an INIT note and `startAngle` is used |
+| `homeSwitch(name)` | a touch sensor or a magnetic switch (a "Digital Device", active low): it homes at ▶, slowly (`homeAngle`, `homeDirection`, `homingPower`, `homingTimeout`), and sets its angle again each time it passes the switch. Missing from the configuration: an INIT note and `startAngle` is used |
 | `continuous()` | a slip ring: no limits, always the shortest way, never "out of range"; the angle shows -180 to 180 |
 | `follows(camera)` | follows the camera's goal; with odometry and `Tunables.Aim.goalX, goalY` the odometry takes over while the camera does not see it ([Aim](#aim)) |
 | `followsOdometry()` | follows the goal with no camera: from the odometry and `Tunables.Aim`'s goal point |
@@ -721,7 +721,7 @@ turret = add(Turret.crServo("turret").part("axon-max-mk2").analogEncoder("turret
 
 | Method | |
 | --- | --- |
-| `followMode()` | the [mode](#modes) that follows the goal (on from START with `follows` or `followsOdometry`) |
+| `followMode()` | the [mode](#modes) that follows the goal (on from ▶ with `follows` or `followsOdometry`) |
 | `aimAt(deg)` | turn to an angle (stops following) |
 | `manual(power)` | by hand; following pauses while the stick moves |
 | `isAimed()` | at the target within the tolerance; while FOLLOWING: at the goal NOW (a goal seen this moment, homed, in range, not held by an interlock, error within the larger of `tolerance` and `Tunables.Aim.toleranceDeg`), so a launcher gated on it never fires after the goal is lost |
@@ -743,17 +743,17 @@ aim has its own `Tunables.Aim.cameraOffset`, see [Aim](#aim)),
 HOLD where it points instead of swinging limit to limit as the heading wobbles; it follows again once the
 goal is back within half of that). With a switch: `homeAngle` (needed), `homeDirection`, `homingPower`,
 `homingTimeout`. Absolute encoder: `encoderOffset`. Servo: `posA`, `angleA`, `posB`, `angleB`,
-`travelSec`, and `startAngle` (optional: where it goes at START, inside its range; default the middle of
+`travelSec`, and `startAngle` (optional: where it goes at ▶, inside its range; default the middle of
 the range). `keepAngle` (default true): TeleOp starts from the angle the last program ended at (within
 5 minutes, same robot app run), so it does not home again after autonomous (a servo turret: it is sent
-there at START instead of `startAngle`). Turret moved by hand since? Turn it to `startAngle`, stop the
-OpMode in INIT (before START) and INIT again: an INIT stopped before START forgets the carried angle.
+there at ▶ instead of `startAngle`). Turret moved by hand since? Turn it to `startAngle`, stop the
+OpMode in INIT (before ▶) and INIT again: an INIT stopped before ▶ forgets the carried angle.
 
 A following turret and whole-robot aim are separate modes: see [Aim](#aim). Buttons: operator right
 stick X by hand, BACK following on/off. The Driver Station shows one line, `Turret : 12 deg  AIMED  following: camera`
 (`AIMED` only when `isAimed()`: while following, at a goal seen now; `odometry`, or `no goal`: it holds where
-it points), `homing: looking for the switch` after START, and for a servo turret before START
-`not sent anywhere yet (at START: 0 deg)`.
+it points), `homing: looking for the switch` after ▶, and for a servo turret before ▶
+`not sent anywhere yet (at ▶: 0 deg)`.
 
 ## Interlock
 
@@ -805,7 +805,7 @@ loops + half its `StopSec`). A part kept out may only use the power that lets it
 slows down as it comes near its waiting point and brakes when it must, even with slow loops (a camera, a
 busy hub). The margin is extra safety on top. A servo needs none: it is never sent past the fence. A turret whose way to its target crosses its zone goes the other way
 round if its range allows (a slip ring, or -270 to 270), else waits at the edge. Both in their zones (pushed
-there, or found so at START): each may only move out. A part whose position is not known (a turret not
+there, or found so at ▶): each may only move out. A part whose position is not known (a turret not
 homed yet, a servo still moving: it counts as anywhere between where it was and where it was sent until its
 `travelSec` is over) counts as in its zone. Every command goes through it: buttons, sticks, actions,
 autonomous steps, a following turret, shooting on the move. A held turret is never `isAimed()`.
@@ -856,7 +856,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `table(name)`, `speedRpm()` | a shot table as Tunables.java has it (null if none); `Tunables.Launcher.speedRpm` (the Shot Tuner starts from them) |
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
 | `requireReady(what, check)` | another check before each feed (e.g. the turret is aimed) |
-| `spinAtStart()`, `spinAtStart(on)`, `spinsAtStart()` | spins up at START (autonomous and TeleOp), ready for the first shot. On by itself with a separate feeder (an indexer or a feed stop): a spinning wheel cannot throw a piece the feeder has not pushed in. `spinAtStart(false)` waits for LB; Tunables `spinAtStart` wins over both |
+| `spinAtStart()`, `spinAtStart(on)`, `spinsAtStart()` | spins up at ▶ (autonomous and TeleOp), ready for the first shot. On by itself with a separate feeder (an indexer or a feed stop): a spinning wheel cannot throw a piece the feeder has not pushed in. `spinAtStart(false)` waits for LB; Tunables `spinAtStart` wins over both |
 | `hood(Hood)`, `hood()` | the launcher's [hood](#hood): its angle from the table's third column; the launcher waits for it before feeding |
 | `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from the wheel shape's forward (the robot's forward for a wheel mounted level; 135 = up and out of the back) |
 | `feedStop(servo)`, `feedStopName()` | a [feed stop](#firing-shot-modes-feed-stop-piece-path): a servo that holds the pieces back until a shot is allowed |
@@ -913,7 +913,7 @@ piece takes in each mode (measured from the last volleys, else an estimate). Whi
 Driver Station says `Fire: QUICK (12 s left)`. `robot.launcher.shotMode(ShotMode.CAREFUL)` sets a mode
 by hand (`null` = choose again).
 
-**Feed stop** (`.feedStop("feed_stop")`, only if the robot has one): it goes to `feedStopHold` at START
+**Feed stop** (`.feedStop("feed_stop")`, only if the robot has one): it goes to `feedStopHold` at ▶
 (never in INIT: nothing moves before the match), opens to `feedStopRelease` for a piece, and closes when
 the wheel sees the shot (its speed drops), or after `feedStopOpenSec` (0.5 s). The indexer and the pushing
 parts wait `feedStopMoveSec` (0.1 s) while it opens. In CAREFUL and QUICK it closes after each piece, so a
@@ -1028,7 +1028,7 @@ public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional (th
 `.alsoServoReversed(name)` (two arms, one on each side, that pinch together behind the piece and push it in:
 see [two servos on one part](#claw)) and `.fullRange()` (the servo's whole turn: [full range](#claw); set `rest` and `push` again after). Usually given to a launcher with
 `.feeder(...)`; added on its own its button is operator RB (feed one). A servo indexer goes to `rest`
-at START. Commands: `feedOne()`, `isBusy()`, `isFeeding()`, `isJammed()`, `clearJam()`. `onFeed(runnable)`
+at ▶. Commands: `feedOne()`, `isBusy()`, `isFeeding()`, `isJammed()`, `clearJam()`. `onFeed(runnable)`
 runs your code each time a feed really starts. A [Pieces](#pieces-and-piecesensor) counter counts the
 piece out only once it has gone: its ready sensor sees it leave, or the feed ends without a jam (a feed
 stopped part way, or jammed, leaves the count as it was).
@@ -1086,11 +1086,11 @@ the rim, or worn balls launch flatter). Use the speed trim first.
 | `minAngle()`, `maxAngle()`, `startAngle()`, `usesAngles()`, `isMotor()`, `isReversed()`, `part()` | `part()` is the [`AngleDevice`](mechanism.md#angledevice) the launcher drives |
 
 `Tunables.Hood` (the section is the hood device's name in CamelCase; [all its numbers](../guides/tunables.md#hood)) (optional ones scale with the range, so they suit degrees, positions and ticks):
-`startAngle` (where it goes at START; default angleA), `stepAngle` (1/25 of the range), `byHandPerSec`
+`startAngle` (where it goes at ▶; default angleA), `stepAngle` (1/25 of the range), `byHandPerSec`
 (the whole range in 2.5 s at full stick), `trimMax` (1/5 of the range), `travelSec` (servo, 0.5; with
 `.part(...)`, from the servo's catalog speed over posA to posB). A
 motor hood: `kP` (power per tick, 0.005), `maxPower` (0.5), `tolerance` (1/50 of the range); it never
-pushes further past a stop. Nothing moves in INIT: the hood goes to `startAngle` at START. The Driver
+pushes further past a stop. Nothing moves in INIT: the hood goes to `startAngle` at ▶. The Driver
 Station shows `Hood : 12.5 deg (table, trim +1.0 deg)` (`moving` until it should be there).
 
 Not built yet: a CR servo with an absolute encoder. It fits the same way: anything that is an
@@ -1143,7 +1143,7 @@ public static boolean autoLighting = false;
 
 Put them in `Tunables.Limelight` (change the `pipeline` line; add `autoLighting` if it is not there).
 A webcam shows `public static double exposureMs = 6;` instead: a new line in its section.
-`lighting()` gives the test itself. At START the test stops and keeps the best setting so far, so
+`lighting()` gives the test itself. At ▶ the test stops and keeps the best setting so far, so
 have a tag in view at INIT. A camera missing from the robot configuration is a warning at INIT, not
 a stop: the OpMode runs and the camera sees nothing.
 
@@ -1155,7 +1155,7 @@ Its optional Tunables (leave them out for the defaults):
 | `lightingSettleMs` | 300 | wait after a switch before counting pictures (ms) |
 | `lightingPictures` | 10 | pictures counted per setting |
 | `lightingMinPictures` | 3 | pictures with tags a setting needs to count as good |
-| `lightingAfterStartMs` | 0 | after START, how long to keep trying (ms); 0 = stop at START with the best so far. No targets while it tries |
+| `lightingAfterStartMs` | 0 | after ▶, how long to keep trying (ms); 0 = stop at ▶ with the best so far. No targets while it tries |
 | `liveView` | true | a webcam: show its picture in the PRACTICE profile (never at an event: it costs speed). See it on the Driver Station: the menu > Camera Stream, in INIT |
 | `exposureMs` (webcam) | -1 | a fixed manual exposure (ms) when the test is off; -1 = the camera's own |
 | `gain` (webcam) | -1 | the gain for manual exposures; -1 = the camera's highest |
@@ -1221,11 +1221,11 @@ and forth, so `robot.aimMode()` stops at INIT with a message on a robot whose tu
 **Reverse drive:** `g1.x.toggle(robot.reverseDriveMode()).rumble();` in `Controls.java`. While it is on,
 forward and strafe are flipped, so the back of the robot acts as the front (the turn is not flipped;
 field-centric driving ignores it). The Driver Station says `Drive : REVERSED: the back is the front`.
-Off at START.
+Off at ▶.
 
 **Whole-robot aim** (no turret): one line in `Controls.java`. While it is on, the robot turns to face
 the goal and the driver keeps forward and sideways; moving the turn stick still turns it by hand. Off
-at START. `turnKp`, `turnKd`, `maxTurnPower`, `minTurnPower` (the least power that turns the robot),
+at ▶. `turnKp`, `turnKd`, `maxTurnPower`, `minTurnPower` (the least power that turns the robot),
 `toleranceDeg` and `cameraOffset` are its numbers (this `cameraOffset` is `Tunables.Aim`'s, for the whole
 robot; a turret has its own in `Tunables.Turret`; the Aim Tuner prints the line for the one your robot
 uses). The Driver Station shows `Aim : camera, 1.5 deg off  AIMED`.
@@ -1294,7 +1294,7 @@ whole-robot aim; nothing while neither aims, or while paused.
 | `mode()` (= `robot.aimMode()`) | whole-robot aim (stops with a message on a robot whose turret follows the goal) |
 | `canAim()`, `stage()` | the robot can find the goal at all (a camera with a goal, or the odometry backup); NOT_SEEN, SEEN, IN_RANGE or LOCKED now (`Stage.words()`: "not seen" ... "LOCKED") |
 | `errorDeg()`, `isAimed()`, `rumbleDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`: on the goal now). While shooting on the move: off the virtual goal |
-| `movingShotMode()` | shooting on the move on/off (on from START with `shootOnMove = true`): `g2.a.toggle(robot.aim().movingShotMode())` |
+| `movingShotMode()` | shooting on the move on/off (on from ▶ with `shootOnMove = true`): `g2.a.toggle(robot.aim().movingShotMode())` |
 | `isMovingShot()`, `lead()` | it is on and the robot moves (over 2 in/s or 5 deg/s); the last lead (a [MovingShot](vision.md#movingshot) `Result`: `leadDeg`, `leadIn`, `distanceIn`), null if none |
 
 ---
@@ -1461,7 +1461,7 @@ robot.lights.otherwise(LightColor.OFF);                                 // when 
 | `show(color).blinking().when(test)` | blinks 2 times a second; `blinking(1)`: once a second (any number above 0, at most 5) |
 | `show(color).whenStarts(test)` | a 0.5 s flash each time `test` turns from false to true (`.forSeconds(1)` first: longer) |
 | `show(color).whenCountGoesUp(count)` | a 0.5 s flash each time the number goes up: `() -> robot.launcher.part().getShotsFired()` flashes once per piece fired (`whenStarts(robot.launcher::isShooting)` would flash once for all of a `fire(3)`). Shots closer together than the flash run into one long flash: `.forSeconds(0.2)` first keeps them apart |
-| `show(color).inLastSeconds(20)` | in the last 20 s of TeleOp's 2:00, counted from START |
+| `show(color).inLastSeconds(20)` | in the last 20 s of TeleOp's 2:00, counted from ▶ |
 | `otherwise(color)` | when no rule is true (default `OFF`) |
 | `flash(color)`, `flash(color, seconds)` | flash now, over every rule: from a button or an action step |
 | `color()`, `showing()`, `isFlashing()`, `clearRules()` | the color the rules pick; what is lit this instant (OFF in a blink's dark half) |
@@ -1514,8 +1514,8 @@ Station's small text.
 
 - **INIT:** solid `RED` or `BLUE` once the alliance is picked (TeleOp: gamepad 1 X or B, or the one
   autonomous left; autonomous: its INIT menu). Not picked yet: **white blinking once a second**
-  ("choose the alliance"). Your rules wait until START.
-- **START:** a 1 s flash of the alliance (TeleOp after autonomous: the one it got), then your rules.
+  ("choose the alliance"). Your rules wait until ▶.
+- **▶:** a 1 s flash of the alliance (TeleOp after autonomous: the one it got), then your rules.
 - **Alliance switched in TeleOp** (the opt-in `lib.switchAlliance(...)`): a 1 s flash of the new one.
 - Keep your rules' colors away from red and blue (the examples use purple and orange), so nobody reads
   "intake on" as "BLUE alliance".
@@ -1667,7 +1667,7 @@ The whole table, with how to move each: [the button menu](../guides/buttons.md#m
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |
 | BACK | press: **pause** everything at once (stopped on brake), a tap again: go on; held 1 s (field-centric on): also "forward" = away from you now (with odometry: the pose stays, only the driver's "forward" changes), still paused | turret following on/off (with a turret; else free) |
-| START | hold 1 s: **set pose here** (with odometry: the pose becomes `Tunables.Odometry`'s reset spot) | free |
+| START (OPTIONS on a PS controller) | hold 1 s: **set pose here** (with odometry: the pose becomes `Tunables.Odometry`'s reset spot) | free |
 | START + BACK | hold START, then press BACK: debug lines (when let go); with `lib.switchAlliance(g1.start, g1.back)`, both held 1.5 s: **switch the alliance**. BACK first is only a pause | |
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | free |
 
@@ -1815,7 +1815,7 @@ field element. With `routeTo` the park goes around the boxes you list:
 
 The steps are read in INIT (for the menu, the start position and the park time; nothing runs), again
 in INIT whenever a menu choice changes (so a `start(...)` inside an `onlyIf` follows the menu:
-[several autos](../guides/autos.md)), and after START. Everything else is [`EasyAuto`](auto.md#easyauto): alliance and delay menu, mirroring for RED,
+[several autos](../guides/autos.md)), and after ▶. Everything else is [`EasyAuto`](auto.md#easyauto): alliance and delay menu, mirroring for RED,
 the timer, stopping everything, the report. When its steps are done it ends at once (even with time
 left), so the Driver Station moves to its TeleOp; TeleOp's INIT shows the report and the alliance (or
 lets the drivers choose it: X = BLUE, B = RED). Until `Tunables.Drive.calibrated` is true it says

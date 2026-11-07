@@ -116,7 +116,7 @@ Read it out loud: it IS the plan. Things to notice:
 
 ## Run it
 
-1. INIT: read the placement line. Choose BLUE, Route = Score. START.
+1. INIT: read the placement line. Choose BLUE, Route = Score. Press ▶ (start on the Driver Hub).
 2. The screen shows "Step 4/11 To the goal" and the time left.
 3. At the end: the report. Is every step "done"?
 4. Run as RED: it turns the other way and parks to the left.

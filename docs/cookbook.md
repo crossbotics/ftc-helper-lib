@@ -105,7 +105,7 @@ first.
 - [How do I wait until something is true?](#how-do-i-wait-until-something-is-true)
 - [How do I start an action from a button?](#how-do-i-start-an-action-from-a-button)
 - [How do I stop every running action?](#how-do-i-stop-every-running-action)
-- [How do I run an action right after START?](#how-do-i-run-an-action-right-after-start)
+- [How do I run an action when the OpMode starts?](#how-do-i-run-an-action-when-the-opmode-starts)
 - [How do I use the same action in an autonomous?](#how-do-i-use-the-same-action-in-an-autonomous)
 
 **Autonomous**
@@ -184,7 +184,7 @@ first.
 | `if` the drivers chose something before the match | `onlyIf(...)` with a menu choice ([choices](#how-do-i-let-the-drivers-choose-before-the-match)) | an autonomous |
 | `repeat 3 times` | a `for` loop that adds the steps 3 times to an action ([repeat](#how-do-i-repeat-steps-several-times)) | `Actions.java` |
 | set servo position | a named position: `robot.claw.open()`, `robot.intakeDeploy.goTo("deployed")` ([servo positions](#how-do-i-add-any-servo-with-named-positions-a-gate-a-fold-out)) | `Controls.java`, `Actions.java` |
-| `waitForStart` | nothing: the library waits for START. For something right after START: `atStart(...)` ([at START](#how-do-i-run-an-action-right-after-start)) | `Robot.java` |
+| `waitForStart` | nothing: the library waits for ▶ (start on the Driver Hub). For something right after ▶: `atStart(...)` ([at ▶](#how-do-i-run-an-action-when-the-opmode-starts)) | `Robot.java` |
 | blocks before `waitForStart`, or after the loop | `atInit(...)`, `duringInit(...)`, `atStop(...)` ([your own code](guides/your-own-code.md)) | `Robot.java` |
 | `if gamepad2.y then ...` inside the loop | one line, once: `g2.y.press(...)` ([buttons](#how-do-i-make-a-button-do-something-once)) | `Controls.java` |
 | `if` the button is held | `g1.a.hold(...)` ([hold](#how-do-i-run-something-only-while-a-button-is-held)) | `Controls.java` |
@@ -321,7 +321,7 @@ robot configuration on the Driver Station, exactly. The section's name is that n
 | `@TeleOp(...)`, `@Autonomous(...)` | put the program in the Driver Station's list, with this name |
 | `@Disabled` | hides the program from the list. The cookbook's programs have it; delete it in your copy |
 | `@Override`, `public`, `static`, `protected` | Java words the file needs. Copy them as they are |
-| INIT, START | the Driver Station's two buttons: INIT gets ready (the library moves nothing then), START runs |
+| INIT, ▶ | the Driver Station's two buttons: INIT gets ready (the library moves nothing then), ▶ (start) runs |
 | PRACTICE, COMPETITION | the two profiles (ways to run): PRACTICE is slower and has the tuning menu |
 | ticks (counts) | how far a motor has turned, from its encoder (a sensor in the motor) |
 | `kP`, `kI`, `kD`, `kF` | the PID numbers: how hard a lift pushes toward its target. Start with the defaults |
@@ -760,7 +760,7 @@ intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-s
 
 <!-- recipe: intake-on-at-start -->
 ```java title="Robot.java"
-// Runs in from START until stopped. Its button (operator RT) then switches it on/off.
+// Runs in from ▶ until stopped. Its button (operator RT) then switches it on/off.
 // .part(...): which motor it is (optional, recommended).
 add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
 ```
@@ -1011,7 +1011,7 @@ public static class Wrist {                                     // "wrist" in th
 // "intake_deploy" = the servo's name in the robot configuration. Numbers: Tunables.IntakeDeploy.
 // .part(...): which servo it is (optional, recommended).
 intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque"));
-// Right after START (autonomous and TeleOp): fold the intake out.
+// Right after ▶ (autonomous and TeleOp): fold the intake out.
 atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
 ```
 
@@ -1024,8 +1024,8 @@ public static class IntakeDeploy {                              // "intake_deplo
 }
 ```
 
-**Why:** a `Positioner` has no standard buttons, so you choose when it moves (here: at START).
-**More:** [Positioner](modules/robot.md#positioner), [an action at START](#how-do-i-run-an-action-right-after-start).
+**Why:** a `Positioner` has no standard buttons, so you choose when it moves (here: at ▶).
+**More:** [Positioner](modules/robot.md#positioner), [an action at ▶](#how-do-i-run-an-action-when-the-opmode-starts).
 
 ### How do I get my servo's full range?
 
@@ -1071,7 +1071,7 @@ These lines take Y, A, X and B from the lift and the claw (their standard button
 Three places: the part's line in `Robot.java`, the action in `Actions.java`, its button in `Controls.java`.
 
 **`Robot.java`**, inside `define()`: add `.optional()` to the part's `add` line (here a deploy servo that
-folds the intake out). The `atStart` line runs the action below at START.
+folds the intake out). The `atStart` line runs the action below at ▶.
 
 <!-- recipe: optional-part -->
 ```java title="Robot.java"
@@ -1079,7 +1079,7 @@ folds the intake out). The `atStart` line runs the action below at START.
 // .part(...): which motor or servo it is (optional, recommended).
 intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque").optional());
 intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
-// At START: fold the intake out, then run it (the action is in Actions.java, below). (2)!
+// At ▶: fold the intake out, then run it (the action is in Actions.java, below). (2)!
 atStart(() -> Actions.deployIntake(this));
 ```
 
@@ -1177,7 +1177,7 @@ public static class Indexer {                                   // "indexer" in 
 // The camera knows the goal of each alliance (BLUE first, then RED).
 camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
 // "turret" = the motor's name in the robot configuration. 5 motor turns per turret turn.
-// follows(camera): it follows the goal from START, but never past Tunables.Turret min and max.
+// follows(camera): it follows the goal from ▶, but never past Tunables.Turret min and max.
 turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
 ```
 
@@ -1571,7 +1571,7 @@ Then a button, in `Controls.java` inside `buttons(...)`:
 
 <!-- recipe: moving-shot-button -->
 ```java title="Controls.java"
-// Shooting on the move on/off (on from START when Tunables.Aim.shootOnMove = true): if
+// Shooting on the move on/off (on from ▶ when Tunables.Aim.shootOnMove = true): if
 // the shots go wide while driving, switch it off and shoot standing still.
 g2.a.toggle(robot.aim().movingShotMode()).says("shoot on the move on/off").rumble();
 ```
@@ -1618,7 +1618,7 @@ public static Action fireNectar(Robot r) {
 ```
 
 **Why:** POLLEN (2.8 in) and NECTAR (3.6 in) fly differently, so each needs its own speeds. **Which
-table at START?** A plain `speedByDistance` table (named `main`) if there is one, else the first by name:
+table at ▶?** A plain `speedByDistance` table (named `main`) if there is one, else the first by name:
 here `nectar` (n before p). To start on POLLEN, add `.startTable("pollen")` to the launcher line in
 `Robot.java` ([like here](#how-do-i-keep-aiming-when-the-camera-loses-the-goal)). The Driver Station's
 `Shot table` line says which one is in use. Fill each table with the
@@ -1665,7 +1665,7 @@ g2.x.press(robot.launcher::useLastTrim).says("use last match's trim");
 **Why:** a worn wheel or softer balls make every shot a little short. The trim (+/- 1% a press, at most
 15% and never past the motor's top speed, back to 0 at every INIT) fixes it for this match, for every
 table. At INIT the Driver Station offers last time's trim (`Trim last time : +3%`): double-tap D-pad up
-after START to use it (or your own button: `useLastTrim`, in the recipe); it is never applied by itself. Battery compensation scales the F gain by `nominalVolts` / the battery
+after ▶ to use it (or your own button: `useLastTrim`, in the recipe); it is never applied by itself. Battery compensation scales the F gain by `nominalVolts` / the battery
 (tuned at 12.6 V, at 11.5 V: F x 1.10). It is not yet proven on a real robot, so it is off: the
 box writes `batteryCompensation = false`. Change it to `true` only when you want to test it. It needs the `kF` and
 `nominalVolts` the Flywheel Finder found together, which is why the box writes the gains as `MEASURE`;
@@ -1701,7 +1701,7 @@ public static class Hood {                                      // "hood" in the
     public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
     public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
     public static double travelSec = DEFAULT;                   // stop to stop, seconds (0.5, or the servo's)
-    public static double startAngle = DEFAULT;                  // where it goes at START (angle A)
+    public static double startAngle = DEFAULT;                  // where it goes at ▶ (angle A)
 }
 ```
 
@@ -1797,7 +1797,7 @@ Every kind of turret (motor, servo, CR servo; switch or not; any range) has its 
 <!-- recipe: turret-home-switch -->
 ```java title="Robot.java"
 // "turret", "turret_home" = the motor's and the home switch's names in the robot configuration. (1)!
-// At START the turret turns slowly until it finds the switch. (2)!
+// At ▶ the turret turns slowly until it finds the switch. (2)!
 turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
         .homeSwitch("turret_home")
         .follows(camera));
@@ -1818,7 +1818,7 @@ public static class Turret {                                    // "turret" in t
 ```
 
 **Why:** a motor's encoder counts from where the turret was at INIT. With a switch the turret finds its
-real angle at START by itself (never during INIT: nothing moves before START), and a slipping belt is
+real angle at ▶ by itself (never during INIT: nothing moves before ▶), and a slipping belt is
 fixed every time it passes the switch. Until it is homed it does not follow the goal and is never "aimed".
 `homeAngle` must be written (INIT stops without it); `min`, `max` default to -90 and 90. No switch? Put the
 turret at `startAngle` (default 0, straight forward) by hand before INIT.
@@ -1848,12 +1848,12 @@ public static class Turret {                                    // "turret" in t
     public static double posB = MEASURE;                        // servo position, other end (Servo Finder)
     public static double angleB = MEASURE;                      // the turret's angle there (an angle app)
     public static double travelSec = DEFAULT;                   // posA to posB, seconds (0.6, or the servo's)
-    public static double startAngle = DEFAULT;                  // sent here at START (0)
+    public static double startAngle = DEFAULT;                  // sent here at ▶ (0)
 }
 ```
 
 **Why:** a servo knows how to go to a position, so the turret needs no encoder, no PID and no homing: the
-cheapest turret. But a servo cannot say where it is, so at START it is sent to `startAngle` (or the
+cheapest turret. But a servo cannot say where it is, so at ▶ it is sent to `startAngle` (or the
 middle of its range), and "aimed" waits `travelSec` for it. `posA`, `angleA`, `posB`, `angleB` must be
 written (INIT stops without them): find the positions with the [Servo Finder](#how-do-i-find-a-servos-open-and-closed-numbers)
 and measure the angle at each with a phone angle app. Its range is between `angleA` and `angleB`. Put
@@ -2092,13 +2092,13 @@ g2.back.press(robot::cancelAll).says("stop all actions");
 **Why:** a stopped action leaves each part safe: a lift holds its height, an intake stops.
 **More:** [RobotDefinition: for your code](modules/robot.md#robotdefinition).
 
-### How do I run an action right after START?
+### How do I run an action when the OpMode starts?
 
 **Where:** `Robot.java`, inside `define()`.
 
 <!-- recipe: action-at-start -->
 ```java title="Robot.java"
-// In Robot.java's define(): this action runs once, right after START (autonomous and TeleOp).
+// In Robot.java's define(): this action runs once, right after ▶ (autonomous and TeleOp).
 atStart(() -> Actions.deployIntake(this));
 ```
 
@@ -2114,8 +2114,8 @@ public static Action deployIntake(Robot r) {
 ```
 
 **Why:** the library never moves anything in INIT (its safety choice: people are still next to the robot), so a
-fold-out waits for START. The game rules would allow it (R103.B), but the robot must be still once INIT is done (G304.H).
-**More:** [Lesson 5: an action at START](tutorials/start/05-actions.md#7-an-action-at-start).
+fold-out waits for ▶. The game rules would allow it (R103.B), but the robot must be still once INIT is done (G304.H).
+**More:** [Lesson 5: an action at ▶](tutorials/start/05-actions.md#7-an-action-when-the-opmode-starts).
 
 ### How do I use the same action in an autonomous?
 
@@ -3029,7 +3029,7 @@ inside `buttons(...)`.
 
 <!-- recipe: light-alliance -->
 ```java title="Controls.java"
-// On by default: the alliance at INIT (solid RED or BLUE), flashed for 1 s at START. (1)!
+// On by default: the alliance at INIT (solid RED or BLUE), flashed for 1 s at ▶. (1)!
 // Your light shows red badly? Other colors for the alliance at INIT (BLUE, and PURPLE for RED):
 robot.lights.allianceColors(LightColor.BLUE, LightColor.PURPLE);
 // No alliance color at INIT at all? Delete the line above and write: (2)!
@@ -3040,7 +3040,7 @@ robot.lights.allianceColors(LightColor.BLUE, LightColor.PURPLE);
 2. Your rules then show from INIT on. Or, in `Tunables.java`, in the light's section: `public static class Light { public static boolean allianceAtInit = false; }`. The line in `Controls.java` wins.
 
 **Why:** a wrong alliance pick in INIT aims at the other alliance's goal all match. With the light solid
-RED or BLUE before START (white blinking once a second until the drivers pick), the drive team sees a wrong
+RED or BLUE before ▶ (white blinking once a second until the drivers pick), the drive team sees a wrong
 pick from the field. The game manual has no rule against a light in your alliance color; the ROBOT SIGNS
 are still required (R401, R402). Keep your own rules' colors away from red and blue.
 **More:** [Lights](modules/robot.md#the-alliance-at-init).
@@ -3100,7 +3100,7 @@ or a longer time.
 robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);
 ```
 
-**Why:** the time counts from START (TeleOp's 2:00), like the gamepad buzzes: about a second off from
+**Why:** the time counts from ▶ (TeleOp's 2:00), like the gamepad buzzes: about a second off from
 the field clock, fine for a reminder.
 
 ## Tuning and finders
@@ -3158,7 +3158,7 @@ into `Tunables.java` and rename P1 (`low`).
 
 ### How do I change a number while the robot runs?
 
-No code needed with the five files. In the TeleOp (PRACTICE profile), after START, **hold GUIDE for
+No code needed with the five files. In the TeleOp (PRACTICE profile), after ▶, **hold GUIDE for
 1 second**: the tuning menu opens. D-pad up/down chooses, right/left changes, **A** saves it on the
 hub, **B** lists the changed values. **Then copy each good value into `Tunables.java`**: a value saved
 only on the hub is lost with a new Control Hub, and your teammates cannot see it.
@@ -3275,7 +3275,7 @@ Or, in the terminal:
 ./gradlew :sim:run
 ```
 
-Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, then START. The red
+Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, then ▶. The red
 **Stop** button (or Ctrl+C in the terminal) stops it.
 
 **Why:** you can try buttons and autonomous routes before the robot is built.

@@ -162,7 +162,7 @@ day one, and the file shows what is still to do. Which one to write:
 | A tuning number (`kP`, a speed, a servo's `travelSec`...) you do not know yet | `DEFAULT` |
 
 **Why positions are `MEASURE`:** the library's guesses (a Positioner's `stowed` 0.0 and `deployed` 0.5)
-are not your servo's. With `DEFAULT` the servo goes to a guess at the first command after START, and a
+are not your servo's. With `DEFAULT` the servo goes to a guess at the first command after ▶ (start on the Driver Hub), and a
 guess can push the part into the frame. With `MEASURE` your TeleOp and autos stop at INIT until the
 [Servo Finder](finders.md#servo-finder-ends-and-positions) gives the numbers. A part that is `optional()`
 and not plugged in does not stop, so the simulator still runs before the servo is mounted. A wrong tuning
@@ -272,7 +272,7 @@ A name that ends in `Sec` is seconds, `Ms` milliseconds, `In` inches, `Mm` milli
 
 ## The Live column: the tuning menu
 
-You can change some numbers while the robot runs: PRACTICE profile, after START hold **GUIDE** for 1 s,
+You can change some numbers while the robot runs: PRACTICE profile, after ▶ hold **GUIDE** for 1 s,
 D-pad to choose and change, **A** to save on the Control Hub ([tuning guide](tuning.md)).
 
 | Live says | What it means |
@@ -362,7 +362,7 @@ Section `Aim` (fixed name). Every line is optional. Module: [Aim](../modules/rob
 | `sweepPower` | the sweep's turn power | 0-1 | 0.3 | no | test | the sweep is too slow, or the picture blurs (less) |
 | `cameraOffset` | whole-robot aim (no turret): a camera that is not on the robot's centre line. A turret has its own, `Tunables.Turret.cameraOffset`; the Aim Tuner prints the line for the one your robot uses | degrees | 0 | yes, at once | test | the robot aims a little to one side |
 | `rumbleDeg` | the aim buzz starts this close to the goal | degrees | 4 | yes, at once | test | the drivers want it earlier or later |
-| `shootOnMove` | shooting while driving: on at START | true/false | false | no | test | only after tuning it on the real robot |
+| `shootOnMove` | shooting while driving: on at ▶ | true/false | false | no | test | only after tuning it on the real robot |
 | `flightSec` | shooting on the move: the piece's time in the air | seconds | 0 | yes, at once | test (film a shot) | moving shots land behind (more) or ahead |
 | `flightSecPerIn` | shooting on the move: more flight time per inch of distance | seconds per inch | 0 | yes, at once | test | far moving shots miss but near ones hit |
 | `maxLeadIn` | shooting on the move: the most it aims ahead | inches | 24 | yes, at once | test | fast moves need more lead |
@@ -508,7 +508,7 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 | `sprayEnabled` | allows SPRAY: no wait for the speed, at the end of TeleOp and when QUICK will not fit before the park in autonomous | true/false | false | no | none | the drivers want it |
 | `sprayLastSec` | with `sprayEnabled`: the last seconds of TeleOp that SPRAY (0 = never by itself) | seconds | 5 | no | none | the drivers want more or less |
 | `sprayOnTapHold` | with `sprayEnabled`: a tap, then a hold of the fire button sprays while held | true/false | true | no | none | the drivers spray by accident (false) |
-| `spinAtStart` | spins the wheel up at START, so it is at speed for the first shot. Wins over `spinAtStart(...)` in `Robot.java` | true/false | true with a separate feeder (an indexer or a feed stop), else false | no | none | save the battery (false), or a robot without a feeder of its own whose drivers want it (true) |
+| `spinAtStart` | spins the wheel up at ▶, so it is at speed for the first shot. Wins over `spinAtStart(...)` in `Robot.java` | true/false | true with a separate feeder (an indexer or a feed stop), else false | no | none | save the battery (false), or a robot without a feeder of its own whose drivers want it (true) |
 | `fallbackDistanceIn` | with the speed from the distance: the distance to use before any goal was seen | inches | none: `speedRpm` | no | none | the first shot of the match has no goal in view |
 | `feedStopHold` | with `.feedStop(...)`: the servo position that holds the pieces back | servo position 0-1 | 0 (a guess, INIT says so) | no | Feed Stop Finder | after the Servo Finder |
 | `feedStopRelease` | with `.feedStop(...)`: the servo position that lets a piece through | servo position 0-1 | 0.5 (a guess) | no | Feed Stop Finder | the same |
@@ -552,7 +552,7 @@ default that says "of the range" fits degrees, positions and counts. Module: [Ho
 | `posB` | the position a hair off the other hard stop | 0 to 1 / counts | REQUIRED, unless `calibration` | yes, at once | Hood Finder | the same |
 | `angleA`, `angleB` | the hood's angle at `posA` and `posB` (both, or neither) | your angle unit | none: the angle is the position | no | Hood Finder | you want the table in degrees |
 | `calibration` | instead of `posA`/`posB`: `{position, angle}` rows for a linkage; first and last rows are the stops | position, angle | none | no | Hood Finder | the hood is not a straight gear |
-| `startAngle` | where it goes at START | angle | angle A | no | none | another start angle |
+| `startAngle` | where it goes at ▶ | angle | angle A | no | none | another start angle |
 | `stepAngle` | one step of `step(n)` | angle | 1/25 of the range | no | none | the drivers want bigger steps |
 | `byHandPerSec` | speed with the stick at full | angle per second | the range in 2.5 s | no | test | the stick is too fast |
 | `trimMax` | the most hood trim | angle | 1/5 of the range | no | none | you need more trim |
@@ -595,7 +595,7 @@ menu. Module: [Camera](../modules/robot.md#camera).
 | `lightingSettleMs` | the test: wait after each switch | ms | 300 | no | none | pictures are still changing |
 | `lightingPictures` | the test: pictures per setting | count | 10 | no | none | results vary |
 | `lightingMinPictures` | the test: pictures with tags a setting needs | count | 3 | no | none | a bad setting wins |
-| `lightingAfterStartMs` | the test: keep trying this long after START (no targets meanwhile) | ms | 0 | no | none | rarely |
+| `lightingAfterStartMs` | the test: keep trying this long after ▶ (no targets meanwhile) | ms | 0 | no | none | rarely |
 | `hfovDeg` | a HuskyLens: its view angle, left edge to right edge of the picture | degrees | 60 (a guess) | no | measure ([how](../modules/vision.md#huskylenscamera)) | always: measure yours |
 | `sizeIn` | a HuskyLens: the real size of what it looks at, for a rough distance (none: no distance) | inches | none | no | measure | the longest side it shows: a tag's black square, a ball's width |
 
@@ -623,7 +623,7 @@ Section: the device's name in CamelCase (`light` reads `Light`, `blinkin` reads 
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
-| `allianceAtInit` | shows the alliance (red or blue) during INIT and flashes it at START. A `robot.lights.allianceAtInit(...)` line in Controls.java wins over this one | true/false | true | no | none | `false`: your rules show in INIT too |
+| `allianceAtInit` | shows the alliance (red or blue) during INIT and flashes it at ▶. A `robot.lights.allianceAtInit(...)` line in Controls.java wins over this one | true/false | true | no | none | `false`: your rules show in INIT too |
 
 ---
 

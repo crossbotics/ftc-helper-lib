@@ -30,7 +30,7 @@ Write tests for your own logic ([tutorial 13](../tutorials/13-testing.md)).
 
 The library comes with a **test kit** ([`com.crossbotics.ftchelper.testkit`](../modules/testkit.md)):
 pretend motors, servos and switches that your robot in five files can use instead of the real ones.
-Your test sets up the robot (that is INIT), presses START, runs a few loops, and checks what the motors
+Your test sets up the robot (that is INIT), presses ▶ (start on the Driver Hub), runs a few loops, and checks what the motors
 and servos were sent. Put it in `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/RobotTest.java`:
 
 ```java
@@ -58,7 +58,7 @@ public class RobotTest {
         PretendDevices devices = new PretendDevices();   // a fresh pretend robot each test
         Robot robot = new Robot();
         robot.setup(devices);                            // INIT
-        robot.startForTests();                           // START
+        robot.startForTests();                           // ▶ (start)
         robot.lift.goTo("high");
         robot.all().update();                            // one loop
         assertTrue(devices.motor("lift_left").power > 0);

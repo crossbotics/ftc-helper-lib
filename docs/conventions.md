@@ -16,7 +16,7 @@ This library uses ONE set of rules everywhere. Learn these and you can read any 
 | `turnClockwise` | robot turns right (clockwise, seen from above) | same |
 | IMU heading | robot turned **left** (counterclockwise) | `ImuSetup.headingDeg`, `AutoDrive.turn`, `AutoDrive.turnTo`, `FieldPose.headingDeg` |
 | `move(..., directionDeg, ...)` | clockwise from forward: 0 forward, 90 right, 180 back, -90 left | `AutoDrive.move`, `Steps.move` |
-| `moveWithTurn(..., directionDeg, headingDeg, ...)` | the direction clockwise, but from the START heading (fixed on the field, because the robot turns on the way); the heading counterclockwise, 0 = the start heading | `AutoDrive.moveWithTurn`, `Steps.moveWithTurn` |
+| `moveWithTurn(..., directionDeg, headingDeg, ...)` | the direction clockwise, but from the start heading (fixed on the field, because the robot turns on the way); the heading counterclockwise, 0 = the start heading | `AutoDrive.moveWithTurn`, `Steps.moveWithTurn` |
 
 Why is turning clockwise-positive but heading counterclockwise-positive?
 
@@ -78,6 +78,10 @@ Standard (tank) drive left/right arrays are `[left, right]`.
   call it START.
 - **■** is the Driver Hub's stop button (STOP).
 - **START** is the small button on the gamepad (OPTIONS on a PS controller).
+- In the docs, the Driver Hub's start is always ▶: "press ▶ (start on the Driver Hub)" the first time
+  on a page, then "▶" or "after ▶". The moment the OpMode starts is "at ▶" or "when the OpMode starts
+  (▶)". The gamepad's button is "the gamepad's START button", or "START (OPTIONS on a PS
+  controller)". Code names keep their words (`atStart`, `Btn.START`).
 - The docs use the Logitech names (A, B, X, Y, LB, RB, LT, RT, BACK, START, GUIDE). The library's screens
   show the names on YOUR controller: × ○ □ △, L1 R1 L2 R2, SHARE OPTIONS PS on a PlayStation one
   ([ButtonNames](modules/gamepad.md#buttonnames)).

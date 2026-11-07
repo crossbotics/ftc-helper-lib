@@ -128,7 +128,7 @@ Good result: reaches each height in under a second, overshoots by less than ~1%,
 
 ## Run it
 
-1. START with the lift at the bottom. Position 0.
+1. Put the lift at the bottom. Press ▶ (start on the Driver Hub). Position 0.
 2. X: the lift goes toward MIDDLE. With the starting kP it may be slow or stop short. That is
    expected: now tune.
 3. Follow the recipe. Watch "Error" and "At target" on telemetry.

@@ -1,4 +1,4 @@
-# Your own code at INIT, START, every loop and STOP
+# Your own code at INIT, ▶, every loop and STOP
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
@@ -15,14 +15,14 @@ you can add your own code to each one:
 | FTC step | When | What the library does | Your code |
 | --- | --- | --- | --- |
 | `init` | once, when the driver presses INIT | makes every part, checks the robot configuration and `Tunables.java` | `atInit(...)` |
-| `init_loop` | again and again, until START | the alliance choice, the INIT checks, the Driver Hub screen | `duringInit(...)` |
-| `start` | once, when the driver presses START | each part's start (an intake "on at the start") | `atStart(...)` |
+| `init_loop` | again and again, until ▶ (start on the Driver Hub) | the alliance choice, the INIT checks, the Driver Hub screen | `duringInit(...)` |
+| `start` | once, when the driver presses ▶ | each part's start (an intake "on at the start") | `atStart(...)` |
 | `loop` | again and again, until STOP | the buttons, driving, every part and action moves a little | `everyLoop(...)` |
 | `stop` | once, at STOP, at the end of an autonomous, or after an error | stops the wheels and every part | `atStop(...)` |
 
 Two rules for all of them:
 
-- **Nothing moves before START.** Code in `atInit` and `duringInit` may read sensors and show
+- **Nothing moves before ▶.** Code in `atInit` and `duringInit` may read sensors and show
   things. It must not give a motor power or move a servo. **Why:** the game rules say the robot
   stays still until the match starts, and a robot that moves in INIT can hurt someone setting it up.
 - **Never wait.** Each piece of code must be quick: no `sleep()`, no `while` that waits for
@@ -48,7 +48,7 @@ protected void define() {
 
     atInit(() -> piecesScored = 0);                                   // INIT, once
     duringInit(() -> show("Lift (counts)", lift.position()));         // INIT loop: check it before the match
-    everyLoop(() -> show("Pieces scored", piecesScored));             // every loop after START
+    everyLoop(() -> show("Pieces scored", piecesScored));             // every loop after ▶
     atStop(() -> RobotLog.ii("team", "scored " + piecesScored));      // the end, after the motors stop
 }
 ```
@@ -97,7 +97,7 @@ their own loop, their own buttons. You can, and still use your `Robot.java`, `Tu
 | --- | --- |
 | `robot.init(this)` | INIT: makes every part, turns on bulk reads (faster loops), runs the INIT checks. Moves nothing. |
 | `robot.initLoop()` | one pass of the INIT loop: the parts' INIT work, your `duringInit`, then it sends the screen |
-| `robot.start()` | START: each part's start and your `atStart` actions (nothing if STOP was pressed in INIT) |
+| `robot.start()` | ▶: each part's start and your `atStart` actions (nothing if STOP was pressed in INIT) |
 | `robot.update()` | one loop: every part and action moves a little, your `everyLoop`, then it sends the screen |
 | `robot.stop()` | STOP: stops the wheels and every part, then your `atStop`. Put it in a `finally`. |
 
@@ -116,7 +116,7 @@ public class OwnTeleOp extends LinearOpMode {
         boolean aBefore = false;
 
         while (opModeInInit()) {
-            robot.show("Press START", "A scores high");
+            robot.show("Press ▶", "A scores high");
             robot.initLoop();                   // sends the screen
         }
 

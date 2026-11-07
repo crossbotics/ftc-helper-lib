@@ -81,7 +81,7 @@ Driver Station: **Configure Robot**, **Scan**, and rename the new "Ethernet Devi
 ## 5. At INIT, and at an event
 
 Have a tag group in view at INIT (where the robot starts the match is fine). The Driver Station shows
-the result, e.g. `limelight lighting : pipeline 2 (9 of 10 pictures saw tags)`. At START the test
+the result, e.g. `limelight lighting : pipeline 2 (9 of 10 pictures saw tags)`. When the OpMode starts (▶), the test
 stops and keeps the best pipeline so far.
 
 **At an event:** in the queue (or on the practice field), INIT once with the robot facing a CELL's tags.

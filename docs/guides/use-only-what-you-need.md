@@ -43,7 +43,7 @@ ControllerBindings buttons = new ControllerBindings()
         .bindHold(Pad.G2, Btn.DPAD_UP, () -> winch.setPower(0.5)) // every loop while held
         .bindRelease(Pad.G2, Btn.DPAD_UP, () -> winch.setPower(0));
 waitForStart();
-buttons.ignoreHeldButtons(gamepad1, gamepad2);   // a button held through START does not fire
+buttons.ignoreHeldButtons(gamepad1, gamepad2);   // a button held through ▶ (start) does not fire
 while (opModeIsActive()) {
     buttons.update(gamepad1, gamepad2);
     // ... your own code

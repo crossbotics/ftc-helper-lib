@@ -64,7 +64,7 @@ public class Tut15TelemetryTuning extends LinearOpMode {
             t.update();
         }
         if (isStopRequested()) return;
-        timer.start();   // the match clock starts now, at START
+        timer.start();   // the match clock starts now, at ▶
         menuKey.ignoreHeldButtons(gamepad1, gamepad2);
         driver.ignoreHeldButtons(gamepad1, gamepad2);
         operator.ignoreHeldButtons(gamepad1, gamepad2);

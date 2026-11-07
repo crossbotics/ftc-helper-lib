@@ -55,9 +55,9 @@ public class ServoFinder extends ServoFinderOpMode { }
 
 **GUIDE = help**, in every finder, in INIT or while it runs: a page with every button and the steps.
 GUIDE is the center button (Logitech/Xbox logo, PlayStation PS button). Some controllers have none,
-or the Driver Hub keeps it for itself: then **hold START for 1 second**. While help is open, the
+or the Driver Hub keeps it for itself: then **hold the gamepad's START button for 1 second** (OPTIONS on a PS controller). While help is open, the
 finder's buttons pause and its motors stop (servos stay where they were sent; a camera keeps running).
-After START, and after help closes, **let go of every stick, trigger and button on gamepad 1** once:
+After ▶ (start on the Driver Hub), and after help closes, **let go of every stick, trigger and button on gamepad 1** once:
 until then the finder ignores them, so a finger that was already down cannot start anything.
 
 Safe in every finder:
@@ -71,7 +71,7 @@ Safe in every finder:
 ## TuneAndCheckOpMode
 
 `TuneAndCheckOpMode` is the library's own OpMode, **"Tune and check"** (group "Finders"): a menu in INIT with the Hardware Check
-and the finders that fit Robot.java. A opens a tool (its INIT screen), START runs it, BACK in the tool's
+and the finders that fit Robot.java. A opens a tool (its INIT screen), ▶ runs it, BACK in the tool's
 INIT goes back to the menu. It finds the robot classes in `org.firstinspires.ftc.teamcode` (on the robot:
 the app's classes, as the SDK finds OpModes; in the simulator: the class path). Not in it: the Aim Tuner
 and the Characterizer. Steps: [the finders guide](../guides/finders.md#tune-and-check-all-of-them-in-one-opmode).
@@ -81,7 +81,7 @@ and the Characterizer. Steps: [the finders guide](../guides/finders.md#tune-and-
 | `NAME` | `"Tune and check"`, the Driver Station name |
 | `useRobots(list)` | uses these robot classes instead of looking (the simulator's tests); `null` = look again |
 
-`Hosting` runs a finder inside it: a finder's `inInit()` and `running()` are the host's INIT and START.
+`Hosting` runs a finder inside it: a finder's `inInit()` and `running()` are the host's INIT and the time after ▶.
 A finder of your own that loops by itself uses `running()`, not `opModeIsActive()`.
 
 ## MotorDirectionCheckOpMode
@@ -263,8 +263,8 @@ results file says which power the numbers fit.
 | Turn | it turns 90 left; check with a square | (the IMU's heading, to compare) |
 
 The Drive, Strafe and Turn tests WAIT while the robot moves, like autonomous (STOP still works).
-A move that ends STALLED or TIMED_OUT is not measured: clear the path and run it again. GUIDE (or
-START) stops a moving test at once and opens help; that test is not measured either.
+A move that ends STALLED or TIMED_OUT is not measured: clear the path and run it again. GUIDE (or the gamepad's
+START button) stops a moving test at once and opens help; that test is not measured either.
 Each new number is used at once inside the tuner (no rebuild): run Drive and Strafe again until
 they measure 48, then copy the lines into your code.
 `testDistanceIn()` changes the 48. Output:
@@ -392,7 +392,7 @@ Without five files, fill in:
 | --- | --- |
 | **Y** | what the D-pad changes: SPEED, HOOD (with a hood), DISTANCE (no camera, no odometry), TABLE (two or more tables) |
 | D-pad up/down, right/left | big / small step (100 / 10 RPM; the hood: a fifth / a fiftieth of its range, 5 / 0.5 deg for 0-25 deg; 6 / 1 in) |
-| **LB** | flywheel on/off (it is OFF at START) |
+| **LB** | flywheel on/off (it is OFF at ▶) |
 | **RB** / hold **RT** | shoot one / keep shooting (let go to stop). Keep shooting also stops after a jam or a "gave up": press RT again to go on |
 | **A** / **B** | the oldest shot not marked yet was a HIT / a MISS (at the speed, hood angle and distance it was fired with) |
 | left stick click | undo the last HIT / MISS: that shot waits to be marked again |
@@ -498,7 +498,7 @@ D-pad chooses a test, **A** runs it, **B** stops it at once.
 It stops itself and says why if: a wheel or motor turns the wrong way for its power (a direction
 setting is wrong; each wheel is checked); a lift goes past a soft limit, or counts down while going up;
 something pushes but does not move for 0.7 s (jammed, against a hard stop, or an encoder cable in
-another motor's port); GUIDE or START is pressed. A drive roll that reaches `maxDriveCounts()` ends early,
+another motor's port); GUIDE or the gamepad's START is pressed. A drive roll that reaches `maxDriveCounts()` ends early,
 and the test goes on with the next part.
 What each part of a test measures:
 
@@ -555,11 +555,11 @@ finder by extending it.
 | `helpLines()` | optional (please write it): the help page, at most 13 lines of about 50 characters. Default: "No help page for this finder yet." |
 | `showInit(t)` | optional: what INIT shows |
 | `pause()` | optional: what stops while help is open (default `stopAll()`; override when `stopAll()` also closes a camera) |
-| `inputsReady()` | false after START and after help, until gamepad 1 was let go: check it before acting on a stick, trigger or held button you read directly |
+| `inputsReady()` | false after ▶ and after help, until gamepad 1 was let go: check it before acting on a stick, trigger or held button you read directly |
 | `openHelp()` | opens the help page (e.g. when a help key stopped a test) |
-| `helpKeyDown()` | true while GUIDE or START is down (e.g. as a stop condition for a moving test) |
+| `helpKeyDown()` | true while the gamepad's GUIDE or START is down (e.g. as a stop condition for a moving test) |
 
-GUIDE and START are the help keys in every finder, so a finder must not bind them itself.
+The gamepad's GUIDE and START are the help keys in every finder, so a finder must not bind them itself.
 
 ## FinderResults
 

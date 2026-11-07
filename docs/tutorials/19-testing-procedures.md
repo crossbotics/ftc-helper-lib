@@ -95,7 +95,7 @@ The simulator lists the Hardware Check with the library's examples. From the `ft
 ./gradlew :sim:run -PteamCode=none -Probot=build/lessonbot.properties
 ```
 
-Open http://localhost:8780, choose "Tutorial 19: Hardware Check", INIT, START. Pick `lift` with the
+Open http://localhost:8780, choose "Tutorial 19: Hardware Check", INIT, ▶ (start on the Driver Hub). Pick `lift` with the
 D-pad, push gamepad 1's right stick up: the lift rises and its count goes up. Pick `claw` and step it
 with the D-pad. Your own robot: `./gradlew :sim:run -PteamCode=../TeamCode` with your `HardwareCheck.java`
 in TeamCode (lesson 1 shows how to make its robot file). The simulator builds its robot from your code,

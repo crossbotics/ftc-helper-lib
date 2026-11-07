@@ -162,7 +162,7 @@ the ground.**
    D-pad up/down picks a motor, the right stick sets its power. Does the encoder count up with positive
    power? That shows the motor and its wires work.
 2. **With the code's directions:** run **Tune and check** (in the TeleOp list, group "Finders"; nothing to copy),
-   pick **Motor Direction Check** with the D-pad, press A, then START. It reads the directions from Robot.java.
+   pick **Motor Direction Check** with the D-pad, press A, then ▶ (start on the Driver Hub). It reads the directions from Robot.java.
    Hold X, Y, A, B: each spins one wheel at 30% (front left, front right, back left, back right; a
    two-motor tank: X = left, Y = right). The screen shows the motor's name. **Every wheel must roll the way
    that moves the robot forward.** ([More](../../guides/finders.md#motor-direction-check-each-wheel-rolls-forward))
@@ -170,7 +170,7 @@ the ground.**
    add its name to the list, or take it out. Remember the list replaces the default (the left side). For
    example, if the lesson robot's back right wheel rolls backward, it needs
    `.reversed("front_left", "back_left", "back_right")`.
-4. **The IMU:** run your TeleOp, hold gamepad 1's small **START** button, then press **BACK** while you
+4. **The IMU:** run your TeleOp, hold gamepad 1's small **START** button (OPTIONS on a PS controller), then press **BACK** while you
    still hold START (this turns on the extra **debug lines**
    on the Driver Station: more numbers for checking, like powers and the `Heading`; it does
    not pause),
@@ -187,7 +187,7 @@ From the `ftc-helper-lib` folder, write the lesson robot's simulator file from i
 ./gradlew :sim:run -PteamCode=none -Probot=build/lessonbot.properties
 ```
 
-Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, START. Set gamepad 1's list to "Keyboard". On the keyboard: left stick W A S D,
+Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, ▶. Set gamepad 1's list to "Keyboard". On the keyboard: left stick W A S D,
 right stick the arrows, LT is Z, Y is I, BACK is Backspace. Drive, strafe, turn, pull LT, switch to
 field-centric and turn the robot around. For your own robot: pick **Simulator** in the list next to Android Studio's
 green Run button and click Run (or `./gradlew :sim:run`). ([Simulator guide](../../guides/simulator.md).)

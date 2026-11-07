@@ -76,7 +76,7 @@ alliances and `mirrorForRed()` is false):
 
 The map is made by `tools/field_map.py` from the simulator's field file (`sim/fields/biobuzz-2026.json`).
 
-Where is (0, 0)? Wherever the pose was last set. An `Auto` sets it from its start spot after START,
+Where is (0, 0)? Wherever the pose was last set. An `Auto` sets it from its start spot after ▶ (start on the Driver Hub),
 so with `s.start(note, x, y, heading)` it is the middle of the field. With `s.start(note, heading)`
 (no spot) the robot starts at (0, 0), so x and y are measured from where it started.
 
@@ -391,7 +391,7 @@ Every kind of odometry is a `PoseTracker`, so your code reads them all the same 
 
 A device that is not ready does not stop the program: the warning tells the drive team. An
 autonomous also reads the odometry in INIT and shows `Odometry: Pinpoint ready`, or a warning such as
-`Odometry (Pinpoint): X pod not found: check its cable`, so a missing pod is seen before START.
+`Odometry (Pinpoint): X pod not found: check its cable`, so a missing pod is seen before ▶.
 
 **How the frames fit (for veterans).** Inside, `PoseTracker` works in one shared device frame: X
 forward and Y left at heading 0 (the goBILDA Pinpoint's frame, and the dead-wheel math's). The library's
@@ -652,9 +652,9 @@ More: [`FieldMap` and `RouteDriver`](drive.md#fieldmap), the [cookbook](../cookb
 
 ## TeleOp starts where autonomous ended
 
-1. **Autonomous START:** the first step ("Start") sets the pose from the start spot (mirrored for RED
+1. **Autonomous, at ▶:** the first step ("Start") sets the pose from the start spot (mirrored for RED
    like the routes).
-2. **Autonomous end** (done, STOP or an error, after START): the whole pose (`robot.pose()`) goes to
+2. **Autonomous end** (done, STOP or an error, after ▶): the whole pose (`robot.pose()`) goes to
    [`MatchMemory`](match.md#matchmemory) / [`PoseStore`](util.md#posestore).
 3. **TeleOp INIT** (`Controls.java`): if autonomous left a pose in the last 5 minutes, the odometry
    starts there. Otherwise it starts at (0, 0, 0) where the robot stands.
@@ -716,7 +716,7 @@ public class OdometryTuner extends OdometryTunerOpMode {
 ```
 
 The sticks drive slowly (30%) in every test. D-pad up/down chooses a test, **A** starts it, **B**
-ends it. GUIDE (or hold START 1 s) shows help. Each test starts the pose at (0, 0, 0).
+ends it. GUIDE (or hold the gamepad's START button 1 s) shows help. Each test starts the pose at (0, 0, 0).
 
 | Test | You do | It finds |
 | --- | --- | --- |

@@ -92,7 +92,7 @@ Guide: [Tuning while the robot runs](../guides/tuning.md).
 ```java
 MatchTimer timer = MatchTimer.teleOp().rumbleAt(20, gamepad1);
 ...
-timer.start();          // right after START
+timer.start();          // right after ▶ (start)
 timer.update();         // every loop: runs the cues
 t.line("Time", timer.format());
 ```
@@ -111,7 +111,7 @@ event: copy them into the code or reset them, so the robot does what the code sa
 
 ## Run it
 
-1. INIT: set Profile to PRACTICE with the D-pad. START.
+1. INIT: set Profile to PRACTICE with the D-pad. Press ▶ (start on the Driver Hub).
 2. Debug lines (Loop, Profile, lift power) are visible. BACK hides them.
 3. GUIDE: the tuning menu. Change `Lift/maxPower` to 0.3: gamepad 2 A/Y now move the lift slowly.
    Gamepad 1 A saves.

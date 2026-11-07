@@ -190,7 +190,7 @@ position:** `sleep` stops all your code, including the lift's PID.
 `DriverHeading` in INIT, which takes that heading. TeleOp sets up the IMU again (that makes "0" the
 way the robot faces now), so `DriverHeading` adds the saved heading back. Field-centric "forward"
 (Y turns it on) is then right from the start of TeleOp, without a reset. The robot must start
-autonomous facing straight away from the driver. After START, `heading.forgetSaved()` makes sure a
+autonomous facing straight away from the driver. After ▶ (start on the Driver Hub), `heading.forgetSaved()` makes sure a
 later TeleOp run does not use the same saved heading again. See
 [DriverHeading](../modules/drive.md#driverheading).
 

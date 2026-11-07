@@ -55,7 +55,7 @@ public class ExampleDriveIntake extends LinearOpMode {
                 .bindRelease(Pad.G1, Btn.LB, () -> reversing = false)
                 .bindPress(Pad.G1, Btn.BACK, t::toggleDebug);
 
-        t.text("Intake starts ON at START. Press START.");
+        t.text("Intake starts ON at ▶. Press ▶.");
         t.update();
         waitForStart();
         controls.ignoreHeldButtons(gamepad1, gamepad2);

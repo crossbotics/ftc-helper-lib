@@ -87,7 +87,7 @@ public class MechanismRecipes {
             // "intake_deploy" = the servo's name in the robot configuration. Numbers: Tunables.IntakeDeploy.
             // .part(...): which servo it is (optional, recommended).
             intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque"));
-            // Right after START (autonomous and TeleOp): fold the intake out.
+            // Right after ▶ (autonomous and TeleOp): fold the intake out.
             atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
             // end recipe
         }
@@ -112,7 +112,7 @@ public class MechanismRecipes {
         }
     }
 
-    /** Intake variants: CR servos, on from START, and a lift that runs the other way. One robot each. */
+    /** Intake variants: CR servos, on from ▶, and a lift that runs the other way. One robot each. */
     public static class IntakeOnServos extends RobotDefinition {
         public Intake intake;
 
@@ -149,7 +149,7 @@ public class MechanismRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: intake-on-at-start
-            // Runs in from START until stopped. Its button (operator RT) then switches it on/off.
+            // Runs in from ▶ until stopped. Its button (operator RT) then switches it on/off.
             // .part(...): which motor it is (optional, recommended).
             add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
             // end recipe
@@ -304,7 +304,7 @@ public class MechanismRecipes {
             // The camera knows the goal of each alliance (BLUE first, then RED).
             camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
             // "turret" = the motor's name in the robot configuration. 5 motor turns per turret turn.
-            // follows(camera): it follows the goal from START, but never past Tunables.Turret min and max.
+            // follows(camera): it follows the goal from ▶, but never past Tunables.Turret min and max.
             turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
             // end recipe
             // recipe: launcher-aimed
@@ -335,7 +335,7 @@ public class MechanismRecipes {
             // .part(...): which motor or servo it is (optional, recommended).
             intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque").optional());
             intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
-            // At START: fold the intake out, then run it (the action is in Actions.java, below).
+            // At ▶: fold the intake out, then run it (the action is in Actions.java, below).
             atStart(() -> Actions.deployIntake(this));
             // end recipe
         }

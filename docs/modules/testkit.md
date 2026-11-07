@@ -7,7 +7,7 @@ Package: `com.crossbotics.ftchelper.testkit`
 Learn it hands-on: [13 Testing](../tutorials/13-testing.md#7-test-your-robot-in-five-files). Guide: [Testing procedures](../guides/testing.md#test-your-robotjava-with-pretend-devices).
 
 Pretend motors, servos and switches for **JUnit tests on a laptop**: your `Robot.java` (the robot in
-five files) runs on them instead of the real hardware. A test sets the robot up (INIT), presses START,
+five files) runs on them instead of the real hardware. A test sets the robot up (INIT), presses ▶ (start on the Driver Hub),
 runs a loop, and checks what each motor and servo was sent. No robot, no Control Hub: a test takes a
 second, so you can run them after every change.
 
@@ -31,7 +31,7 @@ small classes; nothing in it runs on the robot unless a test makes it.
 PretendDevices devices = new PretendDevices();   // a fresh pretend robot
 Robot robot = new Robot();
 robot.setup(devices);                            // INIT (Tunables.java as written; INIT's checks run)
-robot.startForTests();                           // START
+robot.startForTests();                           // ▶ (start)
 robot.lift.goTo("high");
 robot.all().update();                            // one loop
 assertTrue(devices.motor("lift").power > 0);     // the lift motor got power up
@@ -49,7 +49,7 @@ devices.press("lift_bottom", true);              // a pretend switch pressed
 | `battery(volts)` | the battery the hubs read |
 | `get`, `tryGet`, `has` | what the robot asks ([`Devices`](robot.md#robotdefinition)). A kind the kit has no pretend one for (a camera, a color sensor) counts as not plugged in: parts that can do without it warn and go on |
 
-With the robot: `robot.setup(devices)` (INIT), `robot.startForTests()` (START), `robot.all().update()`
+With the robot: `robot.setup(devices)` (INIT), `robot.startForTests()` (what ▶ does), `robot.all().update()`
 (one loop), `robot.pauseAll()` / `robot.resume()` (BACK), `robot.all().stop()` (STOP),
 `robot.checkTunables()` (the Tunables name checks, no devices needed). See [RobotDefinition](robot.md#robotdefinition).
 

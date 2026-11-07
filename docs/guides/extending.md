@@ -110,7 +110,7 @@ and the picture time in `System.nanoTime()`. Then `AimController`, `Turret.aimBy
 1. **One sign convention**: forward +, strafe right +, turn clockwise + for drive commands;
    headings, turret angles and bearings counterclockwise + ([Signs and units](../conventions.md)).
 2. **Nothing blocks TeleOp**: commands are quick; work happens in `update()`. Only autonomous steps wait.
-3. **Hardware setup leaves motors at 0 power.** Nothing moves before START.
+3. **Hardware setup leaves motors at 0 power.** Nothing moves before ▶ (start on the Driver Hub).
 4. **Safety stays on in every profile.** Limits, timeouts, jam checks.
 5. **Testable**: put the logic in a part with no hardware, or take a clock (`LongSupplier`, a method
    that returns the time) and devices in the constructor (the code that makes the object), so tests can

@@ -61,8 +61,8 @@ reverse button, the intake goes back to on OR off, whichever it was, with no ext
 **Why is it safe to call `in()` every loop?** `SpinMotor.in()` does nothing if it is already running
 in, so it does not interrupt anything (like a jam back-out).
 
-**"Defaulted to on":** `intakeOn` starts `true`, and the first loop after START turns it on. It never
-runs during INIT (the library moves nothing before START: a safety choice).
+**"Defaulted to on":** `intakeOn` starts `true`, and the first loop after ▶ (start on the Driver Hub) turns it on. It never
+runs during INIT (the library moves nothing before ▶: a safety choice).
 
 ## How slow mode works
 

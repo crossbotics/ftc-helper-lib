@@ -209,8 +209,8 @@ record of what worked.
 
 **Tune them without a rebuild.** Every number in `Tunables.Auto` is in the tuning menu too:
 
-1. INIT the **TeleOp** with the PRACTICE profile, press START, and hold **GUIDE** for 1 second (the menu
-   from lesson 4; it opens only after START).
+1. INIT the **TeleOp** with the PRACTICE profile, press ▶ (start on the Driver Hub), and hold **GUIDE** for 1 second (the menu
+   from lesson 4; it opens only after ▶).
 2. Choose `Auto/parkInches`, change it, and press **A** to save it on the Control Hub.
 3. Run the autonomous again. It uses the saved value. Its INIT screen lists every value that is
    different from the code, like `Tunables.Auto.parkInches = 18.0 (code 20.0)`.
@@ -242,7 +242,7 @@ start the simulator with the library's examples:
 ```
 
 Open http://localhost:8780, choose "Lesson Bot Score and Park", and press INIT. Read the note and the
-menu; you will see "Drive not tuned: runs in the simulator only". Press START and watch it drive, lift,
+menu; you will see "Drive not tuned: runs in the simulator only". Press ▶ and watch it drive, lift,
 drop and strafe. Read the report at the end. ([Simulator guide](../../guides/simulator.md).)
 
 **Run it again? Press "Back to start" first** (on the page: Control Hub panel, Robot tab). This autonomous's
@@ -255,7 +255,7 @@ where the last program stopped it. "Back to start" puts the robot and the game p
 ./gradlew :sim:run
 ```
 
-Choose your own autonomous, INIT, START, and read its report at the end. The simulator runs it even
+Choose your own autonomous, INIT, ▶, and read its report at the end. The simulator runs it even
 before the Drive Tuner (`calibrated = false`); a real robot does not. Changed a step? Stop the
 simulator (the red Stop button, or **Ctrl+C** in the Terminal) and start it again.
 
