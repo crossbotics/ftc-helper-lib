@@ -131,6 +131,9 @@ const C = await importFrom(dir, 'simcore.js');
 	ok(!placed[0].moved && placed[1].moved && Math.abs(placed[1].ly - placed[0].ly) >= 5.6 && !placed[2].moved, 'placeMarkers: a label that would cover another moves, ' + JSON.stringify(placed));
 	const outl = SC.sheetOutlines([{ x: 0, y: 0, h: 0 }, { x: 0, y: 0, h: 0 }, { x: 10, y: 0, h: 0 }, { x: 10, y: 0, h: 90 }, { x: 10, y: 0, h: 90 }], { x: 0, y: 0, h: 0 });
 	ok(outl.map((o) => o.step).join() === '3,4', 'sheetOutlines: only steps that move or turn the robot, ' + JSON.stringify(outl));
+	ok(SC.numsLabel([1, 2, 3, 5]) === '1-3, 5' && SC.numsLabel([1, 2]) === '1, 2' && SC.numsLabel([4]) === '4' && SC.numsLabel([1, 2, 3, 4, 5, 6, 7]) === '1-7', 'numsLabel');
+	const edge = SC.placeMarkers([{ x: -69, y: 0, nums: [1, 2, 3, 4, 5, 6, 7, 9] }]);
+	ok(edge[0].lx - edge[0].w / 2 >= -70.01, 'placeMarkers: a label stays inside the field, ' + JSON.stringify(edge));
 	ok(SC.sheetTime(0, 12) === '0-12 s' && SC.sheetTime(12, 12) === '12 s' && SC.sheetTime(undefined, 1) === '', 'sheetTime');
 }
 

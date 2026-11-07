@@ -109,15 +109,31 @@ export function sheetOutlines(steps, start) {
  * moved (true when it had to move off its spot: draw a thin line back to it) }]. A label that would cover one
  * already placed moves down, then up, in label-height steps.
  */
+/** Step numbers as short text: [1, 2, 3, 5] -> "1-3, 5". */
+export function numsLabel(nums) {
+	const parts = [];
+	for (let i = 0; i < nums.length; i++) {
+		let j = i;
+		while (j + 1 < nums.length && nums[j + 1] === nums[j] + 1) j++;
+		parts.push(j - i >= 2 ? `${nums[i]}-${nums[j]}` : j > i ? `${nums[i]}, ${nums[j]}` : `${nums[i]}`);
+		i = j;
+	}
+	return parts.join(', ');
+}
+
 export function placeMarkers(markers) {
-	const H = 5.6, placed = [];
+	const H = 5.6, placed = [], EDGE = 70;
+	// Kept inside the field, so a long label never runs off the map.
+	const inside = (x, w) => Math.max(-EDGE + w / 2, Math.min(EDGE - w / 2, x));
 	const hits = (a, b) => Math.abs(a.lx - b.lx) < (a.w + b.w) / 2 + 0.6 && Math.abs(a.ly - b.ly) < H + 0.6;
 	for (const m of markers) {
-		const w = Math.max(5, 2.6 * m.nums.join(', ').length + 2.4);
-		let p = { ...m, w, lx: m.x, ly: m.y, moved: false };
+		const label = numsLabel(m.nums);
+		const w = Math.max(5, 2.6 * label.length + 2.4);
+		const lx = inside(m.x, w);
+		let p = { ...m, label, w, lx, ly: m.y, moved: lx !== m.x };
 		for (let k = 1; k <= 12 && placed.some((q) => hits(p, q)); k++) {
 			const off = Math.ceil(k / 2) * (H + 1) * (k % 2 ? -1 : 1);
-			p = { ...m, w, lx: m.x, ly: m.y + off, moved: true };
+			p = { ...m, label, w, lx, ly: m.y + off, moved: true };
 		}
 		placed.push(p);
 	}
@@ -160,8 +176,10 @@ export function openAutoSheet(c) {
 			<p class="sc-kicker">Auto sheet</p>
 			<h2 class="sc-title">${esc(c.title)}</h2>
 			${c.warn ? `<p class="sc-warn">${esc(c.warn)}</p>` : ''}
-			<div class="sc-grid">
-				<svg class="sc-map" viewBox="-82 -80 164 168" role="img" aria-label="The field from your drivers' wall, with the start spot, the route and the step numbers"></svg>
+			<style>#setupCard .sc-grid.sc-wide { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); }
+				@media (max-width: 640px) { #setupCard .sc-grid.sc-wide { grid-template-columns: minmax(0, 1fr); } }</style>
+			<div class="sc-grid sc-wide">
+				<svg class="sc-map" viewBox="-80 -78 160 164" role="img" aria-label="The field from your drivers' wall, with the start spot, the route and the step numbers"></svg>
 				<div class="sc-facts">
 					<p><b>Start:</b> ${esc(c.note || '(no note yet)')}</p>
 					<p><b>Red and blue:</b> ${esc(alliance)}</p>
@@ -197,7 +215,7 @@ export function openAutoSheet(c) {
 		if (m.moved) el('line', { x1: m.x, y1: -m.y, x2: m.lx, y2: -m.ly, stroke: '#1d2330', 'stroke-width': 0.4 }, g);
 		el('rect', { x: m.lx - m.w / 2, y: -m.ly - 2.8, width: m.w, height: 5.6, rx: 2.8, fill: '#1d2330', stroke: '#fff', 'stroke-width': 0.5 }, g);
 		const t = el('text', { x: m.lx, y: -m.ly + 1.5, 'text-anchor': 'middle', 'font-size': 4.2, 'font-weight': 700, fill: '#fff', 'font-family': 'system-ui, sans-serif' }, g);
-		t.textContent = m.nums.join(', ');
+		t.textContent = m.label;
 	}
 	const close = () => { box.remove(); document.body.classList.remove('carding'); };
 	box.querySelector('[data-close]').onclick = close;
