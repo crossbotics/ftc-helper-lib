@@ -2,6 +2,16 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **Auto sheet (PDF) in the auto builder:** one page to show another team what an autonomous does: the field
+  with the start spot, the whole route, a number where each step ends, and the steps in plain words with
+  their planned times. Print it or save it as a PDF from the print window. In `setupcard.js`
+  (`openAutoSheet`, `sheetMarkers`, `sheetTime`) and `stepscore.js` (`sheetWords`, `actionWords`, `dirWords`),
+  so the web builder can use it too.
+
 ## v0.35.0 - 2026-11-06
 
 ### Added

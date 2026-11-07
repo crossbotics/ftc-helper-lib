@@ -441,7 +441,10 @@ What a team does, step by step:
    line. **Write it for me** writes it from the spot ("Our wall, left corner tile, facing the field"); it
    follows the robot until you type your own words. **Print setup card** shows the card for the drive
    team in the page (print it from there): the note in big letters, the field with the robot's start footprint and heading, red and blue,
-   and the first step.
+   and the first step. **Auto sheet (PDF)** is one page to show another team what the auto does: the
+   field with the start spot, the whole route, a number where each step ends, and the steps in plain words
+   ("Fire all pieces", "drive 42.8 in forward and left") with their planned times. Click **Print or save as
+   PDF**, then choose "Save as PDF" in the print window. Black and white prints are fine.
 5. **Checks** before a run: the field walls and parts along the way, the start rules (touching the wall, on
    your half, not in the LOADING ZONE, inside the 18 in box), more than 30 s, the park time,
    names left empty. The time is a plan from simple speed numbers (an action counts its whole time limit).
@@ -479,8 +482,8 @@ stops INIT with the names there are (`Robot.java has no part called claw (its pa
 method that gives an `Action`: a command named where an action goes (`robot.intake.in()`) is refused
 without being run.
 
-**Shared with the web builder.** The plan, its checks, the Java, the scenario, the start note and the
-setup card come from the same files as the web builder: `pathcore.js`, `stepscore.js`, `mapdraw.js` and
+**Shared with the web builder.** The plan, its checks, the Java, the scenario, the start note, the
+setup card and the auto sheet come from the same files as the web builder: `pathcore.js`, `stepscore.js`, `mapdraw.js` and
 `setupcard.js` in `sim/src/test/resources/sim/builder/`. **The library is their source**: change them here,
 release them. The web site's `scripts/sync-path-builder.mjs` copies them, with the field file, from the release.
 `node tools/check_builder.mjs` checks that the Java and the scenario for a set of plans are letter for letter
