@@ -271,7 +271,7 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
   pipelines). How it works: [vision.md](../../modules/vision.md#venue-lighting).
 - Its numbers: `Tunables.Limelight.pipeline` (the pipeline to use when the test is off) and
   `autoLighting` (true = run the test; false = skip it and use `pipeline`).
-- The camera starts in INIT, so it is already looking at ▶. It has no buttons.
+- The camera starts in INIT, so it is already looking when ▶ is pressed. It has no buttons.
 
 **Set up the three pipelines** (every step, with the settings and why:
 [Setting up Limelight lighting pipelines](../../guides/limelight-lighting.md)). Plug the Limelight into a

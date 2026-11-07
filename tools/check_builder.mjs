@@ -134,6 +134,9 @@ const C = await importFrom(dir, 'simcore.js');
 	ok(SC.numsLabel([1, 2, 3, 5]) === '1-3, 5' && SC.numsLabel([1, 2]) === '1, 2' && SC.numsLabel([4]) === '4' && SC.numsLabel([1, 2, 3, 4, 5, 6, 7]) === '1-7', 'numsLabel');
 	const edge = SC.placeMarkers([{ x: -69, y: 0, nums: [1, 2, 3, 4, 5, 6, 7, 9] }]);
 	ok(edge[0].lx - edge[0].w / 2 >= -70.01, 'placeMarkers: a label stays inside the field, ' + JSON.stringify(edge));
+	ok(S.sheetWords({ kind: 'moveTurn', label: 'Back up', inches: -12, dir: 0, heading: 90 }).includes('12 in back'), 'sheetWords: a moveTurn with minus inches goes back');
+	const top = SC.placeMarkers([{ x: 0, y: 70, nums: [10] }, { x: 4, y: 70, nums: [11] }, { x: 8, y: 70, nums: [12] }]);
+	ok(top.every((m) => m.ly + 2.8 <= 70.01 && m.ly - 2.8 >= -70.01), 'placeMarkers: labels stay inside top to bottom, ' + JSON.stringify(top.map((m) => m.ly)));
 	ok(SC.sheetTime(0, 12) === '0-12 s' && SC.sheetTime(12, 12) === '12 s' && SC.sheetTime(undefined, 1) === '', 'sheetTime');
 }
 

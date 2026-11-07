@@ -30,7 +30,7 @@ Then the **INIT loop**, until ▶ (start on the Driver Hub): gamepad 1 X/B choos
 profile, tuned values), your `addInitTelemetry`, `t.update()`. **No part is updated and no motor
 gets power in the INIT loop.**
 
-### ▶ (once)
+### ▶ start (once)
 
 `timer.start()`, the saved heading is forgotten (it belongs to this run now), buttons held through ▶
 are ignored until let go, then `onStart()` (ControlMap: each module's start, like an intake

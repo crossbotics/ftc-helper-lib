@@ -765,10 +765,10 @@ export function dirWords(d) {
 export function sheetWords(s) {
 	switch (s.kind) {
 		case 'move': return `${s.label}: drive ${num(Math.abs(+s.inches))} in ${dirWords((+s.dir || 0) + (+s.inches < 0 ? 180 : 0))}`;
-		case 'moveTurn': return `${s.label}: drive ${num(Math.abs(+s.inches))} in ${dirWords(+s.dir || 0)} and turn on the way`;
+		case 'moveTurn': return `${s.label}: drive ${num(Math.abs(+s.inches))} in ${dirWords((+s.dir || 0) + (+s.inches < 0 ? 180 : 0))} and turn to ${num(+s.heading)}° on the way (from the start heading)`;
 		case 'action': return `${actionWords(s.code)} (up to ${num(+s.timeout)} s)`;
 		case 'alongside': return `${actionWords(s.code)}, while the next steps run`;
-		case 'run': return `${s.label}: start ${actionWords(s.code).toLowerCase()}`;
+		case 'run': return `${s.label}: started, it keeps running`;
 		default: return stepWords(s);
 	}
 }

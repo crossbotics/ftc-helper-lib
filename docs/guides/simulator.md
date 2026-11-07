@@ -53,7 +53,7 @@ simulator builds your code and makes the robot file only when it starts.
 
 **What you see:** the Driver Hub on the left, the field in 3D in the middle with the gamepads under it,
 and the Control Hub's panels on the right. Try it: pick an OpMode with the TeleOp button, press INIT,
-then ▶ (start, the same big button), and drive with the keyboard (set gamepad 1's list to "Keyboard"; left
+then ▶ (start on the Driver Hub, the same big button), and drive with the keyboard (set gamepad 1's list to "Keyboard"; left
 stick W A S D, right stick the arrows). [The page](#the-page) explains every part.
 
 It works on Windows, macOS and Linux, and on a Chromebook with Linux turned on.

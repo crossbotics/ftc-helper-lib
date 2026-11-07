@@ -104,11 +104,6 @@ export function sheetOutlines(steps, start) {
 	return out;
 }
 
-/**
- * Where to draw each marker's label so no two overlap: [{ ...marker, w (label width), lx, ly (label centre),
- * moved (true when it had to move off its spot: draw a thin line back to it) }]. A label that would cover one
- * already placed moves down, then up, in label-height steps.
- */
 /** Step numbers as short text: [1, 2, 3, 5] -> "1-3, 5". */
 export function numsLabel(nums) {
 	const parts = [];
@@ -121,6 +116,11 @@ export function numsLabel(nums) {
 	return parts.join(', ');
 }
 
+/**
+ * Where to draw each marker's label so no two overlap: [{ ...marker, w (label width), lx, ly (label centre),
+ * moved (true when it had to move off its spot: draw a thin line back to it) }]. A label that would cover one
+ * already placed moves down, then up, in label-height steps.
+ */
 export function placeMarkers(markers) {
 	const H = 5.6, placed = [], EDGE = 70;
 	// Kept inside the field, so a long label never runs off the map.
@@ -131,7 +131,9 @@ export function placeMarkers(markers) {
 		const w = Math.max(5, 2.6 * label.length + 2.4);
 		const lx = inside(m.x, w);
 		let p = { ...m, label, w, lx, ly: m.y, moved: lx !== m.x };
-		for (let k = 1; k <= 12 && placed.some((q) => hits(p, q)); k++) {
+		// Kept inside the field top to bottom too: a label near the top or bottom wall moves inward.
+		const okY = (y) => y - H / 2 >= -EDGE && y + H / 2 <= EDGE;
+		for (let k = 1; k <= 24 && (placed.some((q) => hits(p, q)) || !okY(p.ly)); k++) {
 			const off = Math.ceil(k / 2) * (H + 1) * (k % 2 ? -1 : 1);
 			p = { ...m, label, w, lx, ly: m.y + off, moved: true };
 		}

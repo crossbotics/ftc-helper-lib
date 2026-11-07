@@ -16,8 +16,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 ### Changed
 
 - Docs: "START" now says which start: ▶ on the Driver Hub, or the gamepad's START button. Example screens say
-  "Press ▶". Two headings changed: the cookbook's "How do I run an action when the OpMode starts?" and lesson 5's
-  "7. An action when the OpMode starts" (old links to them from outside the docs break).
+  "Press ▶". Five headings changed: the cookbook's "How do I run an action when the OpMode starts?", lesson 5's
+  "7. An action when the OpMode starts", lesson 3's "6. The "held through ▶" guard", every-loop's "▶ start (once)"
+  and the your-own-code page title (old links to them from outside the docs break).
 
 ## v0.35.0 - 2026-11-06
 

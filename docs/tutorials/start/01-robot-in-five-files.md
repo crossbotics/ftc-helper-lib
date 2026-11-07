@@ -25,7 +25,7 @@ The simulator commands with `-PteamCode=none` run the library's examples. For yo
 Three more complete robots are next to it:
 [`flywheelbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 (an intake that runs from the start, a flywheel the driver speeds up and down, an indexer servo, a
-deploy servo at ▶, the start on the Driver Hub) and
+deploy servo at ▶ (start on the Driver Hub)) and
 [`turretbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot)
 (a turret with a Limelight that follows the goal inside its range, speed from distance, a folding claw),
 and [`v2bot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot) (a turret shooter
