@@ -93,7 +93,7 @@ Words used on this page:
 
 - **Configuration:** the list of motors, servos and sensors you set up on the Driver Station, each
   with a name. Your code finds each part by that name.
-- **INIT** and **▶** (start)**:** the two buttons on the Driver Station. INIT gets the program ready (nothing
+- **INIT** and **▶ (start):** the two buttons on the Driver Station. INIT gets the program ready (nothing
   may move yet); ▶ begins the match part. (The gamepad's small START button is a different button.)
 - **TeleOp:** the program the drivers drive with. **Autonomous:** the program that runs on its own.
 - **Field-centric:** stick up drives the robot away from the driver, whichever way the robot faces.
