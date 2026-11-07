@@ -63,7 +63,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     Feeder feeder;
     private ServoFeeder servoFeeder;
     private MotorFeeder motorFeeder;
-    private Tunable rest, push, pushSec, returnSec, power, feedSec;
+    private Tunable rest, push, pushSec, returnSec, power, feedSec, pushStep;
+    // adjustPush(...): steps of pushStep added to the push position, further from rest (+) or nearer (-).
+    private int pushSteps = 0;
+    // A catalog servo: its time for a full turn (NaN = none), and whether pushSec/returnSec came from it.
+    private double fullMoveSec = Double.NaN;
+    private boolean pushSecFromCatalog = false, returnSecFromCatalog = false;
     LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
     // Told each time a feed really starts (team code).
     private final List<Runnable> feedListeners = new java.util.ArrayList<>();
@@ -131,6 +136,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
             case SERVO:
                 rest = t.tunable("rest", 0.0, 0.01).range(0, 1);
                 push = t.tunable("push", 0.5, 0.01).range(0, 1);
+                pushStep = t.tunable("pushStep", 0.01, 0.005).range(0.001, 0.1);
                 // pushSec/returnSec not written, with a catalog servo (part(...)): its time from rest to push
                 // at the catalog's speed, never under 0.25 s (the piece needs time to leave). A slow torque
                 // servo needs more than 0.25 s just to get there.
@@ -140,6 +146,9 @@ public final class Indexer extends Module<Indexer> implements Feeder {
                         : Math.max(0.25, Math.round(full * Math.abs(push.get() - rest.get()) * 100) / 100.0);
                 boolean pushFromCatalog = !t.has("pushSec") && !Double.isNaN(move);
                 boolean returnFromCatalog = !t.has("returnSec") && !Double.isNaN(move);
+                fullMoveSec = full;
+                pushSecFromCatalog = pushFromCatalog;
+                returnSecFromCatalog = returnFromCatalog;
                 pushSec = t.tunable("pushSec", pushFromCatalog ? move : 0.25, 0.01).range(0.02, 2);
                 returnSec = t.tunable("returnSec", returnFromCatalog ? move : 0.25, 0.01).range(0.02, 2);
                 List<String> cat = new java.util.ArrayList<>();
@@ -236,7 +245,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     // Live tuning: copies the tuning menu's values in (cheap, so every loop).
     private void applyTunables() {
         if (servoFeeder != null) {
-            servoFeeder.positions(rest.get(), push.get()).times(pushSec.get(), returnSec.get());
+            double p = pushNow();
+            // A longer push (adjustPush) with times from the catalog: the servo needs longer to get there.
+            double travel = Double.isNaN(fullMoveSec) ? Double.NaN : Math.max(0.25, fullMoveSec * Math.abs(p - rest.get()));
+            double up = pushSecFromCatalog && !Double.isNaN(travel) ? Math.max(pushSec.get(), travel) : pushSec.get();
+            double down = returnSecFromCatalog && !Double.isNaN(travel) ? Math.max(returnSec.get(), travel) : returnSec.get();
+            servoFeeder.positions(rest.get(), p).times(up, down);
         }
         if (motorFeeder != null && feedSec != null) motorFeeder.power(power.get()).feedTime(feedSec.get());
     }
@@ -346,6 +360,47 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     @Override
     public void addTelemetry(RobotTelemetry t) {
         if (feeder != null) feeder.addTelemetry(t);
+        if (!inLauncher) addPushTrim(t);
+    }
+
+    // The adjustPush(...) trim, when there is one (a launcher's feeder: the launcher shows it, near its speed trim).
+    void addPushTrim(RobotTelemetry t) {
+        if (pushSteps != 0 && push != null) {
+            t.line(name() + " push", "%.3f (%+d x %s; to keep it: Tunables %s push = %.3f)", pushNow(), pushSteps,
+                    exact(pushStep.get()), name(), pushNow());
+        }
+    }
+
+    /**
+     * A push servo: moves the push position by {@code steps} x {@code Tunables pushStep} (0.01): + = further
+     * from rest (a longer push), - = nearer rest. For a D-pad during TeleOp, when the push stops getting the
+     * piece all the way (a servo horn that slips, a worn pad): {@code g1.dpadRight.press(() ->
+     * robot.launcher.feeder().adjustPush(+1))}. Kept until the program ends; the Tunables value is not
+     * changed (the screen shows the number to copy into Tunables). Never past rest, never outside 0 to 1.
+     * Ignored for a CR servo or motor feeder.
+     */
+    public void adjustPush(int steps) {
+        // Not touch(): a trim is not taking the feeder away from an action.
+        if (kind != Kind.SERVO || push == null) return;
+        int next = pushSteps + steps;
+        double dir = Math.signum(push.get() - rest.get());
+        if (dir == 0) dir = 1;
+        double p = push.get() + dir * next * pushStep.get();
+        // Not past rest (the push would go the wrong way) and not outside the servo's range.
+        if (p < 0 || p > 1 || Math.signum(p - rest.get()) != dir) return;
+        pushSteps = next;
+    }
+
+    /** The push position in use now: Tunables push plus the {@link #adjustPush} trim. */
+    public double pushNow() {
+        if (push == null) return Double.NaN;
+        double dir = Math.signum(push.get() - rest.get());
+        if (dir == 0) dir = 1;
+        double p = push.get() + dir * pushSteps * pushStep.get();
+        // Checked again here (not only in adjustPush): pushStep, rest or push may change in the tuning menu
+        // after the trim. Outside 0 to 1, or past rest: the Tunables push alone.
+        if (p < 0 || p > 1 || Math.signum(p - rest.get()) != dir) return push.get();
+        return p;
     }
 
     @Override

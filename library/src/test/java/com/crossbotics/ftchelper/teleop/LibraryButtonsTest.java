@@ -502,7 +502,7 @@ public class LibraryButtonsTest {
         noPauseJob.remove(Job.PAUSE);
         assertNull("a TeleOp that cannot pause says nothing", EasyTeleOp.noPauseWarning(LibraryButtons.twoDrivers().pause(null), noPauseJob));
         assertNull(EasyTeleOp.noFieldCentricNote(LibraryButtons.twoDrivers(), false));
-        assertEquals("No field-centric button (libraryButtons): driving stays robot-centric",
+        assertEquals("No field-centric button (libraryButtons): driving stays robot-centric (unless a button of your own calls driving().toggleFieldCentric())",
                 EasyTeleOp.noFieldCentricNote(LibraryButtons.twoDrivers().fieldCentric(null), false));
     }
 

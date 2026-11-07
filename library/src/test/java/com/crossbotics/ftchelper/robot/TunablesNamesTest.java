@@ -167,7 +167,7 @@ public class TunablesNamesTest {
 
     @Test public void aFieldNoPartReadsStopsInitWithTheKnownNames() {
         expect(Leftover.class, "Tunables.Indexer.spinPower is not a setting of Indexer: the robot would quietly ignore it");
-        expect(Leftover.class, "Known: alsoTrim, alwaysOn, feedSec, power, push, pushSec, rest, returnSec, stageSec, stopSec");
+        expect(Leftover.class, "Known: alsoTrim, alwaysOn, feedSec, power, push, pushSec, pushStep, rest, returnSec, stageSec, stopSec");
         expect(FlagOnAClaw.class, "Tunables.Claw.reversd is not a setting of Claw");
     }
 

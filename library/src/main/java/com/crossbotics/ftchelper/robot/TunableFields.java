@@ -35,7 +35,7 @@ final class TunableFields {
     // tools/check_tunables.py reads these lines: one part(...) per <!-- tunables: Key --> in tunables.md.
     static {
         part("Drive", "calibrated", "maxPower", "moveMinPower", "practiceMaxPower", "slowDownIn", "slowSpeed",
-                "strafeCorrection", "turnKd", "turnKp");
+                "strafeCorrection", "strafeCorrectionLeft", "turnKd", "turnKp");
         part("Odometry", "angularScalar", "checked", "linearScalar", "mirrorForRed", "resetHeading", "resetX", "resetY");
         part("Aim", "cameraForwardIn", "cameraLatencyMs", "cameraLeftIn", "cameraMaxAgeMs", "cameraOdometryAgree",
                 "cameraOffset", "flightSec", "flightSecPerIn", "goalX", "goalY", "lockMarginDeg", "maxGoalDistance", "maxLeadIn",
@@ -48,7 +48,7 @@ final class TunableFields {
                 "lightingPictures", "lightingSettleMs", "liveView", "pipeline", "sizeIn");
         part("Hood", "angleA", "angleB", "byHandPerSec", "calibration", "kP", "maxPower", "posA", "posB",
                 "startAngle", "stepAngle", "tolerance", "travelSec", "trimMax");
-        part("Indexer", "alsoTrim", "alwaysOn", "feedSec", "power", "push", "pushSec", "rest", "returnSec", "stageSec", "stopSec");
+        part("Indexer", "alsoTrim", "alwaysOn", "feedSec", "power", "push", "pushSec", "pushStep", "rest", "returnSec", "stageSec", "stopSec");
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
         part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold",

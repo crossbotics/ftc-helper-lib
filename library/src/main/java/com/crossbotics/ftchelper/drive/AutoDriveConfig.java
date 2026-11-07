@@ -35,6 +35,17 @@ public class AutoDriveConfig {
      * keep their direction. Tune on field tiles.
      */
     public double strafeCorrection = 1.15;
+    /**
+     * The same for strafing LEFT, if the robot slips differently that way (weight to one side, worn
+     * rollers). NaN (the default) = {@link #strafeCorrection} both ways. The Drive Tuner's "Strafe left"
+     * test finds it.
+     */
+    public double strafeCorrectionLeft = Double.NaN;
+
+    /** The strafe correction for this side: + = right, - = left. */
+    public double strafeCorrectionFor(double right) {
+        return right < 0 && !Double.isNaN(strafeCorrectionLeft) ? strafeCorrectionLeft : strafeCorrection;
+    }
 
     // --- Turning (IMU) ---
     // Turns use a PID controller: power grows with how far the heading is off.

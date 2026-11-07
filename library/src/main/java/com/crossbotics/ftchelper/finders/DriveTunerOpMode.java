@@ -24,6 +24,7 @@ import java.util.List;
  *   Push:    roll the robot BY HAND exactly 48 in along the tape, then press B. (Wheel size.)
  *   Drive:   it drives 48 in forward. Measure, set the real distance with the D-pad, press A.
  *   Strafe:  it drives 48 in to the right (mecanum). Measure, set it, press A.
+ *   Strafe left: the same, to the left (only if the robot slips differently that way: strafeCorrectionLeft).
  *   Turn:    it turns 90 left. Check it with a square; the screen shows the IMU's heading.
  * Distance:  D-pad up/down = +/- 1 in, right/left = +/- 0.25 in.
  * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
@@ -32,7 +33,7 @@ import java.util.List;
  * Each new number is used at once in this tuner (no rebuild): run the Drive and Strafe tests again
  * until they measure 48 (within 0.5 in: then it also shows {@code Tunables.Drive: calibrated = true}),
  * then copy the lines into your code. The screen keeps updating while a test moves. Leave 5 ft of space in front of and to
- * the right of the robot. It shows each number twice: for {@code RobotSettings.auto()}
+ * the sides of the robot. It shows each number twice: for {@code RobotSettings.auto()}
  * ({@code c.wheelDiameterIn = 3.937;}) and for the robot in five files ({@code Robot.java: .wheelMm(100.0)},
  * {@code Tunables.Drive: strafeCorrection = 1.120}).
  *
@@ -57,7 +58,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         return true;
     }
 
-    private static final String[] TESTS = {"Push (by hand)", "Drive forward", "Strafe right", "Turn 90 left"};
+    private static final String[] TESTS = {"Push (by hand)", "Drive forward", "Strafe right", "Strafe left", "Turn 90 left"};
 
     /**
      * Your robot in five files: {@code return new Robot();}. The tuner uses its drive (motors, wheel,
@@ -179,12 +180,17 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
 
     private void chooseNext() {
         if (waiting != Wait.CHOOSE) return;
-        do { test = (test + 1) % TESTS.length; } while (test == 2 && !canStrafe());
+        do { test = (test + 1) % TESTS.length; } while (isStrafe(test) && !canStrafe());
+    }
+
+    // The two strafe tests: right (2) and left (3).
+    private static boolean isStrafe(int which) {
+        return which == 2 || which == 3;
     }
 
     private void choosePrevious() {
         if (waiting != Wait.CHOOSE) return;
-        do { test = (test + TESTS.length - 1) % TESTS.length; } while (test == 2 && !canStrafe());
+        do { test = (test + TESTS.length - 1) % TESTS.length; } while (isStrafe(test) && !canStrafe());
     }
 
     // A: start the chosen test, or confirm the measured distance.
@@ -200,7 +206,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
             if (test == 1) driveRight = right;
             if (test == 2) strafeRight = right;
             if (right) {
-                lastResult = (test == 1 ? "Drive" : "Strafe") + " measures " + FinderResults.num(testDistanceIn(), 0)
+                lastResult = (test == 1 ? "Drive" : test == 2 ? "Strafe" : "Strafe left") + " measures " + FinderResults.num(testDistanceIn(), 0)
                         + " in: right." + (test == 1 && canStrafe() && !strafeRight ? " Next: the Strafe test." : "");
                 waiting = Wait.CHOOSE;
                 writeCalibrated();
@@ -217,6 +223,14 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
                 results.set("drive:strafe", "c.strafeCorrection = " + FinderResults.num(s, 3) + ";   // RobotSettings.auto()");
                 results.set("drive:strafe5", "Tunables.Drive: strafeCorrection = " + FinderResults.num(s, 3));
                 lastResult = "Strafe correction now " + FinderResults.num(s, 3) + ". Run the Strafe test again.";
+            } else if (test == 3) {
+                // Left starts from the right's number until it has its own.
+                double from = Double.isNaN(autoConfig.strafeCorrectionLeft) ? autoConfig.strafeCorrection : autoConfig.strafeCorrectionLeft;
+                double s = FinderMath.correctedStrafe(from, testDistanceIn(), measured);
+                autoConfig.strafeCorrectionLeft = s;
+                results.set("drive:strafeL", "c.strafeCorrectionLeft = " + FinderResults.num(s, 3) + ";   // RobotSettings.auto()");
+                results.set("drive:strafeL5", "Tunables.Drive: strafeCorrectionLeft = " + FinderResults.num(s, 3));
+                lastResult = "Strafe left correction now " + FinderResults.num(s, 3) + ". Run the Strafe left test again.";
             }
             waiting = Wait.CHOOSE;
             writeCalibrated();
@@ -277,6 +291,9 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
                 break;
             case 2:
                 afterMove("Strafe", auto.move(testDistanceIn(), 90, testPower));
+                break;
+            case 3:
+                afterMove("Strafe left", auto.move(testDistanceIn(), -90, testPower));
                 break;
             default:
                 auto.resetHeading();
@@ -367,14 +384,15 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
             t.line("Measured", FinderResults.num(measured, 2) + " in");
         } else {
             for (int i = 0; i < TESTS.length; i++) {
-                if (i == 2 && !canStrafe()) continue;
+                if (isStrafe(i) && !canStrafe()) continue;
                 t.text((i == test ? "> " : "  ") + TESTS[i]);
             }
             t.text("D-pad up/down = choose, {A} = start");
             t.line("Power", FinderResults.num(testPower, 1) + " (D-pad left/right: your autos' power)");
         }
         t.line("Now using", "wheel " + FinderResults.num(autoConfig.wheelDiameterIn, 3) + " in, strafe "
-                + FinderResults.num(autoConfig.strafeCorrection, 3));
+                + FinderResults.num(autoConfig.strafeCorrection, 3)
+                + (Double.isNaN(autoConfig.strafeCorrectionLeft) ? "" : ", left " + FinderResults.num(autoConfig.strafeCorrectionLeft, 3)));
         if (!lastResult.isEmpty()) t.text(lastResult);
     }
 
@@ -383,14 +401,14 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         String d = FinderResults.num(testDistanceIn(), 0) + " in";
         return new String[] {
             "Wheel size + strafe correction. Tape " + d + " long;",
-            "  clear floor 5 ft ahead and to the right.",
+            "  clear floor 5 ft ahead and to each side.",
             "D-pad up/down = a test, l/r = power. {A} = start.",
             "{GUIDE} or {START} stops a moving test (not measured).",
             "Push: {A}, roll the robot BY HAND exactly " + d + ",",
             "  straight along the tape, then {B}.",
             "Drive: drives " + d + ". Measure it, set the real",
             "  distance (D-pad up/down 1 in, l/r 0.25 in), {A}.",
-            "Strafe (mecanum): the same, to the right.",
+            "Strafe (mecanum): the same, right. Strafe left: left",
             "Turn: turns 90 left: check it with a square.",
             "Each new number is used at once: repeat Drive and",
             "  Strafe until they measure " + d + ".",
