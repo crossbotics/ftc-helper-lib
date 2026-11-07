@@ -28,7 +28,7 @@ itself. The check must spin each motor exactly as Robot.java sets it up.
 ## Steps
 
 1. INIT **Tune and check**. **Motor Direction Check** must be in the menu, after the Hardware Check.
-2. Open it, press START. Nothing may move until you hold a button.
+2. Open it, press ▶ (start on the Driver Hub). Nothing may move until you hold a button.
 3. Hold X. Only the front-left motor may run (tank: the left one). The screen must say its name, and
    "(reversed)" if Robot.java reverses it. Let go: it must stop.
 4. Do the same with Y, A and B.

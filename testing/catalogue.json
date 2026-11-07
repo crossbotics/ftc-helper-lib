@@ -991,7 +991,7 @@
      {
       "ol": [
        "INIT **Tune and check**. **Motor Direction Check** must be in the menu, after the Hardware Check.",
-       "Open it, press START. Nothing may move until you hold a button.",
+       "Open it, press ▶ (start on the Driver Hub). Nothing may move until you hold a button.",
        "Hold X. Only the front-left motor may run (tank: the left one). The screen must say its name, and \"(reversed)\" if Robot.java reverses it. Let go: it must stop.",
        "Do the same with Y, A and B.",
        "On the real robot: every wheel must roll the way that drives the robot forward. If one does not, add its name to `reversed(...)` on the drive line (or take it out), INIT again and check that wheel again."
@@ -4401,7 +4401,7 @@
      {
       "ol": [
        "INIT. Neither servo must move.",
-       "Press START, then close the claw (operator B). Both fingers must close at the same moment and meet in the middle.",
+       "Press ▶ (start on the Driver Hub), then close the claw (operator B). Both fingers must close at the same moment and meet in the middle.",
        "Open it. Both must open together.",
        "Open and close it 5 times fast. Neither finger may ever move alone: both must end at the same place each time. (A pause, BACK, does not stop a servo that is already going: it finishes its move. Feed arms go back to `rest` on a pause.)",
        "If the fingers do not quite meet, set `alsoTrim = 0.02` (or -0.02) in the tuning menu, then open and close again (a new trim is used at the next move). The second finger must move a little more (or less)."
@@ -5191,10 +5191,10 @@
     "steps": [
      {
       "ol": [
-       "Press START. Spin up. The feed wheel must not turn yet.",
+       "Press ▶ (start on the Driver Hub). Spin up. The feed wheel must not turn yet.",
        "Fire one piece. The feed wheel must start first. The arm must push about 0.2 s later, while the wheel still turns. The wheel must stop about 0.3 s after the push starts. The piece must leave.",
        "Set `stopSec = -0.1` in the tuning menu. Fire again. The wheel must stop just before the arm pushes. The piece still goes: the wheel ran 0.1 s.",
-       "Set `alwaysOn = true` in `Tunables.java` and INIT again. After START with the flywheel on, the wheel must turn all the time. A fire must push at once.",
+       "Set `alwaysOn = true` in `Tunables.java` and INIT again. After ▶ with the flywheel on, the wheel must turn all the time. A fire must push at once.",
        "Press LB (the flywheel coasts down). The wheel must stop."
       ]
      }
