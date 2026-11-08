@@ -2,7 +2,7 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.37.1 - 2026-11-08
 
 ### Fixed
 
