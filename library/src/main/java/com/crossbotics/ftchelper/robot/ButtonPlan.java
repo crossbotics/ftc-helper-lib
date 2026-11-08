@@ -407,7 +407,7 @@ final class ButtonPlan {
         final ControllerBindings.Pad pad;
         final BooleanSupplier when;
         final int buzzes;
-        // True for rumbleWhenAimed(): a graded buzz from robot.aim().errorDeg().
+        // True for rumbleWhenAimed(): a graded buzz from robot.aim().buzzErrorDeg().
         final boolean aim;
 
         Watch(ControllerBindings.Pad pad, BooleanSupplier when, int buzzes) {
@@ -441,7 +441,7 @@ final class ButtonPlan {
                     rumble = new com.crossbotics.ftchelper.gamepad.AimRumble(now, () -> Pad.clock.getAsLong());
                 }
                 rumble.setThreshold(robot.aim().rumbleDeg());
-                if (rumble.update(robot.aim().errorDeg()) && aimBuzzed != null) aimBuzzed.run();
+                if (rumble.update(robot.aim().buzzErrorDeg()) && aimBuzzed != null) aimBuzzed.run();
             }
 
             @Override void reset() { }

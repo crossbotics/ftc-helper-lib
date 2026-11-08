@@ -2,6 +2,7 @@ package com.crossbotics.ftchelper.robot;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -109,6 +110,17 @@ public class AimTest {
             public static double speedRpm = 2600;
             public static double[][] speedByDistancePollen = {{24, 2000}, {72, 3000}};
             public static double[][] speedByDistanceNectar = {{24, 2500}, {72, 3500}};
+        }
+    }
+
+    // The camera sits turned 3 degrees to the left (cameraOffset).
+    public static class OffsetCamera {
+        public static class Aim {
+            public static double goalX = -24, goalY = 48;
+            public static double cameraOffset = 3, rumbleDeg = 4;
+        }
+        public static class Launcher {
+            public static double[][] speedByDistance = {{24, 2000}, {72, 3000}};
         }
     }
 
@@ -548,6 +560,43 @@ public class AimTest {
         assertEquals("paused: no buzz", 1, buzzes[0]);
         plan.loop(false, false);
         assertEquals(2, buzzes[0]);
+    }
+
+    @Test public void withTheAimOffTheBuzzFollowsTheDriversOwnAimButTheLauncherCheckDoesNot() {
+        AimBot r = bot(GoalTunables.class, true, false);
+        final int[] buzzes = {0};
+        ButtonPlan.aimBuzzed = () -> buzzes[0]++;
+        ButtonPlan plan = ControlMap.makePlan(r, false, false, (g1, g2) -> g1.rumbleWhenAimed());
+        final Gamepad g1 = new Gamepad(), g2 = new Gamepad();
+        plan.compile(r, new ControllerBindings(), new ControllerBindings(), new ArrayList<>(), () -> g1, () -> g2);
+        cam.seen = seen(20, 48);                              // aim mode off, turned away: no buzz
+        plan.loop(false, false);
+        assertEquals(0, buzzes[0]);
+        cam.seen = seen(1, 48);                               // the driver turned to the goal: a buzz
+        plan.loop(false, false);
+        assertEquals(1, buzzes[0]);
+        assertEquals(1, r.aim().buzzErrorDeg(), 0.01);
+        assertTrue("the launcher's check: nothing aims", Double.isNaN(r.aim().errorDeg()));
+        assertFalse(r.aim().isAimed());
+        clock.addSec(1);
+        cam.seen = null;                                      // no goal in view: no buzz
+        plan.loop(false, false);
+        assertEquals(1, buzzes[0]);
+        assertTrue(Double.isNaN(r.aim().buzzErrorDeg()));
+        place(r, -24, 0, 0);                                  // the odometry faces the goal, the camera does not see it
+        assertNotNull(r.aim().fromOdometry());
+        assertTrue("by hand: the camera only", Double.isNaN(r.aim().buzzErrorDeg()));
+        plan.loop(false, false);
+        assertEquals(1, buzzes[0]);
+    }
+
+    @Test public void theByHandBuzzTakesOffTheCameraOffsetAndATurretRobotStaysQuiet() {
+        AimBot r = bot(OffsetCamera.class, true, false);
+        cam.seen = seen(4, 48);                               // 4 degrees left in the picture, the camera 3 left
+        assertEquals("1 degree off", 1, r.aim().buzzErrorDeg(), 0.01);
+        AimBot t = bot(GoalTunables.class, true);             // a turret the driver aims, the robot faces the goal
+        cam.seen = seen(1, 48);
+        assertTrue("the turret, not the robot, aims: no by-hand buzz", Double.isNaN(t.aim().buzzErrorDeg()));
     }
 
     @Test public void rumbleWhenAimedTwiceOnOneGamepadStops() {

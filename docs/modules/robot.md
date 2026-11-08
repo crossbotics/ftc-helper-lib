@@ -1299,7 +1299,9 @@ time limit, and the report says `not seen`. The auto builder has it as "+ Aim at
 
 **The aim buzz**: `g2.rumbleWhenAimed();` buzzes that gamepad while the aim is within `rumbleDeg`, the
 closer the stronger and longer (an [AimRumble](gamepad.md)). It follows a turret that is following, or
-whole-robot aim; nothing while neither aims, or while paused.
+whole-robot aim. A robot with no turret buzzes with aim mode off too: the driver turns it by hand, and it
+buzzes when the camera sees the goal straight ahead (`buzzErrorDeg()`). Only the buzz: a launcher's "aimed"
+check stays off while nothing aims. Nothing with no goal in view, or while paused.
 
 **Quick turn on fire** (`Tunables.Aim.aimOnFire = true`; **off unless you set it**: it turns the robot).
 For a robot with no turret, with aim mode off: a press of the fire button (the launcher's RB, or
@@ -1328,7 +1330,7 @@ public static class Aim {                    // Tunables.java
 | `mode()` (= `robot.aimMode()`) | whole-robot aim (stops with a message on a robot whose turret follows the goal) |
 | `canAim()`, `stage()` | the robot can find the goal at all (a camera with a goal, or the odometry backup); NOT_SEEN, SEEN, IN_RANGE or LOCKED now (`Stage.words()`: "not seen" ... "LOCKED") |
 | `aimsOnFire()`, `isTurningToFire()` | quick turn on fire is set (`aimOnFire`); a fire press is turning the robot now |
-| `errorDeg()`, `isAimed()`, `rumbleDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`: on the goal now). While shooting on the move: off the virtual goal |
+| `errorDeg()`, `isAimed()`, `rumbleDeg()`, `buzzErrorDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`: on the goal now). While shooting on the move: off the virtual goal. `buzzErrorDeg()`: the buzz's error (also the camera's bearing on a robot with no turret and the aim off) |
 | `movingShotMode()` | shooting on the move on/off (on from ▶ with `shootOnMove = true`): `g2.a.toggle(robot.aim().movingShotMode())` |
 | `isMovingShot()`, `lead()` | it is on and the robot moves (over 2 in/s or 5 deg/s); the last lead (a [MovingShot](vision.md#movingshot) `Result`: `leadDeg`, `leadIn`, `distanceIn`), null if none |
 

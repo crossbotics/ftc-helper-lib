@@ -2,6 +2,15 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Fixed
+
+- **The aim buzz now works when you aim by hand** (a robot with no turret): with aim mode off, `rumbleWhenAimed()`
+  buzzes when the driver has turned the robot to face the goal the camera sees, the closer the stronger. Before, it
+  buzzed only while the library turned the robot (aim mode on, or the quick turn on fire). New `Aim.buzzErrorDeg()`.
+  The launcher's "aimed" check does not change. A robot with a turret: as before.
+
 ## v0.37.0 - 2026-11-08
 
 ### Added

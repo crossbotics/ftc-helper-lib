@@ -3,6 +3,7 @@ package com.crossbotics.ftchelper.sim;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.crossbotics.ftchelper.drive.FieldMap;
 import com.crossbotics.ftchelper.match.Alliance;
@@ -150,8 +151,16 @@ public class SimRouteTest {
         return file;
     }
 
+    // The screen, and any crash (of the OpMode or of the physics): a failed check says why the robot stopped.
     private static String shown(SimRun s) {
-        return String.join("\n", s.screen());
+        String err = s.error();
+        return String.join("\n", s.screen()) + (err.isEmpty() ? "" : "\nERROR: " + err);
+    }
+
+    // Fails with what the screen showed and any crash. The check (often a wait) runs first, then the screen is
+    // read: a crash during the wait is in the message.
+    private static void ok(SimRun s, String what, boolean passed) {
+        if (!passed) fail((what.isEmpty() ? "" : what + "\n") + shown(s));
     }
 
     private static boolean waitForText(SimRun s, String text, double sec) throws InterruptedException {
@@ -163,7 +172,7 @@ public class SimRouteTest {
         FieldPose p = MatchMemory.fieldPose(a, x, y, 0);
         s.robot().setPose(p.x, p.y, p.headingDeg);
         s.g1().start = true;
-        assertTrue(shown(s), waitForText(s, "Pose set", 5));
+        ok(s, "", waitForText(s, "Pose set", 5));
         s.g1().start = false;
         s.waitForLoops(3);
     }
@@ -176,7 +185,18 @@ public class SimRouteTest {
             if (done.getAsBoolean()) return true;
             Thread.sleep(10);
         }
-        return done.getAsBoolean();
+        boolean ok = done.getAsBoolean();
+        if (!ok) dumpThreads();
+        return ok;
+    }
+
+    // Where every thread is now: for a run that got stuck (it printed nothing else useful).
+    private static void dumpThreads() {
+        for (java.util.Map.Entry<Thread, StackTraceElement[]> e : Thread.getAllStackTraces().entrySet()) {
+            System.err.println("THREAD " + e.getKey().getName() + " " + e.getKey().getState());
+            StackTraceElement[] st = e.getValue();
+            for (int i = 0; i < Math.min(25, st.length); i++) System.err.println("    at " + st[i]);
+        }
     }
 
     @Test public void afterTheParkTimeTheAutonomousGoesAroundBothFrames() throws Exception {
@@ -185,7 +205,7 @@ public class SimRouteTest {
             s.init("Route Auto");
             assertEquals("", s.error());
             s.start();
-            assertTrue("reached the far side\n" + shown(s),
+            ok(s, "reached the far side",
                     waitNoHiveBump(s, () -> HiveBot.last != null && HiveBot.last.pose() != null
                             && Math.hypot(HiveBot.last.pose().x, HiveBot.last.pose().y - 40) < 1.5, 25));
             assertEquals("", s.error());
@@ -196,12 +216,12 @@ public class SimRouteTest {
         try (SimRun s = new SimRun(robotFile(HiveBot.class).toString())) {
             s.sim.ds.register("Route TeleOp", "TeleOp", RouteTeleOp.class);
             s.init("Route TeleOp");
-            assertTrue(shown(s), s.screenHas("route to the middle"));
+            ok(s, "", s.screenHas("route to the middle"));
             s.start();
             standOnResetSpot(s, Alliance.BLUE, 0, -61);
             s.press(v -> s.g1().dpad_left = v);
-            assertTrue("it says it drives\n" + shown(s), waitForText(s, "Route: Middle", 2));
-            assertTrue("it arrives\n" + shown(s), waitNoHiveBump(s, () -> s.screenHas("Middle: there"), 20));
+            ok(s, "it says it drives", waitForText(s, "Route: Middle", 2));
+            ok(s, "it arrives", waitNoHiveBump(s, () -> s.screenHas("Middle: there"), 20));
             FieldPose at = HiveBot.last.pose();
             assertEquals(0, at.x, 1.5);
             assertEquals(0, at.y, 1.5);
@@ -220,9 +240,9 @@ public class SimRouteTest {
             s.start();
             standOnResetSpot(s, Alliance.BLUE, 0, -61);
             s.press(v -> s.g1().dpad_right = v);
-            assertTrue(shown(s), waitForText(s, "Route: Far", 2));
+            ok(s, "", waitForText(s, "Route: Far", 2));
             s.g1().right_stick_x = 0.2f;
-            assertTrue(shown(s), waitForText(s, "Far: stopped: a drive stick moved", 2));
+            ok(s, "", waitForText(s, "Far: stopped: a drive stick moved", 2));
             s.g1().right_stick_x = 0;
             assertTrue("the wheels stop", SimRun.waitFor(() -> s.robot().motors.get("front_left").userPower() == 0, 1));
             FieldPose stopped = HiveBot.last.pose();
@@ -239,16 +259,16 @@ public class SimRouteTest {
             s.start();
             standOnResetSpot(s, Alliance.BLUE, 0, -61);
             s.press(v -> s.g1().dpad_right = v);
-            assertTrue(shown(s), waitForText(s, "Route: Far", 2));
+            ok(s, "", waitForText(s, "Route: Far", 2));
             s.press(v -> s.g1().back = v);
-            assertTrue(shown(s), waitForText(s, "PAUSED", 2));
+            ok(s, "", waitForText(s, "PAUSED", 2));
             s.press(v -> s.g1().back = v);
-            assertTrue(shown(s), SimRun.waitFor(() -> !s.screenHas("PAUSED"), 2));
+            ok(s, "", SimRun.waitFor(() -> !s.screenHas("PAUSED"), 2));
             assertFalse(shown(s), s.screenHas("Route: Far"));
             assertTrue("the wheels stay stopped", s.robot().motors.get("front_left").userPower() == 0);
             // While paused a route does not start at all.
             s.press(v -> s.g1().back = v);
-            assertTrue(shown(s), waitForText(s, "PAUSED", 2));
+            ok(s, "", waitForText(s, "PAUSED", 2));
             s.press(v -> s.g1().dpad_right = v);
             assertFalse(shown(s), s.screenHas("Route: Far"));
             assertEquals("", s.error());
@@ -261,7 +281,7 @@ public class SimRouteTest {
             s.init("Route TeleOp");
             s.start();
             s.press(v -> s.g1().dpad_left = v);
-            assertTrue(shown(s), waitForText(s, "Middle: not started: the pose is not set", 2));
+            ok(s, "", waitForText(s, "Middle: not started: the pose is not set", 2));
             assertTrue(s.robot().motors.get("front_left").userPower() == 0);
             assertEquals("", s.error());
         }
@@ -273,7 +293,7 @@ public class SimRouteTest {
             s.init("Route Timed");
             s.start();
             standOnResetSpot(s, Alliance.BLUE, 0, -61);
-            assertTrue("it arrives\n" + shown(s), waitNoHiveBump(s, () -> s.screenHas("Timed: there"), 20));
+            ok(s, "it arrives", waitNoHiveBump(s, () -> s.screenHas("Timed: there"), 20));
             assertEquals(-56, HiveBot.last.pose().x, 1.5);
             assertEquals(-36, HiveBot.last.pose().y, 1.5);
         }
@@ -286,9 +306,9 @@ public class SimRouteTest {
             s.start();
             standOnResetSpot(s, Alliance.BLUE, 0, -61);
             s.g1().right_stick_x = 0.2f;
-            assertTrue("it waits, it does not end\n" + shown(s), waitForText(s, "Timed: waiting", 4));
+            ok(s, "it waits, it does not end", waitForText(s, "Timed: waiting", 4));
             s.g1().right_stick_x = 0;
-            assertTrue("let go: it arrives\n" + shown(s), waitNoHiveBump(s, () -> s.screenHas("Timed: there"), 20));
+            ok(s, "let go: it arrives", waitNoHiveBump(s, () -> s.screenHas("Timed: there"), 20));
         }
     }
 
@@ -299,7 +319,7 @@ public class SimRouteTest {
             s.start();
             standOnResetSpot(s, Alliance.BLUE, 0, -61);
             s.g1().right_stick_x = 0.2f;
-            assertTrue(shown(s), waitForText(s, "Timed: not started: the driver kept driving", 9));
+            ok(s, "", waitForText(s, "Timed: not started: the driver kept driving", 9));
             s.g1().right_stick_x = 0;
             Thread.sleep(300);
             assertFalse("it stays given up\n" + shown(s), s.screenHas("Route: Timed"));
@@ -316,7 +336,7 @@ public class SimRouteTest {
             assertEquals(shown(s), 25, MirrorBot.last.pose().x, 1);
             s.press(v -> s.g1().dpad_left = v);
             double[] least = {25};
-            assertTrue("it arrives\n" + shown(s), SimRun.waitFor(() -> {
+            ok(s, "it arrives", SimRun.waitFor(() -> {
                 least[0] = Math.min(least[0], MirrorBot.last.pose().x);
                 return s.screenHas("Up: there");
             }, 20));
@@ -331,7 +351,7 @@ public class SimRouteTest {
         try (SimRun s = new SimRun(robotFile(NoMap.class).toString())) {
             s.sim.ds.register("Route No Map", "TeleOp", RouteNoMap.class);
             s.init("Route No Map");
-            assertTrue(shown(s) + s.error(), SimRun.waitFor(() -> (shown(s) + s.error()).contains("needs a map"), 3));
+            assertTrue(shown(s), SimRun.waitFor(() -> shown(s).contains("needs a map"), 3));
         }
     }
 }
