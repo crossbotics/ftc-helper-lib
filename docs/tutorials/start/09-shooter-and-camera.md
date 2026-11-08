@@ -715,6 +715,8 @@ g2.rumbleWhenAimed();
 
 Gamepad 2 buzzes while the aim is within `Tunables.Aim.rumbleDeg` (4 degrees), and the closer, the
 stronger and longer each buzz. It works for a turret that follows the goal and for whole-robot aim.
+A robot with no turret buzzes with aim mode off too: turn it by hand, and the buzz says when it faces the
+goal the camera sees.
 
 ## 12. Extra: know which piece fires next
 

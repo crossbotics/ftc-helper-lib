@@ -606,6 +606,31 @@ public final class Aim {
         return rumbleDeg.getAsDouble();
     }
 
+    /**
+     * The error the aim buzz ({@code rumbleWhenAimed()}) uses, degrees (counterclockwise +), or NaN = no buzz.
+     * While the library aims (whole-robot aim on, the quick turn on fire, a turret that follows the goal) it is
+     * {@link #errorDeg()}. On a robot with no turret and the aim off, it is the camera's bearing to the goal:
+     * the driver turns the robot by hand, and the gamepad buzzes when it faces the goal. Only the buzz: the
+     * launcher's "aimed" check ({@link #isAimed()}) stays as it is.
+     *
+     * @return degrees to turn to face the goal; NaN when nothing aims and no goal is in view
+     */
+    public double buzzErrorDeg() {
+        double e = errorDeg();
+        if (!Double.isNaN(e) || mode.isOn() || isTurningToFire() || hasTurret()) return e;
+        TargetObservation g = cameraGoal(aimingCamera());   // the camera only: an odometry guess can be off
+        return g == null ? Double.NaN : corrected(g).bearingDeg;
+    }
+
+    // True if the robot has a turret on it now (a turret the driver aims by hand moves the camera's bearing,
+    // so the whole-robot "by hand" buzz would be wrong for it).
+    private boolean hasTurret() {
+        for (Module<?> m : robot.modules()) {
+            if (m instanceof Turret && m.isPresent()) return true;
+        }
+        return false;
+    }
+
     // The first turret with its follow mode on, or null.
     private Turret followingTurret() {
         for (Module<?> m : robot.modules()) {

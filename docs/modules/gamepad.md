@@ -199,7 +199,8 @@ if (!confirm.isPlaying()) aimFeel.update(headingErrorDeg);
 | `update(error)` | call every loop. Returns true if it started a buzz. `NaN` (no target) does nothing. |
 
 In the robot in five files it is one line in `Controls.java`: `g2.rumbleWhenAimed();` (the error is
-the turret's or the whole robot's aim; see [Aim](robot.md#aim)).
+the turret's or the whole robot's aim, or, on a robot with no turret and the aim off, the camera's bearing
+to the goal while the driver turns by hand; see [Aim](robot.md#aim)).
 
 ---
 

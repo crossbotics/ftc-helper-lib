@@ -109,7 +109,8 @@ public final class Pad {
     /**
      * Feedback for aiming by hand: this gamepad buzzes while the aim is close, the closer the stronger
      * and longer (last season's "on target" buzz). Works for a turret that follows the goal and for
-     * whole-robot aim ({@code robot.aimMode()}); nothing while neither is aiming. It starts within
+     * whole-robot aim ({@code robot.aimMode()}). A robot with no turret also buzzes with the aim off, when the
+     * driver has turned it to face the goal the camera sees ({@code Aim.buzzErrorDeg()}). It starts within
      * {@code Tunables.Aim.rumbleDeg} (default 4 degrees). One line: {@code g1.rumbleWhenAimed();}
      */
     public void rumbleWhenAimed() {
