@@ -23,7 +23,7 @@ const TURNS = new Set(['turn', 'turnTo', 'moveTurn']);  // steps with a turn kno
 const KNOB = '#f2c230';                                 // the turn knobs' yellow
 // Things the robot DOES (not drives): an orange diamond with a letter on the map (A, B, C...), so they never
 // look like the points it drives to (a dark round badge with a number).
-const DOING = new Set(['run', 'action', 'alongside', 'ready', 'aim']);
+const DOING = new Set(['run', 'action', 'alongside', 'ready', 'aim', 'goal']);
 const letter = (n) => (n < 26 ? String.fromCharCode(65 + n) : letter(Math.floor(n / 26) - 1) + letter(n % 26));
 // The letters of a Simple steps plan: { step index: 'A', ... } in step order.
 function stepLetters(steps) {
@@ -209,7 +209,7 @@ panel.innerHTML = `
   <div class="row b-addrow" id="bAdd">
     <button data-add="move">+ Drive</button><button data-add="strafe" id="bAddStrafe">+ Strafe</button><button data-add="turn">+ Turn</button>
     <button data-add="turnTo">+ Turn to</button><button data-add="wait">+ Wait</button><button data-add="run">+ Start something</button>
-    <button data-add="action">+ Action</button><button data-add="aim" id="bAddAim" title="Turn to the goal (camera, or the odometry backup)">+ Aim at the goal</button><button data-add="ready" id="bAddReady" title="Spin the launcher up and wait until it is ready to fire">+ Ready to launch</button><button data-add="remember" title="Save the heading now, for Turn back">+ Remember heading</button><button data-add="back" title="Turn back to the remembered heading">+ Turn back</button><button data-add="park">+ Park from here</button>
+    <button data-add="action">+ Action</button><button data-add="aim" id="bAddAim" title="Turn to the goal (camera, or the odometry backup)">+ Aim at the goal</button><button data-add="ready" id="bAddReady" title="Spin the launcher up and wait until it is ready to fire">+ Ready to launch</button><button data-add="goal" id="bAddGoal" title="Wait until the camera sees the goal (e.g. after a HIVE tip), then go on">+ Wait for the goal</button><button data-add="remember" title="Save the heading now, for Turn back">+ Remember heading</button><button data-add="back" title="Turn back to the remembered heading">+ Turn back</button><button data-add="park">+ Park from here</button>
     </div>
   <div id="bAddHome"></div>
   <div id="bTankNote" class="b-tanknote" hidden></div>
@@ -407,6 +407,8 @@ function renderFeatures() {
 	$('bAddAim').hidden = !!list.length && !(aim && !aim.missing);
 	const readyStep = list.find((f) => f.kind === 'AUTO_STEP' && f.name === 'Ready to launch');
 	$('bAddReady').hidden = !!list.length && !(readyStep && !readyStep.missing);
+	const goalStep = list.find((f) => f.kind === 'AUTO_STEP' && f.name === 'Wait for the goal');
+	$('bAddGoal').hidden = !!list.length && !(goalStep && !goalStep.missing);
 }
 $('bRobot').onchange = () => change(() => { B.robotClass = $('bRobot').value; });
 $('bRed').onclick = () => change(() => { B.alliance = 'RED'; });
@@ -1097,7 +1099,7 @@ $('bSheet').onclick = () => {
 
 // ------------------------------------------------------------------ Simple steps: the list
 
-const KIND_TEXT = { move: 'Drive', moveTurn: 'Drive and turn', turn: 'Turn', turnTo: 'Turn to', wait: 'Wait', run: 'Start something', action: 'Action', alongside: 'Action', aim: 'Aim at the goal', ready: 'Ready to launch', remember: 'Remember heading', back: 'Turn back', park: 'Park from here' };
+const KIND_TEXT = { move: 'Drive', moveTurn: 'Drive and turn', turn: 'Turn', turnTo: 'Turn to', wait: 'Wait', run: 'Start something', action: 'Action', alongside: 'Action', aim: 'Aim at the goal', ready: 'Ready to launch', goal: 'Wait for the goal', remember: 'Remember heading', back: 'Turn back', park: 'Park from here' };
 const DIRS = [[0, 'forward'], [180, 'back'], [90, 'right (strafe)'], [270, 'left (strafe)']];
 const NEW = {
 	move: () => ({ kind: 'move', label: 'Drive', inches: 24, dir: 0, power: 0.6 }),
@@ -1109,6 +1111,7 @@ const NEW = {
 	action: () => ({ kind: 'action', code: actionsNow()[0] || '', timeout: ACTION_LIMIT_SEC }),
 	aim: () => ({ kind: 'aim', label: 'Aim', timeout: 3 }),
 	ready: () => ({ kind: 'ready', label: 'Ready', timeout: 3 }),
+	goal: () => ({ kind: 'goal', label: 'Wait for the goal', timeout: 10, goOn: false }),
 	remember: () => ({ kind: 'remember', label: 'Remember heading' }),
 	back: () => ({ kind: 'back', label: 'Turn back', power: 0.5 }),
 	park: () => ({ kind: 'park', sec: 3 }),
@@ -1188,6 +1191,8 @@ function stepForm(s, i) {
 			<p class="muted">Turns back to the heading saved by "Remember heading". Without odometry pods it uses the IMU: better than nothing. The preview does not turn: the run does.</p>`;
 		case 'ready': return `<div class="row">${name('Ready')}<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label></div>
 			<p class="muted">Spins the launcher up and waits until it is at speed. Put it before the drive to the shooting spot: the first shot then goes at once.</p>`;
+		case 'goal': return `<div class="row">${name('Wait for the goal')}<label><input type="checkbox" data-k="goOn" ${s.goOn === false ? '' : 'checked'}> go on after <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}" ${s.goOn === false ? 'disabled' : ''}> s if not seen</label></div>
+			<p class="muted">Waits until the camera sees our goal (our HIVE's up CELL) and it stays still for 1 s (a tipped HIVE can swing), then goes on. For a start where it is not in view yet, e.g. behind the HIVE: wait for a tip, then fire. Unticked: no time limit; it waits until the goal is seen, or until "Park from here" takes over (the steps between are then skipped). The time estimate counts the whole limit (no limit: 0).</p>`;
 		case 'park': return `<div class="row"><label>Keep the last <input type="number" min="0.5" step="0.5" data-k="sec" value="${fmt(+s.sec)}"> s for the steps below</label></div>`;
 		default: return '';
 	}
@@ -1273,6 +1278,7 @@ function stepInput(i, t) {
 		if (k === 'dirSel') { if (t.value !== 'other') s.dir = +t.value; else if (DIRS.some(([d]) => d === +s.dir)) s.dir = 45; }
 		else if (k === 'dir' && B.steps.plan.drive === 'tank' && S.sideways(v)) return;   // a tank drive: forward or back only
 		else if (k === 'wait') { if (t.checked) { s.kind = 'action'; s.timeout = s.timeout ?? ACTION_LIMIT_SEC; } else s.kind = 'alongside'; }
+		else if (k === 'goOn') { s.goOn = t.checked; if (!(+s.timeout > 0)) s.timeout = 10; }
 		else if (k === 'fireRpm') s.code = S.withFireSpeed(s.code, t.value === '' ? null : v);
 		else if (k === 'codeSel') {
 			if (t.value === '__own') { s.typed = true; return; }

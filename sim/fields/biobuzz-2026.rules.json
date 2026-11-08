@@ -42,8 +42,8 @@
   "notes": "10.5.2: a piece scores when at least partly in the scoring volume between the top ring and the middle ring: from the middle ring's top (133.5 mm, CAD Flower_Layer_B) to the top ring's top (543.7 mm, CAD). Lower ring: its top 0.35 in (the field file's lip), hole 2.79 in (9.7): a piece narrower than the hole sits in it, a wider one (NECTAR) rests on its rim. retrievalHeightIn (9.7): a piece taller than the Retrieval Opening cannot leave by the bottom (G418: only POLLEN may be taken out of the bottom). gapIn: the space between stacked pieces in the CAD's staging (4.29 - 1.4 - 2.8). nectarLastSec (G410): NECTAR into the scoring volume before the last 60 s is a MAJOR FOUL."
  },
  "hives": {
-  "tipSeconds": 0.5,
-  "notes": "How long a HIVE takes to turn from one stable state to the other. An estimate (the manual gives no time): film a real tip and change it. 0 = it tips at once."
+  "tipSeconds": 2.0,
+  "notes": "How long a HIVE takes to turn from one stable state to the other. An estimate (the manual gives no time; the team sees real HIVEs tip slowly, so 2 s, not 0.5): film a real tip and change it. 0 = it tips at once."
  },
  "cleanEntry": {
   "minDescentDeg": 10,

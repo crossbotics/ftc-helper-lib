@@ -290,6 +290,7 @@ do"), and its Action list starts with the ready actions.
 | --- | --- | --- | --- |
 | Fire 1, Fire 2 ... Fire all | action | a launcher | `robot.launcher.fireAction(2)`, `robot.launcher.fireAllAction()` |
 | Ready to launch | auto step | a launcher: spins up and waits until ready | `.readyToLaunch("Ready", 3)`, the action `robot.launcher.readyAction(3)` |
+| Wait for the goal | auto step | a camera with `goal(...)`: waits until it sees the goal, still, then goes on | `.waitForGoal("Wait for the goal")` (no limit), `.waitForGoal("Wait for the goal", 10)` |
 | Shot modes: CAREFUL, QUICK, SPRAY | automatic | a launcher ([Firing](#firing-shot-modes-feed-stop-piece-path)) | (nothing to write; SPRAY: `sprayEnabled = true`) |
 | Feed stop | automatic | a feed stop servo | `.feedStop("feed_stop")` on the launcher |
 | Piece path: parts that push a piece in | automatic | an intake that pushes pieces into the wheel | `.pushedBy(intake)` on the launcher |
@@ -307,6 +308,7 @@ do"), and its Action list starts with the ready actions.
 | Turret follows the goal | TeleOp toggle | a turret with `follows(camera)` or `followsOdometry()` (the robot drives at full speed while it aims) | `g1.rb.toggle(robot.turret.followMode())` |
 | Goal line on the Driver Station: seen, in range, LOCKED | automatic | what aiming needs | (nothing to write) |
 | Buzz when aimed | TeleOp | what aiming needs | `g1.rumbleWhenAimed();` |
+| Quick turn on fire: RB turns the robot to the goal, then fires | TeleOp (Tunables) | whole-robot aim's needs | `Tunables.Aim.aimOnFire = true` |
 | Shoot while moving | TeleOp toggle | aiming, and `odometry(...)` (the speed). Tune it first | `g2.a.toggle(robot.aim().movingShotMode())` |
 
 This table is kept by hand (it reads better than a generated one); a test (`FeaturesTest`) fails when a
@@ -870,7 +872,8 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 
 `Tunables.Launcher` (the section is the flywheel motor's name in CamelCase: a launcher on `shooter` reads `Tunables.Shooter`, its feeder on `feeder` reads `Tunables.Feeder`; [all its numbers](../guides/tunables.md#launcher)): `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed
-stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNectar` (any names after
+stays; the camera's distance goes through a [glitch filter](vision.md#distancefilter) first: `distanceMedianOf`,
+`distanceJumpIn`, `distanceJumpAgreeIn`), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNectar` (any names after
 `speedByDistance`), and `kP`, `kI`, `kD`, `kF` (the hub's speed control: the
 [Flywheel Finder](../guides/finders.md) finds them, and `nominalVolts`, the battery voltage they were found
 at). **First run:** the ones not written start from the parts catalog for the motor in
@@ -1147,6 +1150,19 @@ A webcam shows `public static double exposureMs = 6;` instead: a new line in its
 have a tag in view at INIT. A camera missing from the robot configuration is a warning at INIT, not
 a stop: the OpMode runs and the camera sees nothing.
 
+**Do the test again** (for a robot that started with no tag in view, or new light): `relight()`. Put
+it on a button in `Controls.java`, aim the camera at a tag, then press. Hold it a moment, so a bump
+does not start it:
+
+```java
+g1.y.heldFor(0.5, robot.camera::relight).rumble().says("camera: lighting test again (aim at a tag)");
+```
+
+In the match it takes up to 5 s (or `lightingAfterStartMs`, when you set it), and the camera sees no targets until it is done (so the aim stops
+too). The TeleOp screen shows `Webcam 1 lighting: ...` from then on. If no setting sees a tag, it keeps
+the setting it had. Without `autoExposure` / `autoPipelines` (or with the test turned off in Tunables) it
+does nothing: it returns false, and the TeleOp screen says so for 5 s.
+
 Its optional Tunables (leave them out for the defaults):
 
 | Number | Default | What it does |
@@ -1285,6 +1301,24 @@ time limit, and the report says `not seen`. The auto builder has it as "+ Aim at
 closer the stronger and longer (an [AimRumble](gamepad.md)). It follows a turret that is following, or
 whole-robot aim; nothing while neither aims, or while paused.
 
+**Quick turn on fire** (`Tunables.Aim.aimOnFire = true`; **off unless you set it**: it turns the robot).
+For a robot with no turret, with aim mode off: a press of the fire button (the launcher's RB, or
+`robot.launcher.fire()`) with the goal in view turns the robot to the goal, and the piece waits until the
+robot is within `toleranceDeg`, at most `aimOnFireSec` (0.5 s: a press always fires). When the shots are
+done (and the button is let go) the turn is the driver's again. The turn stick still wins. No goal in
+view at the press: it fires as before, with no turn. The goal lost during the turn (a turn blurs the
+picture): it waits, up to `aimOnFireSec`, then fires. It uses whole-robot aim's numbers (`turnKp` and the others) and
+does nothing with aim mode on (it aims already), with a turret that follows the goal, or while the launcher
+sprays (the last seconds, or tap-then-hold: SPRAY does not wait, so a turn would throw pieces to the side). An autonomous's
+`fire(n)` and fire actions do not turn (use `aimAtGoal`). While it turns, `errorDeg()`, `isAimed()` and
+the aim buzz follow it, and the launcher's "not ready" list says `turning to the goal`.
+
+```java
+public static class Aim {                    // Tunables.java
+    public static boolean aimOnFire = true;  // RB with the goal in view: turn to it, then fire
+}
+```
+
 | Method | |
 | --- | --- |
 | `goal()`, `source()` | the goal now (null if neither), and CAMERA, ODOMETRY or NONE |
@@ -1293,6 +1327,7 @@ whole-robot aim; nothing while neither aims, or while paused.
 | `hasGoalPoint()` | `Tunables.Aim` has `goalX` and `goalY` |
 | `mode()` (= `robot.aimMode()`) | whole-robot aim (stops with a message on a robot whose turret follows the goal) |
 | `canAim()`, `stage()` | the robot can find the goal at all (a camera with a goal, or the odometry backup); NOT_SEEN, SEEN, IN_RANGE or LOCKED now (`Stage.words()`: "not seen" ... "LOCKED") |
+| `aimsOnFire()`, `isTurningToFire()` | quick turn on fire is set (`aimOnFire`); a fire press is turning the robot now |
 | `errorDeg()`, `isAimed()`, `rumbleDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`: on the goal now). While shooting on the move: off the virtual goal |
 | `movingShotMode()` | shooting on the move on/off (on from ▶ with `shootOnMove = true`): `g2.a.toggle(robot.aim().movingShotMode())` |
 | `isMovingShot()`, `lead()` | it is on and the robot moves (over 2 in/s or 5 deg/s); the last lead (a [MovingShot](vision.md#movingshot) `Result`: `leadDeg`, `leadIn`, `distanceIn`), null if none |
@@ -1766,6 +1801,8 @@ What [`Steps`](#auto) can do:
 | `moveWithTurn(label, inches, directionDeg, headingDeg, power)` | drive AND turn at the same time (mecanum only). The direction is fixed on the field: clockwise from the start heading (0 = the way the robot faced at the start, 90 = its right then). It ends facing `headingDeg` (0 = the start heading, counterclockwise +). A tank drive cannot: use `move`, then `turnTo` |
 | `aimAtGoal(label, timeoutSec)` | turn to the goal with the camera (or the odometry backup), or wait for a following turret; "not seen" in the report if there was no goal ([Aim](#aim)) |
 | `aimAtGoal(label, timeoutSec, sweepDeg)` | the same, with a [sweep](#aim) when the goal is not in view: up to `sweepDeg` each way, slowly, then aim. A turret that follows the goal does not sweep: the step waits for the turret |
+| `waitForGoal(label)` | WAIT until the camera sees the goal (from `goal(...)` on a camera; the camera only, not the odometry backup) and the goal is still: in view and moving less than 2 degrees and 2 inches for 1 s (`Tunables.Aim` `goalSteadySec`, `goalSteadyDeg`, `goalSteadyIn`: a tipped HIVE can swing). Then go on. For a start where the goal is not in view yet, e.g. behind the HIVE: wait for a tip, then fire. No time limit: if the goal is never seen, it waits until `parkWithSeconds` takes over (the steps between are skipped) or autonomous ends. It does not turn the robot. An upside-down CELL (a down CELL) is not the goal: it keeps waiting |
+| `waitForGoal(label, timeoutSec)` | the same, but at most `timeoutSec`: then it goes on anyway, and the report says "not seen in 10 s: went on" (or "seen, never still") |
 | `rememberHeading(label)`, `turnBack(label, maxPower)` | save the heading now; later turn back to it (without odometry pods it uses the IMU: better than nothing). The same as `AutoRoutine`'s `rememberHeading` / `returnToHeading` |
 | `readyToLaunch(label, timeoutSec)` | spin the launcher up and WAIT until it is ready to fire, then go on; the speed keeps following the distance in the next steps ([Firing](#firing-shot-modes-feed-stop-piece-path)). To spin up while the next step drives instead: `.run("Spin up", robot.launcher::spinUp)` |
 | `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn][, PathAt...])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../guides/autonomous-builder.md#drive-to-a-field-point-driveto)); [`PathAt`](#pathat) starts things on the way |

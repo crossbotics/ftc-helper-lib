@@ -401,6 +401,57 @@ public class BuiltAutoTest {
         }
     }
 
+    // "Wait for the goal" on the flywheel bot (a webcam with goal(...)): from a spot that faces the goal it
+    // goes on at once; facing away it waits its whole limit, says "not seen" and goes on.
+    @Test public void theWaitForTheGoalStepGoesOnSeenOrNot() throws Exception {
+        Class<com.crossbotics.ftchelper.examples.flywheelbot.Robot> c = com.crossbotics.ftchelper.examples.flywheelbot.Robot.class;
+        SimFromRobot.Result res = SimFromRobot.merge(null, c.getDeclaredConstructor().newInstance().simLines(), c.getName(), "biobuzz-2026");
+        java.io.File file = java.io.File.createTempFile("flywheelbot", ".properties");
+        file.deleteOnExit();
+        java.nio.file.Files.write(file.toPath(), res.text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        // {heading, go on after 4 s?, what the report says} (the goal comes into view about 1 s after ▶, then must stay still 1 s)
+        String[][] cases = {{"" + GOAL_FACING_H, "true", "Tip: done"}, {"" + (GOAL_FACING_H + 180), "true", "not seen in 4 s"},
+                {"" + GOAL_FACING_H, "false", "Tip: done"}};
+        for (String[] k : cases) {
+            BuiltAuto.program = BuiltAuto.Program.from(SimJsonReader.object(SimJsonReader.parse("{\"name\":\"Goal wait\",\"mode\":\"steps\","
+                    + "\"mirror\":false,\"robotClass\":\"\",\"start\":{\"note\":\"\",\"x\":" + GOAL_SPOT_X + ",\"y\":" + GOAL_SPOT_Y + ",\"h\":" + k[0] + ",\"spot\":true},\"steps\":["
+                    + "{\"kind\":\"goal\",\"label\":\"Tip\",\"timeout\":4,\"goOn\":" + k[1] + "},"
+                    + "{\"kind\":\"wait\",\"label\":\"After\",\"sec\":0.5}]}"), "a program"));
+            BuiltAuto.robotClass = c;
+            try (SimRun s = new SimRun(file.getPath())) {
+                runToTheEnd(s);
+                String all = String.join("\n", com.crossbotics.ftchelper.match.MatchMemory.lastReport());
+                assertTrue(k[0] + ":\n" + all, all.contains(k[2]) && (k[2].startsWith("Tip: done") ? !all.contains("not seen") : true));
+                assertTrue(k[0] + ":\n" + all, all.contains("After: done"));
+            }
+        }
+    }
+
+    // No time limit, facing away: it waits until the park time takes over, and the step before the park is skipped.
+    @Test public void theWaitForTheGoalStepWithNoLimitWaitsForThePark() throws Exception {
+        Class<com.crossbotics.ftchelper.examples.flywheelbot.Robot> c = com.crossbotics.ftchelper.examples.flywheelbot.Robot.class;
+        SimFromRobot.Result res = SimFromRobot.merge(null, c.getDeclaredConstructor().newInstance().simLines(), c.getName(), "biobuzz-2026");
+        java.io.File file = java.io.File.createTempFile("flywheelbot", ".properties");
+        file.deleteOnExit();
+        java.nio.file.Files.write(file.toPath(), res.text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        BuiltAuto.program = BuiltAuto.Program.from(SimJsonReader.object(SimJsonReader.parse("{\"name\":\"Goal wait\",\"mode\":\"steps\","
+                + "\"mirror\":false,\"robotClass\":\"\",\"start\":{\"note\":\"\",\"x\":" + GOAL_SPOT_X + ",\"y\":" + GOAL_SPOT_Y + ",\"h\":" + (GOAL_FACING_H + 180) + ",\"spot\":true},\"steps\":["
+                + "{\"kind\":\"goal\",\"label\":\"Tip\",\"timeout\":2,\"goOn\":false},"
+                + "{\"kind\":\"wait\",\"label\":\"Fire\",\"sec\":0.5},"
+                + "{\"kind\":\"park\",\"sec\":3},"
+                + "{\"kind\":\"wait\",\"label\":\"Park\",\"sec\":0.5}]}"), "a program"));
+        BuiltAuto.robotClass = c;
+        try (SimRun s = new SimRun(file.getPath())) {
+            runToTheEnd(s);
+            String all = String.join("\n", com.crossbotics.ftchelper.match.MatchMemory.lastReport());
+            assertTrue(all, !all.contains("Fire: done") && all.contains("Park: done"));
+            assertTrue(all, !all.contains("went on"));
+        }
+    }
+
+    // A spot and heading (RED, as runToTheEnd plays) from which the flywheel bot's webcam sees its goal.
+    private static final double GOAL_SPOT_X = 51.6, GOAL_SPOT_Y = -58.5, GOAL_FACING_H = 37.8;
+
     // BuiltRun reads the routine's report while it runs: EasyAuto still has its private "routine" field.
     @Test public void theReportCanBeReadWhileItRuns() throws Exception {
         assertNotNull(com.crossbotics.ftchelper.auto.EasyAuto.class.getDeclaredField("routine"));

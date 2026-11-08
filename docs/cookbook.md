@@ -1448,10 +1448,12 @@ public static class Aim {                                       // a fixed name:
     public static double maxTurnPower = DEFAULT;                // the most it turns by itself (0.5)
     public static double toleranceDeg = DEFAULT;                // "aimed" within this, degrees (2)
     public static double rumbleDeg = DEFAULT;                   // rumbleWhenAimed(): buzz within this (4)
+    public static boolean aimOnFire = false;                    // no turret: a fire press turns to the goal first (2)!
 }
 ```
 
 1. With odometry, the aim goes on when the camera loses the goal. BIOBUZZ: your HIVE's CELL that is up at the start, 13 in right of the centre line and 13 in toward you.
+2. Quick turn on fire, for a robot with no turret: with aim mode off, RB with the goal in view turns the robot to the goal, then fires (at most 0.5 s later: `aimOnFireSec`). Off unless you set it to `true`, because it turns the robot.
 
 **Why:** a tag gets blocked by a robot or a game piece; the odometry still knows where the goal is. The
 Driver Station says which one aims (`following: camera` or `following: odometry`). It needs the pose

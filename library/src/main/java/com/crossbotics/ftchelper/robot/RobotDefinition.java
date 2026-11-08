@@ -1085,6 +1085,9 @@ public abstract class RobotDefinition {
             out.add(new Feature(Feature.Kind.AUTO_STEP, "Aim at the goal with a sweep", ".aimAtGoal(\"Aim\", 4, 45)", "a drive + " + aimNeeds,
                     aimMissing, "not in view: turns slowly up to 45 deg each way to find it"));
         }
+        out.add(new Feature(Feature.Kind.AUTO_STEP, "Wait for the goal", ".waitForGoal(\"Wait for the goal\")", "a camera with goal(...)",
+                camera ? "" : "a camera with goal(...) in Robot.java",
+                "waits until the camera sees the goal, still for 1 s (e.g. after a HIVE tip), then goes on; with a time limit it goes on anyway"));
         out.add(new Feature(Feature.Kind.AUTO_STEP, "Remember heading, turn back", ".rememberHeading(\"Remember\") ... .turnBack(\"Back\", 0.5)",
                 "a drive", drive == null ? "a drive" : "", "useful without odometry pods: the IMU's heading"));
         out.add(new Feature(Feature.Kind.TOGGLE, "Reverse drive", "g1.x.toggle(robot.reverseDriveMode()).rumble()", "a drive",

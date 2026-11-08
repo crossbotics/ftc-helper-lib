@@ -37,8 +37,8 @@ final class TunableFields {
         part("Drive", "calibrated", "maxPower", "moveMinPower", "practiceMaxPower", "slowDownIn", "slowSpeed",
                 "strafeCorrection", "strafeCorrectionLeft", "turnKd", "turnKp");
         part("Odometry", "angularScalar", "checked", "linearScalar", "mirrorForRed", "resetHeading", "resetX", "resetY");
-        part("Aim", "cameraForwardIn", "cameraLatencyMs", "cameraLeftIn", "cameraMaxAgeMs", "cameraOdometryAgree",
-                "cameraOffset", "flightSec", "flightSecPerIn", "goalX", "goalY", "lockMarginDeg", "maxGoalDistance", "maxLeadIn",
+        part("Aim", "aimOnFire", "aimOnFireSec", "cameraForwardIn", "cameraLatencyMs", "cameraLeftIn", "cameraMaxAgeMs", "cameraOdometryAgree",
+                "cameraOffset", "flightSec", "flightSecPerIn", "goalSteadyDeg", "goalSteadyIn", "goalSteadySec", "goalX", "goalY", "lockMarginDeg", "maxGoalDistance", "maxLeadIn",
                 "maxTurnPower", "minTurnPower", "mirrorForRed", "rumbleDeg", "shootOnMove", "shooterForwardIn",
                 "shooterLeftIn", "sweepPower", "sweepStepDeg", "toleranceDeg", "turnKd", "turnKp");
         part("Buttons", "holdSec", "tapGapSec");
@@ -51,7 +51,7 @@ final class TunableFields {
         part("Indexer", "alsoTrim", "alwaysOn", "feedSec", "power", "push", "pushSec", "pushStep", "rest", "returnSec", "stageSec", "stopSec");
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
-        part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold",
+        part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "distanceJumpAgreeIn", "distanceJumpIn", "distanceMedianOf", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold",
                 "feedStopMoveSec", "feedStopOpenSec", "feedStopRelease", "idleRpm", "kD", "kF", "kI", "kP", "maxFiringQueue", "nominalVolts", "quickBandRpm",
                 "quickMaxWaitSec", "readyBandRpm", "redTrimPercent", "shotIntervalSec", "speedByDistance", "speedRpm",
                 "spinAtStart", "sprayEnabled", "sprayLastSec", "sprayOnTapHold", "stepRpm", "trimMaxPercent", "trimStepPercent");

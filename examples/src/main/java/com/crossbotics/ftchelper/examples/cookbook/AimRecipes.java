@@ -48,6 +48,7 @@ public class AimRecipes {
             public static double maxTurnPower = DEFAULT;                // the most it turns by itself (0.5)
             public static double toleranceDeg = DEFAULT;                // "aimed" within this, degrees (2)
             public static double rumbleDeg = DEFAULT;                   // rumbleWhenAimed(): buzz within this (4)
+            public static boolean aimOnFire = false;                    // no turret: a fire press turns to the goal first
         }
         // end recipe
 

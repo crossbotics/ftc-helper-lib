@@ -8,7 +8,7 @@ expect tips "Red" = 0
 set piece POLLEN 12.9 -15.75 55.6
 set piece POLLEN 12.9 -10.75 55.6
 set piece POLLEN 12.9 -6.75 55.6
-wait 2
+wait 3                         # it takes 2 s to turn (tipSeconds)
 expect tips "Red" = 1          # it tipped
 expect cell "Red" = 0          # the new up CELL is empty; the 6 pieces fell out
 print pieces

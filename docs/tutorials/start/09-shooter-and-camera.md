@@ -271,7 +271,9 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
   pipelines). How it works: [vision.md](../../modules/vision.md#venue-lighting).
 - Its numbers: `Tunables.Limelight.pipeline` (the pipeline to use when the test is off) and
   `autoLighting` (true = run the test; false = skip it and use `pipeline`).
-- The camera starts in INIT, so it is already looking when ▶ is pressed. It has no buttons.
+- The camera starts in INIT, so it is already looking when ▶ is pressed. It needs no buttons. If the
+  robot starts with no tag in view, you can give the test a button: aim at a tag, press, and it runs
+  again (`relight()`, [robot.md](../../modules/robot.md#camera)).
 
 **Set up the three pipelines** (every step, with the settings and why:
 [Setting up Limelight lighting pipelines](../../guides/limelight-lighting.md)). Plug the Limelight into a
@@ -383,6 +385,9 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   Between rows the speed is blended: at 36 in, halfway between the 24 and 48 rows, it is halfway
   between their speeds (2375). With no goal in view, it keeps the last
   speed (a sudden change would spoil the next shot); before the goal is first seen, it uses `speedRpm`.
+  A camera sometimes gives one picture with a wrong distance (a glitch). The launcher uses the middle of
+  the last 5 pictures, and a big jump must show in 3 pictures in a row, so one bad picture never changes
+  the speed ([how](../../modules/vision.md#distancefilter)).
   Fill the rows from real shots with the [Shot Tuner](../../guides/finders.md#shot-tuner-the-shot-table).
   Its buttons are all on **gamepad 1**: at each distance shoot 3-5 at a speed (RB), mark each A = HIT or
   B = MISS, try another speed (D-pad), and X keeps the speed with the best **hit ratio** (hits out of
@@ -656,6 +661,19 @@ at it (within `toleranceDeg`). The aim mode can be on or off: the driver can lin
 view: no shot, never blind. It needs `import com.crossbotics.ftchelper.robot.Aim;` at the top of
 `Robot.java`. `aim()` here is the robot's own (the code is inside `Robot.java`); in `Controls.java` and
 `Actions.java` the same thing is `robot.aim()`.
+
+**Quick turn on fire: aim only when you shoot.** Aim mode turns the robot all the time. Some drivers
+want to drive freely and aim only at the shot. One line in the `Tunables.Aim` class:
+
+```java
+public static boolean aimOnFire = true;   // RB with the goal in view: turn to it, then fire
+```
+
+Now, with aim mode off, a press of RB with the goal in view turns the robot to the goal, fires as soon
+as it points at it (within `toleranceDeg`), and gives the turn stick back when the shots are done. It
+never waits more than `aimOnFireSec` (0.5 s): a press always fires. No goal in view: it fires at once,
+as before. While the launcher sprays (the last seconds, or tap-then-hold) it does not turn: SPRAY never waits. It is off unless you set it, because it turns the robot: the drivers must know it is on.
+Tune whole-robot aim first (`turnKp` and the others, above): the quick turn uses the same numbers.
 
 **In an autonomous: get ready, aim, fire.** Three ready-made steps, no `Actions.java`. From
 [`flywheelbot/autos/ShootAndLeave.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/autos/ShootAndLeave.java):
@@ -938,7 +956,7 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 | "goal out of turret range (behind the robot: holding)" | the odometry says the goal is behind: turn the robot toward it. |
 | Whole-robot aim stops a few degrees off | raise `turnKp`, or set `minTurnPower` (the least power that turns the robot). |
 | `limelight lighting: trying 1 of 3: pipeline 0 (no tags yet: face a tag)` (INIT) | the test has tried every pipeline and none saw a tag. Turn the robot toward a tag; the test keeps going until ▶. |
-| `limelight lighting: NO TAGS SEEN` (after ▶) | no pipeline saw a tag in INIT, so the first one is kept. Next time have a tag in view at INIT; check each pipeline on the Limelight's web page. |
+| `limelight lighting: NO TAGS SEEN` (after ▶) | no pipeline saw a tag in INIT, so the first one is kept. Next time have a tag in view at INIT; check each pipeline on the Limelight's web page. Or press your `relight()` button with a tag in view. |
 | `limelight lighting: no pictures from pipeline 2 (missing?)` | that pipeline is not set up on the Limelight: make it (see above), or take it out of `autoPipelines(...)`. |
 | `limelight: not found: no Limelight called "limelight"` | the name in the robot configuration is different (case counts), or the Limelight is not in it. The OpMode still runs, without the camera. |
 

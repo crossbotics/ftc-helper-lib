@@ -32,8 +32,18 @@ import java.util.function.LongSupplier;
  *     public static double flightSec = 0.8, flightSecPerIn = 0, maxLeadIn = 24;
  *     public static double shooterForwardIn = 0, shooterLeftIn = 0;   // the shooter (turret pivot) from the centre
  *     public static double cameraForwardIn = 0, cameraLeftIn = 0;     // a camera on the body, from the centre
+ *     public static boolean aimOnFire = false;                // quick turn to the goal on a fire press (off unless set)
+ *     public static double aimOnFireSec = 0.5;                // the most it waits for the turn before it fires anyway
  * }
  * }</pre>
+ *
+ * <p><b>Quick turn on fire</b> ({@code aimOnFire = true}, off unless you set it: it turns the robot, so a
+ * team must choose it). For a robot with no turret, with whole-robot aim OFF: a press of the fire button
+ * with the goal in view turns the robot to the goal, fires as soon as it is within {@code toleranceDeg}
+ * (or after {@code aimOnFireSec}, 0.5 s, whichever comes first: a press always fires), and gives the turn
+ * back when the shots are done. The driver's turn stick still wins. No goal in view: it fires as before, with no
+ * turn. Goal lost during the turn (a blurred picture): it waits up to {@code aimOnFireSec}, then fires.
+ * Not while the launcher sprays (the last seconds, or tap-then-hold): SPRAY does not wait. It uses the same turn numbers as whole-robot aim ({@code turnKp} and the others).
  *
  * <p><b>Whole-robot aim and a following turret are separate modes.</b> Use one: a robot with a turret
  * that follows the goal ({@code follows(camera)} or {@code followsOdometry()}) aims with the turret;
@@ -128,8 +138,16 @@ public final class Aim {
     // Locked stays locked until the error passes toleranceDeg + this (no flicker at the edge).
     private final double lockMarginDeg;
     private final double sweepStepDeg, sweepPower;
+    private final double goalSteadySec, goalSteadyDeg, goalSteadyIn;
     private boolean lockedLast = false;
     private long lastLeadNanos = 0;
+    // Quick turn on fire (Tunables.Aim aimOnFire, off unless set; aimOnFireSec 0.5): on, and the most it
+    // waits for the turn. fireTurnStart: when the driver's fire press started a turn (nanoseconds), -1: none.
+    private final boolean aimOnFire;
+    private final double aimOnFireSec;
+    private long fireTurnStart = -1;
+    // The launcher whose fire press started the turn (the turn ends when ITS shots are done), or null.
+    private Launcher fireTurnLauncher = null;
 
     Aim(RobotDefinition robot, TunableSection t) {
         this.robot = robot;
@@ -158,6 +176,11 @@ public final class Aim {
         lockMarginDeg = t.has("lockMarginDeg") ? Math.abs(t.number("lockMarginDeg", 1)) : 1;
         sweepStepDeg = t.has("sweepStepDeg") ? Math.max(1, Math.abs(t.number("sweepStepDeg", 15))) : 15;
         sweepPower = t.has("sweepPower") ? Math.min(1, Math.abs(t.number("sweepPower", 0.3))) : 0.3;
+        goalSteadySec = t.has("goalSteadySec") ? Math.max(0, t.number("goalSteadySec", 1)) : 1;
+        goalSteadyDeg = t.has("goalSteadyDeg") ? Math.abs(t.number("goalSteadyDeg", 2)) : 2;
+        goalSteadyIn = t.has("goalSteadyIn") ? Math.abs(t.number("goalSteadyIn", 2)) : 2;
+        aimOnFire = t.has("aimOnFire") && t.flag("aimOnFire", false);
+        aimOnFireSec = t.has("aimOnFireSec") ? Math.max(0, t.number("aimOnFireSec", 0.5)) : 0.5;
         // Whole-robot aim turns on only with a goal in view (last season's rule): a press with no goal
         // leaves it off (one buzz with .rumble()), so the robot never waits to turn toward nothing.
         mode.onlyWhen(() -> goal() != null, "no goal in view");
@@ -412,12 +435,72 @@ public final class Aim {
         return sweepPower;
     }
 
+    // waitForGoal: how long the goal must stay in view and still, and how much it may move meanwhile
+    // (Tunables.Aim goalSteadySec 1, goalSteadyDeg 2, goalSteadyIn 2).
+    double goalSteadySec() {
+        return goalSteadySec;
+    }
+
+    double goalSteadyDeg() {
+        return goalSteadyDeg;
+    }
+
+    double goalSteadyIn() {
+        return goalSteadyIn;
+    }
+
     double toleranceNow() {
         return toleranceDeg.getAsDouble();
     }
 
     double maxTurnPowerNow() {
         return maxTurnPower.getAsDouble();
+    }
+
+    // ----------------------------- quick turn on fire -----------------------------
+
+    /** True if a fire press turns the robot to the goal first ({@code Tunables.Aim.aimOnFire}; off unless set). */
+    public boolean aimsOnFire() {
+        return aimOnFire;
+    }
+
+    /**
+     * True while a quick turn on fire is working: the driver pressed fire with the goal in view, and the
+     * shots are not done yet (or the button is still held). False with {@code aimOnFire} off.
+     */
+    public boolean isTurningToFire() {
+        if (fireTurnStart < 0) return false;
+        // Aim mode took over, the shots are done, or the launcher sprays now (SPRAY does not wait, so a
+        // turn would only throw pieces to the side): the turn is the driver's again.
+        if (mode.isOn() || fireTurnLauncher == null || !fireTurnLauncher.firingForDriver() || fireTurnLauncher.spraysNow()) {
+            fireTurnStart = -1;
+            fireTurnLauncher = null;
+            return false;
+        }
+        return true;
+    }
+
+    // The launcher's fire() (the driver's press) calls this: start a quick turn if it is on and can work.
+    // Not with aim mode on (it is aiming already), not with a following turret (the turret aims), not
+    // with no goal in view (fire as before), not while that launcher sprays (SPRAY does not wait). A press
+    // during a turn keeps the same start time.
+    void driverFired(Launcher launcher) {
+        if (!aimOnFire || mode.isOn() || isTurningToFire() || goal() == null) return;
+        if (launcher.spraysNow() || followingTurretInRobot() != null) return;
+        fireTurnStart = clock.getAsLong();
+        fireTurnLauncher = launcher;
+        lockedLast = false;   // it must get inside the tolerance on this turn
+    }
+
+    // A launcher asks this before it feeds a piece: false only while a quick turn that this launcher
+    // started is still turning (the goal in view, not within the tolerance, and aimOnFireSec not over yet).
+    boolean readyToFire(Launcher launcher) {
+        if (!isTurningToFire() || fireTurnLauncher != launcher) return true;
+        if ((clock.getAsLong() - fireTurnStart) / 1e9 >= aimOnFireSec) return true;   // a press always fires
+        // Lost the goal during the turn (the turn blurs the picture): keep waiting, up to aimOnFireSec,
+        // so the piece is not fed while the robot still turns.
+        TargetObservation g = goal();
+        return g != null && withinLock(corrected(g).bearingDeg);
     }
 
     // A turret that follows the goal (follows(camera) or followsOdometry() in Robot.java), or null.
@@ -431,11 +514,11 @@ public final class Aim {
 
     /**
      * The turn TeleOp uses this loop (clockwise +, like the drive's turn), from the driver's turn stick
-     * after shaping: unchanged while the mode is off or the stick is moved; the aim's turn otherwise
-     * (0 when there is no goal: the robot does not turn on its own).
+     * after shaping: unchanged while the mode is off (and no quick turn on fire is working) or the stick
+     * is moved; the aim's turn otherwise (0 when there is no goal: the robot does not turn on its own).
      */
     double assistTurn(double driverTurn) {
-        if (!mode.isOn()) {
+        if (!mode.isOn() && !isTurningToFire()) {
             driverTurning = false;
             if (controller != null) controller.reset();
             return driverTurn;
@@ -482,11 +565,11 @@ public final class Aim {
     // ----------------------------- how far off -----------------------------
 
     /**
-     * How many degrees the aim is off now (any sign), NaN if unknown. With whole-robot aim on: the
-     * robot's front to the goal. Otherwise, a turret that is following: its error. Neither: NaN.
+     * How many degrees the aim is off now (any sign), NaN if unknown. With whole-robot aim on (or a quick
+     * turn on fire working): the robot's front to the goal. Otherwise, a turret that is following: its error. Neither: NaN.
      */
     public double errorDeg() {
-        if (mode.isOn()) {
+        if (mode.isOn() || isTurningToFire()) {
             TargetObservation g = goal();
             return g == null ? Double.NaN : corrected(g).bearingDeg;
         }
@@ -501,7 +584,7 @@ public final class Aim {
      * launcher check: {@code .requireReady("aimed", () -> aim().isAimed())}.
      */
     public boolean isAimed() {
-        if (mode.isOn()) return withinLock(errorDeg());
+        if (mode.isOn() || isTurningToFire()) return withinLock(errorDeg());
         Turret t = followingTurret();
         return t != null && t.isAimed();
     }

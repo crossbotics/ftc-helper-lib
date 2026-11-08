@@ -47,6 +47,11 @@ public final class LightingSweep {
     public static final int NO_PICTURE = -1;
     /** Give this to {@link #update(int)} for a new picture taken with another setting (the one before). */
     public static final int OTHER_SETTING = -2;
+    /**
+     * After a {@link #restart()} during the match, with {@link #giveUpAfterStartMs} 0: the longest it
+     * tries (milliseconds). Enough for every setting once with a tag in view; then it stops.
+     */
+    public static final double RESTART_IN_MATCH_MS = 5000;
 
     private final List<String> labels;
     private final IntConsumer apply;
@@ -73,6 +78,7 @@ public final class LightingSweep {
     private boolean gaveUp = false;
     private long startedNanos = -1;       // START (-1: still INIT)
     private long retryNanos = -1;         // restart() during the match
+    private int beforeRestart = -1;       // the setting chosen before restart() (kept if the retry sees no tag)
 
     /**
      * @param labels one short name per setting, in the order to try them (e.g. "pipeline 0").
@@ -145,18 +151,22 @@ public final class LightingSweep {
     }
 
     /**
-     * Forgets the result and tries every setting again (for a button, e.g. after moving to a new
-     * field). During the match it gets {@link #giveUpAfterStartMs} from now (and the cameras report
-     * no targets until it is done).
+     * Forgets the result and tries every setting again (for a button: aim at a tag, press). During
+     * the match it gets {@link #giveUpAfterStartMs} from now, or {@link #RESTART_IN_MATCH_MS} when
+     * that is 0, and the cameras report no targets until it is done. If no setting sees a tag in that
+     * time, it goes back to the setting it had before.
      */
     public void restart() {
+        int had = isDone() ? chosen : beforeRestart;
         reset();
+        beforeRestart = had;
         if (startedNanos >= 0) retryNanos = clock.getAsLong();
     }
 
     /** A new camera session (the camera was closed and started again): everything as new, INIT again. */
     public void newSession() {
         reset();
+        beforeRestart = -1;
         startedNanos = -1;
         retryNanos = -1;
     }
@@ -230,8 +240,12 @@ public final class LightingSweep {
 
     // Past the time after START (or after an in-match restart)?
     private boolean overTime(long now) {
-        long from = Math.max(startedNanos, retryNanos);
-        return startedNanos >= 0 && giveUpAfterStartMs > 0 && ms(now - from) >= giveUpAfterStartMs;
+        if (startedNanos < 0) return false;
+        if (retryNanos >= startedNanos) {
+            double limit = giveUpAfterStartMs > 0 ? giveUpAfterStartMs : RESTART_IN_MATCH_MS;
+            return ms(now - retryNanos) >= limit;
+        }
+        return giveUpAfterStartMs > 0 && ms(now - startedNanos) >= giveUpAfterStartMs;
     }
 
     // Done with one setting: note its score, then on to the next (or pick the winner).
@@ -250,9 +264,9 @@ public final class LightingSweep {
             return;
         }
         int first = nextToTry(0);
-        if (first < 0) {           // every setting refused or missing: keep the first
+        if (first < 0) {           // every setting refused or missing: keep the one from before a restart, else the first
             gaveUp = true;
-            choose(0);
+            choose(beforeRestart >= 0 ? beforeRestart : 0);
             return;
         }
         next(first, now);          // nothing good yet (no tag in view?): try them all again
@@ -277,7 +291,8 @@ public final class LightingSweep {
         if (trying >= 0 && skipWhy[trying] == null && switchedNanos >= 0 && hits > hitsOf[trying]) hitsOf[trying] = hits;
         int best = best();
         gaveUp = best < 0;
-        choose(best < 0 ? 0 : best);
+        // A retry that saw no tag: back to the setting from before (it saw tags then).
+        choose(best >= 0 ? best : beforeRestart >= 0 ? beforeRestart : 0);
     }
 
     private void next(int index, long now) {
@@ -357,6 +372,7 @@ public final class LightingSweep {
      * "NO TAGS SEEN: kept normal (have a tag in view at INIT next time)".
      */
     public String status() {
+        if (gaveUp && beforeRestart >= 0) return "NO TAGS SEEN: kept " + labels.get(chosen) + " (aim at a tag, then try again)";
         if (gaveUp) return "NO TAGS SEEN: kept " + labels.get(chosen) + " (have a tag in view at INIT next time)";
         if (chosen >= 0) {
             return String.format(Locale.US, "%s (%d of %d pictures saw tags)", labels.get(chosen), hitsOf[chosen], seenOf[chosen]);

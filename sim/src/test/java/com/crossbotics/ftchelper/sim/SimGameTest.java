@@ -137,9 +137,9 @@ public class SimGameTest {
         assertEquals("still not taken", 4, r.pieces.storedCount());
     }
 
-    // A HIVE takes tipSeconds (0.5 s) to turn: halfway through it has turned part of the way, not tipped yet, and
+    // A HIVE takes tipSeconds (2 s) to turn: halfway through it has turned part of the way, not tipped yet, and
     // the pieces in its CELL move with it (no jump). Then it is TIPPED, and 20 points for red.
-    @Test public void aHiveTurnsOverHalfASecond() throws Exception {
+    @Test public void aHiveTurnsOverItsTipSeconds() throws Exception {
         SimRobot r = robot("");
         r.setPose(40, -55, 0);
         run(r, 1.5);
@@ -153,7 +153,7 @@ public class SimGameTest {
         double maxJump = 0, maxProgress = 0;
         boolean sawMiddle = false;
         Map<Integer, double[]> last = new java.util.HashMap<>();
-        for (int i = 0; i < 300 && h.tips == 0; i++) {
+        for (int i = 0; i < 1000 && h.tips == 0; i++) {
             run(r, 0.01);
             double p = r.pieces.tipProgress().get("Red HIVE");
             maxProgress = Math.max(maxProgress, p);

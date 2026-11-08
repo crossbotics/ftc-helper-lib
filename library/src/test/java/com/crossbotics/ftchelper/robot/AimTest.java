@@ -123,6 +123,17 @@ public class AimTest {
         }
     }
 
+    // Quick turn on fire on (aimOnFire), the most it waits 0.5 s (the default).
+    public static class FireTurn {
+        public static class Aim {
+            public static boolean aimOnFire = true;
+            public static double toleranceDeg = 2;
+        }
+        public static class Launcher {
+            public static double[][] speedByDistance = {{24, 2000}, {72, 3000}};
+        }
+    }
+
     public static class NoGoalPoint {
         public static class Launcher {
             public static double[][] speedByDistance = {{24, 2000}, {72, 3000}};
@@ -286,8 +297,11 @@ public class AimTest {
         r.started();
         assertEquals("nectar comes first by name", "nectar", r.launcher.tableName());
         r.launcher.spinUp();
-        cam.seen = seen(0, 24);
-        r.all().update();
+        for (int i = 0; i < 3; i++) {                         // the glitch filter needs 3 pictures
+            clock.addSec(0.033);
+            cam.seen = seen(0, 24);
+            r.all().update();
+        }
         assertEquals(2500, r.launcher.targetRpm(), 1e-9);
         assertEquals(Aim.Source.CAMERA, r.launcher.distanceSource());
         clock.addSec(1);                                      // camera lost: the odometry says 72 in
@@ -432,6 +446,67 @@ public class AimTest {
         place(r, 24, 48, 80);                                 // 10 degrees right of it: turn left
         assertTrue(aim.assistTurn(0) < 0);
         assertEquals(10, aim.errorDeg(), 1e-6);
+    }
+
+    // ----------------------------- quick turn on fire -----------------------------
+
+    @Test public void aFirePressTurnsToTheGoalAndFiresOnceAimed() {
+        AimBot r = bot(FireTurn.class, true, false);
+        Aim aim = r.aim();
+        assertTrue(aim.aimsOnFire());
+        cam.seen = seen(10, 48);                              // the goal 10 degrees LEFT
+        assertEquals("no press: the driver's turn", 0.3, aim.assistTurn(0.3), 1e-9);
+        r.launcher.fire();
+        assertTrue(aim.isTurningToFire());
+        assertTrue("turns left: " + aim.assistTurn(0), aim.assistTurn(0) < 0);
+        assertFalse("not aimed yet: the piece waits", aim.readyToFire(r.launcher));
+        assertEquals("the stick still wins", 0.5, aim.assistTurn(0.5), 1e-9);
+        cam.seen = null;                                      // the turn blurs the picture: goal lost
+        assertFalse("lost during the turn: it still waits", aim.readyToFire(r.launcher));
+        cam.seen = seen(1, 48);                               // within toleranceDeg (2)
+        assertTrue("aimed: it fires", aim.readyToFire(r.launcher));
+        r.launcher.part().stopShooting();                     // the shot is done
+        assertFalse(aim.isTurningToFire());
+        assertEquals("done: the turn is the driver's again", 0.3, aim.assistTurn(0.3), 1e-9);
+    }
+
+    @Test public void aFirePressFiresAnywayAfterAimOnFireSec() {
+        AimBot r = bot(FireTurn.class, true, false);
+        cam.seen = seen(20, 48);
+        r.launcher.fire();
+        assertFalse(r.aim().readyToFire(r.launcher));
+        clock.addSec(0.5);
+        cam.seen = seen(20, 48);                              // a fresh picture, still 20 degrees off
+        assertTrue("a press always fires", r.aim().readyToFire(r.launcher));
+    }
+
+    @Test public void noQuickTurnWhileTheLauncherSprays() {
+        AimBot r = bot(FireTurn.class, true, false);
+        r.started();
+        r.launcher.shotMode(com.crossbotics.ftchelper.launcher.Launcher.ShotMode.SPRAY);
+        r.all().update();                                     // the launcher picks SPRAY for the next piece
+        cam.seen = seen(10, 48);
+        r.launcher.fire();
+        assertFalse("SPRAY does not wait: no turn", r.aim().isTurningToFire());
+        assertEquals(0.3, r.aim().assistTurn(0.3), 1e-9);
+    }
+
+    @Test public void noQuickTurnWithNoGoalOrWhenNotSetOrWithAimModeOn() {
+        AimBot r = bot(FireTurn.class, true, false);
+        r.launcher.fire();                                    // no goal in view: fire as before
+        assertFalse(r.aim().isTurningToFire());
+        assertTrue(r.aim().readyToFire(r.launcher));
+        r.launcher.part().stopShooting();
+        cam.seen = seen(10, 48);
+        r.aimMode().on();
+        r.launcher.fire();                                    // aim mode is aiming already
+        assertFalse(r.aim().isTurningToFire());
+        AimBot off = bot(GoalTunables.class, true, false);    // aimOnFire not set: off
+        cam.seen = seen(10, 48);
+        off.launcher.fire();
+        assertFalse(off.aim().aimsOnFire());
+        assertFalse(off.aim().isTurningToFire());
+        assertEquals(0.3, off.aim().assistTurn(0.3), 1e-9);
     }
 
     @Test public void wholeRobotAimWithNoGoalDoesNotTurn() {

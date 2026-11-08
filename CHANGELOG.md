@@ -2,6 +2,42 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **Wait for the goal** (`waitForGoal(label)`, `waitForGoal(label, timeoutSec)`), an autonomous step: waits until
+  the camera sees the goal and the goal is still (in view, moving less than 2 degrees and 2 inches, for 1 s: a
+  tipped HIVE can swing), then goes on. For a start where the goal is not in view yet, e.g. behind the HIVE:
+  wait for a tip, then fire. No time limit: it waits until `parkWithSeconds` takes over; with one, it goes on
+  anyway and the report says "not seen". New optional Tunables in `Aim`: `goalSteadySec`, `goalSteadyDeg`,
+  `goalSteadyIn`. In the auto builder: "+ Wait for the goal" (only for a robot with a camera that has
+  `goal(...)`), with a "go on after X s" box.
+- **Do the lighting test again** (`Camera.relight()`), for a button: aim the camera at a tag, press, and it tries
+  every exposure (or pipeline) again. For a robot that started with no tag in view. In the match it takes up to
+  5 s (`LightingSweep.RESTART_IN_MATCH_MS`), with no targets until it is done; if no setting sees a tag, it keeps
+  the setting it had. The TeleOp screen shows the result.
+
+- **A glitch filter for the camera's distance** (`DistanceFilter`), used by the launcher's speed from the distance
+  (and its hood): the middle of the last 5 pictures, and a jump over 12 in is used only after 3 pictures in a row
+  that agree within 4 in. After 0.5 s with no picture (a HIVE tip, the robot drove away) it starts over with no
+  jump check. One or two bad pictures no longer change the flywheel speed. New optional Tunables in the launcher's
+  section: `distanceMedianOf` (5; 1 = off), `distanceJumpIn` (12; 0 = off), `distanceJumpAgreeIn` (4).
+- **Quick turn on fire** (`Tunables.Aim.aimOnFire = true`; off unless set), for a robot with no turret: with
+  whole-robot aim off and the goal in view, a fire press turns the robot to the goal, fires once it is within
+  `toleranceDeg` (or after `aimOnFireSec`, 0.5 s: a press always fires), and gives the turn back when the shots
+  are done. The turn stick still wins. No goal in view, or while the launcher sprays: it fires as before. `Aim.aimsOnFire()`,
+  `Aim.isTurningToFire()`; `errorDeg()`, `isAimed()` and the aim buzz follow the turn too.
+
+### Changed
+
+- Simulator: a HIVE now takes 2 s to tip (it was 0.5 s): real HIVEs tip slowly. Still an estimate
+  (`tipSeconds` in `sim/fields/biobuzz-2026.rules.json`) until a real tip is filmed.
+- The launcher's speed from the camera's distance now waits for 3 pictures (about 0.1 s) before it first uses
+  the camera (the glitch filter); until then it uses the odometry's distance, or keeps the speed it has.
+- `LightingSweep.restart()` during the match: with `giveUpAfterStartMs` 0 it now stops after 5 s (it could try
+  forever with no targets), and with no tag seen it keeps the setting from before (it was the first one).
+
 ## v0.36.0 - 2026-11-06
 
 ### Added

@@ -451,6 +451,48 @@ public final class Steps {
     }
 
     /**
+     * Waits until the camera sees the goal (our HIVE's up CELL, from {@code goal(...)} on a camera in
+     * Robot.java) and the goal is STILL, then goes on. Still = in view the whole time and moving less than
+     * {@code Tunables.Aim} {@code goalSteadyDeg} (2) and {@code goalSteadyIn} (2) for {@code goalSteadySec}
+     * (1 s): a tipped HIVE can swing for a moment. For a start where the goal is not in view yet, e.g.
+     * behind the HIVE: wait for a tip, then fire. It uses the camera only (never the odometry backup) and
+     * does not turn the robot. No time limit: it waits until the goal is seen, or until the park time
+     * ({@link #parkWithSeconds}) cuts it short; the steps between are then skipped. In the auto builder:
+     * "Wait for the goal".
+     */
+    public Steps waitForGoal(String label) {
+        return waitForGoal(label, Double.POSITIVE_INFINITY);
+    }
+
+    /**
+     * {@link #waitForGoal(String)}, but at most {@code timeoutSec}: not seen (still) in time, it goes on
+     * anyway and the report says "not seen in 10 s: went on".
+     */
+    public Steps waitForGoal(String label, double timeoutSec) {
+        if (!adding()) return this;
+        Camera camera = null;
+        for (Module<?> m : robot.modules()) if (m instanceof Camera && ((Camera) m).hasGoal()) { camera = (Camera) m; break; }
+        if (camera == null) throw new IllegalStateException("waitForGoal(...): Robot.java has no camera with goal(...)");
+        Aim a = robot.aim();
+        if (a == null) throw new IllegalStateException("waitForGoal(...) can only be a step inside your autonomous (it runs after setup), not in define()");
+        final Camera c = camera;
+        final double steadySec = a.goalSteadySec(), steadyDeg = a.goalSteadyDeg(), steadyIn = a.goalSteadyIn();
+        routine.step(label, ctx -> {
+            GoalSteady steady = new GoalSteady(steadySec, steadyDeg, steadyIn);
+            // The auto's own clock (seconds left), so the simulator's faster time counts right too.
+            // No limit: until autonomous ends (a big finite number: the wait's clock must not overflow).
+            double limit = Double.isInfinite(timeoutSec) ? Math.min(1e6, ctx.secondsLeft() + 60) : timeoutSec;
+            if (!ctx.waitUntil(() -> steady.update(a.cameraGoal(c), (long) (-ctx.secondsLeft() * 1e9)), limit) && ctx.isActive()) {
+                String why = c.whyNoGoal();
+                String sec = timeoutSec == Math.rint(timeoutSec) ? String.valueOf((long) timeoutSec) : String.valueOf(timeoutSec);
+                ctx.note((steady.everSeen() ? "seen, never still" : "not seen") + " in " + sec + " s"
+                        + (why.isEmpty() ? "" : " (" + why + ")") + ": went on");
+            }
+        });
+        return this;
+    }
+
+    /**
      * {@link #aimAtGoal(String, double)} with a sweep: when the goal is not in view, the whole robot turns
      * slowly up to {@code sweepDeg} each way to find it ({@code Tunables.Aim} {@code sweepStepDeg} 15,
      * {@code sweepPower} 0.3), then aims. Never seen: it turns back to where it started ("not seen

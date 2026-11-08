@@ -55,6 +55,10 @@ import java.util.List;
  * while the goal is seen; when the camera does not see it, from the odometry's distance (with an
  * {@code odometry(...)} line and {@code Tunables.Aim.goalX, goalY}, see {@link Aim}); with neither it
  * keeps the last speed. {@link #speedFromOdometry()}: the odometry's distance only (no camera).
+ * The camera's distance goes through a glitch filter first ({@link com.crossbotics.ftchelper.vision.DistanceFilter}:
+ * the middle of the last 5 pictures, and a jump over 12 in needs 3 pictures that agree), so one bad
+ * picture never changes the speed. Tunables {@code distanceMedianOf}, {@code distanceJumpIn},
+ * {@code distanceJumpAgreeIn}.
  *
  * <p><b>Several shot tables</b>, one per game piece (they fly differently): every
  * {@code speedByDistance...} table in the section is one, named by the rest of its name.
@@ -199,6 +203,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private double ejectRpm = 600, ejectSec = 1;
     // The distance to use before any goal was seen (Tunables fallbackDistanceIn); NaN = none.
     private double fallbackDistanceIn = Double.NaN;
+    // Keeps camera glitches out of the distance (the middle of the last pictures, and the jump check).
+    private com.crossbotics.ftchelper.vision.DistanceFilter distanceFilter = new com.crossbotics.ftchelper.vision.DistanceFilter();
 
     private Launcher(String motor, String motorId) {
         super(motor);
@@ -604,6 +610,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 .idleRpm(t.number("idleRpm", 0))
                 .shotInterval(t.number("shotIntervalSec", 0.25));
         for (int i = 0; i < checks.size(); i++) part.requireReady(checkNames.get(i), checks.get(i));
+        // Quick turn on fire (Tunables.Aim.aimOnFire): wait for the turn (up to aimOnFireSec). Always true when it is off.
+        part.requireReady("turning to the goal", () -> robot.aim() == null || robot.aim().readyToFire(this));
         // The shot modes (all optional: read only when written, so no "missing" note).
         if (t.has("quickBandRpm")) part.quickBand(t.number("quickBandRpm", Double.NaN));
         if (t.has("quickMaxWaitSec")) part.quickMaxWait(t.number("quickMaxWaitSec", 0.3));
@@ -629,6 +637,12 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         redTrimPct = t.has("redTrimPercent") ? t.number("redTrimPercent", 0) : 0;
         blueTrimPct = t.has("blueTrimPercent") ? t.number("blueTrimPercent", 0) : 0;
         fallbackDistanceIn = t.has("fallbackDistanceIn") ? t.number("fallbackDistanceIn", Double.NaN) : Double.NaN;
+        // The glitch filter for the camera's distance (docs/modules/vision.md#distancefilter): optional numbers.
+        int medianOf = t.has("distanceMedianOf") ? (int) Math.round(t.number("distanceMedianOf", 5)) : 5;
+        if (medianOf < 1 || medianOf > 15) throw new IllegalStateException("Tunables." + name() + ".distanceMedianOf = " + medianOf + ": use 1 (off) to 15");
+        distanceFilter = new com.crossbotics.ftchelper.vision.DistanceFilter(medianOf,
+                t.has("distanceJumpIn") ? t.number("distanceJumpIn", 12) : 12,
+                t.has("distanceJumpAgreeIn") ? t.number("distanceJumpAgreeIn", 4) : 4);
         ejectRpm = t.has("ejectRpm") ? Math.abs(t.number("ejectRpm", 600)) : 600;
         ejectSec = t.has("ejectSec") ? Math.abs(t.number("ejectSec", 1)) : 1;
         // The hood (built before this module): the launcher sends it the table's angle and waits for it.
@@ -854,6 +868,18 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         boolean wasOff = !spinning;
         fire(1);
         if (wasOff) idleAfterShots = true;
+        // Quick turn on fire (Tunables.Aim.aimOnFire): the robot turns to the goal before this shot feeds.
+        if (robot.aim() != null) robot.aim().driverFired(this);
+    }
+
+    // For the quick turn on fire: the driver's fire button is held, or shots are still on their way.
+    boolean firingForDriver() {
+        return part != null && !missing && (holding || part.isShooting());
+    }
+
+    // For the quick turn on fire: SPRAY now (tap-then-hold, or the last seconds: chosen by the last update).
+    boolean spraysNow() {
+        return spraying || modeNow == ShotMode.SPRAY;
     }
 
     /** The most shots {@link #fire()} lets wait at once (Tunables {@code maxFiringQueue}, default 4; 0 = no queue). */
@@ -1538,11 +1564,18 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             }
         }
         if (Double.isNaN(fixedRpm) && speedMode.isOn() && !tables.isEmpty() && usesDistance()) {
-            // The camera first (a fresh picture with a distance), then the odometry.
+            // The camera first (a fresh picture with a distance, through the glitch filter), then the odometry.
             TargetObservation seen = robot.aim().cameraGoal(distanceCamera);
-            if (seen == null || !seen.hasDistance()) seen = robot.aim().fromOdometry();
-            distanceSource = Aim.sourceOf(seen);
-            if (seen != null && seen.hasDistance()) lastDistance = seen.distanceIn;
+            double cameraIn = distanceFilter.add(seen, Aim.clock.getAsLong());
+            if (seen != null && seen.hasDistance() && !Double.isNaN(cameraIn)) {
+                distanceSource = Aim.Source.CAMERA;
+                lastDistance = cameraIn;
+            } else {
+                // No camera distance yet (or the filter is still collecting pictures): the odometry's.
+                seen = robot.aim().fromOdometry();
+                distanceSource = Aim.sourceOf(seen);
+                if (seen != null && seen.hasDistance()) lastDistance = seen.distanceIn;
+            }
             // Never seen a goal yet: the fallback distance from Tunables, if there is one.
             if (Double.isNaN(lastDistance) && !Double.isNaN(fallbackDistanceIn)) lastDistance = fallbackDistanceIn;
             // No goal at all: keep the last distance, so the last speed (a sudden change would spoil

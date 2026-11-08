@@ -352,11 +352,16 @@ Section `Aim` (fixed name). Every line is optional. Module: [Aim](../modules/rob
 | `cameraMaxAgeMs` | a camera picture older than this does not count as "sees the goal" | ms | 150 | no | test | the camera is slow and the goal flickers to "odometry" |
 | `maxGoalDistance` | the odometry backup is off while it says the goal is farther than this (a wrong pose) | inches | 170 | no | the field size | another field size |
 | `cameraOdometryAgree` | warn when the camera and the odometry differ by more than this | inches | 6 | no | test | too many warnings with a good pose |
+| `goalSteadySec` | `waitForGoal`: how long the goal must stay in view and still before the step goes on (a tipped HIVE can swing) | s | 1 | no | test | shots after the wait miss while the HIVE still moves (more); the wait is too long (less; 0 = go on when first seen) |
+| `goalSteadyDeg` | `waitForGoal`: how far left or right the goal may move meanwhile | degrees | 2 | no | test | a still goal never counts as still (the camera's numbers jump: more) |
+| `goalSteadyIn` | `waitForGoal`: how much nearer or farther the goal may move meanwhile | inches | 2 | no | test | the same |
 | `turnKp` | whole-robot aim: turn power per degree off | power per degree | 0.02 | yes, at once | test | aim is slow (more) or swings (less) |
 | `turnKd` | whole-robot aim: brakes the turn as it gets close | power per degree/s | 0.002 | yes, at once | test | aim overshoots (more) |
 | `maxTurnPower` | whole-robot aim: the most turn power | 0 to 1 | 0.5 | yes, at once | test | aim is too fast or too slow |
 | `minTurnPower` | whole-robot aim: the least power that still turns the robot | 0 to 1 | 0 | yes, at once | test | aim stops a few degrees short |
 | `toleranceDeg` | whole-robot aim counts as aimed within this | degrees | 2 | yes, at once | test | shots miss although "AIMED" (less) |
+| `aimOnFire` | quick turn on fire (no turret, aim mode off): a fire press with the goal in view turns the robot to the goal, then fires | true/false | false | no | test | the robot fires before it points at the goal (turn it on) |
+| `aimOnFireSec` | quick turn on fire: the most a press waits for the turn before it fires anyway | seconds | 0.5 | no | test | shots wait too long (less), or fire before the turn is done (more) |
 | `lockMarginDeg` | once LOCKED (or AIMED), it stays so until the error passes `toleranceDeg` + this: no flicker at the edge | degrees | 1 | no | test | LOCKED flickers (more) |
 | `sweepStepDeg` | `aimAtGoal(label, sec, sweepDeg)`: the robot turns this much between two looks while it sweeps for the goal | degrees | 15 | no | test | the goal is passed by between looks (less) |
 | `sweepPower` | the sweep's turn power | 0-1 | 0.3 | no | test | the sweep is too slow, or the picture blurs (less) |
@@ -510,6 +515,9 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 | `sprayOnTapHold` | with `sprayEnabled`: a tap, then a hold of the fire button sprays while held | true/false | true | no | none | the drivers spray by accident (false) |
 | `spinAtStart` | spins the wheel up at ▶, so it is at speed for the first shot. Wins over `spinAtStart(...)` in `Robot.java` | true/false | true with a separate feeder (an indexer or a feed stop), else false | no | none | save the battery (false), or a robot without a feeder of its own whose drivers want it (true) |
 | `fallbackDistanceIn` | with the speed from the distance: the distance to use before any goal was seen | inches | none: `speedRpm` | no | none | the first shot of the match has no goal in view |
+| `distanceMedianOf` | with the speed from the camera's distance: the middle of this many pictures is used, so one or two bad pictures never change the speed ([DistanceFilter](../modules/vision.md#distancefilter)); 1 = off | pictures, 1-15 | 5 | no | none | the speed follows the distance too slowly (lower), or glitches still get through (higher) |
+| `distanceJumpIn` | a distance change bigger than this needs 3 pictures that agree before it is used (not after the goal was out of view for 0.5 s); 0 = no jump check | inches | 12 | no | none | real moves are held back (higher), or glitch runs get through (lower) |
+| `distanceJumpAgreeIn` | for the jump check: how close each of the 3 pictures must be to the one before | inches | 4 | no | none | a real jump is never used: the camera's numbers jump about more (higher) |
 | `feedStopHold` | with `.feedStop(...)`: the servo position that holds the pieces back | servo position 0-1 | 0 (a guess, INIT says so) | no | Feed Stop Finder | after the Servo Finder |
 | `feedStopRelease` | with `.feedStop(...)`: the servo position that lets a piece through | servo position 0-1 | 0.5 (a guess) | no | Feed Stop Finder | the same |
 | `feedStopMoveSec` | with `.feedStop(...)`: how long it takes to open; the indexer and the pushing parts wait this long | seconds | 0.1 | no | test | a slow servo is still part-closed when the piece comes (more) |

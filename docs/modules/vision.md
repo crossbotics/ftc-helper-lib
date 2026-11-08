@@ -24,6 +24,7 @@ The **bearing** is how far the robot must turn to face a target, in degrees (+ =
 | [`TargetObservation`](#targetobservation) | read one target: id, name, bearing, distance, picture time |
 | [`AimController`](#aimcontroller) | turn the bearing into a turn power, safely |
 | [`MovingShot`](#movingshot) | the math of shooting while moving: an old picture brought to now, the lead for the flight time |
+| [`DistanceFilter`](#distancefilter) | keep camera glitches out of a distance (the middle of the last pictures, and a jump check) |
 
 ```mermaid
 flowchart LR
@@ -205,7 +206,8 @@ setting for the place you are in, by itself, during INIT:
    and keeps trying, all through INIT.
 5. **At ▶ it stops at once** and keeps the best setting so far (the first one if none saw a tag).
    So the robot never aims with a setting it is only trying. **Have a tag in view at INIT** (where the
-   robot starts the match is fine), or the test cannot help.
+   robot starts the match is fine), or the test cannot help. Or put the test on a button: aim at a
+   tag, press, and it runs again (up to 5 s, or `lightingAfterStartMs`; [robot.md](robot.md#camera), `relight()`).
 
 A setting the camera refuses (a webcam without manual exposure), or a Limelight pipeline that sends
 no pictures (not set up), gets no score, is skipped from then on, and is shown on the Driver Station
@@ -270,7 +272,7 @@ pictures see the most tags. `LimelightTags` and `WebcamTags` make one for you; g
 | `.minPictures(n)` | pictures with tags needed to count as good (default 3; `lightingMinPictures`) |
 | `.giveUpAfterStartMs(ms)` | after ▶, how long to keep trying (default 0 = stop at ▶ with the best so far; Tunables `lightingAfterStartMs`). The cameras report no targets while it tries after ▶ |
 | `matchStarted()`, `matchHasStarted()` | ▶ was pressed |
-| `restart()` | try every setting again during the match (it gets `giveUpAfterStartMs` from now) |
+| `restart()` | try every setting again during the match (it gets `giveUpAfterStartMs` from now, or `RESTART_IN_MATCH_MS`, 5 s, when that is 0); no tag seen: back to the setting it had. The five-files `Camera.relight()` calls it |
 | `newSession()` | the camera was closed and started again: INIT again (the cameras call it in `close()`) |
 | `isDone()`, `gaveUp()`, `chosen()`, `chosenLabel()`, `current()`, `noTagsYet()`, `skipped(i)` | the result |
 | `status()`, `scores()`, `problems()` | "dim (9 of 10 pictures saw tags)"; "normal 2/10, bright 0/10, dim 9/10"; "no pictures from pipeline 2 (missing?)" |
@@ -386,3 +388,43 @@ MovingShot.Result r = shot.solve(goal[0], goal[1], v[0], v[1], odo.turnDegPerSec
 It leaves out the turret's own turn during the picture's age, air drag (it slows the piece's sideways
 speed a little: in the simulator a 30 in/s strafe missed by 21 in without the lead and 3.5 in with
 it), and a change of speed during the flight.
+
+## DistanceFilter
+
+Keeps camera glitches out of a distance. A camera sometimes gives one picture with a wrong distance
+(a tag half hidden, a blur, a reflection). Used as it comes, that picture changes the flywheel speed
+for a moment, and a shot fired then goes long or short. The five-files launcher's
+`speedFromDistance(camera)` uses one for you (numbers in `Tunables.Launcher`: `distanceMedianOf`,
+`distanceJumpIn`, `distanceJumpAgreeIn`).
+
+Two checks, one after the other:
+
+1. **The middle of the last 5 pictures** (the median): sort them, take the one in the middle. One or
+   two bad pictures are at the ends of the list, so they are never used. It costs about 2 pictures of
+   delay (0.07 s at 30 pictures a second).
+2. **The jump check:** a distance more than 12 in from the one in use is used only after 3 pictures in a
+   row, each within 4 in of the one before. A camera never gives the exact same number twice, so it
+   needs that tolerance. A real move gets through in about 0.1 s; a glitch of a few pictures does not.
+
+**After a gap it starts over.** With no new picture for 0.5 s (the goal out of view), a big change is
+expected: the HIVE tipped, or the robot drove away for pieces. The first distance after the gap skips
+the jump check. It still waits for 3 pictures, so one glitch as the goal comes into view is kept out.
+
+Only NEW pictures count (each picture's own time, `timeNanos`): a loop faster than the camera does not
+count one picture many times.
+
+| Method | What it does |
+| --- | --- |
+| `new DistanceFilter()` | the defaults: the middle of 5, jumps over 12 in need 3 pictures within 4 in |
+| `new DistanceFilter(medianOf, jumpIn, agreeIn)` | your own: `medianOf` 1 to 15 (1 = off), `jumpIn` inches (0 = no jump check), `agreeIn` inches |
+| `add(goal, nowNanos)` | every loop: the goal now (or null); returns the distance to use (inches), NaN when there is none yet (keep what you had) |
+| `distance()` | the distance in use, NaN if none |
+| `jumpWaiting()` | true while a jump waits to be sure |
+| `reset()` | forget everything; the next distance skips the jump check |
+
+```java
+DistanceFilter filter = new DistanceFilter();
+// every loop:
+double d = filter.add(camera.target("RED SCORING"), System.nanoTime());
+if (!Double.isNaN(d)) launcher.setDistance(d);   // else keep the speed you have
+```
