@@ -433,7 +433,7 @@ public class SimPiecesTest {
     }
 
     // The red HIVE (pivot 0, -12.75, 43.95; the CELL toward +x up at the start, holding the 3 staged NECTAR,
-    // 123 g): 3 POLLEN dropped into it make 198 g, over the 187 g that tips it. It tips (turning for 0.5 s, the rules
+    // 123 g): 3 POLLEN dropped into it make 198 g, over the 187 g that tips it. It tips (turning for 2 s, the rules
     // file's tipSeconds; SimGameTest watches it turn): the other CELL comes up, its pieces fall out, its tags move.
     // A piece over a wall is counted. Back to start puts it all back.
     @Test public void aHiveTipsWhenItsUpCellIsHeavyEnough() throws Exception {
@@ -450,7 +450,7 @@ public class SimPiecesTest {
             double a = 17, hh = 5 + h.floor;
             r.pieces.place("POLLEN", h.pivot[0] + a * ax[0][0] + hh * ax[2][0], h.pivot[1] + w, h.pivot[2] + a * ax[0][2] + hh * ax[2][2]);
         }
-        run(r, 2.0);
+        run(r, 3.0);                                  // tipSeconds 2: it turns, then counts
         assertEquals("tipped once", 1, (int) r.pieces.tips().get("Red HIVE"));
         assertEquals("now the -x CELL is up", -1, h.up);
         assertEquals("nothing in the new up CELL", 0, (int) r.pieces.inCells().get("Red HIVE"));

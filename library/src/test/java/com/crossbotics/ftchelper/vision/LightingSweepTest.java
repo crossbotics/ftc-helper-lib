@@ -167,6 +167,48 @@ public class LightingSweepTest {
         assertFalse(s.isDone());
     }
 
+    @Test public void aRestartInTheMatchStopsAfterFiveSecondsAndKeepsTheOldSettingIfNoTag() {
+        LightingSweep s = sweep("a", "b", "c");   // giveUpAfterStartMs 0: no limit at START
+        run(s, 3000, new int[] {0, 3, 0});
+        assertEquals(1, s.chosen());
+        s.matchStarted();
+        now += 10_000_000_000L;
+        s.restart();                           // the button, facing away from every tag
+        run(s, LightingSweep.RESTART_IN_MATCH_MS - 100, new int[] {0, 0, 0});
+        assertFalse("still trying before the limit", s.isDone());
+        run(s, 200, new int[] {0, 0, 0});
+        assertTrue("the retry stops at its limit", s.isDone());
+        assertEquals("no tag seen: back to the setting it had", 1, s.chosen());
+        assertTrue(s.status(), s.status().contains("aim at a tag"));
+    }
+
+    @Test public void aRestartWhereEverySettingIsRefusedKeepsTheOldSetting() {
+        LightingSweep s = sweep("a", "b");
+        run(s, 3000, new int[] {0, 3});
+        assertEquals(1, s.chosen());
+        s.matchStarted();
+        s.restart();
+        run(s, 20, new int[] {0, 0});
+        s.switched();
+        s.switchFailed();                      // the camera refuses a
+        s.switched();
+        s.switchFailed();                      // and b
+        assertTrue(s.isDone());
+        assertEquals("every setting refused: back to the one it had, not the first", 1, s.chosen());
+    }
+
+    @Test public void aRestartInTheMatchFacingATagPicksTheNewBest() {
+        LightingSweep s = sweep("a", "b", "c");
+        run(s, 3000, new int[] {0, 3, 0});
+        assertEquals(1, s.chosen());
+        s.matchStarted();
+        s.restart();                           // new lighting: now c sees the tags
+        run(s, 3000, new int[] {0, 0, 5});
+        assertTrue(s.isDone());
+        assertEquals(2, s.chosen());
+        assertFalse(s.gaveUp());
+    }
+
     @Test public void waitingForTheCameraStillEndsAtStart() {
         LightingSweep s = sweep("a", "b").giveUpAfterStartMs(500);
         s.matchStarted();

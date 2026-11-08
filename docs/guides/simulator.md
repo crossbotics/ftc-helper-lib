@@ -344,7 +344,11 @@ What a team does, step by step:
      to the goal with the camera or the odometry backup, or a following turret aims; it never turns blind,
      and the report says "not seen"; only for a robot that can aim; the plan's preview does not turn for it,
      the run does), **ready to launch** (`readyToLaunch`: spins the launcher up and waits until it is at
-     speed; only for a robot with a launcher), and "park from here" (`parkWithSeconds`). A button adds its step at the end.
+     speed; only for a robot with a launcher), **wait for the goal** (`waitForGoal`: waits until the camera
+     sees the goal and it stays still for 1 s, then goes on; for a start where the goal is not in view yet,
+     e.g. behind the HIVE before a tip; tick "go on after X s" to go on anyway when it is not seen, or leave
+     it unticked to wait until "park from here" takes over; only for a robot with a camera that has a goal;
+     the time estimate counts the whole limit, or 0 with no limit), and "park from here" (`parkWithSeconds`). A button adds its step at the end.
      **Put a step between two:** point between two steps in the list and press the **+** that shows there.
      The buttons move into that gap: each one you press (and each tap on the map) goes in there, one after
      the other, until you press **Done**. **Start over** (beside Undo) removes every step; Undo brings them back.
@@ -946,8 +950,8 @@ The 3 staged NECTAR rest in each up CELL. When the pieces that have come to rest
 (slow for 0.3 s) weigh 187 g or more (the team's field tests: no tip at about 175 g, a tip at about
 199-200 g; the 3 NECTAR are 123 g, so the 3rd POLLEN tips it), the HIVE turns 60 degrees: the other CELL
 comes up, the pieces in the CELL that went down fall out, and the 8 AprilTags on its CELLs move with it
-(cameras see them where they are now). It turns over half a second (slow, fast, slow; the rules file's
-`tipSeconds`, an estimate until someone films a real tip): its CELLs carry their pieces and push what they
+(cameras see them where they are now). It turns over 2 s (slow, fast, slow; the rules file's
+`tipSeconds`, an estimate until someone films a real tip: real HIVEs tip slowly): its CELLs carry their pieces and push what they
 meet, and it counts as TIPPED when it gets there (10.5.1). In a match only LAUNCHED pieces may tip it (10.5.1, G417), and a
 robot may not catch what falls out until it has touched something else (G409); the simulator does not
 referee either. The page

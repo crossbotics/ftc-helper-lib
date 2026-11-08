@@ -63,6 +63,10 @@ public final class Camera extends Module<Camera> {
     TargetSource source;
     // The lighting test as running (null when it is off).
     private com.crossbotics.ftchelper.vision.LightingSweep sweep = null;
+    // relight() was pressed: the TeleOp screen shows the lighting line from then on.
+    private boolean relit = false;
+    // relight() was pressed with the test off: when (Time.nanos), to warn for a few seconds. -1: not pressed.
+    private long relightOffAt = -1;
     // The Tunables lines that skip the test next time, e.g. "pipeline = 1;" (shown at INIT once found).
     private String skipHint = "";
     // For the simulator file: the turret this camera rides (its device name), or null (set by
@@ -308,6 +312,25 @@ public final class Camera extends Module<Camera> {
         return sweep;
     }
 
+    /**
+     * Does the lighting test again, now: for a button. Aim the camera at a tag, then press. In the
+     * match it takes up to 5 s (or Tunables {@code lightingAfterStartMs} when that is set), and the camera sees no targets until it is done (so do not press
+     * while you aim to shoot). If no setting sees a tag, it keeps the setting it had. Needs
+     * {@link #autoExposure} or {@link #autoPipelines}, and Tunables {@code autoLighting} not false;
+     * without them it does nothing, and the TeleOp screen says so for 5 s.
+     *
+     * @return true if the test started again
+     */
+    public boolean relight() {
+        if (sweep == null) {
+            relightOffAt = com.crossbotics.ftchelper.core.Time.nanos();   // the screen says why nothing happened
+            return false;
+        }
+        sweep.restart();
+        relit = true;
+        return true;
+    }
+
     // The INIT loop: keep the camera reading (so the lighting test runs), and show the result.
     @Override
     void initLoop(RobotTelemetry t) {
@@ -405,6 +428,14 @@ public final class Camera extends Module<Camera> {
     public void addTelemetry(RobotTelemetry t) {
         if (source == null) return;
         source.addTelemetry(t);
+        if (relightOffAt >= 0 && com.crossbotics.ftchelper.core.Time.nanos() - relightOffAt < 5_000_000_000L) {
+            t.warn(device + " lighting test is off: nothing to do again (it needs autoExposure() or autoPipelines(...) "
+                    + "in Robot.java, and no exposureMs/pipeline line or autoLighting = false in Tunables)");
+        }
+        if (relit && sweep != null) {
+            if (sweep.gaveUp()) t.warn(device + " lighting: " + sweep.status());
+            else t.line(device + " lighting", sweep.status());
+        }
         if (blueGoal != null) {
             TargetObservation g = goal();
             String why = g == null ? whyNoGoal() : "";

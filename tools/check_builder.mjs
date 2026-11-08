@@ -289,6 +289,20 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		ok(back4.plan && back4.plan.steps[0].sweep === 45 && back4.plan.steps[1].kind === 'remember' && back4.plan.steps[3].kind === 'back' && back4.plan.steps[3].power === 0.4, 'sweep, remember, turn back: read back from Java');
 		const back3 = S.fromJava('s.start("x", 0, -61, 0).readyToLaunch("Ready", 2).move("Out", 10, 0, 0.5);');
 		ok(back3.plan && back3.plan.steps[0].kind === 'ready' && back3.plan.steps[0].timeout === 2 && back3.plan.steps.length === 2, 'ready step: read back from Java');
+		ok(S.stepCode({ kind: 'goal', label: 'Wait for the goal', timeout: 10 }) === 'waitForGoal("Wait for the goal", 10)', 'goal step: the Java');
+		const back5 = S.fromJava('s.start("x", 0, -61, 0).waitForGoal("Tip", 8.5).move("Out", 10, 0, 0.5);');
+		ok(back5.plan && back5.plan.steps[0].kind === 'goal' && back5.plan.steps[0].timeout === 8.5 && back5.plan.steps.length === 2, 'goal step: read back from Java');
+		ok(S.stepSeconds({ kind: 'goal', label: 'G', timeout: 8 }, 0, 0) === 8, 'goal step: the time estimate counts the whole limit');
+		ok(/camera sees the goal/.test(S.stepWords({ kind: 'goal', label: 'G', timeout: 8 })), 'goal step: the words');
+		const badGoal = S.checkPlan({ drive: 'mecanum', start: { x: 0, y: wallY, h: 0 }, steps: [{ kind: 'goal', label: 'G', timeout: 0 }] }).list.filter((c) => c.level === 'bad').map((c) => c.text).join(' | ');
+		ok(/time limit/.test(badGoal), 'goal step: a time limit is needed: ' + badGoal);
+		ok(S.stepCode({ kind: 'goal', label: 'Tip', timeout: 10, goOn: false }) === 'waitForGoal("Tip")', 'goal step with no time limit: the Java');
+		const back6 = S.fromJava('s.start("x", 0, -61, 0).waitForGoal("Tip").move("Out", 10, 0, 0.5);');
+		ok(back6.plan && back6.plan.steps[0].kind === 'goal' && back6.plan.steps[0].goOn === false && back6.plan.steps.length === 2, 'goal step with no time limit: read back from Java');
+		ok(back5.plan.steps[0].goOn === true, 'goal step with a limit: read back as go on');
+		ok(S.stepSeconds({ kind: 'goal', label: 'G', timeout: 8, goOn: false }, 0, 0) === 0 && /no time limit/.test(S.stepWords({ kind: 'goal', label: 'G', timeout: 8, goOn: false })), 'goal step with no time limit: 0 s, and the words say so');
+		const noLimit = S.checkPlan({ drive: 'mecanum', start: { x: 0, y: wallY, h: 0 }, steps: [{ kind: 'goal', label: 'G', timeout: 0, goOn: false }] }).list.filter((c) => c.level === 'bad' && c.step === 0);
+		ok(noLimit.length === 0, 'goal step with no time limit: no time limit is needed');
 	}
 	ok(/^Left side .* from the left wall, right side against the right wall, back against our wall\.$/.test(S.startInches(S.snapStart({ x: 80, y: -80, h: 0 }, R, half), R, half)), 'startInches: the corner reads "against"');
 	ok(S.wallName(-70, 10) === 'the left wall' && S.wallName(60, -71) === 'our wall' && S.wallName(71, 5) === 'the right wall' && S.wallName(0, 71) === 'the far wall', 'wallName');

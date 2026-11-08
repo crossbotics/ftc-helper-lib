@@ -3344,6 +3344,165 @@
    }
   },
   {
+   "id": "AIM-07",
+   "title": "Do the lighting test again from a button",
+   "area": "aim",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 15,
+   "needs": [
+    [
+     "limelight",
+     "webcam"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.37.0",
+   "docs": [
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "camera"
+    },
+    {
+     "path": "docs/modules/vision.md",
+     "anchor": "venue-lighting"
+    }
+   ],
+   "file": "testing/tests/AIM-07.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The lighting test picks the camera setting in INIT, but only if a tag is in view then. A robot that starts with no tag in view (behind the HIVE, or facing a wall) keeps the first setting. `relight()` runs the test again from a button. We want to know it finds a good setting in the match, and how long the camera is \"blind\" while it tries."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Clear floor, PRACTICE profile. Aim (if on) stops while the test runs."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A camera with `.autoExposure()` (webcam) or `.autoPipelines(...)` (Limelight), and `.goal(...)`.",
+       "In `Controls.java`: `g1.y.heldFor(0.5, robot.camera::relight).rumble().says(\"camera: lighting test again (aim at a tag)\");`"
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT with the camera facing away from every tag. START.",
+       "Turn the robot until the goal's tags are in view. Hold Y for half a second.",
+       "Watch the Driver Station: `... lighting: trying 1 of 4 ...`, then the setting it chose.",
+       "Check that `Goal` shows the goal again.",
+       "Face away from every tag and hold Y again. Wait 5 s."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 3 it chooses a setting within 5 s and the goal is seen again. In step 5 it says `NO TAGS SEEN: kept ...` with the setting from step 3 (not a different one)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "camera model, and the venue light (gym, classroom, event)",
+       "the setting it chose, and how long it took (seconds)",
+       "if the goal was seen better after the test than before"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "If you put the test on another button, say which. A Limelight tries pipelines, not exposures."
+     }
+    ]
+   }
+  },
+  {
+   "id": "AIM-08",
+   "title": "Quick turn on fire",
+   "area": "aim",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 15,
+   "needs": [
+    [
+     "limelight",
+     "webcam"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.37.0",
+   "docs": [
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "aim"
+    },
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "10-no-turret-aim-the-whole-robot"
+    }
+   ],
+   "file": "testing/tests/AIM-08.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A robot with no turret must point at the goal to score. With `Tunables.Aim.aimOnFire = true`, a fire press turns the robot to the goal first, then fires. We want to know it turns quickly, fires once aimed, and gives the turn stick back after the shot."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Clear floor, PRACTICE profile. The robot turns by itself on a fire press: keep hands away."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot with no turret, a camera with `.goal(...)`, and a launcher on RB.",
+       "In `Tunables.java`: `public static class Aim { public static boolean aimOnFire = true; }`.",
+       "Whole-robot aim tuned first (`turnKp`, `maxTurnPower`, `toleranceDeg`)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "START. Aim mode off. Face about 15 degrees to one side of the goal, with the goal in view.",
+       "Tap RB once. Watch the robot turn and fire.",
+       "After the shot, move the turn stick. Check that the robot turns as the stick says.",
+       "Face away from the goal (not in view). Tap RB.",
+       "Face 15 degrees off again. Tap RB and move the turn stick at once."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 2 the robot turns to the goal and fires within 0.5 s, and the shot is aimed. In step 3 the stick turns the robot. In step 4 it fires at once with no turn. In step 5 the stick wins."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "how long from the press to the shot (seconds, from a video if you can)",
+       "how many degrees off the robot started, and if the shot scored",
+       "`turnKp`, `maxTurnPower`, `toleranceDeg` used"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "If the fire button is not RB, say which. A tank drive turns the same way."
+     }
+    ]
+   }
+  },
+  {
    "id": "AUTO-01",
    "title": "Choose the start spot in the INIT menu",
    "area": "autos",
@@ -5291,6 +5450,84 @@
     "different": [
      {
       "p": "No feed wheel: skip step 5. A launcher with `spinAtStart()` starts on: switch it off first (step 1)."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-11",
+   "title": "The glitch filter keeps the flywheel speed steady",
+   "area": "shooter",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 20,
+   "needs": [
+    [
+     "limelight",
+     "webcam"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.37.0",
+   "docs": [
+    {
+     "path": "docs/modules/vision.md",
+     "anchor": "distancefilter"
+    },
+    {
+     "path": "docs/guides/tunables.md",
+     "anchor": "launcher"
+    }
+   ],
+   "file": "testing/tests/SHOT-11.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A camera sometimes gives one picture with a wrong distance. The launcher now uses the middle of the last 5 pictures, and a big jump must show in 3 pictures in a row. We want to know the speed stays steady with real cameras and venue light, and that it still follows a real move fast enough."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Clear floor, PRACTICE profile. The flywheel spins: keep hands away."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with `.speedFromDistance(camera)` and a `speedByDistance` table.",
+       "Debug lines on (so the launcher line shows the distance in use)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Spin up with the goal in view, standing still, about 60 in away. Watch the launcher's distance for 30 s.",
+       "Wave a hand through the camera's view a few times. Watch the target speed.",
+       "Drive straight toward the goal, then away, at a normal speed. Watch the distance follow.",
+       "Turn away from the goal for 2 s, drive 3 ft, then face the goal again."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In steps 1 and 2 the target speed never jumps by more than one table step for a moment. In step 3 the distance follows within about 0.2 s. In step 4 the new distance is used within about 0.2 s of the goal coming back into view."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "camera model and the venue light",
+       "any jump you still saw (how big, how long)",
+       "the `distanceMedianOf`, `distanceJumpIn`, `distanceJumpAgreeIn` you ended with, if you changed them"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "With odometry, the odometry's distance is used while the camera is still collecting its first 3 pictures: say if you see a jump between the two."
      }
     ]
    }
