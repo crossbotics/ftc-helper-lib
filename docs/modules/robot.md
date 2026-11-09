@@ -1175,6 +1175,7 @@ Its optional Tunables (leave them out for the defaults):
 | `liveView` | true | a webcam: show its picture in the PRACTICE profile (never at an event: it costs speed). See it on the Driver Station: the menu > Camera Stream, in INIT |
 | `exposureMs` (webcam) | -1 | a fixed manual exposure (ms) when the test is off; -1 = the camera's own |
 | `gain` (webcam) | -1 | the gain for manual exposures; -1 = the camera's highest |
+| `pitchDeg` (webcam, Limelight) | 0 | the camera's tilt, degrees up (0 = level). With it, the goal's bearing and distance are along the floor ([CameraTilt](vision.md#cameratilt)); also the simulator robot file's `pitch` |
 
 These are read once, in INIT, and are not in the tuning menu: change them in `Tunables.java` and
 install again. The section is the camera's name in CamelCase: `Webcam 1` reads `Tunables.Webcam1`,

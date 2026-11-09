@@ -83,6 +83,51 @@ public class VisionTest {
         assertEquals(123L, o.timeNanos);
     }
 
+    // A goal 27.5 degrees to the LEFT, 48 in away along the floor, 35 in above the lens, seen by a camera tilted
+    // 35 degrees up: its place in the camera's own view (right, forward along the lens, up in the picture).
+    private static final double PITCH = 35, TRUE_BEARING = 27.5, FLOOR = 48, ABOVE = 35;
+    private static double[] inCameraView() {
+        double right = -FLOOR * Math.sin(Math.toRadians(TRUE_BEARING));
+        double fwd = FLOOR * Math.cos(Math.toRadians(TRUE_BEARING));
+        double p = Math.toRadians(PITCH);
+        return new double[] {right, fwd * Math.cos(p) + ABOVE * Math.sin(p), -fwd * Math.sin(p) + ABOVE * Math.cos(p)};
+    }
+
+    @Test public void cameraTiltGivesTheFloorsBearingAndDistance() {
+        double[] c = inCameraView();
+        assertEquals(TRUE_BEARING, CameraTilt.bearingDeg(c[0], c[1], c[2], PITCH), 1e-9);
+        assertEquals(FLOOR, CameraTilt.floorDistance(c[0], c[1], c[2], PITCH), 1e-9);
+        // Without the tilt: the camera's own view reads too small to the side (the problem it fixes).
+        assertTrue(CameraTilt.bearingDeg(c[0], c[1], c[2], 0) < TRUE_BEARING - 4);
+        // Level: the plain formulas (what the SDK and the Limelight give).
+        assertEquals(Math.toDegrees(Math.atan2(-3, 40)), CameraTilt.bearingDeg(3, 40, 7, 0), 1e-9);
+        assertEquals(Math.hypot(3, 40), CameraTilt.floorDistance(3, 40, 7, 0), 1e-9);
+        assertTrue(Double.isNaN(CameraTilt.bearingDeg(Double.NaN, 40, 0, 35)));
+    }
+
+    @Test public void aTiltedWebcamsDetectionIsTurnedFlat() {
+        double[] c = inCameraView();
+        // AprilTagPoseFtc: x right, y forward, z up, yaw, pitch, roll, range, bearing, elevation.
+        AprilTagPoseFtc pose = new AprilTagPoseFtc(c[0], c[1], c[2], 0, 0, 0, Math.hypot(c[0], c[1]),
+                Math.toDegrees(Math.atan2(-c[0], c[1])), 0);
+        AprilTagSingleDetection d = new AprilTagSingleDetection(7, 0, 50f, null, null, null, pose, null, null, 123L, DistanceUnit.INCH);
+        TargetObservation o = WebcamTags.convert(d, PITCH);
+        assertEquals(TRUE_BEARING, o.bearingDeg, 1e-6);
+        assertEquals(FLOOR, o.distanceIn, 1e-6);
+        assertEquals("level (no pitch): the SDK's own numbers", pose.bearing, WebcamTags.convert(d).bearingDeg, E);
+    }
+
+    @Test public void aTiltedLimelightsGroupTargetIsTurnedFlat() {
+        TagGroup red = TagGroup.biobuzz().get(0);
+        double[] c = inCameraView();
+        java.util.Map<Integer, double[]> places = new java.util.HashMap<>();
+        // The tags' row lies across the picture (Limelight space: x right, y DOWN, z forward).
+        for (int id : new int[] {30, 31, 32, 33}) places.put(id, new double[] {c[0] + red.alongRowIn(id), -c[2], c[1]});
+        TargetObservation o = LimelightTags.groupTarget(red, places, 7, PITCH);
+        assertEquals(TRUE_BEARING, o.bearingDeg, 1e-6);
+        assertEquals(FLOOR, o.distanceIn, 1e-6);
+    }
+
     @Test public void limelightDistanceFromPoseInInches() {
         // Camera space: x right, y down, z forward. 0.3 m right, 0.8 m down (ignored), 0.4 m forward.
         Pose3D pose = new Pose3D(new Position(DistanceUnit.METER, 0.3, 0.8, 0.4, 0),

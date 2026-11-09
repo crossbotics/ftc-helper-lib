@@ -1383,9 +1383,12 @@ made by the SDK's own builders).
 ```properties
 # name = the name in the robot configuration. Where it sits: inches forward/left/up from the robot's
 # center on the floor; yaw (+ = turned left) and pitch (+ = tilted up) in degrees. hfov = how wide it
-# sees, in degrees (Logitech C920 at 640x480: about 70). Defaults: 0, 0, 10, 0, 0, 70.4, 640, 480.
+# sees, in degrees (Logitech C920 at 640x480: about 70; C270: 42.5). Defaults: 0, 0, 10, 0, 0, 70.4, 640, 480.
 camera.front = name=Webcam 1, forward=7, left=0, up=12, yaw=0, pitch=20, hfov=70.4, width=640, height=480
 ```
+
+A robot in five files makes this line from Robot.java (`:sim:fromRobot`): its `pitch` is the camera's
+`pitchDeg` in Tunables when written (else 30, a guess). Change `forward`, `up` and `hfov` to your robot's.
 
 What it does: the camera opens about 1 s after the OpMode makes it, then sends 30 pictures a second.
 For each picture it works out which of the field file's AprilTags are in view: inside the picture,

@@ -604,6 +604,7 @@ menu. Module: [Camera](../modules/robot.md#camera).
 | `lightingPictures` | the test: pictures per setting | count | 10 | no | none | results vary |
 | `lightingMinPictures` | the test: pictures with tags a setting needs | count | 3 | no | none | a bad setting wins |
 | `lightingAfterStartMs` | the test: keep trying this long after ▶ (no targets meanwhile) | ms | 0 | no | none | rarely |
+| `pitchDeg` | a webcam or Limelight: its tilt up; then bearings and distances are along the floor ([CameraTilt](../modules/vision.md#cameratilt)) | degrees (+ = up) | 0 (level) | no | measure (a level app on the camera's face) | the camera is tilted; after a change, make the shot table again |
 | `hfovDeg` | a HuskyLens: its view angle, left edge to right edge of the picture | degrees | 60 (a guess) | no | measure ([how](../modules/vision.md#huskylenscamera)) | always: measure yours |
 | `sizeIn` | a HuskyLens: the real size of what it looks at, for a rough distance (none: no distance) | inches | none | no | measure | the longest side it shows: a tag's black square, a ball's width |
 

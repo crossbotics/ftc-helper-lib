@@ -28,7 +28,9 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  * is always that alliance's HIVE's CELL that reads right side up (the up CELL, the one you can score
  * in), whichever of its two CELLs that is now; a CELL whose tags read upside down is never the goal
  * ({@link TagGroup#goalTarget}). Tunables
- * ({@code Tunables.Limelight} for device "limelight"): {@code pipeline} (Limelight only, default 0).
+ * ({@code Tunables.Limelight} for device "limelight"): {@code pipeline} (Limelight only, default 0), {@code pitchDeg}
+ * (webcam or Limelight: its tilt up in degrees, 0 = level: then bearings and distances are along the floor, see
+ * {@link com.crossbotics.ftchelper.vision.CameraTilt}).
  * No suggested buttons. It starts in INIT (a webcam needs a second or two). A camera missing from the
  * robot configuration never stops the OpMode: it warns on the Driver Station and sees nothing.
  *
@@ -252,14 +254,16 @@ public final class Camera extends Module<Camera> {
             source = husky;
         } else if (limelight) {
             LimelightTags ll = new LimelightTags(device, (Limelight3A) found)
-                    .pipeline((int) Math.round(t.number("pipeline", 0)));
+                    .pipeline((int) Math.round(t.number("pipeline", 0)))
+                    .pitchDeg(optional(t, "pitchDeg", 0));   // tilted up: the floor's bearing and distance
             if (auto && autoPipelines != null) {
                 ll.autoPipelines(autoPipelines);
                 sweep = ll.lighting();
             }
             source = ll;
         } else {
-            WebcamTags cam = new WebcamTags(device, (WebcamName) found);
+            WebcamTags cam = new WebcamTags(device, (WebcamName) found)
+                    .pitchDeg(optional(t, "pitchDeg", 0));   // tilted up: the floor's bearing and distance (CameraTilt)
             // Live view: the picture on the robot's screen and the Driver Station's Camera Stream, for
             // checking the brightness. On in the PRACTICE profile (Tunables liveView, true), never at an
             // event (COMPETITION): drawing the picture costs speed.
@@ -448,7 +452,9 @@ public final class Camera extends Module<Camera> {
     void simLines(List<String> out, TunableSection t) {
         // A guess until measured. Tilted 30 degrees up: goals' tags are often high (BIOBUZZ: up to 50 in
         // on a raised CELL), and a flatter camera sees them only from far away.
-        String where = "forward=6, left=0, up=12, yaw=0, pitch=30";
+        // Tunables pitchDeg (the measured tilt), when written, is the simulator's tilt too.
+        String where = "forward=6, left=0, up=12, yaw=0, pitch="
+                + (t != null && t.has("pitchDeg") ? fmt("%.1f", t.number("pitchDeg", 30)) : "30");
         // On a turret (a turret follows this camera and cameraOnBody() is not used): it turns with the
         // turret in the simulator too (on=turret: measured with the turret pointing straight forward).
         if (simOnTurret != null) where += ", on=" + simOnTurret;

@@ -1522,7 +1522,9 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
 The test runs in INIT (nothing moves), takes about a second per setting, and the Driver Station says what
 it kept. Point the robot at the tags in INIT. Its numbers are optional (`Tunables.Limelight`:
 `autoLighting = false` skips the test and uses `pipeline`).
-**More:** [Vision: venue lighting](modules/vision.md#venue-lighting), [Camera](modules/robot.md#camera).
+**Tilted up?** Add its tilt to the same section: `public static double pitchDeg = 35;` (degrees up, measured
+on the robot). Then a goal off to the side reads the right angle, and distances are along the floor.
+**More:** [Vision: venue lighting](modules/vision.md#venue-lighting), [CameraTilt](modules/vision.md#cameratilt), [Camera](modules/robot.md#camera).
 
 ### How do I find game pieces with a HuskyLens?
 

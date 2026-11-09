@@ -86,10 +86,32 @@ camera.start();                  // in INIT: a webcam needs 1-2 s to start
 | `.gain(g)` | the gain for `autoExposure`'s manual exposures (default: the camera's highest) |
 | `lighting()` / `matchStarted()` | the lighting test (null without `autoExposure`); tell it ▶ (start on the Driver Hub) was pressed |
 | `.keepTargetsMs(ms)` | how long targets stay in `targets()` without a new picture (default 500) |
-| `WebcamTags.convert(detection)` | turns an SDK detection into a TargetObservation |
+| `.pitchDeg(degrees)` | the camera's tilt up (0 = level, the default): bearings and distances along the floor ([CameraTilt](#cameratilt)) |
+| `WebcamTags.convert(detection)` / `convert(detection, pitchDeg)` | turns an SDK detection into a TargetObservation (level, or tilted) |
 
 Better distances: calibrate the camera (the FTC docs explain "camera calibration") or use a
 camera the SDK already knows (Logitech C270/C920 at common resolutions).
+
+
+## CameraTilt
+
+A camera tilted up (to see a high goal) measures in its own tilted view. A goal off to the side then
+reads too few degrees: 27.5 degrees left reads about 21 with the camera 35 degrees up. Its distance is
+the slanted line from the lens up to the goal. `CameraTilt` turns the camera's numbers flat again: the
+bearing and the distance **along the floor**, which the aim and the odometry use.
+
+```java
+WebcamTags camera = WebcamTags.create(hardwareMap, "Webcam 1").pitchDeg(35);   // tilted 35 degrees up
+// In the robot in five files: Tunables.Webcam1.pitchDeg = 35
+```
+
+| Method | What it does |
+| --- | --- |
+| `CameraTilt.bearingDeg(right, forward, up, pitchDeg)` | the floor's bearing (+ = left) of a point in the camera's view (right, along the lens, up in the picture) |
+| `CameraTilt.floorDistance(right, forward, up, pitchDeg)` | its distance along the floor (same length unit) |
+
+`pitchDeg`: + = tilted up, 0 = level (nothing changes). Measure it on the robot: a phone's level app on
+the camera's face. A webcam and a Limelight use it; a HuskyLens does not (yet).
 
 ## LimelightTags
 
@@ -108,6 +130,7 @@ on the robot network). Set the correct tag size there for distances.
 | --- | --- |
 | `.pipeline(n)` | which pipeline (also switches at once if already started) |
 | `.autoPipelines(0, 1, 2)` | [venue lighting](#venue-lighting): tries these pipelines in INIT, keeps the best (replaces `.pipeline`) |
+| `.pitchDeg(degrees)` | the Limelight's tilt up (0 = level, the default): bearings and distances along the floor ([CameraTilt](#cameratilt)) |
 | `lighting()` / `matchStarted()` | the lighting test (null without `autoPipelines`); tell it ▶ was pressed |
 | `.pollRate(hz)` | results per second |
 | `setRobotHeading(deg)` | for the Limelight's MegaTag2 position feature (not needed to aim). Safe every loop: sent in the background |
