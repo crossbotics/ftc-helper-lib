@@ -14,6 +14,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **The five files, one walkthrough page per file** ([docs/five-files/](docs/five-files/README.md)), starting with
+  `Robot.java` and `Tunables.java`: the smallest files for a robot that drives, every line explained, each part's
+  attributes and numbers (needed or not, and the default), then how to add a part. Each page's code is a compiled program (`examples/.../firstrobot/`) or a cookbook recipe, and
+  `tools/check_docs.py` keeps the page and the code the same.
 - **Set up, one small page per step** ([docs/setup/](docs/setup/README.md)). Nine pages take a team from an
   empty laptop to a robot that runs its code: what you need, Android Studio, GitHub and the robot project,
   add the library, update the hubs, build and install, the robot configuration, every practice, and the

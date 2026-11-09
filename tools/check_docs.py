@@ -35,6 +35,8 @@ TUT_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/tut
 TUT_TEST = ROOT / "examples/src/test/java/com/crossbotics/ftchelper/examples/tutorials"
 COOKBOOK_MD = ROOT / "docs/cookbook.md"
 COOKBOOK_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook"
+# The five files walkthrough (docs/five-files/): each page shows one compiled program, marked like a recipe.
+WALK_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/firstrobot"
 RECIPE_START = re.compile(r"^\s*// recipe: ([a-z0-9-]+)\s*$")
 RECIPE_END = re.compile(r"^\s*// end recipe\s*$")
 RECIPE_MARK = re.compile(r"^<!-- recipe: ([a-z0-9-]+) -->\s*$")
@@ -114,7 +116,7 @@ FINDERS = {"MotorFinder", "ServoFinder", "HoodFinder", "DriveTuner", "OdometryTu
 def recipe_file(java, start, code=""):
     """The TeamCode file a recipe goes in, worked out from where it sits in the cookbook's Java (shown as
     the code box's title, e.g. "Robot.java")."""
-    rel = java.relative_to(COOKBOOK_CODE)
+    rel = java.relative_to(WALK_CODE if java.is_relative_to(WALK_CODE) else COOKBOOK_CODE)
     if rel.parts[0] == "autos":
         return "autos/" + rel.name
     if rel.stem in ("Robot", "Controls", "Actions", "Tunables") or rel.stem in FINDERS:
@@ -155,10 +157,10 @@ def fence(rel, start, code):
     return f'```java title="{name}"' if name else "```java"
 
 
-def cookbook_regions():
+def cookbook_regions(root=None):
     """The marked regions of the cookbook's Java files: name -> (file, line, code without the common indent)."""
     regions = {}
-    for java in sorted(COOKBOOK_CODE.rglob("*.java")):   # with autos/
+    for java in sorted((root or COOKBOOK_CODE).rglob("*.java")):   # with autos/
         rel = java.relative_to(ROOT)
         name, start, body = None, 0, []
         for n, line in enumerate(java.read_text().splitlines(), 1):
@@ -258,14 +260,26 @@ def check_cookbook():
             problems.append(f"docs/cookbook.md:{pending[1]}: recipe {pending[0]}: put the marker right before its java block")
             pending = None
         i += 1
-    for name in sorted(set(regions) - shown):
+    # A region may be shown on another page instead (the Tunables reference shows each part's section).
+    elsewhere = {m.group(1) for page in marked_pages() for m in MARKED_BLOCK.finditer(page.read_text())}
+    for name in sorted(set(regions) - shown - elsewhere):
         rel, start, _ = regions[name]
-        problems.append(f"{rel}:{start}: recipe {name} is not shown in docs/cookbook.md")
+        problems.append(f"{rel}:{start}: recipe {name} is not shown in docs/cookbook.md or another docs page")
     # The code is the record: a recipe that tunes live must say to copy the value back.
     for section in re.split(r"\n(?=### )", COOKBOOK_MD.read_text()):
         if "tuning menu" in section and "Tunables.java" not in section:
             problems.append(f"docs/cookbook.md: '{section.splitlines()[0]}' mentions the tuning menu "
                             "but not copying the value into Tunables.java")
+
+
+def all_regions():
+    """The cookbook's regions and the five files walkthrough's: the pages may show either."""
+    regions = dict(cookbook_regions())
+    for name, region in cookbook_regions(WALK_CODE).items():
+        if name in regions:
+            problems.append(f"{region[0]}:{region[1]}: recipe {name} is also in {regions[name][0]}:{regions[name][1]}")
+        regions[name] = region
+    return regions
 
 
 MARKED_BLOCK = re.compile(r"<!-- recipe: ([a-z0-9-]+) -->\n(```java[^\n]*)\n(.*?)\n?```", re.S)
@@ -278,25 +292,32 @@ def marked_pages():
 
 def check_marked_pages():
     """A recipe shown on another page must be the same as its Java region too (it is not compiled there)."""
-    regions = cookbook_regions()
+    regions = all_regions()
+    shown = set()
     for page in marked_pages():
         rel = page.relative_to(ROOT)
         text = page.read_text()
         for m in MARKED_BLOCK.finditer(text):
             line = text[:m.start()].count("\n") + 1
+            shown.add(m.group(1))
             if m.group(1) not in regions:
-                problems.append(f"{rel}:{line}: no recipe {m.group(1)} in {COOKBOOK_CODE.relative_to(ROOT)}")
+                problems.append(f"{rel}:{line}: no recipe {m.group(1)} in {COOKBOOK_CODE.relative_to(ROOT)} "
+                                f"or {WALK_CODE.relative_to(ROOT)}")
             elif (regions[m.group(1)][2] != strip_markers(m.group(3).strip("\n"))
                   or m.group(2) != fence(*regions[m.group(1)])):
                 problems.append(f"{rel}:{line}: recipe {m.group(1)} differs from {regions[m.group(1)][0]} "
                                 "(python3 tools/check_docs.py --fix-cookbook)")
         if text.count("<!-- recipe: ") != len(MARKED_BLOCK.findall(text)):
             problems.append(f"{rel}: a '<!-- recipe: name -->' marker is not right before a java block")
+    # Each walkthrough program is shown on its page: the page and the compiled code stay the same.
+    for name, (rel, start, _) in cookbook_regions(WALK_CODE).items():
+        if name not in shown:
+            problems.append(f"{rel}:{start}: recipe {name} is not shown on any docs/five-files page")
 
 
 def fix_cookbook():
     """Rewrites each marked java block of docs/cookbook.md (and of the guides that show one) from its Java region."""
-    regions = cookbook_regions()
+    regions = all_regions()
 
     def fill(m):
         name = m.group(1)

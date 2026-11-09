@@ -53,7 +53,9 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
     (points, match times, FLOWER heights, tip time, clean-shot rules), typed from the manual with section
     numbers (SimRules; scoring in SimScore, the clean-shot judge in SimCellJudge, a port of the turret
     simulator's judge() checked by SimCellJudgeTest).
-- `docs/` `setup/` (one page per setup step, in order, each ending with "Done when"), `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
+- `docs/` `setup/` (one page per setup step, in order, each ending with "Done when"), `five-files/` (one walkthrough
+  page per robot file; each page's code is a compiled program in `examples/.../firstrobot/` or a cookbook recipe,
+  shown with a `<!-- recipe: name -->` marker and kept the same by `tools/check_docs.py`), `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
 - `testing/` the community test list: one file per test in `testing/tests/`, words in `vocabulary.json`,
   `catalogue.json` made by `python3 tools/check_tests.py --fix` (crossbotics.com reads it). A new
