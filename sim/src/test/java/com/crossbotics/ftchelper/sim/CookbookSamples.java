@@ -60,6 +60,7 @@ final class CookbookSamples {
         put(s, "Tunables$IntakeDeploy", "stowed", 0.0, "deployed", 0.8);
         put(s, "Tunables$Turret", "min", -90, "max", 90);
         put(s, "Tunables$Indexer", "rest", 0.15, "push", 0.55);
+        put(s, "Tunables$IntakeColor", "POLLEN", 60);
         put(s, "AimRecipes$MovingShotNumbers$Aim", "flightSec", 0.8, "shooterForwardIn", -4, "shooterLeftIn", 0,
                 "cameraForwardIn", 7, "cameraLeftIn", 0);
         put(s, "AimRecipes$TrimNumbers$Launcher", "kP", 1.17, "kI", 0.117, "kF", 11.70, "nominalVolts", 12.6);

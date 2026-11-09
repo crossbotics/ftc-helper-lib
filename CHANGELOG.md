@@ -14,6 +14,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **The Tunables reference has a block to copy for each part** ([tunables.md](docs/guides/tunables.md)): every
+  section starts with the part's lines, set to `DEFAULT` or `MEASURE`. New blocks for Camera, Lights and a piece
+  sensor; the blocks are the cookbook's compiled code, checked by `tools/check_docs.py`.
 - **The five files, one walkthrough page per file** ([docs/five-files/](docs/five-files/README.md)), starting with
   `Robot.java` and `Tunables.java`: the smallest files for a robot that drives, every line explained, each part's
   attributes and numbers (needed or not, and the default), then how to add a part. Each page's code is a compiled program (`examples/.../firstrobot/`) or a cookbook recipe, and
