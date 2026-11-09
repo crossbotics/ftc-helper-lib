@@ -6,8 +6,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * The lesson robot, file 3 of 5: the buttons, and the TeleOp. The parts bring their own buttons
- * (driving on gamepad 1; intake, lift and claw on gamepad 2). Here we add only our own.
+ * The lesson robot, file 3 of 5: the buttons, and the TeleOp. Driving is the library's (gamepad 1);
+ * the intake's, lift's and claw's buttons are written out below (gamepad 2), then our own.
  * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/03-buttons/
  */
 @TeleOp(name = "Lesson Bot TeleOp", group = "Examples")
@@ -22,8 +22,8 @@ public class Controls extends ControlMap<Robot> {
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
         // The intake's own buttons.
-        g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold)");
-        g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
+        robot.intake.inOn(g2.rt);
+        robot.intake.outOn(g2.lt);
 
         // The lift's own buttons.
         g2.a.press(() -> robot.lift.goTo("down")).says("down");
@@ -31,7 +31,7 @@ public class Controls extends ControlMap<Robot> {
         g2.y.press(() -> robot.lift.goTo("high")).says("high");
         g2.dpadUp.press(robot.lift::stepUp).says("next height up");
         g2.dpadDown.press(robot.lift::stepDown).says("next height down");
-        g2.leftStickY.use(robot.lift::manual).says("by hand");
+        g2.leftStickY.use(robot.lift::manual).says("by hand");   // one driver: g2.rightStickY (G1 left stick drives)
 
         // Ours.
         g2.rb.press(Actions.scoreHigh(robot)).says("score high");     // lesson 5

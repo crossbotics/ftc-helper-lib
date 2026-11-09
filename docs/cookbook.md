@@ -592,7 +592,7 @@ g2.lb.hold(robot.intake::holdIn, robot.intake::stop).says("intake in (hold)");
 g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
 ```
 
-**Why:** `free()` takes the standard job off a button; then you give the new buttons their jobs.
+**Why:** a part's buttons are your lines: put its jobs on the buttons you want, and leave its usual ones free.
 **More:** [Lesson 3: the buttons the parts bring](tutorials/start/03-buttons.md#2-the-parts-buttons-written-out).
 
 ### How do I put the launcher's fire button on another button?

@@ -31,7 +31,7 @@ import java.util.function.Supplier;
  * <p>Hooks for other parts: {@link #nextKind()} (a {@code Supplier<String>}, e.g. to pick the shot
  * table), {@link #whenFull()}, {@link #whenEmpty()}, {@link #whenNextIs(String)} (BooleanSuppliers,
  * e.g. for LEDs or {@code Intake.stopsWhen}). No Tunables of its own (its sensors have theirs).
- * Suggested button: hold operator left-stick button 1 s = count 0 (the count went wrong).
+ * Usual button (a line to write in Controls.java): hold operator left-stick button 1 s = count 0 (the count went wrong).
  *
  * <p>The count is a helper, not a guarantee: a miscount happens (two touching pieces, a piece that
  * bounced out). The drivers, not the count, are responsible for the game's limit (BIOBUZZ G407) until
@@ -438,7 +438,7 @@ public final class Pieces extends Module<Pieces> {
         markReadyStale();
     }
 
-    /** Empties the count (e.g. a button after the robot was emptied by hand; its suggested button). */
+    /** Empties the count (e.g. a button after the robot was emptied by hand; its usual button). */
     public void clear() {
         held.clear();
         readyStale = false;

@@ -86,7 +86,7 @@ import java.util.function.DoubleSupplier;
  * <p>A following turret and whole-robot aim ({@code robot.aimMode()}) are separate modes: use one (see
  * {@link Aim}).
  *
- * <p>Suggested buttons: operator right stick X turns it by hand; operator BACK switches following
+ * <p>Usual buttons (lines to write in Controls.java): operator right stick X turns it by hand; operator BACK switches following
  * on and off.
  *
  * Docs: docs/modules/robot.md (section "Turret"), docs/guides/turret-setup.md

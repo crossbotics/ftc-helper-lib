@@ -18,8 +18,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The team's TeleOp and button map in one file, {@code Controls.java}. Every module on the robot
- * already has its standard buttons; you only write what is different.
+ * The team's TeleOp and button map in one file, {@code Controls.java}. The library's own buttons
+ * (driving, pause, menus) are always there; every other button is a line in {@code buttons(...)}, a
+ * part's too (each part's "buttons to add" in docs/modules/robot.md).
  *
  * <pre>{@code
  * @TeleOp(name = "TeleOp")
@@ -27,7 +28,7 @@ import java.util.Set;
  *     public static boolean oneDriver = false;   // true: everything on gamepad 1
  *
  *     @Override protected void buttons(Robot robot, Pad g1, Pad g2) {
- *         g2.y.press(Actions.scoreHigh(robot));   // replaces the lift's "high" on Y
+ *         g2.y.press(Actions.scoreHigh(robot));   // an action on Y
  *         g2.rightStickButton.free();              // free: nothing yet
  *     }
  * }
@@ -100,7 +101,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      * True: each part adds its usual buttons by itself (the way before v0.39.0), and a line of yours on one
      * of those buttons replaces it. Default false: a part has no buttons until Controls.java writes its lines,
      * so every button is a line you can read. INIT names each part's usual button that is still free
-     * ("Intake: its usual G2 RT (in (hold)) is free"). The usual lines: docs/modules/robot.md, each part's
+     * ("Intake: usual buttons not in Controls.java: G2 RT (in (hold)), ..."). The usual lines: docs/modules/robot.md, each part's
      * "Buttons to add".
      */
     protected boolean useStandardButtons() {

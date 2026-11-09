@@ -79,8 +79,8 @@ robot's map (two drivers):
 The lift's buttons come from its named heights in `Tunables.Lift` (`down = 0, low = 900, high = 2400`):
 A is the lowest, Y the highest, X the second. Every part's buttons are in
 [robot.md's standard map](../../modules/robot.md#controlmap). **Why the parts' lines are written out:** you
-read every button in one file. A `Controls.java` without them still works: each part then adds its own
-buttons by itself, the same ones.
+read every button in one file. Without its lines, a part has **no** buttons (INIT names them). Only a
+`Controls.java` with `useStandardButtons()` returning `true` lets each part add its usual buttons by itself.
 
 ## 3. One driver or two
 
@@ -304,8 +304,7 @@ From the `ftc-helper-lib` folder (skip the first line if you did it in lesson 2)
 Open http://localhost:8780, pick "Lesson Bot TeleOp" and INIT: read the map. Press ▶. Use the on-screen
 gamepad 2, or the keyboard (set gamepad 2's list to "Keyboard" first; A/B/X/Y are K L J I, LB/RB are Q E, LT/RT are Z C, GUIDE is M, BACK is
 Backspace). Press RB and watch the lift rise. Press RB again while it moves: it cancels. Tap GUIDE.
-Then add one job of your own to Controls.java, and one on a button that already has one, to see the
-INIT message.
+Then add one job of your own to Controls.java, and a second one on the same button, to see the INIT message.
 
 **Your own robot:** pick **Simulator** in the list next to Android Studio's green Run button, and click Run. Or, from the `ftc-helper-lib` folder:
 
@@ -333,7 +332,8 @@ Driver Station. ([Simulator guide](../../guides/simulator.md).)
 | INIT stops: "is the library's ... button" | That button is the library's (driving, pause, menus). Pick a free one (INIT lists them), or move the library's job with `libraryButtons` (section 7). |
 | INIT stops: "libraryButtons: Two library features are on ..." | You moved a library feature onto a button that has one already. The message names the line to change: pick another button, or turn the other one off (`null`). |
 | INIT stops: "slow() is for one driver" | With two drivers, G1 LT is slow already. Delete the line, or free the library's slow first (`lib.slow(null)`). |
-| A part's button does nothing | Your job replaced its suggestion, or INIT says it has no button (one driver). |
+| A part's button does nothing | Its line is not in Controls.java: INIT says "usual buttons not in Controls.java". Copy its lines from its "buttons to add". |
+| INIT stops: "G1 left stick Y is the library's ... button" | One driver: your `g2` lines are on gamepad 1, whose left stick drives. Give the lift's stick line another stick: `g2.rightStickY`. |
 | No button does anything | The robot is paused: tap BACK. |
 | A button held at ▶ does nothing | Let it go and press again: a button held through ▶ does not count. |
 | The help says "press" | Add `.says("...")` to that job. |

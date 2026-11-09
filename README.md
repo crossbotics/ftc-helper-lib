@@ -34,7 +34,8 @@ public static class Lift {
     public static double down = 0, low = 900, high = 2400;   // named heights, in encoder counts
 }
 
-// Controls.java: the TeleOp. Driving and each part's buttons come with the parts; add your own:
+// Controls.java: the TeleOp. Driving comes with the library; each button is one line:
+g2.a.press(() -> robot.lift.goTo("high")).says("lift to high");
 g2.rb.press(Actions.scoreHigh(robot)).says("score high");
 ```
 
@@ -106,9 +107,9 @@ replacement for learning.
 
 **New to the library?** Read in this order:
 
-1. [Set up](docs/setup/README.md) (never used Android Studio, or new to Java): install
-   Android Studio, get the robot project, put a first program on the robot, and change one line of
-   Java safely. Skip it if your robot project already builds and installs.
+1. [Set up](docs/setup/README.md): install Android Studio, get the robot project, add the library and
+   make the robot configuration. New to Java? Then [Read Java and make your first edit](docs/start-from-zero.md).
+   Skip them if your robot project already builds and installs.
 2. [From Blocks to Java](docs/blocks-to-java.md) (used Scratch or Blocks before): where each block you
    know went, and why you never write the loop.
 3. [Quick start](docs/quick-start.md): add the library, get five files, and drive.

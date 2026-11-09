@@ -7,8 +7,8 @@ import com.crossbotics.ftchelper.robot.LightColor;
 import com.crossbotics.ftchelper.robot.Pad;
 
 /**
- * Example robot 2, file 3 of 5: the buttons and the TeleOp. The parts bring their buttons (INIT
- * shows the map); here: X grab, Y release into a FLOWER, the aim buzz, and the light's colors.
+ * Example robot 2, file 3 of 5: the buttons and the TeleOp. Each part's buttons are written out below
+ * (INIT shows the map); ours: X grab, Y release into a FLOWER, the aim buzz, and the light's colors.
  * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#13-a-light-for-the-drivers
  */
 @TeleOp(name = "TurretBot TeleOp", group = "Examples")
@@ -23,18 +23,14 @@ public class Controls extends ControlMap<Robot> {
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
         // The intake's own buttons.
-        g2.rt.toggle(robot.intake).says("in on/off");
-        g2.lt.hold(robot.intake::reverse, robot.intake::endReverse).says("out (hold)");
+        robot.intake.inOn(g2.rt);
+        robot.intake.outOn(g2.lt);
 
         // The launcher's own buttons.
-        g2.lb.toggle(robot.launcher).says("spin up / down");
-        g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
-        g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd).says("speed trim +1%, 4 a second")
-                .tap(() -> robot.launcher.step(1)).says("speed trim +1%");
-        g2.dpadDown.hold(() -> robot.launcher.repeatStep(-1), robot.launcher::repeatEnd).says("speed trim -1%, 4 a second")
-                .tap(() -> robot.launcher.step(-1)).says("speed trim -1%")
-                .doubleTap(robot.launcher::resetTrim).says("speed trim 0");
-        g2.dpadRight.press(robot.launcher::nextTable).says("next shot table (NECTAR, POLLEN)");
+        robot.launcher.spinOn(g2.lb);
+        robot.launcher.fireOn(g2.rb);
+        robot.launcher.speedOn(g2.dpadUp, g2.dpadDown);
+        robot.launcher.tableOn(g2.dpadRight);
 
         // The claw's own button.
         g2.b.toggle(robot.claw).says("open / close");

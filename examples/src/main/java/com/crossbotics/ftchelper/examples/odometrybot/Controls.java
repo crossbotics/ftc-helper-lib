@@ -24,8 +24,8 @@ public class Controls extends ControlMap<Robot> {
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
         // The intake's own buttons.
-        g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold)");
-        g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
+        robot.intake.inOn(g2.rt);
+        robot.intake.outOn(g2.lt);
 
         // Ours.
         show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in", robot.pose().x, robot.pose().y));

@@ -36,17 +36,8 @@ public class UsualButtons {
     static class IntakeLines {
         void buttons(Parts robot, Pad g1, Pad g2) {
             // recipe: buttons-intake
-            g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold)");
-            g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
-            // end recipe
-        }
-    }
-
-    static class IntakeOnAtStartLines {
-        void buttons(Parts robot, Pad g1, Pad g2) {
-            // recipe: buttons-intake-on-at-start
-            g2.rt.toggle(robot.intake).says("in on/off");
-            g2.lt.hold(robot.intake::reverse, robot.intake::endReverse).says("out (hold)");
+            robot.intake.inOn(g2.rt);
+            robot.intake.outOn(g2.lt);
             // end recipe
         }
     }
@@ -101,28 +92,10 @@ public class UsualButtons {
     static class LauncherLines {
         void buttons(Parts robot, Pad g1, Pad g2) {
             // recipe: buttons-launcher
-            g2.lb.toggle(robot.launcher).says("spin up / down");
-            g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
-            g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd).says("speed up, 4 a second")
-                    .tap(() -> robot.launcher.step(1)).says("speed up");
-            g2.dpadDown.hold(() -> robot.launcher.repeatStep(-1), robot.launcher::repeatEnd).says("speed down, 4 a second")
-                    .tap(() -> robot.launcher.step(-1)).says("speed down")
-                    .doubleTap(robot.launcher::resetTrim).says("back to speedRpm");
-            // end recipe
-        }
-    }
-
-    static class LauncherWithTablesLines {
-        void buttons(Parts robot, Pad g1, Pad g2) {
-            // recipe: buttons-launcher-tables
-            g2.lb.toggle(robot.launcher).says("spin up / down");
-            g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
-            g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd).says("speed trim +1%, 4 a second")
-                    .tap(() -> robot.launcher.step(1)).says("speed trim +1%");
-            g2.dpadDown.hold(() -> robot.launcher.repeatStep(-1), robot.launcher::repeatEnd).says("speed trim -1%, 4 a second")
-                    .tap(() -> robot.launcher.step(-1)).says("speed trim -1%")
-                    .doubleTap(robot.launcher::resetTrim).says("speed trim 0");
-            g2.dpadRight.press(robot.launcher::nextTable).says("next shot table");   // with two tables or more
+            robot.launcher.spinOn(g2.lb);
+            robot.launcher.fireOn(g2.rb);
+            robot.launcher.speedOn(g2.dpadUp, g2.dpadDown);
+            robot.launcher.tableOn(g2.dpadRight);
             // end recipe
         }
     }

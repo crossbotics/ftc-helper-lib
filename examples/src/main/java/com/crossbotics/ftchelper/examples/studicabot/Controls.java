@@ -10,7 +10,7 @@ import com.crossbotics.ftchelper.robot.Pad;
  * - left stick drives, right stick X turns (left stick click: slow on/off); RT/LT intake in/out
  * - LB flywheel on/off, RB fires one (hold to keep firing), Y fires all
  * - D-pad up/down: flywheel speed +/- 100 motor RPM
- * These are the library's standard buttons, not Studica's layout:
+ * These are each part's usual buttons, written out below,, not Studica's layout:
  * more: https://crossbotics.com/ftc-helper/docs/guides/starter-bots/#studica-bot-code
  */
 @TeleOp(name = "Studica Bot TeleOp", group = "Examples")
@@ -24,17 +24,14 @@ public class Controls extends ControlMap<Robot> {
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
         // The intake's own buttons.
-        g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold)");
-        g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
+        robot.intake.inOn(g2.rt);
+        robot.intake.outOn(g2.lt);
 
         // The launcher's own buttons.
-        g2.lb.toggle(robot.launcher).says("spin up / down");
-        g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
-        g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd).says("speed up, 4 a second")
-                .tap(() -> robot.launcher.step(1)).says("speed up");
-        g2.dpadDown.hold(() -> robot.launcher.repeatStep(-1), robot.launcher::repeatEnd).says("speed down, 4 a second")
-                .tap(() -> robot.launcher.step(-1)).says("speed down")
-                .doubleTap(robot.launcher::resetTrim).says("back to speedRpm");
+        robot.launcher.spinOn(g2.lb);
+        robot.launcher.fireOn(g2.rb);
+        robot.launcher.speedOn(g2.dpadUp, g2.dpadDown);
+        robot.launcher.tableOn(g2.dpadRight);
 
         // Ours.
         g1.y.press(Actions.fireAll(robot)).says("fire all");

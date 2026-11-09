@@ -75,7 +75,7 @@ import java.util.List;
  * ({@code {48, 2550, 12}}), blended between rows like the speed; the launcher waits for the hood to
  * arrive before it feeds. Two-number rows still work (then the hood is set by hand). See {@link Hood}.
  *
- * <p>Suggested buttons (operator): LB spins up / down, RB fires one (hold it: keeps firing). D-pad
+ * <p>Usual buttons (lines to write in Controls.java) (operator): LB spins up / down, RB fires one (hold it: keeps firing). D-pad
  * up/down: with the speed from the distance, the speed trim +/- {@code trimStepPercent} (1%); with a
  * fixed speed, +/- {@code stepRpm}; held, one more step every 0.25 s. Double-tap D-pad down: back to no
  * trim. Double-tap D-pad up: use last time's trim (only when there is one). D-pad right picks the next
@@ -1775,23 +1775,52 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         if (op.lb.last != null) op.lb.last.job = jobKey(SPIN_JOB);
         op.rb.hold(this::fireWhileHeld, this::ceaseFire).says(fireWords());
         if (op.rb.last != null) op.rb.last.job = jobKey(FIRE_JOB);
-        // With the speed from the table the D-pad trims it by a percentage; with a fixed speed it steps
-        // the rpm. Held: one more step every 0.25 s. Double-tap down: back to none.
-        String up = usesDistance() ? "speed trim +" + percent(trimStepPct, false) : "speed up";
-        String down = usesDistance() ? "speed trim -" + percent(trimStepPct, false) : "speed down";
-        // The hold goes first: if another part already has the button, that gives one clear INIT note
-        // and the other gestures are not tried.
-        op.dpadUp.hold(() -> repeatStep(1), this::repeatEnd).says(up + ", 4 a second");
-        if (plan.mine(op.dpadUp) != null) {
-            op.dpadUp.tap(() -> step(1)).says(up);
-            if (offered != null) op.dpadUp.doubleTap(this::upTwice).says("use last time's trim (" + lastTrimOffered() + ")");
-        }
-        op.dpadDown.hold(() -> repeatStep(-1), this::repeatEnd).says(down + ", 4 a second");
-        if (plan.mine(op.dpadDown) != null) {
-            op.dpadDown.tap(() -> step(-1)).says(down)
-                    .doubleTap(this::resetTrim).says(usesDistance() ? "speed trim 0" : "back to speedRpm");
-        }
-        if (tables.size() > 1) op.dpadRight.press(this::nextTable).says("next shot table (" + tableList().toUpperCase(java.util.Locale.US) + ")");   // as the Driver Station shows them
+        speedButton(op.dpadUp, 1, plan);
+        speedButton(op.dpadDown, -1, plan);
+        if (tables.size() > 1) tableButton(op.dpadRight);
+    }
+
+    /**
+     * Puts the speed buttons on {@code up} and {@code down}, in {@code Controls.java} (the launcher's usual
+     * D-pad up and down): a tap is one step (with a shot table, the speed trim by {@code trimStepPercent};
+     * with a fixed speed, {@code stepRpm}), held is 4 steps a second, a double-tap of {@code down} goes back to
+     * no trim, and when last match's trim is offered at INIT, a double-tap of {@code up} uses it. Example:
+     * {@code robot.launcher.speedOn(g2.dpadUp, g2.dpadDown);}
+     *
+     * @param up   the faster button, or null for none
+     * @param down the slower button, or null for none
+     */
+    public void speedOn(Pad.Button up, Pad.Button down) {
+        if (up != null) speedButton(up, 1, null);
+        if (down != null) speedButton(down, -1, null);
+    }
+
+    /**
+     * Puts "next shot table" on {@code button}, in {@code Controls.java} (the launcher's usual D-pad right):
+     * each press picks the next table. Only with two shot tables or more ({@code speedByDistance} and
+     * {@code speedByDistance<Name>}); with one, it puts nothing on the button. Example:
+     * {@code robot.launcher.tableOn(g2.dpadRight);}
+     *
+     * @param button the button
+     */
+    public void tableOn(Pad.Button button) {
+        if (tables.size() > 1) tableButton(button);
+    }
+
+    // The D-pad's speed gestures on one button. From the parts' own buttons (plan not null): the hold goes
+    // first, and if another part already has the button that gives one clear INIT note and the rest is skipped.
+    private void speedButton(Pad.Button b, int dir, ButtonPlan plan) {
+        String words = usesDistance() ? "speed trim " + (dir > 0 ? "+" : "-") + percent(trimStepPct, false)
+                : (dir > 0 ? "speed up" : "speed down");
+        b.hold(() -> repeatStep(dir), this::repeatEnd).says(words + ", 4 a second");
+        if (plan != null && plan.mine(b) == null) return;
+        b.tap(() -> step(dir)).says(words);
+        if (dir > 0 && offered != null) b.doubleTap(this::upTwice).says("use last time's trim (" + lastTrimOffered() + ")");
+        if (dir < 0) b.doubleTap(this::resetTrim).says(usesDistance() ? "speed trim 0" : "back to speedRpm");
+    }
+
+    private void tableButton(Pad.Button b) {
+        b.press(this::nextTable).says("next shot table (" + tableList().toUpperCase(java.util.Locale.US) + ")");   // as the Driver Station shows them
     }
 
     // Its motor is named in Launcher.flywheel(name, id).

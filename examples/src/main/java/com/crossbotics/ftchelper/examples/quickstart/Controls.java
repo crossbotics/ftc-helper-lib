@@ -27,8 +27,8 @@ public class Controls extends ControlMap<Robot> {
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
         // The intake's own buttons.
-        g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold)");
-        g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
+        robot.intake.inOn(g2.rt);
+        robot.intake.outOn(g2.lt);
 
         // Ours.
         // Runs ONCE, at INIT: each line plugs a job into a button. No if, while or sleep() here (lesson 3).

@@ -15,9 +15,9 @@ autonomous take one or two more sessions.
 
 | Your robot | Your road |
 | --- | --- |
-| A **starter bot** from goBILDA, REV (DUO), AndyMark (Robits) or Studica, built as the seller's guide says | [Road 1: an unchanged starter bot](#road-1-an-unchanged-starter-bot) |
+| A **starter bot** from goBILDA (tank or mecanum), REV (DUO), AndyMark (Robits) or Studica, built as the seller's guide says | [Road 1: an unchanged starter bot](#road-1-an-unchanged-starter-bot) |
 | One of those starter bots **with your own changes**: a part added, taken off or moved, another motor or servo | [Road 2: a changed starter bot](#road-2-a-changed-starter-bot) |
-| **Your own design**, or a kit robot that is not one of those four | [Road 3: your own robot](#road-3-your-own-robot) |
+| **Your own design**, or a kit robot that is not one of those | [Road 3: your own robot](#road-3-your-own-robot) |
 
 Not sure? Only new buttons, or new numbers? That is still road 1: buttons are in `Controls.java` and
 numbers in `Tunables.java`. One part added, taken off or changed makes it road 2.
@@ -227,6 +227,7 @@ folders are inside `ftc-helper-lib/examples/src/main/java/com/crossbotics/ftchel
 | Starter bot | Its folder | Its autonomous |
 | --- | --- | --- |
 | goBILDA FTC StarterBot | [`gobildabot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot) | `autos/LaunchAndBackUp.java` |
+| goBILDA FTC StarterBot with Mecanum Wheels (Strafer) | [`gobildastraferbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildastraferbot) | `autos/LaunchAndLeave.java` |
 | REV DUO FTC Starter Bot | [`revbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/revbot) | `autos/ShootAndLeave.java` |
 | AndyMark Robits BIOBUZZ StarterBot | [`andymarkbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/andymarkbot) | `autos/ThrowAndLeave.java` |
 | Studica FTC Starter Bot | [`studicabot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/studicabot) | `autos/ShootAndLeave.java` |
@@ -406,7 +407,7 @@ servos, and how they look. The names and the drive come from `Robot.java`; the s
 - **Changed your code?** Stop the simulator and start it again. **Why:** it builds your code when it
   starts. To stop it in the Terminal: click in the Terminal and press **Ctrl+C**.
 - **Road 1 and 2: use your starter bot's measured robot file.** Before the first start, copy
-  `ftc-helper-lib/sim/robots/starter-bot-gobilda.properties` (or `-rev`, `-andymark`, `-studica`) to
+  `ftc-helper-lib/sim/robots/starter-bot-gobilda.properties` (or `-gobilda-strafer`, `-rev`, `-andymark`, `-studica`) to
   `simulator/robot.properties` in your robot project. **Why:** it has the starter bot's real size and
   shapes; a file made from `Robot.java` guesses an 18 x 18 in robot. A copied file has no "made from"
   line at the top, so the simulator does not change it when it starts. **Road 2:** after each change,
@@ -476,4 +477,4 @@ lessons your robot needs (7 odometry, 8 paths, 9 a shooter). A quick question
 ("how do I add a claw?")? The [cookbook](cookbook.md) has short answers with code to copy.
 
 Road 1 and 2: your starter bot's page says what its code does differently, and what the simulator
-cannot show yet: [The four BIOBUZZ starter bots](guides/starter-bots.md).
+cannot show yet: [The BIOBUZZ starter bots](guides/starter-bots.md).

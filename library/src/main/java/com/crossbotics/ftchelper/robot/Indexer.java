@@ -33,7 +33,7 @@ import java.util.function.LongSupplier;
  * <p>Tunables: {@code Indexer.servo}: {@code rest}, {@code push}, {@code pushSec}, {@code returnSec} (and
  * {@code alsoTrim} with a second servo).
  * {@code Indexer.crServo} and {@code Indexer.motor}: {@code power} and {@code feedSec} (how long it
- * runs per piece). Added on its own (no launcher), its suggested button is operator RB: feed one.
+ * runs per piece). Added on its own (no launcher), its usual button (a line in Controls.java) is operator RB: feed one.
  *
  * <p>A feed wheel ({@code Launcher.feedWheel(Indexer.crServo("feeder_wheel"))}): a CR servo or motor that
  * moves the pieces up to the pusher (the launcher's {@code feeder}). Its Tunables: {@code power},

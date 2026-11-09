@@ -189,7 +189,8 @@ final class ButtonPlan {
         if (old != null && TEAM.equals(old.source) && old.kind == Kind.SHIFT && e.kind == Kind.SHIFT) return old;
         if (old != null && old.kind == Kind.RESERVED) {
             throw new IllegalStateException("Controls.java: " + input + " is the library's \"" + old.says
-                    + "\" button. Pick another button, or move the library's job (libraryButtons, docs/guides/buttons.md).");
+                    + "\" button. Pick another button, or move the library's job (libraryButtons, docs/guides/buttons.md)."
+                    + (oneDriver ? " One driver: your g2 lines are on gamepad 1 too, where the library drives." : ""));
         }
         if (old != null && TEAM.equals(old.source) && old.kind != Kind.FREE && e.kind != Kind.FREE
                 && (old.kind == Kind.SHIFT || e.kind == Kind.SHIFT)) {
@@ -248,13 +249,19 @@ final class ButtonPlan {
         for (int pi = 0; pi < theirs.length; pi++) {
             Object[] in = inputs(theirs[pi]), mine = inputs(ours[pi]);   // the same inputs, in the same order
             for (int i = 0; i < in.length; i++) {
-                Entry e = usual.jobs.get(in[i]);
-                if (e == null || e.kind == Kind.FREE || e.source == null || e.source.equals(TEAM) || e.source.equals(LIBRARY)) continue;
-                Entry here = jobs.get(mine[i]);
-                if (here != null && here.kind != Kind.FREE) continue;
+                // The part that got this input in the usual plan, and any part that wanted it but came later
+                // (two intakes both want RT): each one's usual button counts.
+                List<Entry> wanted = new ArrayList<>();
+                Entry got = usual.jobs.get(in[i]);
+                if (got != null) wanted.add(got);
+                for (Entry r : usual.rejected) if (r.input == in[i]) wanted.add(r);
+                if (usedHere(mine[i])) continue;
                 String name = in[i] instanceof Pad.Button ? ((Pad.Button) in[i]).label : ((Pad.Stick) in[i]).label;
-                StringBuilder sb = byPart.computeIfAbsent(e.source, k -> new StringBuilder());
-                sb.append(sb.length() == 0 ? "" : ", ").append(ours[pi]).append(' ').append(name).append(" (").append(words(e)).append(')');
+                for (Entry e : wanted) {
+                    if (e.kind == Kind.FREE || e.source == null || e.source.equals(TEAM) || e.source.equals(LIBRARY)) continue;
+                    StringBuilder sb = byPart.computeIfAbsent(e.source, k -> new StringBuilder());
+                    sb.append(sb.length() == 0 ? "" : ", ").append(ours[pi]).append(' ').append(name).append(" (").append(words(e)).append(')');
+                }
             }
         }
         List<String> out = new ArrayList<>();
@@ -263,6 +270,14 @@ final class ButtonPlan {
                     + ". The lines: docs/modules/robot.md, \"Buttons to add\"");
         }
         return out;
+    }
+
+    // True when this plan gives the input a job: its own, or as either button of a pair (LB + RT).
+    private boolean usedHere(Object input) {
+        Entry here = jobs.get(input);
+        if (here != null && here.kind != Kind.FREE) return true;
+        for (Entry p : pairs) if (p.shift == input || p.with == input) return true;
+        return false;
     }
 
     /** Notes for INIT, e.g. a module suggestion that found no free button. */

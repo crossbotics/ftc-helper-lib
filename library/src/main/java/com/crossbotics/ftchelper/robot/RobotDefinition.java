@@ -1695,7 +1695,7 @@ public abstract class RobotDefinition {
         return Drive.slowSpeed(driveSection);
     }
 
-    /** Each module's suggested buttons, in the order they were added. */
+    /** Each module's usual buttons, in the order they were added. */
     final void suggestButtons(ButtonPlan plan) {
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) {

@@ -143,6 +143,22 @@ public class AllButtonsTest {
         assertEquals(defaults, written);
     }
 
+    /** The lesson robot switched to one driver: its g2 lines go on gamepad 1, where the left stick drives. */
+    public static class LessonBotOneDriver extends com.crossbotics.ftchelper.examples.lessonbot.Controls {
+        public static boolean oneDriver = true;
+    }
+
+    // A written line on a button gamepad 1 drives with stops INIT, and the message says why (one driver).
+    @Test public void oneDriverOnADrivingStickStopsInitWithAClearMessage() throws Exception {
+        Path file = robotFile(com.crossbotics.ftchelper.examples.lessonbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.sim.ds.register("Lesson Bot One Driver", "TeleOp", LessonBotOneDriver.class);
+            s.init("Lesson Bot One Driver");
+            String err = s.error();
+            assertTrue(err, err.contains("is the library's") && err.contains("One driver"));
+        }
+    }
+
     @SuppressWarnings("unchecked")
     @Test public void everyExampleWritesOutItsPartsButtons() throws Exception {
         StringBuilder failed = new StringBuilder();

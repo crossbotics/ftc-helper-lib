@@ -25,7 +25,7 @@ differ a lot (school-managed Windows, old Macs, Chromebooks). We need to know wh
 
 1. Start a timer. Follow [Set up](../../docs/setup/README.md) from the top, exactly as written.
 2. Write each step that did not match your screen (a button with another name, a missing menu).
-3. Go on until its last section: a first build and an edit that builds.
+3. Go on through page 7 (the robot configuration): every page ends with "Done when".
 4. Then run the simulator once (SIM-01 step 1 to 3).
 
 ## Pass rule

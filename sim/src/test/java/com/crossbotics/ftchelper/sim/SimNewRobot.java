@@ -16,7 +16,7 @@ import java.util.Set;
 /**
  * Writes a team's five starting files (Robot.java, Tunables.java, Controls.java, Actions.java and one
  * autonomous) from the robot configuration the Driver Station saved, so the drive works on day one and
- * each mechanism already has its module, its numbers and its standard buttons.
+ * each mechanism already has its module, its numbers and its usual buttons, written out in Controls.java.
  *
  * <pre>
  * ./gradlew :sim:newRobot -Pconfig=path/to/config.xml -PteamCode=../TeamCode [-Ppackage=org.firstinspires.ftc.teamcode]
@@ -531,8 +531,8 @@ public final class SimNewRobot {
         List<String[]> b = new ArrayList<>();   // {button, line}
         switch (p.type) {
             case "Intake":
-                b.add(new String[] {"rt", "g2.rt.hold(" + ref + "::holdIn, " + ref + "::stop).says(\"in (hold)\");"});
-                b.add(new String[] {"lt", "g2.lt.hold(" + ref + "::out, " + ref + "::stop).says(\"out (hold)\");"});
+                b.add(new String[] {"rt", ref + ".inOn(g2.rt);"});
+                b.add(new String[] {"lt", ref + ".outOn(g2.lt);"});
                 break;
             case "Lift": {
                 List<String> pos = new ArrayList<>();
@@ -571,20 +571,28 @@ public final class SimNewRobot {
                 b.add(new String[] {"leftStickY", "g2.leftStickY.use(" + ref + "::byHand).says(\"hood angle (up = bigger angle)\");"});
                 break;
             case "Launcher":
-                b.add(new String[] {"lb", "g2.lb.toggle(" + ref + ").says(\"spin up / down\");"});
-                b.add(new String[] {"rb", "g2.rb.hold(" + ref + "::fireWhileHeld, " + ref + "::ceaseFire).says(\"fire one; hold: keep firing\");"});
-                b.add(new String[] {"dpadUp", "g2.dpadUp.hold(() -> " + ref + ".repeatStep(1), " + ref + "::repeatEnd).says(\"speed up, 4 a second\")\n"
-                        + "                .tap(() -> " + ref + ".step(1)).says(\"speed up\");"});
-                b.add(new String[] {"dpadDown", "g2.dpadDown.hold(() -> " + ref + ".repeatStep(-1), " + ref + "::repeatEnd).says(\"speed down, 4 a second\")\n"
-                        + "                .tap(() -> " + ref + ".step(-1)).says(\"speed down\")\n"
-                        + "                .doubleTap(" + ref + "::resetTrim).says(\"back to speedRpm\");"});
+                b.add(new String[] {"lb", ref + ".spinOn(g2.lb);"});
+                b.add(new String[] {"rb", ref + ".fireOn(g2.rb);"});
+                // speedOn takes both D-pad buttons; one another part already has stays null, as the part did.
+                String up = used.contains("dpadUp") ? "null" : "g2.dpadUp", down = used.contains("dpadDown") ? "null" : "g2.dpadDown";
+                if (!(up.equals("null") && down.equals("null"))) {
+                    b.add(new String[] {"speed", ref + ".speedOn(" + up + ", " + down + ");"});
+                    if (!up.equals("null")) used.add("dpadUp");
+                    if (!down.equals("null")) used.add("dpadDown");
+                }
                 break;
             default:
                 break;
         }
         List<String> mine = new ArrayList<>();
         for (String[] l : b) {
-            if (used.add(l[0])) mine.add("        " + l[1]);
+            String[] keys = l[0].equals("speed") ? new String[0] : l[0].split("\\+");
+            boolean free = true;
+            for (String k : keys) free &= !used.contains(k);
+            if (free) {
+                used.addAll(java.util.Arrays.asList(keys));
+                mine.add("        " + l[1]);
+            }
             else mine.add("        // " + l[0] + " is already another part's: " + p.type + " " + p.field + " has no button for it here");
         }
         if (mine.isEmpty()) return;

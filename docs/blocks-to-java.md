@@ -8,7 +8,7 @@ with Java. It shows where each block you know went in the robot's five files. Co
 
 **Before this:** [Set up](setup/README.md) (if you are new to Android Studio). Read this
 page **before** the [Quick start](quick-start.md): the Quick start gives you the five files this page
-talks about. **The reading order:** Start from zero, then this page, then the Quick start, then
+talks about. **The reading order:** [Set up](setup/README.md), [Read Java and make your first edit](start-from-zero.md), then this page, then the Quick start, then
 [Lesson 1](tutorials/start/01-robot-in-five-files.md) and lessons 2 to 6 (then the lessons your robot needs).
 
 ## The key idea: you never write the loop

@@ -6,8 +6,8 @@ import com.crossbotics.ftchelper.robot.ControlMap;
 import com.crossbotics.ftchelper.robot.Pad;
 
 /**
- * Example robot 1, file 3 of 5: the buttons, and the TeleOp. The parts bring their standard
- * buttons (INIT shows the whole map); here are only our own.
+ * Example robot 1, file 3 of 5: the buttons, and the TeleOp. Each part's buttons are written
+ * out below (INIT shows the whole map), then our own.
  * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#10-no-turret-aim-the-whole-robot
  */
 @TeleOp(name = "FlywheelBot TeleOp", group = "Examples")
@@ -21,17 +21,14 @@ public class Controls extends ControlMap<Robot> {
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
         // The intake's own buttons.
-        g2.rt.toggle(robot.intake).says("in on/off");
-        g2.lt.hold(robot.intake::reverse, robot.intake::endReverse).says("out (hold)");
+        robot.intake.inOn(g2.rt);
+        robot.intake.outOn(g2.lt);
 
         // The launcher's own buttons.
-        g2.lb.toggle(robot.launcher).says("spin up / down");
-        g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
-        g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd).says("speed up, 4 a second")
-                .tap(() -> robot.launcher.step(1)).says("speed up");
-        g2.dpadDown.hold(() -> robot.launcher.repeatStep(-1), robot.launcher::repeatEnd).says("speed down, 4 a second")
-                .tap(() -> robot.launcher.step(-1)).says("speed down")
-                .doubleTap(robot.launcher::resetTrim).says("back to speedRpm");
+        robot.launcher.spinOn(g2.lb);
+        robot.launcher.fireOn(g2.rb);
+        robot.launcher.speedOn(g2.dpadUp, g2.dpadDown);
+        robot.launcher.tableOn(g2.dpadRight);
 
         // Ours.
         // RB: whole-robot aim on/off (two buzzes = on, one = off). Numbers: Tunables.Aim.

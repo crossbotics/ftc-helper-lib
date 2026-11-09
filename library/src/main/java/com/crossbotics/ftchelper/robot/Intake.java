@@ -22,7 +22,7 @@ import java.util.List;
  * }</pre>
  *
  * <p>{@code Tunables.Intake}: {@code inPower} (default 1.0) and {@code outPower} (default 0.7).
- * Suggested buttons: hold G2 RT to run it in, hold G2 LT to push out. With {@link #onAtStart()}:
+ * Usual buttons (lines to write in Controls.java): hold G2 RT to run it in, hold G2 LT to push out. With {@link #onAtStart()}:
  * G2 RT switches it on and off, and holding LT pushes out, then goes back to what it was doing.
  * With {@link #stopsWhen}: holding RT for 1 s runs it in anyway (the count was wrong), and the Driver
  * Station warns when it has been held back for more than 2 s.
@@ -413,17 +413,39 @@ public final class Intake extends Module<Intake> implements Toggleable {
     @Override
     void suggestButtons(ButtonPlan plan) {
         Pad op = plan.operator();
+        inOn(op.rt);
+        outOn(op.lt);
+    }
+
+    /**
+     * Puts "in" on {@code button}, in {@code Controls.java} (the intake's usual RT), the right way for this
+     * intake: held = in (with {@code stopsWhen}, held 1 s = in anyway); with {@code onAtStart()}, a press
+     * switches it on and off instead (with {@code stopsWhen} too, held 1 s = in anyway). Example:
+     * {@code robot.intake.inOn(g2.rt);}
+     *
+     * @param button the button
+     */
+    public void inOn(Pad.Button button) {
         if (onAtStart && stopIn != null) {
             // A tap switches it; held 1 s it runs in even when stopsWhen says no (the count was wrong).
-            op.rt.tap(this::toggle).says("in on/off").heldFor(OVERRIDE_SEC, this::inAnyway).says("in anyway (count says full)");
-            op.lt.hold(this::reverse, this::endReverse).says("out (hold)");
+            button.tap(this::toggle).says("in on/off").heldFor(OVERRIDE_SEC, this::inAnyway).says("in anyway (count says full)");
         } else if (onAtStart) {
-            op.rt.toggle(this).says("in on/off");
-            op.lt.hold(this::reverse, this::endReverse).says("out (hold)");
+            button.toggle(this).says("in on/off");
         } else {
-            op.rt.hold(this::holdIn, this::stop).says(stopIn != null ? "in (hold; 1 s: in even when full)" : "in (hold)");
-            op.lt.hold(this::out, this::stop).says("out (hold)");
+            button.hold(this::holdIn, this::stop).says(stopIn != null ? "in (hold; 1 s: in even when full)" : "in (hold)");
         }
+    }
+
+    /**
+     * Puts "out" on {@code button}, in {@code Controls.java} (the intake's usual LT): pushes out while held,
+     * then stops (with {@code onAtStart()}: then goes back to what it was doing). Example:
+     * {@code robot.intake.outOn(g2.lt);}
+     *
+     * @param button the button
+     */
+    public void outOn(Pad.Button button) {
+        if (onAtStart) button.hold(this::reverse, this::endReverse).says("out (hold)");
+        else button.hold(this::out, this::stop).says("out (hold)");
     }
 
     @Override

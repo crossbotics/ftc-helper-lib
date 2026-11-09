@@ -101,8 +101,8 @@ public class LightRecipes {
 
         @Override
         protected void buttons(Robot robot, Pad g1, Pad g2) {
-            g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold)");   // the intake's usual buttons
-            g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
+            robot.intake.inOn(g2.rt);   // the intake's usual buttons
+            robot.intake.outOn(g2.lt);
 
             // recipe: light-flash
             // A flash beats every rule while it lasts (write it first: it reads that way).

@@ -9,8 +9,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Each part's buttons to add:** docs/modules/robot.md has a "buttons to add" block for every part with usual
   buttons (intake, lift, arm, claw, wrist, turret, launcher, indexer, hood, pieces), compiled in
   `examples/.../cookbook/UsualButtons.java`. The example `allbuttons/Controls.java` writes out every library button
-  and every intake and launcher button, with a `free()` line for each free button. `Intake.holdIn()`, `Launcher.step(direction)`, `repeatStep(direction)` and
-  `repeatEnd()` are public now, so your own buttons can do exactly what the parts' own buttons do.
+  and every intake and launcher button, with a `free()` line for each free button. One-line button methods do exactly what a part's own buttons did: `robot.intake.inOn(g2.rt)`,
+  `outOn(g2.lt)` (with `stopsWhen`, held 1 s: in anyway), `robot.launcher.speedOn(g2.dpadUp, g2.dpadDown)` (steps, trim,
+  reset, last match's trim) and `tableOn(g2.dpadRight)`, beside the older `fireOn` and `spinOn`. `Intake.holdIn()`,
+  `Launcher.step(direction)`, `repeatStep(direction)` and `repeatEnd()` are public too.
 - **Encoder Check** (in Tune and check for every robot in five files, or `EncoderCheckOpMode` on its own): finds an
   encoder cable that is missing, in another motor's port, or counting backward. Hold A: each motor in Robot.java
   gets a short push (30% for 0.3 s), one at a time, with Robot.java's direction, and every motor port's count is
@@ -37,7 +39,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   the old way back. The example robots and `:sim:newRobot` write each part's buttons out, and their tests check
   that the button maps did not change.
 - **The Tunables reference has a block to copy for each part** ([tunables.md](docs/guides/tunables.md)): every
-  section starts with the part's lines, set to `DEFAULT` or `MEASURE`. New blocks for Camera, Lights and a piece
+  section starts with the part's lines, most set to `DEFAULT` or `MEASURE`. New blocks for Camera, Lights and a piece
   sensor; the blocks are the cookbook's compiled code, checked by `tools/check_docs.py`.
 - **The five files, one walkthrough page per file** ([docs/five-files/](docs/five-files/README.md)), starting with
   `Robot.java`, `Tunables.java` and `Controls.java`: the smallest files for a robot that drives (a simulator test drives it), every line explained, each part's

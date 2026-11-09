@@ -94,7 +94,7 @@ public class ButtonRecipes {
         }
     }
 
-    /** The intake moved from the triggers (its standard buttons) to the bumpers. */
+    /** The intake moved from the triggers (its usual buttons) to the bumpers. */
     @TeleOp(name = "Cookbook Moved Buttons", group = "Cookbook")
     @Disabled
     public static class MovedButtons extends ControlMap<Robot> {

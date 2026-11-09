@@ -14,7 +14,7 @@ import java.util.Map;
  * }
  * }</pre>
  *
- * <p>Suggested button: operator B opens and closes it.
+ * <p>Usual button (a line to write in Controls.java): operator B opens and closes it.
  *
  * Docs: docs/modules/robot.md (section "Claw")
  */

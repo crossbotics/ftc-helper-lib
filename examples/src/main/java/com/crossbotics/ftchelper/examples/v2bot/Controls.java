@@ -7,7 +7,7 @@ import com.crossbotics.ftchelper.robot.LightColor;
 import com.crossbotics.ftchelper.robot.Pad;
 
 /**
- * The V2 robot, file 3 of 5: the TeleOp. The parts bring their buttons (INIT shows the map). Added
+ * The V2 robot, file 3 of 5: the TeleOp. Each part's buttons are written out below (INIT shows the map). Added
  * here: A grab, Y score in a FLOWER, X stow, the lift on the right stick Y, and the light's colors.
  * more: https://crossbotics.com/ftc-helper/docs/guides/interlocks/#the-v2-robots-buttons
  */
@@ -23,18 +23,14 @@ public class Controls extends ControlMap<Robot> {
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
         // The intake's own buttons.
-        g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold; 1 s: in even when full)");
-        g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
+        robot.intake.inOn(g2.rt);
+        robot.intake.outOn(g2.lt);
 
         // The launcher's own buttons.
-        g2.lb.toggle(robot.launcher).says("spin up / down");
-        g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
-        g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd).says("speed trim +1%, 4 a second")
-                .tap(() -> robot.launcher.step(1)).says("speed trim +1%");
-        g2.dpadDown.hold(() -> robot.launcher.repeatStep(-1), robot.launcher::repeatEnd).says("speed trim -1%, 4 a second")
-                .tap(() -> robot.launcher.step(-1)).says("speed trim -1%")
-                .doubleTap(robot.launcher::resetTrim).says("speed trim 0");
-        g2.dpadRight.press(robot.launcher::nextTable).says("next shot table (NECTAR, POLLEN)");
+        robot.launcher.spinOn(g2.lb);
+        robot.launcher.fireOn(g2.rb);
+        robot.launcher.speedOn(g2.dpadUp, g2.dpadDown);
+        robot.launcher.tableOn(g2.dpadRight);
 
         // The claw's own button.
         g2.b.toggle(robot.claw).says("open / close");

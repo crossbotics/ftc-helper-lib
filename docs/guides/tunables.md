@@ -314,7 +314,7 @@ The finders are: [Servo Finder](finders.md#servo-finder-ends-and-positions),
 Section `Drive` (fixed name). Read once at INIT. Module: [Drive](../modules/robot.md#drive).
 
 **Copy into `Tunables.java`.** Change only what you need: `DEFAULT` keeps the starting value,
-`MEASURE` must be measured.
+`MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-drive -->
 ```java title="Tunables.java"
@@ -349,7 +349,7 @@ public static class Drive {                                     // a fixed name:
 Section `Odometry` (fixed name). Read once at INIT. Module: [Odometry](../modules/robot.md#odometry).
 
 **Copy into `Tunables.java`.** Change only what you need: `DEFAULT` keeps the starting value,
-`MEASURE` must be measured.
+`MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-reset-spot -->
 ```java title="Tunables.java"
@@ -379,7 +379,7 @@ public static class Odometry {                                  // a fixed name:
 Section `Aim` (fixed name). Every line is optional. Module: [Aim](../modules/robot.md#aim).
 
 **Copy into `Tunables.java`.** Change only what you need: `DEFAULT` keeps the starting value,
-`MEASURE` must be measured.
+`MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-aim -->
 ```java title="Tunables.java"
@@ -434,7 +434,7 @@ public static class Aim {                                       // a fixed name:
 Section `Buttons` (fixed name). For button gestures (double tap, hold). Module: [ControlMap](../modules/robot.md#controlmap).
 
 **Copy into `Tunables.java`.** Change only what you need: `DEFAULT` keeps the starting value,
-`MEASURE` must be measured.
+`MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-buttons -->
 ```java title="Tunables.java"
@@ -456,7 +456,7 @@ public static class Buttons {                                   // a fixed name:
 Section: the device's name in CamelCase (`intake` reads `Intake`, `front_roller` reads `FrontRoller`). Module: [Intake](../modules/robot.md#intake).
 
 **Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
-what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured.
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-intake -->
 ```java title="Tunables.java"
@@ -479,7 +479,7 @@ two motors ([`alsoMotor`](../modules/robot.md#two-motors-on-one-lift-or-arm)) it
 Module: [Lift](../modules/robot.md#lift), [Arm](../modules/robot.md#arm).
 
 **Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
-what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured.
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 A lift (counts):
 
@@ -536,7 +536,7 @@ Section: the device's name in CamelCase (`claw` reads `Claw`, `intake_deploy` re
 [Wrist](../modules/robot.md#wrist), [Positioner](../modules/robot.md#positioner).
 
 **Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
-what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured.
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 A claw:
 
@@ -594,7 +594,7 @@ Section: the device's name in CamelCase (`turret` reads `Turret`). Degrees, 0 = 
 your turret needs: [Setting up a turret](turret-setup.md). Module: [Turret](../modules/robot.md#turret).
 
 **Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
-what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured.
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-turret -->
 ```java title="Tunables.java"
@@ -643,7 +643,7 @@ own units. Read once at INIT, never in the tuning menu: a zone that moved while 
 let them hit. Guide: [interlocks](interlocks.md). Module: [Interlock](../modules/robot.md#interlock).
 
 **Copy into `Tunables.java`.** The section's name is the rule's name. Change only what you need:
-`DEFAULT` keeps the starting value, `MEASURE` must be measured.
+`DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-interlock -->
 ```java title="Tunables.java"
@@ -671,7 +671,7 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 `shooter` reads **`Shooter`** (not `Launcher`). Module: [Launcher](../modules/robot.md#launcher).
 
 **Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
-what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured.
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-launcher -->
 ```java title="Tunables.java"
@@ -737,7 +737,7 @@ Section: the device's name in CamelCase: `Indexer.servo("feeder")` reads **`Feed
 (not `Indexer`). Module: [Indexer](../modules/robot.md#indexer).
 
 **Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
-what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured.
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 A servo indexer:
 
@@ -774,7 +774,7 @@ encoder counts. "Angle" below is your angle, in degrees or any scale you chose, 
 default that says "of the range" fits degrees, positions and counts. Module: [Hood](../modules/robot.md#hood).
 
 **Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
-what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured.
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-hood -->
 ```java title="Tunables.java"
@@ -830,7 +830,7 @@ Section: the device's name in CamelCase (`limelight` reads `Limelight`, `Webcam 
 menu. Module: [Camera](../modules/robot.md#camera).
 
 **Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
-what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured.
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-camera -->
 ```java title="Tunables.java"
@@ -863,7 +863,7 @@ Section: each sensor's device name in CamelCase (`intake_color` reads `IntakeCol
 [Pieces and PieceSensor](../modules/robot.md#pieces-and-piecesensor). (`Pieces` itself reads no numbers.)
 
 **Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
-what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured.
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-piece-sensor -->
 ```java title="Tunables.java"
@@ -893,7 +893,7 @@ public static class IntakeColor {                               // "intake_color
 Section: the device's name in CamelCase (`light` reads `Light`, `blinkin` reads `Blinkin`). Module: [Lights](../modules/robot.md#lights).
 
 **Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
-what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured.
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
 
 <!-- recipe: tunables-lights -->
 ```java title="Tunables.java"
