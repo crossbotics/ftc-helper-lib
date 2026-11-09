@@ -240,13 +240,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return hood;
     }
 
-    // The flywheel reads its encoder (its speed). Then its own parts: the feeder, the feed wheel, the hood.
+    // The flywheel reads its encoder (its speed). Its own parts (feeder, feed wheel, hood) are children:
+    // RobotDefinition.encoderMotors() asks them too.
     @Override
-    void encoderMotors(java.util.List<EncoderMotor> out) {
-        out.add(new EncoderMotor(device, reversed, name(), true, null));
-        if (indexer != null) indexer.encoderMotors(out);
-        if (feedWheel != null) feedWheel.encoderMotors(out);
-        if (hood != null) hood.encoderMotors(out);
+    void encoderMotors(java.util.List<EncoderMotor> out, TunableSection t) {
+        out.add(new EncoderMotor(device, reversed, name(), true));
     }
 
     /**

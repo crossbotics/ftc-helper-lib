@@ -2100,7 +2100,7 @@
        "INIT **Tune and check**. **Encoder Check** must be in the menu, after the Motor Direction Check.",
        "Open it, press ▶ (start on the Driver Hub). Nothing may move until you hold A.",
        "Hold A. One motor at a time must turn a little. Let go of A in the middle: everything must stop at once.",
-       "Hold A until the end. Every motor with a good cable must say `OK: counts up`.",
+       "Hold A until the end. Every motor with a good cable must say `OK: counts up` (or `down`). Each lift or arm must move away from its stop, never into it.",
        "Robot OFF. Swap the encoder cables of two motors (for example front-left and front-right). Robot ON, then steps 1 to 4 again. Each of the two must say `counts on \"...\" instead: encoder cables swapped?` and name the other one.",
        "Robot OFF. Put the cables back, then unplug one encoder cable. Robot ON, steps 1 to 4 again. That motor must say `NO COUNTS: encoder cable missing?`.",
        "Robot OFF. Plug every cable back in the right port."

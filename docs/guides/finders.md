@@ -176,21 +176,30 @@ motor port's count, and shows a result for each motor:
 
 | Result | What it means | Fix |
 | --- | --- | --- |
-| OK: counts up | its own port counted, the right way | nothing |
+| OK: counts up (or down) | its own port counted, the way it was pushed | nothing |
 | NO COUNTS | no port counted | plug in the encoder cable, or replace it. (Or the motor did not turn: did you see it move?) |
-| counts on "X" (port N) instead | another motor's port counted | encoder cables swapped: put each one in its own motor's port |
+| counts on "X" instead | another motor's port counted | encoder cables swapped: put each one in its own motor's port |
 | counts on "lift_right" instead: plug the encoder cable into "lift_left"'s port | a two-motor lift or arm: only the first motor's encoder is read | move the cable to the first motor's port |
-| counts BACKWARD | its port counted down for positive power | the motor's power wires are swapped (red and black), or an outside encoder is mounted the other way |
+| counts BACKWARD | its port counted the other way from the push | the motor's power wires are swapped (red and black), or an outside encoder is mounted the other way |
 | no counts (fine: nothing reads this encoder) | an intake or feeder with no encoder cable | nothing |
+| could not read its encoder | the hub did not answer | press **Y** to check again; still there: check the hub's cables |
+| NOT IN THE CONFIGURATION | Robot.java names a motor the configuration does not have | add it to the configuration, or mark the part `optional()` |
 
 1. Robot on a block. Lifts and arms down. In **Tune and check**, open **Encoder Check**, then press **▶**.
 2. Hold **A**. Each motor gets its short push in turn. Let go of **A** and everything stops at once.
 3. Read the results. Fix the cables. Press **Y** to check again.
 
-Each motor is set up as Robot.java says (its direction), so positive power lifts a lift and turns a wheel
-forward, and its count must go up. Before each push the check waits until nothing moves (a flywheel
-spins down), so one motor is never mistaken for another. Not checked: servos, CR servos, a CR servo
-turret, and a drive motor whose port reads an odometry pod (the [Odometry Tuner](#odometry-tuner-directions-offsets-and-a-loop-check) checks pods).
+Each motor is set up as Robot.java says (its direction). It is pushed toward the side where its part has
+room, from your `Tunables.java`: a lift up from its bottom stop, a hood toward `posB`, a turret toward the
+end of its range that is farther from its start angle. Its count must move the same way.
+
+**Watch each part while it is pushed.** The count turns with the direction setting, so the check cannot
+see a wrong `reversed()` in Robot.java: only your eyes can. A lift or arm must move UP, away from its stop.
+It moves down? Fix `reversed()` on its line in Robot.java (the drive: the [Motor Direction Check](#motor-direction-check-each-wheel-rolls-forward)).
+
+Before each push the check waits until every port is still (a flywheel spins down), so one motor is never
+mistaken for another. Something keeps moving? The screen names it. Not checked: servos, CR servos, a CR servo
+turret, and a motor whose port reads something else: an odometry pod (the [Odometry Tuner](#odometry-tuner-directions-offsets-and-a-loop-check) checks pods) or a CR servo turret's encoder.
 
 Run it on every new robot, and again after any motor or cable is changed.
 

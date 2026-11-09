@@ -69,9 +69,9 @@ public final class Intake extends Module<Intake> implements Toggleable {
 
     // An intake runs on power: nothing reads its encoder ("no counts" is fine). Its motors run together.
     @Override
-    void encoderMotors(List<EncoderMotor> out) {
+    void encoderMotors(List<EncoderMotor> out, TunableSection t) {
         if (servos) return;
-        EncoderMotor m = new EncoderMotor(names[0], reversed.contains(names[0]), name(), false, null);
+        EncoderMotor m = new EncoderMotor(names[0], reversed.contains(names[0]), name(), false);
         for (int i = 1; i < names.length; i++) m.with(names[i], reversed.contains(names[i]));
         out.add(m);
     }

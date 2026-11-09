@@ -21,10 +21,10 @@ final class EncoderCheck {
     // The push: low power, short, so a lift moves a little and a wheel turns a little (robot on a block).
     static final double POWER = 0.3;
     static final double PUSH_SEC = 0.3;
-    // Before each push, every port must be still this long (a flywheel spins down, an arm settles),
-    // so a part still moving from the last push is not counted. At most STILL_MAX_SEC, then it goes on.
+    // Before each push, every port must be still this long (a flywheel spins down, an arm settles), so a part
+    // still moving from the last push is never blamed. After STILL_SLOW_SEC the screen names the moving port.
     static final double STILL_SEC = 0.25;
-    static final double STILL_MAX_SEC = 2.0;
+    static final double STILL_SLOW_SEC = 2.0;
     static final int STILL_COUNTS = 3;
     // Fewer counts than this = "did not count" (an encoder that only jitters).
     static final int MIN_COUNTS = 20;
@@ -32,12 +32,10 @@ final class EncoderCheck {
     /** One encoder port that can be read: a motor in the configuration. */
     static final class Port {
         final String name;
-        final int number;
         final IntSupplier count;
 
-        Port(String name, int number, IntSupplier count) {
+        Port(String name, IntSupplier count) {
             this.name = name;
-            this.number = number;
             this.count = count;
         }
     }
@@ -48,6 +46,10 @@ final class EncoderCheck {
         final String part;
         final boolean encoderRead;
         final String skip;
+        /** True if the skip reason is a fault (shown as a problem), false if it is fine. */
+        final boolean skipIsFault;
+        /** +1 = pushed with positive power, -1 = with negative power (the part's room is that way). */
+        int sign = 1;
         final List<DoubleConsumer> power = new ArrayList<>();
         final Set<String> mates = new HashSet<>();
         /** The result's words (null = not checked yet). */
@@ -56,10 +58,15 @@ final class EncoderCheck {
         boolean ok = false;
 
         Job(String name, String part, boolean encoderRead, String skip) {
+            this(name, part, encoderRead, skip, false);
+        }
+
+        Job(String name, String part, boolean encoderRead, String skip, boolean skipIsFault) {
             this.name = name;
             this.part = part;
             this.encoderRead = encoderRead;
             this.skip = skip == null ? "" : skip;
+            this.skipIsFault = skipIsFault;
         }
     }
 
@@ -71,8 +78,10 @@ final class EncoderCheck {
     private int at = 0;
     private Phase phase = Phase.SETTLE;
     private double settleStart = Double.NaN, stillSince = Double.NaN, pushStart = Double.NaN;
-    // The counts when "still" began, and just before the push.
+    // The counts when "still" began, and just before the push (null = that port could not be read).
     private Map<String, Integer> last = null, before = null;
+    // The port that moved last while settling (for the screen when it takes long).
+    private String movingPort = null;
 
     EncoderCheck(List<Job> jobs, List<Port> ports, DoubleSupplier clockSec) {
         this.jobs = jobs;
@@ -104,25 +113,25 @@ final class EncoderCheck {
         if (phase == Phase.DONE) return;
         double now = clockSec.getAsDouble();
         if (!go) {
-            if (phase == Phase.PUSH) {
-                power(jobs.get(at), 0);
-                phase = Phase.SETTLE;
-            }
-            settleStart = Double.NaN;
+            stop();
             return;
         }
         Job job = jobs.get(at);
         if (phase == Phase.SETTLE) {
             Map<String, Integer> counts = readAll();
             // Still = no port moved more than STILL_COUNTS since stillSince (slow coasting adds up too).
-            if (Double.isNaN(settleStart) || moved(last, counts) > STILL_COUNTS) {
+            String moved = moved(last, counts);
+            if (Double.isNaN(settleStart) || moved != null) {
                 if (Double.isNaN(settleStart)) settleStart = now;
                 stillSince = now;
                 last = counts;
+                if (moved != null) movingPort = moved;
             }
-            if (now - stillSince >= STILL_SEC || now - settleStart >= STILL_MAX_SEC) {
+            // Only once everything is still: a push while another part moves could blame the wrong port.
+            if (now - stillSince >= STILL_SEC) {
                 before = counts;
-                power(job, POWER);
+                movingPort = null;
+                power(job, POWER * job.sign);
                 pushStart = now;
                 phase = Phase.PUSH;
             }
@@ -131,8 +140,13 @@ final class EncoderCheck {
             Map<String, Integer> after = readAll();
             power(job, 0);
             Map<String, Integer> delta = new LinkedHashMap<>();
-            for (Port p : ports) delta.put(p.name, after.get(p.name) - before.get(p.name));
-            Verdict v = judge(job.name, job.mates, job.encoderRead, delta, portNumbers());
+            for (Port p : ports) {
+                Integer b = before.get(p.name), a = after.get(p.name);
+                // Not read (an error), or a jump to exactly 0 (a hub's answer when a read fails): unknown.
+                if (b == null || a == null || (a == 0 && Math.abs(b) >= MIN_COUNTS)) continue;
+                delta.put(p.name, a - b);
+            }
+            Verdict v = judge(job.name, job.mates, job.encoderRead, job.sign, delta);
             job.result = v.text;
             job.ok = v.ok;
             at++;
@@ -142,11 +156,11 @@ final class EncoderCheck {
         }
     }
 
-    /** Power 0 to the motor being pushed. Safe to call any time. */
+    /** Power 0 to the motor being pushed (all of its motors, even if one fails). Safe to call any time. */
     void stop() {
-        if (at < jobs.size()) power(jobs.get(at), 0);
         if (phase == Phase.PUSH) phase = Phase.SETTLE;
         settleStart = Double.NaN;
+        if (at < jobs.size()) power(jobs.get(at), 0);
     }
 
     /** True once every motor has a result. */
@@ -164,6 +178,12 @@ final class EncoderCheck {
         return phase == Phase.PUSH;
     }
 
+    /** The port still moving after STILL_SLOW_SEC of waiting (null = none, or not waiting that long). */
+    String stillMoving() {
+        if (phase != Phase.SETTLE || Double.isNaN(settleStart)) return null;
+        return clockSec.getAsDouble() - settleStart >= STILL_SLOW_SEC ? movingPort : null;
+    }
+
     List<Job> jobs() {
         return jobs;
     }
@@ -171,46 +191,49 @@ final class EncoderCheck {
     // Moves past the motors that are skipped (no push for them), and notes when all are done.
     private void skipSkipped() {
         for (; at < jobs.size() && !jobs.get(at).skip.isEmpty(); at++) {
-            jobs.get(at).result = "skipped: " + jobs.get(at).skip;
-            jobs.get(at).ok = true;
+            Job j = jobs.get(at);
+            j.result = j.skipIsFault ? j.skip : "skipped: " + j.skip;
+            j.ok = !j.skipIsFault;
         }
         if (at >= jobs.size()) phase = Phase.DONE;
     }
 
+    // Every motor of the job, each tried even if one fails (then the first error is thrown after).
     private static void power(Job job, double p) {
-        for (DoubleConsumer c : job.power) c.accept(p);
+        RuntimeException first = null;
+        for (DoubleConsumer c : job.power) {
+            try {
+                c.accept(p);
+            } catch (RuntimeException e) {
+                if (first == null) first = e;
+            }
+        }
+        if (first != null) throw first;
     }
 
-    // Every port's count now. A port that cannot be read counts as 0 (it then looks like "no counts").
+    // Every port's count now. A port that cannot be read is null (left out of the judging).
     private Map<String, Integer> readAll() {
         Map<String, Integer> out = new LinkedHashMap<>();
         for (Port p : ports) {
-            int c;
+            Integer c;
             try {
                 c = p.count.getAsInt();
             } catch (RuntimeException e) {
-                c = 0;
+                c = null;
             }
             out.put(p.name, c);
         }
         return out;
     }
 
-    // The biggest change of any port between two readings (0 when there is no earlier reading).
-    private static int moved(Map<String, Integer> a, Map<String, Integer> b) {
-        if (a == null) return 0;
-        int most = 0;
+    // The port that changed more than STILL_COUNTS between two readings (null = none, or no earlier reading).
+    private static String moved(Map<String, Integer> a, Map<String, Integer> b) {
+        if (a == null) return null;
         for (Map.Entry<String, Integer> e : b.entrySet()) {
             Integer was = a.get(e.getKey());
-            if (was != null) most = Math.max(most, Math.abs(e.getValue() - was));
+            if (was != null && e.getValue() != null && Math.abs(e.getValue() - was) > STILL_COUNTS) return e.getKey();
         }
-        return most;
-    }
-
-    private Map<String, Integer> portNumbers() {
-        Map<String, Integer> out = new LinkedHashMap<>();
-        for (Port p : ports) out.put(p.name, p.number);
-        return out;
+        return null;
     }
 
     /** A result: fine or not, and its words for the screen. */
@@ -227,33 +250,32 @@ final class EncoderCheck {
     /**
      * Which port counted during one motor's push, and what that means.
      *
-     * @param motor the motor pushed (its own port must count, up)
+     * @param motor the motor pushed (its own port must count, the way it was pushed)
      * @param mates the motors pushed with it (a lift's second motor)
      * @param encoderRead true if the library reads this motor's encoder (else "no counts" is fine)
-     * @param delta each port's change during the push, counts
-     * @param portNumbers each port's number on its hub (for the words)
+     * @param sign +1 if pushed with positive power, -1 with negative power
+     * @param delta each port's change during the push, counts (a port that could not be read is left out)
      * @return the result
      */
-    static Verdict judge(String motor, Set<String> mates, boolean encoderRead, Map<String, Integer> delta,
-                         Map<String, Integer> portNumbers) {
+    static Verdict judge(String motor, Set<String> mates, boolean encoderRead, int sign, Map<String, Integer> delta) {
         Integer ownBox = delta.get(motor);
-        int own = ownBox == null ? 0 : ownBox;
-        if (own >= MIN_COUNTS) return new Verdict(true, String.format(Locale.US, "OK: counts up (+%d)", own));
+        if (ownBox == null) return new Verdict(false, "could not read its encoder: press {Y} to check again");
+        int own = ownBox * (sign < 0 ? -1 : 1);
+        String way = sign < 0 ? "down" : "up";
+        if (own >= MIN_COUNTS) return new Verdict(true, String.format(Locale.US, "OK: counts %s (%+d)", way, ownBox));
         if (own <= -MIN_COUNTS) {
             return new Verdict(false, String.format(Locale.US,
-                    "counts BACKWARD (%d): power wires swapped, or a reversed encoder?", own));
+                    "counts BACKWARD (%+d): power wires swapped, or a reversed encoder?", ownBox));
         }
         // Its own port did not count. Which one did? A port pushed with it (a lift's second motor) first.
         String mate = biggest(delta, mates, null, motor);
         if (mate != null) {
-            return new Verdict(false, "counts on \"" + mate + "\"" + port(portNumbers, mate)
-                    + " instead: plug the encoder cable into \"" + motor + "\"'s port (only its encoder is read)");
+            if (!encoderRead) return new Verdict(true, "no counts (fine: nothing reads this encoder)");
+            return new Verdict(false, "counts on \"" + mate + "\" instead: plug the encoder cable into \""
+                    + motor + "\"'s port (only its encoder is read)");
         }
         String other = biggest(delta, null, mates, motor);
-        if (other != null) {
-            return new Verdict(false, "counts on \"" + other + "\"" + port(portNumbers, other)
-                    + " instead: encoder cables swapped?");
-        }
+        if (other != null) return new Verdict(false, "counts on \"" + other + "\" instead: encoder cables swapped?");
         if (!encoderRead) return new Verdict(true, "no counts (fine: nothing reads this encoder)");
         return new Verdict(false, "NO COUNTS: encoder cable missing? (Or it did not turn.)");
     }
@@ -271,10 +293,5 @@ final class EncoderCheck {
             }
         }
         return best;
-    }
-
-    private static String port(Map<String, Integer> numbers, String name) {
-        Integer n = numbers.get(name);
-        return n == null || n < 0 ? "" : " (port " + n + ")";
     }
 }

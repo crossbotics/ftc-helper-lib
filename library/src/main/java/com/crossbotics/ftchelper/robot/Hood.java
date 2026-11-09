@@ -497,10 +497,13 @@ public final class Hood extends Module<Hood> {
         return reversed;
     }
 
-    // A motor hood reads its encoder (its angle); a servo hood has no motor.
+    // A motor hood reads its encoder (its angle); a servo hood has no motor. It starts on stop A, so it is
+    // pushed toward posB (which may be below posA: then with negative power).
     @Override
-    void encoderMotors(List<EncoderMotor> out) {
-        if (kind == Kind.MOTOR) out.add(new EncoderMotor(device, reversed, name(), true, null));
+    void encoderMotors(List<EncoderMotor> out, TunableSection t) {
+        if (kind != Kind.MOTOR) return;
+        int sign = t.has("posA") && t.has("posB") && t.number("posB", 1) < t.number("posA", 0) ? -1 : 1;
+        out.add(new EncoderMotor(device, reversed, name(), true, sign));
     }
 
     /** The hood as an {@link AngleDevice} (what the launcher drives), for anything this module does not offer. */

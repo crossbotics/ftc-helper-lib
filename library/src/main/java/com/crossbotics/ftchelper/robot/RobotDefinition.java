@@ -986,8 +986,9 @@ public abstract class RobotDefinition {
     /**
      * Every motor Robot.java names, for the Encoder Check (Tune and check): the drive motors first, then each
      * part's motors (a lift's second motor rides with its first). Each has the direction Robot.java gives it,
-     * and says if the library reads its encoder. A drive motor whose port reads an odometry pod is listed
-     * with a {@code skip} reason (its port counts the pod, not the motor). Servos are not listed.
+     * which way to push it (toward the side its range has room, from Tunables.java), and says if the library
+     * reads its encoder. A motor whose port reads something else (an odometry pod, a CR servo turret's
+     * encoder) is listed with a {@code skip()} reason. Servos are not listed.
      *
      * <pre>{@code
      * for (EncoderMotor m : new Robot().encoderMotors()) telemetry.addLine(m.toString());
@@ -997,23 +998,35 @@ public abstract class RobotDefinition {
      */
     public final List<EncoderMotor> encoderMotors() {
         describe();
+        // Ports whose count belongs to something else: dead-wheel pods (a Pinpoint or an OTOS uses none),
+        // a CR servo turret's encoder.
+        java.util.Map<String, String> taken = new java.util.LinkedHashMap<>();
+        if (odometrySpec != null && (odometrySpec.kindName().equals("threeWheels") || odometrySpec.kindName().equals("twoWheels"))) {
+            for (String n : odometrySpec.names()) taken.put(n, "an odometry pod (the Odometry Tuner checks pods)");
+        }
+        List<Module<?>> all = new ArrayList<>();
+        for (Module<?> m : modules) {
+            all.add(m);
+            all.addAll(m.children());
+        }
+        for (Module<?> m : all) m.encoderPortsRead(taken);
         List<EncoderMotor> out = new ArrayList<>();
-        // Pods on motor ports (dead wheels): those ports count the pod. A Pinpoint or an OTOS uses none.
-        List<String> pods = new ArrayList<>();
-        boolean podsOnPorts = odometrySpec != null
-                && (odometrySpec.kindName().equals("threeWheels") || odometrySpec.kindName().equals("twoWheels"));
-        if (podsOnPorts) pods.addAll(odometrySpec.names());
         // The drive's encoders are read only without odometry (the drive's distances then come from them).
         boolean driveRead = odometrySpec == null;
-        for (String n : drive.motorNames()) {
-            out.add(new EncoderMotor(n, drive.isReversed(n), "drive", driveRead,
-                    pods.contains(n) ? "its port reads an odometry pod (the Odometry Tuner checks pods)" : null));
+        for (String n : drive.motorNames()) out.add(new EncoderMotor(n, drive.isReversed(n), "drive", driveRead));
+        for (Module<?> m : all) {
+            int from = out.size();
+            m.encoderMotors(out, TunableSection.forFile(tunablesClass, m.name()));
+            for (int i = from; i < out.size(); i++) out.get(i).optional(m.isOptional());
         }
-        for (Module<?> m : modules) m.encoderMotors(out);
-        // Each motor once (a launcher's pusher can also be its own part).
+        // Each motor once (a launcher's pusher can also be its own part); a port that counts something else: skipped.
         java.util.Set<String> seen = new java.util.HashSet<>();
         List<EncoderMotor> once = new ArrayList<>();
-        for (EncoderMotor m : out) if (seen.add(m.name)) once.add(m);
+        for (EncoderMotor m : out) {
+            if (!seen.add(m.name)) continue;
+            if (taken.containsKey(m.name)) m.skip("its port reads " + taken.get(m.name));
+            once.add(m);
+        }
         return once;
     }
 

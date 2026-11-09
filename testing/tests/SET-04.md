@@ -33,7 +33,8 @@ both faults and name the right motor.
 1. INIT **Tune and check**. **Encoder Check** must be in the menu, after the Motor Direction Check.
 2. Open it, press ▶ (start on the Driver Hub). Nothing may move until you hold A.
 3. Hold A. One motor at a time must turn a little. Let go of A in the middle: everything must stop at once.
-4. Hold A until the end. Every motor with a good cable must say `OK: counts up`.
+4. Hold A until the end. Every motor with a good cable must say `OK: counts up` (or `down`). Each lift or arm
+   must move away from its stop, never into it.
 5. Robot OFF. Swap the encoder cables of two motors (for example front-left and front-right). Robot ON, then
    steps 1 to 4 again. Each of the two must say `counts on "..." instead: encoder cables swapped?` and name
    the other one.

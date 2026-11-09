@@ -180,7 +180,7 @@ robot on a block. It names the fault for each motor:
 | The Encoder Check says | Fix |
 | --- | --- |
 | <samp>NO COUNTS: encoder cable missing?</samp> | plug in the encoder cable, or replace it |
-| <samp>counts on "X" (port N) instead: encoder cables swapped?</samp> | put each encoder cable in its own motor's port |
+| <samp>counts on "X" instead: encoder cables swapped?</samp> | put each encoder cable in its own motor's port |
 | <samp>counts on "lift_right" instead: plug the encoder cable into "lift_left"'s port</samp> | a two-motor lift: only the first motor's encoder is read. Move the cable |
 | <samp>counts BACKWARD</samp> | the motor's power wires are swapped (red and black), or an outside encoder is mounted the other way |
 

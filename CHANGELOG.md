@@ -14,9 +14,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Encoder Check** (in Tune and check for every robot in five files, or `EncoderCheckOpMode` on its own): finds an
   encoder cable that is missing, in another motor's port, or counting backward. Hold A: each motor in Robot.java
   gets a short push (30% for 0.3 s), one at a time, with Robot.java's direction, and every motor port's count is
-  read. Each motor shows OK, `NO COUNTS`, `counts on "X" (port N) instead` or `counts BACKWARD`. A two-motor lift
-  is pushed with both motors; an intake's missing encoder is fine; a drive port that reads an odometry pod is
-  skipped. `RobotDefinition.encoderMotors()` lists the motors. The simulator's scenarios can make the faults
+  read. Each motor shows OK, `NO COUNTS`, `counts on "X" instead` or `counts BACKWARD`. Each part is pushed toward
+  the side where it has room (a lift up, a hood toward `posB`). A two-motor lift is pushed with both motors; an
+  intake's missing encoder is fine; a port that reads an odometry pod or a CR servo turret's encoder is skipped; a
+  read the hub fails says "could not read" instead of a fault. It cannot see a wrong `reversed()`: watch the part. `RobotDefinition.encoderMotors()` lists the motors. The simulator's scenarios can make the faults
   (`set encoder lift none`, `set encoder lift flywheel`). Guide: [Encoder Check](docs/guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port);
   community test SET-04.
 - **goBILDA's StarterBot with mecanum wheels** (on a Strafer chassis), a fifth BIOBUZZ starter bot: the template

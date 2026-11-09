@@ -707,9 +707,23 @@ public final class Turret extends Module<Turret> {
     }
 
     // A motor turret reads its own port's encoder (its angle). A CR servo turret has no motor to push.
+    // Pushed toward the side of its start angle with more room (a turret that only turns one way from INIT).
     @Override
-    void encoderMotors(List<EncoderMotor> out) {
-        if (kind == Kind.MOTOR) out.add(new EncoderMotor(device, reversed, name(), true, null));
+    void encoderMotors(List<EncoderMotor> out, TunableSection t) {
+        if (kind != Kind.MOTOR) return;
+        int sign = 1;
+        if (!continuous) {
+            double lo = t.number("min", -90), hi = t.number("max", 90), start = t.number("startAngle", 0);
+            if (!t.has("startAngle") && (start < lo || start > hi)) start = (lo + hi) / 2;
+            sign = hi - start >= start - lo ? 1 : -1;
+        }
+        out.add(new EncoderMotor(device, reversed, name(), true, sign));
+    }
+
+    // A CR servo turret's encoder sits on a motor port (maybe another part's motor): that port counts the turret.
+    @Override
+    void encoderPortsRead(java.util.Map<String, String> out) {
+        if (kind == Kind.CR_SERVO && !analog && encoderName != null) out.put(encoderName, name() + "'s encoder");
     }
 
     /**

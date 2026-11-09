@@ -104,8 +104,8 @@ without five files (its own `DriveConfig`): copy `examples/.../MotorDirectionChe
 ## EncoderCheckOpMode
 
 Hold **A**: each motor in Robot.java gets a short push (30% for 0.3 s), one at a time, set up as Robot.java
-says. Every motor port's encoder is read; each motor shows OK, NO COUNTS, `counts on "X" (port N) instead`
-or `counts BACKWARD`. Let go of **A**: everything stops. **Y** = check again. In Tune and check for every
+says, once every port is still. Every motor port's encoder is read; each motor shows OK, NO COUNTS, `counts on "X" instead`
+or `counts BACKWARD`. Each part is pushed toward its room (from Tunables.java); watch that a lift moves up. Let go of **A**: everything stops. **Y** = check again. In Tune and check for every
 robot in five files; on its own:
 
 ```java
