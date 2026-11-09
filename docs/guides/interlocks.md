@@ -253,7 +253,7 @@ then holds the wrist out (it waits until the turret turns away).
 
 ### The V2 robot's buttons
 
-The parts bring their buttons, all on gamepad 2 (the operator): RT intake on/off (held 1 s: in even when
+`Controls.java` writes out each part's usual buttons, all on gamepad 2 (the operator): RT intake in (held 1 s: in even when
 the count says full), LT push out (hold), LB flywheel spin up/down, RB fire (hold: keep firing), D-pad
 up/down speed trim, D-pad right the next shot table, left stick Y hood trim, right stick X turret by
 hand, BACK turret following on/off, B claw open/close, D-pad left the wrist's previous position, left
@@ -263,9 +263,8 @@ stick button held 1 s: piece count = 0.
 stick Y, a buzz when the turret is on target, and the light's colors (orange while the rule holds a
 part back).
 
-Some module suggestions find their button taken by a part added earlier in `Robot.java`. The INIT
-screen lists them, e.g. `Lift by hand: no button (G2 left stick Y is taken by Hood)`. That is the
-library's check doing its job: one job per button. `Controls.java` gives the lift its own stick.
+Two parts' usual buttons can want the same button (the lift and the hood both use the left stick).
+`Controls.java` gives each one a button of its own: the hood the left stick, the lift the right stick.
 
 ### The lifter's steps
 

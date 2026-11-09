@@ -30,7 +30,7 @@ put in your TeamCode), a few lines per lesson. Each lesson explains with a worke
 a mecanum drive, an intake, a lift and a claw, in five short files. Read the lesson robot's lines, then
 make the same change in your own TeamCode; the lesson robot's files are also the answer key. (Lesson 1
 explains with goBILDA's starter bot, lesson 7 with an odometry robot, and lesson 9 with two shooter robots, the same way.) Every part
-brings its own numbers and buttons, so each lesson adds only a few lines. A simulator test runs the
+brings its own numbers, and its buttons are a few lines to copy, so each lesson adds only a few lines. A simulator test runs the
 finished lesson robot, so the code here always works.
 
 **The simulator commands:** each lesson shows two sets. The lesson robot's use `-PteamCode=none` (the

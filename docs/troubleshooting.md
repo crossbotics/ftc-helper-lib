@@ -189,12 +189,12 @@ robot also ends this way: the robot presses the wall.
 The spot you gave `routeTo` or `route` is on a box, or other boxes close every way to it. Move the spot. For
 the second one, a smaller margin in `fieldMap(...)` can also help.
 
-**A part's button does nothing, and INIT says <samp>... no button (G2 RB is your "score high" in Controls.java)</samp>**
+**A part does nothing on its buttons, and INIT says <samp>Intake: usual buttons not in Controls.java: ...</samp>**
 
-A job of yours in `Controls.java` is on a button that part suggested, so yours won and the part has no
-button for that job. It often happens when a later lesson adds a part (a launcher wants gamepad 2's LB
-and RB). Move your job to a free button (INIT lists them: <samp>G2 free: ...</samp>), or free the part's job and
-give it another button ([lesson 3](tutorials/start/03-buttons.md#5-one-job-per-button-or-several-gestures)).
+Since v0.39.0 a part has no buttons until `Controls.java` has its lines. Copy the part's lines from its
+"buttons to add" in the [reference](modules/robot.md) (for example [Intake](modules/robot.md#intake-buttons-to-add))
+into `buttons(...)`. A button that line wants is already yours? Put the part's job on a free one (INIT lists
+them: <samp>G2 free: ...</samp>).
 
 **A servo turns less than its seller says (a goBILDA 2000 servo: about 270 degrees, not 300)**
 The hub sends 600 to 2400 microseconds for positions 0 to 1 (the FTC SDK's normal range); the servo's

@@ -1369,15 +1369,26 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         lastTrim.put(name(), new double[] {trimPct, adjustSteps});
     }
 
-    // One D-pad step: the trim (speed from the distance) or the rpm step (a fixed speed).
-    private void step(int direction) {
+    /**
+     * One speed step, the launcher's own D-pad tap: with the speed from the distance, the trim by
+     * {@code trimStepPercent}; with a fixed speed, {@code stepRpm}. Your own button:
+     * {@code g2.dpadUp.tap(() -> robot.launcher.step(1)).says("speed up");}
+     *
+     * @param direction +1 faster, -1 slower
+     */
+    public void step(int direction) {
         if (usesDistance()) trimBy(direction * trimStepPct);
         else adjust(direction);
     }
 
-    // A held D-pad, every loop: one step 0.5 s after the press (the hold starts after the tap time,
-    // Tunables.Buttons.holdSec 0.3 s), then one every REPEAT_SEC.
-    void repeatStep(int direction) {
+    /**
+     * The launcher's own held D-pad, for {@code hold(...)}: every loop while held, one {@link #step}
+     * 0.5 s after the press, then 4 a second. End it with {@link #repeatEnd} when the button is let go:
+     * {@code g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd)}.
+     *
+     * @param direction +1 faster, -1 slower
+     */
+    public void repeatStep(int direction) {
         double now = clock.getAsLong() / 1e9;
         if (Double.isNaN(repeatAt)) repeatAt = now + 0.2;
         if (now >= repeatAt) {
@@ -1386,7 +1397,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         }
     }
 
-    void repeatEnd() {
+    /** Ends a {@link #repeatStep} hold: the next hold waits 0.5 s again before its first step. */
+    public void repeatEnd() {
         repeatAt = Double.NaN;
     }
 

@@ -6,6 +6,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Each part's buttons to add:** docs/modules/robot.md has a "buttons to add" block for every part with usual
+  buttons (intake, lift, arm, claw, wrist, turret, launcher, indexer, hood, pieces), compiled in
+  `examples/.../cookbook/UsualButtons.java`. The example `allbuttons/Controls.java` writes out every library button
+  and every intake and launcher button, with a `free()` line for each free button. `Intake.holdIn()`, `Launcher.step(direction)`, `repeatStep(direction)` and
+  `repeatEnd()` are public now, so your own buttons can do exactly what the parts' own buttons do.
 - **goBILDA's StarterBot with mecanum wheels** (on a Strafer chassis), a fifth BIOBUZZ starter bot: the template
   `gobildastraferbot` (five files with goBILDA's own configuration names: `left_front_drive` and the others,
   `windmillServo`), its simulator robot file `sim/robots/starter-bot-gobilda-strafer.properties` (measured from
@@ -14,11 +19,19 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **A part has no buttons until Controls.java has its lines** (`useStandardButtons()` is now false by
+  default). Before, each part put its usual buttons on the gamepads by itself, hidden; now every button is a line
+  you can read: the library's own (driving, BACK, GUIDE, START: always there) in `libraryButtons(...)`, everything
+  else in `buttons(...)`. **Your code:** a `Controls.java` that relied on a part's own buttons loses them. INIT
+  names each one ("Intake: usual buttons not in Controls.java: G2 RT (in (hold)), ..."): copy the part's lines
+  from its new "buttons to add" in docs/modules/robot.md, or write `useStandardButtons()` returning `true` to get
+  the old way back. The example robots and `:sim:newRobot` write each part's buttons out, and their tests check
+  that the button maps did not change.
 - **The Tunables reference has a block to copy for each part** ([tunables.md](docs/guides/tunables.md)): every
   section starts with the part's lines, set to `DEFAULT` or `MEASURE`. New blocks for Camera, Lights and a piece
   sensor; the blocks are the cookbook's compiled code, checked by `tools/check_docs.py`.
 - **The five files, one walkthrough page per file** ([docs/five-files/](docs/five-files/README.md)), starting with
-  `Robot.java` and `Tunables.java`: the smallest files for a robot that drives, every line explained, each part's
+  `Robot.java`, `Tunables.java` and `Controls.java`: the smallest files for a robot that drives (a simulator test drives it), every line explained, each part's
   attributes and numbers (needed or not, and the default), then how to add a part. Each page's code is a compiled program (`examples/.../firstrobot/`) or a cookbook recipe, and
   `tools/check_docs.py` keeps the page and the code the same.
 - **Set up, one small page per step** ([docs/setup/](docs/setup/README.md)). Nine pages take a team from an

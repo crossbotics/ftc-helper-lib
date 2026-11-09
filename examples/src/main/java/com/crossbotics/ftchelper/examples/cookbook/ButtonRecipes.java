@@ -103,9 +103,8 @@ public class ButtonRecipes {
         @Override
         protected void buttons(Robot robot, Pad g1, Pad g2) {
             // recipe: move-a-button
-            g2.rt.free();   // free(): no job on it, even the one the intake suggests
-            g2.lt.free();
-            g2.lb.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
+            // The intake's usual lines are on RT and LT: here the same jobs are on the bumpers.
+            g2.lb.hold(robot.intake::holdIn, robot.intake::stop).says("intake in (hold)");
             g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
             // end recipe
 
@@ -160,17 +159,17 @@ public class ButtonRecipes {
         }
     }
 
-    /** No standard buttons: only the jobs written here. */
-    @TeleOp(name = "Cookbook Only My Buttons", group = "Cookbook")
+    /** The parts add their usual buttons by themselves (the way before v0.39.0). */
+    @TeleOp(name = "Cookbook Parts Add Their Buttons", group = "Cookbook")
     @Disabled
-    public static class OnlyMyButtons extends ControlMap<Robot> {
+    public static class PartsAddTheirButtons extends ControlMap<Robot> {
         public static boolean oneDriver = false;
 
-        // recipe: no-standard-buttons
-        // false: the parts bring no buttons of their own. Only the jobs in buttons(...) are used.
+        // recipe: parts-add-their-buttons
+        // true: each part adds its usual buttons by itself. A line in buttons(...) on one of them replaces it.
         @Override
         protected boolean useStandardButtons() {
-            return false;
+            return true;
         }
         // end recipe
 

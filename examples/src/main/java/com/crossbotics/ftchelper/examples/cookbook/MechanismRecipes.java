@@ -191,7 +191,12 @@ public class MechanismRecipes {
         public static boolean oneDriver = false;
 
         @Override
-        protected void buttons(TwoMotorLift robot, Pad g1, Pad g2) { }
+        protected void buttons(TwoMotorLift robot, Pad g1, Pad g2) {
+            g2.a.press(() -> robot.lift.goTo("down")).says("down");   // the lift's usual buttons (Lift: buttons to add)
+            g2.x.press(() -> robot.lift.goTo("low")).says("low");
+            g2.y.press(() -> robot.lift.goTo("high")).says("high");
+            g2.leftStickY.use(robot.lift::manual).says("by hand");
+        }
     }
 
     /** A claw with a servo for each finger. */
@@ -217,7 +222,9 @@ public class MechanismRecipes {
         public static boolean oneDriver = false;
 
         @Override
-        protected void buttons(TwoServoClaw robot, Pad g1, Pad g2) { }
+        protected void buttons(TwoServoClaw robot, Pad g1, Pad g2) {
+            g2.b.toggle(robot.claw).says("open / close");   // the claw's usual button (Claw: buttons to add)
+        }
     }
 
     /** Parts that are not in the parts catalog: described in Robot.java with their own numbers. */

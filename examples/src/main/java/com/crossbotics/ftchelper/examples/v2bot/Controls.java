@@ -16,8 +16,39 @@ import com.crossbotics.ftchelper.robot.Pad;
 public class Controls extends ControlMap<Robot> {
     public static boolean oneDriver = false;
 
+    // Always pre-assigned on gamepad 1 (the library's): sticks: drive; LT: slow; Y: field-centric (double
+    // tap); BACK: pause; GUIDE: button map (held: tuning menu); START held 1 s: set pose; START + BACK: debug
+    // lines; X / B in INIT: alliance.
+
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
+        // The intake's own buttons.
+        g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold; 1 s: in even when full)");
+        g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
+
+        // The launcher's own buttons.
+        g2.lb.toggle(robot.launcher).says("spin up / down");
+        g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
+        g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd).says("speed trim +1%, 4 a second")
+                .tap(() -> robot.launcher.step(1)).says("speed trim +1%");
+        g2.dpadDown.hold(() -> robot.launcher.repeatStep(-1), robot.launcher::repeatEnd).says("speed trim -1%, 4 a second")
+                .tap(() -> robot.launcher.step(-1)).says("speed trim -1%")
+                .doubleTap(robot.launcher::resetTrim).says("speed trim 0");
+        g2.dpadRight.press(robot.launcher::nextTable).says("next shot table (NECTAR, POLLEN)");
+
+        // The claw's own button.
+        g2.b.toggle(robot.claw).says("open / close");
+
+        // The wrist's and the piece count's own buttons.
+        g2.dpadLeft.press(robot.wrist::previous).says("previous position");
+        g2.leftStickButton.heldFor(1.0, robot.pieces::clear).says("piece count = 0");
+
+        // The hood's and the turret's own buttons.
+        g2.leftStickY.use(robot.launcher.hood()::byHand).says("hood trim while it follows the table, else the hood (up = bigger angle)");
+        g2.rightStickX.use(v -> robot.turret.manual(-v)).says("by hand (right = clockwise)");
+        g2.back.toggle(robot.turret.followMode()).says("follow the goal on/off");
+
+        // Ours.
         // The lifter's steps (each is an Action: it runs over many loops and never blocks the robot).
         g2.a.press(Actions.grab(robot)).says("grab a ball from the tiles");
         g2.y.press(Actions.scoreInFlower(robot)).says("score in a FLOWER");

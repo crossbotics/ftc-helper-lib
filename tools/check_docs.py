@@ -37,6 +37,7 @@ COOKBOOK_MD = ROOT / "docs/cookbook.md"
 COOKBOOK_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook"
 # The five files walkthrough (docs/five-files/): each page shows one compiled program, marked like a recipe.
 WALK_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/firstrobot"
+WALK_ROOTS = [WALK_CODE]   # more example folders whose regions the docs show may go here
 RECIPE_START = re.compile(r"^\s*// recipe: ([a-z0-9-]+)\s*$")
 RECIPE_END = re.compile(r"^\s*// end recipe\s*$")
 RECIPE_MARK = re.compile(r"^<!-- recipe: ([a-z0-9-]+) -->\s*$")
@@ -116,7 +117,7 @@ FINDERS = {"MotorFinder", "ServoFinder", "HoodFinder", "DriveTuner", "OdometryTu
 def recipe_file(java, start, code=""):
     """The TeamCode file a recipe goes in, worked out from where it sits in the cookbook's Java (shown as
     the code box's title, e.g. "Robot.java")."""
-    rel = java.relative_to(WALK_CODE if java.is_relative_to(WALK_CODE) else COOKBOOK_CODE)
+    rel = java.relative_to(next((r for r in WALK_ROOTS if java.is_relative_to(r)), COOKBOOK_CODE))
     if rel.parts[0] == "autos":
         return "autos/" + rel.name
     if rel.stem in ("Robot", "Controls", "Actions", "Tunables") or rel.stem in FINDERS:
@@ -275,7 +276,7 @@ def check_cookbook():
 def all_regions():
     """The cookbook's regions and the five files walkthrough's: the pages may show either."""
     regions = dict(cookbook_regions())
-    for name, region in cookbook_regions(WALK_CODE).items():
+    for name, region in [kv for root in WALK_ROOTS for kv in cookbook_regions(root).items()]:
         if name in regions:
             problems.append(f"{region[0]}:{region[1]}: recipe {name} is also in {regions[name][0]}:{regions[name][1]}")
         regions[name] = region
@@ -310,7 +311,7 @@ def check_marked_pages():
         if text.count("<!-- recipe: ") != len(MARKED_BLOCK.findall(text)):
             problems.append(f"{rel}: a '<!-- recipe: name -->' marker is not right before a java block")
     # Each walkthrough program is shown on its page: the page and the compiled code stay the same.
-    for name, (rel, start, _) in cookbook_regions(WALK_CODE).items():
+    for name, (rel, start, _) in [kv for root in WALK_ROOTS for kv in cookbook_regions(root).items()]:
         if name not in shown:
             problems.append(f"{rel}:{start}: recipe {name} is not shown on any docs/five-files page")
 

@@ -46,7 +46,7 @@ first.
 - [How do I make the gamepad buzz?](#how-do-i-make-the-gamepad-buzz)
 - [How do I control a part with a stick?](#how-do-i-control-a-part-with-a-stick)
 - [How do I move a part's button to another button?](#how-do-i-move-a-parts-button-to-another-button)
-- [How do I turn off all the standard buttons?](#how-do-i-turn-off-all-the-standard-buttons)
+- [How do I let the parts add their usual buttons by themselves?](#how-do-i-let-the-parts-add-their-usual-buttons-by-themselves)
 - [How do I move the library's own buttons (slow, field-centric, pause)?](#how-do-i-move-the-librarys-own-buttons-slow-field-centric-pause)
 - [How do I change the double-tap and hold times?](#how-do-i-change-the-double-tap-and-hold-times)
 - [How do I switch the alliance during TeleOp?](#how-do-i-switch-the-alliance-during-teleop)
@@ -462,10 +462,9 @@ No code needed. With `Controls.java` (two drivers):
 All button recipes go in `Controls.java`, inside `buttons(...)`. That method runs once, at INIT: each
 line plugs a job into a button. Every line ends with `;`. `.says("...")` is the text on the button map.
 
-**Pick a free button.** Each part already has standard buttons ([the standard map](modules/robot.md#controlmap)):
-for example the claw uses operator **B**, the lift **A**, **X**, **Y**. A job you write on one of them
-takes that button from the part (INIT says so). Two jobs that YOU write on one button stop INIT with the
-button's name. INIT lists the free buttons. To empty a button first: `g2.b.free();`
+**Pick a free button.** Each part's usual buttons are lines in `Controls.java` too (each part's "buttons
+to add" in the [reference](modules/robot.md)): for example the claw on operator **B**, the lift on **A**,
+**X**, **Y**. Two jobs on one button stop INIT with the button's name. INIT lists the free buttons.
 ([move a button](#how-do-i-move-a-parts-button-to-another-button)).
 
 ### How do I make a button do something once?
@@ -583,18 +582,18 @@ g2.rightStickY.use(robot.lift::manual).says("lift by hand");
 
 **Where:** `Controls.java`, inside `buttons(...)`.
 
-Each part brings standard buttons (the intake: operator RT and LT). To move them:
+A part's buttons are lines in `Controls.java` (the intake's usual ones: operator RT and LT). To move them,
+change the button in their lines:
 
 <!-- recipe: move-a-button -->
 ```java title="Controls.java"
-g2.rt.free();   // free(): no job on it, even the one the intake suggests
-g2.lt.free();
-g2.lb.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
+// The intake's usual lines are on RT and LT: here the same jobs are on the bumpers.
+g2.lb.hold(robot.intake::holdIn, robot.intake::stop).says("intake in (hold)");
 g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
 ```
 
 **Why:** `free()` takes the standard job off a button; then you give the new buttons their jobs.
-**More:** [Lesson 3: the buttons the parts bring](tutorials/start/03-buttons.md#2-the-buttons-the-parts-bring).
+**More:** [Lesson 3: the buttons the parts bring](tutorials/start/03-buttons.md#2-the-parts-buttons-written-out).
 
 ### How do I put the launcher's fire button on another button?
 
@@ -611,21 +610,23 @@ firing, and a tap then a hold sprays. `fireOn` moves all of it in one line, and 
 `fireOn(null)` leaves no fire button at all.
 **More:** [Firing](modules/robot.md#firing-shot-modes-feed-stop-piece-path).
 
-### How do I turn off all the standard buttons?
+### How do I let the parts add their usual buttons by themselves?
 
 **Where:** `Controls.java`, inside the class, as a method of its own: below the `}` that ends
 `buttons(...)`, above the class's last `}`.
 
-<!-- recipe: no-standard-buttons -->
+<!-- recipe: parts-add-their-buttons -->
 ```java title="Controls.java"
-// false: the parts bring no buttons of their own. Only the jobs in buttons(...) are used.
+// true: each part adds its usual buttons by itself. A line in buttons(...) on one of them replaces it.
 @Override
 protected boolean useStandardButtons() {
-    return false;
+    return true;
 }
 ```
 
-**Why:** some teams want every button written in one place, with no surprises.
+**Why:** code written before v0.39.0 relied on it: each part put its usual buttons on the gamepads without
+a line in `Controls.java`. Since v0.39.0 a part has no buttons until you write its lines (each part's
+"buttons to add" in the [reference](modules/robot.md)), so every button is a line you can read.
 **More:** [ControlMap](modules/robot.md#controlmap).
 
 ### How do I move the library's own buttons (slow, field-centric, pause)?
@@ -709,7 +710,7 @@ pressing BACK first just pauses. Holding 1.5 s means a bump does nothing.
 
 Each part is one line in `Robot.java`'s `define()`, plus a field for it at the top of the class (for
 example `public Lift lift;`) and a section with its numbers in `Tunables.java`. The section's name is
-the configuration name in CamelCase (each word starts with a capital letter, no spaces or `_`): `intake_deploy` reads `IntakeDeploy`. Its standard buttons come with it.
+the configuration name in CamelCase (each word starts with a capital letter, no spaces or `_`): `intake_deploy` reads `IntakeDeploy`. Its buttons: copy its lines into `Controls.java` ("buttons to add" in the [reference](modules/robot.md)).
 
 ### How do I add an intake on a motor?
 
@@ -731,7 +732,7 @@ public static class Intake {                                    // "intake" in t
 }
 ```
 
-**Why:** the intake brings its buttons (operator RT in, LT out) and its numbers (`Tunables.Intake`).
+**Why:** the intake brings its numbers (`Tunables.Intake`). Its buttons are lines in `Controls.java`: [Intake: buttons to add](modules/robot.md#intake-buttons-to-add).
 **More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#1-three-lines-in-robotjava), [Intake](modules/robot.md#intake).
 
 ### How do I add an intake on CR servos?
@@ -940,7 +941,7 @@ public static class Claw {                                      // "claw" in the
 }
 ```
 
-**Why:** the claw brings its button (operator B opens and closes), and the Servo Finder gives the two numbers.
+**Why:** the Servo Finder gives the two numbers. Its button is a line in `Controls.java`: [Claw: buttons to add](modules/robot.md#claw-buttons-to-add).
 **More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#1-three-lines-in-robotjava), [Claw](modules/robot.md#claw).
 
 ### How do I run a claw on two servos?
@@ -998,7 +999,7 @@ public static class Wrist {                                     // "wrist" in th
 }
 ```
 
-**Why:** the wrist brings its buttons (operator D-pad left and right step through the positions).
+**Why:** a wrist steps through its named positions. Its buttons are lines in `Controls.java`: [Wrist: buttons to add](modules/robot.md#wrist-buttons-to-add).
 **More:** [Wrist](modules/robot.md#wrist).
 
 ### How do I add any servo with named positions (a gate, a fold-out)?
@@ -1024,7 +1025,7 @@ public static class IntakeDeploy {                              // "intake_deplo
 }
 ```
 
-**Why:** a `Positioner` has no standard buttons, so you choose when it moves (here: at ▶).
+**Why:** a `Positioner` has no usual buttons, so you choose when it moves (here: at ▶).
 **More:** [Positioner](modules/robot.md#positioner), [an action at ▶](#how-do-i-run-an-action-when-the-opmode-starts).
 
 ### How do I get my servo's full range?
@@ -1062,8 +1063,8 @@ g2.back.press(() -> robot.intakeDeploy.goTo("stowed")).says("fold the intake in"
 ```
 
 **Why:** `goTo("name")` uses the position by its name, so the number lives only in `Tunables.java`.
-These lines take Y, A, X and B from the lift and the claw (their standard buttons), on purpose; see
-[pick a free button](#buttons-and-gestures).
+These lines use Y, A, X and B, the buttons the lift's and the claw's usual lines use: write one or the
+other; see [pick a free button](#buttons-and-gestures).
 **More:** [Lift](modules/robot.md#lift), [Claw](modules/robot.md#claw).
 
 ### My robot doesn't have this part yet. How do I keep its code?

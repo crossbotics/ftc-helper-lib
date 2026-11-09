@@ -20,8 +20,17 @@ public class Controls extends ControlMap<Robot> {
     // STEP 7: true if one driver does everything on gamepad 1.
     public static boolean oneDriver = false;
 
+    // Always pre-assigned on gamepad 1 (the library's): sticks: drive; LT: slow; Y: field-centric (double
+    // tap); BACK: pause; GUIDE: button map (held: tuning menu); START + BACK: debug lines; X / B in INIT:
+    // alliance.
+
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
+        // The intake's own buttons.
+        g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold)");
+        g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
+
+        // Ours.
         // Runs ONCE, at INIT: each line plugs a job into a button. No if, while or sleep() here (lesson 3).
         // An example: an action on gamepad 2's D-pad left (delete it if you deleted the intake in STEP 5).
         g2.dpadLeft.press(Actions.spitOut(robot)).says("spit out");

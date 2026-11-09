@@ -236,6 +236,35 @@ final class ButtonPlan {
         return out;
     }
 
+    /**
+     * With the parts' own buttons off: each part's usual button (from {@code usual}, the same robot with them on)
+     * that is free in this plan, one line per part, e.g. "Intake: usual buttons not in Controls.java: G2 RT in
+     * (hold), G2 LT out (hold)". A button that has any job here counts as done: the team chose it.
+     */
+    List<String> usualButtonsFree(ButtonPlan usual) {
+        Map<String, StringBuilder> byPart = new LinkedHashMap<>();
+        Pad[] theirs = oneDriver ? new Pad[] {usual.g1} : new Pad[] {usual.g1, usual.g2};
+        Pad[] ours = oneDriver ? new Pad[] {g1} : new Pad[] {g1, g2};
+        for (int pi = 0; pi < theirs.length; pi++) {
+            Object[] in = inputs(theirs[pi]), mine = inputs(ours[pi]);   // the same inputs, in the same order
+            for (int i = 0; i < in.length; i++) {
+                Entry e = usual.jobs.get(in[i]);
+                if (e == null || e.kind == Kind.FREE || e.source == null || e.source.equals(TEAM) || e.source.equals(LIBRARY)) continue;
+                Entry here = jobs.get(mine[i]);
+                if (here != null && here.kind != Kind.FREE) continue;
+                String name = in[i] instanceof Pad.Button ? ((Pad.Button) in[i]).label : ((Pad.Stick) in[i]).label;
+                StringBuilder sb = byPart.computeIfAbsent(e.source, k -> new StringBuilder());
+                sb.append(sb.length() == 0 ? "" : ", ").append(ours[pi]).append(' ').append(name).append(" (").append(words(e)).append(')');
+            }
+        }
+        List<String> out = new ArrayList<>();
+        for (Map.Entry<String, StringBuilder> b : byPart.entrySet()) {
+            out.add(b.getKey() + ": usual buttons not in Controls.java: " + b.getValue()
+                    + ". The lines: docs/modules/robot.md, \"Buttons to add\"");
+        }
+        return out;
+    }
+
     /** Notes for INIT, e.g. a module suggestion that found no free button. */
     List<String> notes() {
         List<String> out = new ArrayList<>();

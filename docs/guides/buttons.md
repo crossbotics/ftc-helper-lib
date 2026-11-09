@@ -86,8 +86,8 @@ g2.rb.tap(robot.launcher::fire).says("fire one")
      .doubleTap(() -> robot.launcher.fire(3)).says("fire three");
 ```
 
-A part's own buttons can move with one line too: `robot.launcher.fireOn(g2.y)` puts all of the
-launcher's RB firing (taps, hold, tap then hold) on Y, and `spinOn(...)` moves LB's spin up / down
+The launcher's firing can go on a button with one line too: `robot.launcher.fireOn(g2.y)` puts all of its
+firing (taps, hold, tap then hold) on Y, and `spinOn(...)` puts its spin up / down on a button
 ([cookbook](../cookbook.md#how-do-i-put-the-launchers-fire-button-on-another-button)).
 
 Taps on `fire` (and on the launcher's own RB) add up: at most `maxFiringQueue` shots wait (Tunables, default 4), so many nervous taps do
@@ -209,7 +209,7 @@ A stick is a number from -1 to 1 (up and right are +), not a button:
 | You want | Write |
 | --- | --- |
 | Its value every loop | `g2.leftStickY.use(robot.lift::manual).says("lift by hand")` |
-| No job (even if a part suggested one) | `g2.rightStickX.free()` |
+| No job (it stays free) | `g2.rightStickX.free()` |
 
 ## Moving the library's buttons
 
@@ -302,9 +302,9 @@ frees the button for `buttons(...)`.
 
 - One job per button, or several gestures. A button with `press(...)` and `tap(...)` stops INIT:
   `Controls.java: G2 B has two jobs`. The same gesture twice stops too: `G2 A has two "tap" jobs`.
-- Your job on a button a part suggested replaces the suggestion, and INIT says so, e.g.
-  `Launcher fire one; hold: keep firing: no button (G2 RB is your "score high" in Controls.java)`: that
-  job of the part has no button now (give it another one if you need it). `.free()` clears a button.
+- A part has no buttons until `Controls.java` has its lines (each part's "buttons to add" in the
+  [reference](../modules/robot.md)). INIT names a part's usual button that is still free:
+  `Intake: usual buttons not in Controls.java: G2 RT (in (hold)), ...`. `.free()` keeps a button empty.
 - A shift key has no job of its own. `.free()` on a shift key removes its pairs too.
 - A button held when ▶ is pressed (or when the tuning menu closes) does nothing until it is let go.
 
@@ -318,6 +318,6 @@ line per gesture, and the button map lists every gesture.
 
 - [Cookbook: buttons and gestures](../cookbook.md#buttons-and-gestures): one question, a few tested lines, per job.
 
-- [Lesson 3: Buttons](../tutorials/start/03-buttons.md): the standard buttons each part brings.
+- [Lesson 3: Buttons](../tutorials/start/03-buttons.md): each part's usual buttons, written out.
 - [The robot module: ControlMap](../modules/robot.md#controlmap): every method in one table.
 - [Gamepad module](../modules/gamepad.md): the same jobs with `ControllerBindings`, without the five files.

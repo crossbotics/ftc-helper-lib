@@ -194,6 +194,6 @@ Every launcher and feeder number: [Launcher](../guides/tunables.md#launcher),
 
 ---
 
-**Next:** `Controls.java` (coming). Until then: [lesson 1, Controls.java](../tutorials/start/01-robot-in-five-files.md#3-controlsjava-the-buttons-and-the-teleop).
+**Next:** [Controls.java](03-controls-java.md).
 **Look it up:** [every number of every part](../guides/tunables.md). **Go deeper:**
 [the finders](../guides/finders.md) and [the tuning menu](../guides/tuning.md).

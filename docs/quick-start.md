@@ -265,7 +265,7 @@ went (the loop, "when pressed", "wait") in these files.
 4. **`Robot.java`:** only if a wheel turns the wrong way (you find out in section 7, step 4, below): add `.reversed(...)` listing **every** reversed drive motor, on its own line **before** `.imu(...)` (the STEP 4 comment marks the place).
    **Why:** The list replaces the default (the left side reversed); `.imu(...)` ends the drive line with `));`, so a `.reversed(...)` after it does not build.
 5. **`Robot.java`:** your mechanisms: keep, delete or add `add(...)` lines (and a field for each). On each line, `.part("gobilda-5203-1150")`: your motor's or servo's id (on its label; optional but recommended). No intake? Also delete the `g2.dpadLeft` line in `Controls.java` and `spitOut` in `Actions.java`.
-   **Why:** Each part brings its numbers and buttons; with `.part(...)` its starting values are that part's real numbers, and the simulator moves it like the real one.
+   **Why:** Each part brings its numbers (its buttons are lines in `Controls.java`); with `.part(...)` its starting values are that part's real numbers, and the simulator moves it like the real one.
 6. **`Tunables.java`:** leave `maxPower` and `practiceMaxPower` at 0.4 for now.
    **Why:** A slow first drive is a safe first drive.
 7. **`Controls.java`:** the TeleOp's name (renamed it? Change `preselectTeleOp` in `autos/FirstAuto.java` to the same name); `group = "Examples"` to your own group name (or delete it); `oneDriver = true` if one person drives and runs the mechanisms.

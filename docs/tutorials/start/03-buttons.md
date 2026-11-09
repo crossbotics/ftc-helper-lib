@@ -57,10 +57,12 @@ Java](../../blocks-to-java.md) shows the same idea with blocks.) The `<Robot>` s
 - `@Override`: `buttons(...)` fills in a method the library class leaves to you; the library calls it
   to set up the buttons.
 
-## 2. The buttons the parts bring
+## 2. The parts' buttons, written out
 
-Each part in `Robot.java` brings its **standard buttons**. You write nothing for them. The lesson robot
-gets this map (two drivers):
+A part has **no buttons** until `Controls.java` has its lines. The lesson robot's `Controls.java` writes
+each part's usual buttons out, one line each, so you can see and change them. The library's own buttons
+on gamepad 1 (driving, BACK, GUIDE) are **always pre-assigned**: you write nothing for them. The lesson
+robot's map (two drivers):
 
 | Input | Gamepad 1 (driver) | Gamepad 2 (operator) |
 | --- | --- | --- |
@@ -76,8 +78,9 @@ gets this map (two drivers):
 
 The lift's buttons come from its named heights in `Tunables.Lift` (`down = 0, low = 900, high = 2400`):
 A is the lowest, Y the highest, X the second. Every part's buttons are in
-[robot.md's standard map](../../modules/robot.md#controlmap). **Why:** most robots use the same buttons
-for the same parts, so you only write what is different.
+[robot.md's standard map](../../modules/robot.md#controlmap). **Why the parts' lines are written out:** you
+read every button in one file. A `Controls.java` without them still works: each part then adds its own
+buttons by itself, the same ones.
 
 ## 3. One driver or two
 
@@ -114,7 +117,7 @@ later. `robot.claw::open` is a shorter way to write the same thing (a **method r
 | `tap`, `hold` (with other gestures on the same button: starts after 0.3 s), `doubleTap`, `tapThenHold`, `taps(n, ...)`, `heldFor(sec, ...)` | `g2.lb.tap(a).heldFor(1.0, b)` | several gestures on one button (section 5) |
 | `with(other, job)` | `g2.lb.with(g2.y, job)` | a pair: hold LB, press Y |
 | `rumble()` | `.toggle(robot.claw).rumble()` | a buzz when the job runs; on a toggle 2 = on, 1 = off |
-| `free()` | `g2.dpadDown.free()` | no job, even if a part suggested one |
+| `free()` | `g2.dpadDown.free()` | no job: the button stays empty on purpose |
 | `says(words)` | `.says("score high")` | the words on the button map |
 
 Notes:
@@ -182,13 +185,12 @@ The library tells them apart for you: a tap is a press let go before the hold st
 
 The rules, checked at INIT:
 
-- A job of yours on a button a part suggested **replaces** the suggestion. The part then has no
-  button for that job, and INIT says so, for example
-  `Lift down: no button (G2 A is your "drop" in Controls.java)`. Use `free()` to clear a button
-  without a new job.
-- **A free button today may be a part's button tomorrow.** When a later lesson adds a part (a
-  launcher in lesson 9 wants gamepad 2's LB and RB), your job on that button wins and the part gets
-  none. After adding a part, read INIT's notes for `no button`.
+- **A part you add has no buttons until you write its lines.** Copy them from its "buttons to add" in the
+  [reference](../../modules/robot.md) (for example [Lift](../../modules/robot.md#lift-buttons-to-add)). INIT
+  names a part's usual button that is still free: `Lift: usual buttons not in Controls.java: ...`.
+- **A button you use today may be one a later part usually wants.** When a later lesson adds a part (a
+  launcher in lesson 9 usually takes gamepad 2's LB and RB), give its lines other buttons. Use `free()`
+  to keep a button empty on purpose.
 - Two jobs of yours on one button stop at INIT: `Controls.java: G2 RB has two jobs. Give each button one
   job (put both commands in one lambda if you want both).`
 - A job on one of the library's buttons (gamepad 1's left stick, right stick X, LT with two drivers, Y on
@@ -276,7 +278,7 @@ two library jobs on one button stop with the button's name. A job you free is sa
 
 ## 8. The lesson robot's two actions, and a buzz
 
-The lesson robot uses gamepad 2's bumpers, which no part suggested:
+The lesson robot uses gamepad 2's bumpers, which no part's usual lines use:
 
 - **RB, "score high":** lift up, open the claw at the top, lift down.
 - **LB, "grab and lift"** (a tap): close the claw, then lift the piece a little. Held 1 s: the lift

@@ -179,7 +179,7 @@ do not say:
   **Why:** a guess could swing the poker into the frame. (The simulator's REV robot file has stand-ins
   for them, so it runs before you measure.) Nothing moves at INIT, so the code does not fold it: fold the poker by hand
   before INIT, so the robot fits the 18 in start cube. It first moves when A, B or an action sends it.
-- **Buttons:** one driver on gamepad 1, with the library's standard buttons (LB flywheel on/off, RB fire
+- **Buttons:** one driver on gamepad 1, with each part's usual buttons written out (LB flywheel on/off, RB fire
   one, D-pad up/down speed +/- 100 RPM), so this robot drives like the other examples. REV's code puts
   the intake on RB and RT and runs the feeder by hand on the D-pad: change a button in `Controls.java` if
   your drivers want REV's layout.
@@ -334,7 +334,7 @@ as it is. What the comments in the code do not say:
   of the roller. For that one, take `"rollerF"` out of the intake line and add the commented `stick`
   line in `Robot.java` (`Tunables.Stick`: in = 0.46, out = 0.65). AndyMark does not say which of the
   kit's servos the stick has: use the one on yours (`"am-4955a"` if it is a High Speed servo too).
-- **Buttons:** one driver on gamepad 1, with the library's standard buttons (RT intake in, LT out, RB
+- **Buttons:** one driver on gamepad 1, with each part's usual buttons written out (RT intake in, LT out, RB
   throws one piece), so this robot drives like the other examples. AndyMark's code puts the intake on the
   bumpers (LB in, RB out) and runs the catapult while RT is held: change a button in `Controls.java` if
   your drivers want AndyMark's layout.
@@ -392,7 +392,7 @@ comments in the code do not say:
   first TeleOp. The push and return times are guesses.
 - **Fire all (Y):** spins up, then pushes the pieces in one by one with the flap as soon as the wheel is
   at speed. It uses only the launcher, so the driver can still run the intake.
-- **Buttons:** one driver on gamepad 1, one stick to drive, and the library's standard buttons, so this
+- **Buttons:** one driver on gamepad 1, one stick to drive, and each part's usual buttons written out, so this
   robot drives like the other examples. Studica's code drives "tank style" (each stick runs one side),
   puts the intake on the bumpers, the flywheel on RT and the flap on X and A: change a button in
   `Controls.java` if your drivers want Studica's layout.
@@ -419,7 +419,8 @@ robot file and the notes on this page all use them.
    `Tunables.IntakeDeploy`). Write `MEASURE` for each position and limit, and `DEFAULT` for the rest
    ([DEFAULT and MEASURE](tunables.md#default-and-measure)). **Why:** INIT then stops until a finder gives
    the real number, so a guess never pushes the part into the frame.
-4. **Buttons:** each part brings its own buttons. Move one, or add a job, in `Controls.java`
+4. **Buttons:** each part's buttons are written out in `Controls.java`, so a part you add has **no buttons**
+   until you write its lines there (each part's "buttons to add" in the [reference](../modules/robot.md)). Move one, or add a job, in `Controls.java`
    ([lesson 3](../tutorials/start/03-buttons.md)). Several parts together: an action in `Actions.java`
    ([lesson 5](../tutorials/start/05-actions.md)).
 5. **Changed the intake, or where the pieces ride?** Count again how many fit (POLLEN, NECTAR, a mix)

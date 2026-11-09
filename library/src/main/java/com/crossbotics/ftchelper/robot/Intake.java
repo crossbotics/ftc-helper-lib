@@ -252,8 +252,12 @@ public final class Intake extends Module<Intake> implements Toggleable {
         ignoreStop = false;
     }
 
-    // The suggested in-button, every loop while held: in; held 1 s while held back, in anyway.
-    private void holdIn() {
+    /**
+     * The intake's own "in" button job, for {@code hold(...)}: runs in every loop while the button is held.
+     * With {@link #stopsWhen}, held 1 s it runs in anyway (the count was wrong). Your own button:
+     * {@code g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold)");}
+     */
+    public void holdIn() {
         in();
         long now = clock.getAsLong();
         if (inHeldSince < 0) inHeldSince = now;

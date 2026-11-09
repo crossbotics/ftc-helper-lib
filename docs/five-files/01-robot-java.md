@@ -238,8 +238,8 @@ Its numbers: `speedRpm`, `readyBandRpm` and the speed control (`kP`, `kF`, ...)
 | `Camera` | a webcam or Limelight | [Camera](../modules/robot.md#camera) |
 | `Lights` | a light strip or Blinkin | [Lights](../modules/robot.md#lights) |
 
-Each part also gets its numbers in `Tunables.java` and its buttons in `Controls.java`. The next pages
-show how.
+Each part also gets its numbers in `Tunables.java` and its buttons in `Controls.java` (a part has no
+buttons until you write its lines there). The next pages show how.
 
 ---
 

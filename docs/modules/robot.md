@@ -13,7 +13,7 @@ Quick answers with code to copy: the [cookbook](../cookbook.md) (driving, button
 A team's whole robot program in five files a student can read in one sitting. This is the
 recommended way to use the library, and the one the main-track lessons teach: start with lesson 1
 (above), or the [Quick start](../quick-start.md) for a driving robot in 30 minutes. Each mechanism
-is a **module**: one line in `Robot.java` that brings its own numbers, buttons and autonomous steps.
+is a **module**: one line in `Robot.java` that brings its own numbers and autonomous steps; its buttons are lines in `Controls.java`.
 Each file answers one question, so you always know where to look:
 
 | File | Answers | Changes when |
@@ -26,7 +26,7 @@ Each file answers one question, so you always know where to look:
 
 A new robot: `./gradlew :sim:newRobot -Pconfig=... -PteamCode=...` writes the five files from the
 robot configuration ([below](#making-the-files)). A mechanism added later is one line in `Robot.java`:
-its numbers, its standard buttons and its simulator lines come with it.
+its numbers and its simulator lines come with it (its buttons: lines in `Controls.java`).
 
 ```mermaid
 flowchart LR
@@ -402,7 +402,7 @@ What "off" means, everywhere:
 | Telemetry | its line is `- (not on the robot)` (a servo part that is on the robot but has had no command yet says `not sent yet`) |
 | INIT | PRACTICE: a note. **COMPETITION: a loud warning at the very top** (above every other warning), `!! COMPETITION: "intake_deploy" not in the configuration: IntakeDeploy is OFF (optional part). On the robot? Check its name in the configuration, then INIT again`: at an event, a part that is off is most likely a misspelled or lost name |
 | [Actions](#action) | the step's command to it is skipped and the action goes on. A wait right after a step that only used parts that are off is skipped too (nothing to wait for). `status()` ends with `skipped IntakeDeploy (not on the robot)`, `skipped()` lists them; an autonomous's report says it on the step |
-| Buttons | the part's own suggested buttons, `toggle(part)` and any button given `.needs(part)` do nothing; the button map says `- off: IntakeDeploy not on the robot` (COMPETITION: `- !! OFF: ...`) |
+| Buttons | a part's own buttons (with `useStandardButtons()` true), `toggle(part)` and any button given `.needs(part)` do nothing; the button map says `- off: IntakeDeploy not on the robot` (COMPETITION: `- !! OFF: ...`) |
 | [Interlock](#interlock) rules | a rule with it is off (nothing to hit), and needs no Tunables section: INIT says `Interlock TurretLift: off (Lift is not on the robot)` |
 | [Aim](#aim) | a following turret that is off does not aim: whole-robot aim (`robot.aimMode()`) may be used |
 | Tunables | its section may be missing or unfinished: no stop. Wrong numbers (max below min) are a note: `Fix its Tunables before adding it: ...`. Its numbers are **hidden from the tuning menu** (it says `Not on the robot (hidden): IntakeDeploy`): changing them would do nothing. Saved values are kept, and they come back the day the part is there |
@@ -539,6 +539,7 @@ intake = add(Intake.motor("intake").part("gobilda-5203-117")
 | Method | |
 | --- | --- |
 | `in()`, `out()`, `stop()`, `toggle()` | run in / out until stopped; on/off |
+| `holdIn()` | the intake's own RT job, for `hold(...)`: in while held; with `stopsWhen`, held 1 s: in anyway (`g2.rt.hold(robot.intake::holdIn, robot.intake::stop)`) |
 | `reverse()`, `endReverse()` | push out while a button is held, then back to what it was doing |
 | `isRunning()`, `isPushingOut()` | running at all; pushing out now (`out()`, or `reverse()` held) |
 | `onAtStart()` | runs in from ▶ until stopped |
@@ -551,6 +552,30 @@ intake = add(Intake.motor("intake").part("gobilda-5203-117")
 `onAtStart()`: RT switches it on/off, hold LT pushes out. With `stopsWhen`: hold RT for 1 s to run in
 anyway (with `onAtStart()`: tap RT switches, hold it 1 s runs in anyway), and the Driver Station warns
 when it has been held back for more than 2 s, so the drivers notice a count that says "full" too soon.
+
+### Intake: buttons to add
+
+A part has **no buttons** until you add its lines to `buttons(...)` in `Controls.java`. These are the usual
+ones: copy them as they are, or change a button or the words.
+
+- `g2` is gamepad 2, the operator's. With one driver (`oneDriver = true` in `Controls.java`), the same lines
+  put these buttons on gamepad 1: copy them unchanged. Want another button? Change `g2.rt` to, for example, `g2.lb`.
+- Each line: which button, how it starts (`.hold`, `.toggle`, `.press`...), what it does, and `.says("...")`:
+  the words on the button map at INIT, so the drivers know the button. [Reading a button line](#reading-a-button-line).
+
+<!-- recipe: buttons-intake -->
+```java title="Controls.java"
+g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold)");
+g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
+```
+
+With `onAtStart()` (it runs from ▶), RT switches it instead:
+
+<!-- recipe: buttons-intake-on-at-start -->
+```java title="Controls.java"
+g2.rt.toggle(robot.intake).says("in on/off");
+g2.lt.hold(robot.intake::reverse, robot.intake::endReverse).says("out (hold)");
+```
 
 ---
 
@@ -609,6 +634,26 @@ use the other method. Two motors pushing against each other get hot and can brea
 `motor.lift_right = lift, part=..., with=lift_left, mirrored=true`: in the simulator both turn one slide.
 Inside, the lift's [`SafeMotor`](safety.md#safemotor) sends every power to both (`alsoPowers`).
 
+### Lift: buttons to add
+
+A part has **no buttons** until you add its lines to `buttons(...)` in `Controls.java`. These are the usual
+ones: copy them as they are, or change a button or the words.
+
+- `g2` is gamepad 2, the operator's. With one driver (`oneDriver = true` in `Controls.java`), the same lines
+  put these buttons on gamepad 1: copy them unchanged. Want another button? Change `g2.rt` to, for example, `g2.lb`.
+- Each line: which button, how it starts (`.hold`, `.toggle`, `.press`...), what it does, and `.says("...")`:
+  the words on the button map at INIT, so the drivers know the button. [Reading a button line](#reading-a-button-line). A is the lowest height, Y the highest, X the second.
+
+<!-- recipe: buttons-lift -->
+```java title="Controls.java"
+g2.a.press(() -> robot.lift.goTo("down")).says("down");
+g2.x.press(() -> robot.lift.goTo("low")).says("low");
+g2.y.press(() -> robot.lift.goTo("high")).says("high");
+g2.dpadUp.press(robot.lift::stepUp).says("next height up");
+g2.dpadDown.press(robot.lift::stepDown).says("next height down");
+g2.leftStickY.use(robot.lift::manual).says("by hand");
+```
+
 ## Arm
 
 ```java
@@ -618,6 +663,21 @@ arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
 The same as Lift, in degrees (`gearRatio`: motor turns per arm turn; `bottomSwitch(name)` and
 [`alsoMotor`](#two-motors-on-one-lift-or-arm) like the lift's; section: the device's name in CamelCase, `arm` reads `Tunables.Arm`). 0 degrees is where the arm is
 when the program starts. Button: operator right stick Y by hand.
+
+### Arm: buttons to add
+
+A part has **no buttons** until you add its lines to `buttons(...)` in `Controls.java`. These are the usual
+ones: copy them as they are, or change a button or the words.
+
+- `g2` is gamepad 2, the operator's. With one driver (`oneDriver = true` in `Controls.java`), the same lines
+  put these buttons on gamepad 1: copy them unchanged. Want another button? Change `g2.rt` to, for example, `g2.lb`.
+- Each line: which button, how it starts (`.hold`, `.toggle`, `.press`...), what it does, and `.says("...")`:
+  the words on the button map at INIT, so the drivers know the button. [Reading a button line](#reading-a-button-line).
+
+<!-- recipe: buttons-arm -->
+```java title="Controls.java"
+g2.rightStickY.use(robot.arm::manual).says("by hand");
+```
 
 ---
 
@@ -668,6 +728,21 @@ wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());   // 0
 
 `open()`, `close()`, `toggle()`, `isClosed()`. Button: operator B opens/closes.
 
+### Claw: buttons to add
+
+A part has **no buttons** until you add its lines to `buttons(...)` in `Controls.java`. These are the usual
+ones: copy them as they are, or change a button or the words.
+
+- `g2` is gamepad 2, the operator's. With one driver (`oneDriver = true` in `Controls.java`), the same lines
+  put these buttons on gamepad 1: copy them unchanged. Want another button? Change `g2.rt` to, for example, `g2.lb`.
+- Each line: which button, how it starts (`.hold`, `.toggle`, `.press`...), what it does, and `.says("...")`:
+  the words on the button map at INIT, so the drivers know the button. [Reading a button line](#reading-a-button-line).
+
+<!-- recipe: buttons-claw -->
+```java title="Controls.java"
+g2.b.toggle(robot.claw).says("open / close");
+```
+
 ## Wrist
 
 ```java
@@ -678,15 +753,36 @@ wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed"));   // Tunables.Wris
 swings an arm shape (`.looks(Shape.arm().on(lift)...angle("folded", -90).angle("flower", -213))`) and a
 claw can ride on it (`Claw ... .looks(Shape.claw().on(wrist)...)`).
 
+### Wrist: buttons to add
+
+A part has **no buttons** until you add its lines to `buttons(...)` in `Controls.java`. These are the usual
+ones: copy them as they are, or change a button or the words.
+
+- `g2` is gamepad 2, the operator's. With one driver (`oneDriver = true` in `Controls.java`), the same lines
+  put these buttons on gamepad 1: copy them unchanged. Want another button? Change `g2.rt` to, for example, `g2.lb`.
+- Each line: which button, how it starts (`.hold`, `.toggle`, `.press`...), what it does, and `.says("...")`:
+  the words on the button map at INIT, so the drivers know the button. [Reading a button line](#reading-a-button-line).
+
+<!-- recipe: buttons-wrist -->
+```java title="Controls.java"
+g2.dpadLeft.press(robot.wrist::previous).says("previous position");
+g2.dpadRight.press(robot.wrist::next).says("next position");
+```
+
 ## Positioner
 
 ```java
 intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque"));   // Tunables.IntakeDeploy: stowed, deployed
 ```
 
-`goTo(name)`, `next()`. No suggested buttons: use it from Controls.java or an action. For the simulator,
+`goTo(name)`, `next()`. No usual buttons: use it from Controls.java or an action. For the simulator,
 it swings an arm shape: `.looks(Shape.arm()...angle("stowed", 90).angle("deployed", 20))`, and can push a
 passive part over (`Shape.dropsWhen`, [Shapes](#shapes-and-parts)).
+
+### Positioner: buttons to add
+
+A positioner has no usual buttons: you choose when it moves, for example
+`g2.x.press(() -> robot.intakeDeploy.goTo("deployed")).says("deploy");` or at ▶ in `Robot.java`.
 
 ---
 
@@ -756,6 +852,22 @@ stick X by hand, BACK following on/off. The Driver Station shows one line, `Turr
 (`AIMED` only when `isAimed()`: while following, at a goal seen now; `odometry`, or `no goal`: it holds where
 it points), `homing: looking for the switch` after ▶, and for a servo turret before ▶
 `not sent anywhere yet (at ▶: 0 deg)`.
+
+### Turret: buttons to add
+
+A part has **no buttons** until you add its lines to `buttons(...)` in `Controls.java`. These are the usual
+ones: copy them as they are, or change a button or the words.
+
+- `g2` is gamepad 2, the operator's. With one driver (`oneDriver = true` in `Controls.java`), the same lines
+  put these buttons on gamepad 1: copy them unchanged. Want another button? Change `g2.rt` to, for example, `g2.lb`.
+- Each line: which button, how it starts (`.hold`, `.toggle`, `.press`...), what it does, and `.says("...")`:
+  the words on the button map at INIT, so the drivers know the button. [Reading a button line](#reading-a-button-line).
+
+<!-- recipe: buttons-turret -->
+```java title="Controls.java"
+g2.rightStickX.use(v -> robot.turret.manual(-v)).says("by hand (right = clockwise)");
+g2.back.toggle(robot.turret.followMode()).says("follow the goal on/off");   // only with follows(...)
+```
 
 ## Interlock
 
@@ -844,6 +956,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `fireAction(n, rpm)`, `fireAllAction(rpm)` | the same, at this flywheel speed (RPM), then back to the usual one (`speedRpm` or the shot table; a stopped action goes back too). For a robot with **no camera** that shoots from a spot it knows: `.action(robot.launcher.fireAllAction(2250))`. The auto builder's **flywheel** box on a fire action writes it. A speed above the motor's top speed stops INIT |
 | `useSpeed(rpm)`, `useNormalSpeed()`, `fixedSpeedRpm()` | use one speed from now on (the speed trim still applies) until `useNormalSpeed()`; most code wants the fire actions above, which go back by themselves |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |
+| `step(direction)`, `repeatStep(direction)`, `repeatEnd()` | the launcher's own D-pad jobs: one step (+1 / -1: the trim with a shot table, else `stepRpm`); while held, a step after 0.5 s then 4 a second, and `repeatEnd()` on release (`g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd)`) |
 | `trimBy(change)`, `setTrim(percent)`, `resetTrim()`, `trim()` | the [speed trim](#speed-trim-and-battery-compensation): every shot speed (table or fixed) +/- that many percent, e.g. `trimBy(+2)`; kept to +/- `trimMaxPercent` and to the motor's top speed; `resetTrim()` also clears `adjust` |
 | `atMotorLimit()` | true when the trimmed speed is cut to the motor's top speed ("(motor limit)"; more trim up does nothing) |
 | `lastTrimOffered()`, `useLastTrim()` | the trim used last time (since the robot app started), offered at INIT ("+3%", "" if none); use it (double-tap D-pad up does). Never applied by itself |
@@ -1024,6 +1137,41 @@ public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional (th
 // a button: g2.y.press(() -> robot.launcher.trimBy(+3));   an action: .then(() -> r.launcher.setTrim(+5))
 ```
 
+### Launcher: buttons to add
+
+A part has **no buttons** until you add its lines to `buttons(...)` in `Controls.java`. These are the usual
+ones: copy them as they are, or change a button or the words.
+
+- `g2` is gamepad 2, the operator's. With one driver (`oneDriver = true` in `Controls.java`), the same lines
+  put these buttons on gamepad 1: copy them unchanged. Want another button? Change `g2.rt` to, for example, `g2.lb`.
+- Each line: which button, how it starts (`.hold`, `.toggle`, `.press`...), what it does, and `.says("...")`:
+  the words on the button map at INIT, so the drivers know the button. [Reading a button line](#reading-a-button-line). Its feeder (an indexer in the launcher) needs no button: RB feeds.
+
+<!-- recipe: buttons-launcher -->
+```java title="Controls.java"
+g2.lb.toggle(robot.launcher).says("spin up / down");
+g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
+g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd).says("speed up, 4 a second")
+        .tap(() -> robot.launcher.step(1)).says("speed up");
+g2.dpadDown.hold(() -> robot.launcher.repeatStep(-1), robot.launcher::repeatEnd).says("speed down, 4 a second")
+        .tap(() -> robot.launcher.step(-1)).says("speed down")
+        .doubleTap(robot.launcher::resetTrim).says("back to speedRpm");
+```
+
+With a shot table (`speedFromDistance(...)`), the D-pad trims the speed in percent, and D-pad right picks the next table:
+
+<!-- recipe: buttons-launcher-tables -->
+```java title="Controls.java"
+g2.lb.toggle(robot.launcher).says("spin up / down");
+g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
+g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd).says("speed trim +1%, 4 a second")
+        .tap(() -> robot.launcher.step(1)).says("speed trim +1%");
+g2.dpadDown.hold(() -> robot.launcher.repeatStep(-1), robot.launcher::repeatEnd).says("speed trim -1%, 4 a second")
+        .tap(() -> robot.launcher.step(-1)).says("speed trim -1%")
+        .doubleTap(robot.launcher::resetTrim).says("speed trim 0");
+g2.dpadRight.press(robot.launcher::nextTable).says("next shot table");   // with two tables or more
+```
+
 ## Indexer
 
 `Indexer.servo(name)` (Tunables: `rest`, `push`, `pushSec`, `returnSec`, `alsoTrim`, `pushStep` for `adjustPush(steps)`, a D-pad trim of the push in TeleOp), `Indexer.crServo(name)` and
@@ -1035,6 +1183,15 @@ at ▶. Commands: `feedOne()`, `isBusy()`, `isFeeding()`, `isJammed()`, `clearJa
 runs your code each time a feed really starts. A [Pieces](#pieces-and-piecesensor) counter counts the
 piece out only once it has gone: its ready sensor sees it leave, or the feed ends without a jam (a feed
 stopped part way, or jammed, leaves the count as it was).
+
+### Indexer: buttons to add
+
+An indexer in a launcher needs no button (the launcher's RB feeds). An indexer on its own:
+
+<!-- recipe: buttons-indexer -->
+```java title="Controls.java"
+g2.rb.press(robot.feeder::feedOne).says("feed one");   // an indexer on its own, not in a launcher
+```
 
 ## Hood
 
@@ -1099,6 +1256,21 @@ Station shows `Hood : 12.5 deg (table, trim +1.0 deg)` (`moving` until it should
 Not built yet: a CR servo with an absolute encoder. It fits the same way: anything that is an
 [`AngleDevice`](mechanism.md#angledevice) can be a hood of the [plain launcher](launcher.md#launcher)
 (`new Launcher(...).hood(myHood)`).
+
+### Hood: buttons to add
+
+A part has **no buttons** until you add its lines to `buttons(...)` in `Controls.java`. These are the usual
+ones: copy them as they are, or change a button or the words.
+
+- `g2` is gamepad 2, the operator's. With one driver (`oneDriver = true` in `Controls.java`), the same lines
+  put these buttons on gamepad 1: copy them unchanged. Want another button? Change `g2.rt` to, for example, `g2.lb`.
+- Each line: which button, how it starts (`.hold`, `.toggle`, `.press`...), what it does, and `.says("...")`:
+  the words on the button map at INIT, so the drivers know the button. [Reading a button line](#reading-a-button-line).
+
+<!-- recipe: buttons-hood -->
+```java title="Controls.java"
+g2.leftStickY.use(robot.launcher.hood()::byHand).says("hood angle (up = bigger angle)");
+```
 
 ---
 
@@ -1466,6 +1638,21 @@ with `startsWith(...)`; a ready sensor corrects an empty count). The simulator (
 `color.NAME = at=ready`, `distance.NAME = at=intake, acrossMm=150`) simulates colour and distance
 sensors, not the camera.
 
+### Pieces: buttons to add
+
+A part has **no buttons** until you add its lines to `buttons(...)` in `Controls.java`. These are the usual
+ones: copy them as they are, or change a button or the words.
+
+- `g2` is gamepad 2, the operator's. With one driver (`oneDriver = true` in `Controls.java`), the same lines
+  put these buttons on gamepad 1: copy them unchanged. Want another button? Change `g2.rt` to, for example, `g2.lb`.
+- Each line: which button, how it starts (`.hold`, `.toggle`, `.press`...), what it does, and `.says("...")`:
+  the words on the button map at INIT, so the drivers know the button. [Reading a button line](#reading-a-button-line).
+
+<!-- recipe: buttons-pieces -->
+```java title="Controls.java"
+g2.leftStickButton.heldFor(1.0, robot.pieces::clear).says("piece count = 0");
+```
+
 ---
 
 ## Lights
@@ -1627,8 +1814,39 @@ public class Controls extends ControlMap<Robot> {
 }
 ```
 
-`Controls.java` is the TeleOp ([`EasyTeleOp`](teleop.md) underneath). Every module on the robot already
-has its standard buttons; write only what differs. A [`Pad`](#controlmap) has every input by name:
+### Reading a button line
+
+Every button line has the same four pieces:
+
+```java
+//  1. which button   2. how it starts                       3. what it does    4. its words
+    g2.rt             .hold(robot.intake::holdIn,            robot.intake::stop) .says("in (hold)");
+```
+
+1. **Which button:** `g1` is gamepad 1 (the driver), `g2` is gamepad 2 (the operator), then the button: `rt`
+   is the right trigger. With one driver (`oneDriver = true`), `g2` lines go on gamepad 1.
+2. **How it starts**, and 3. **what it does:**
+
+   | Written | The job runs |
+   | --- | --- |
+   | `.press(job)` | once, when the button goes down |
+   | `.hold(job, stopJob)` | `job` every loop while the button is held, then `stopJob` once when it is let go |
+   | `.toggle(part)` | each press switches the part: on, off, on... A claw: open, closed. A launcher: spinning, stopped. With `.rumble()`: two buzzes = on, one = off |
+   | `.use(job)` | a stick: `job` gets the stick's value (-1 to 1) every loop |
+   | `.heldFor(1.0, job)` | once, after the button is held 1 s (a safe "are you sure?") |
+   | `.tap(job)`, `.doubleTap(job)` | once per quick tap; once on two quick taps. Chain them on one button |
+
+   `robot.intake::stop` hands over the intake's `stop` command, for the button to run later.
+   `() -> robot.lift.goTo("high")` is a small piece of code with its own words in it (a **lambda**).
+4. **`.says("...")`:** the words on the button map. INIT shows the map (every button and its words), and
+   a tap of GUIDE shows it during the match. Without `.says`, the map shows only the press type, like
+   `G2 RT: hold`, so the drivers cannot tell what it does.
+
+Every press type: [the button menu](../guides/buttons.md).
+
+`Controls.java` is the TeleOp ([`EasyTeleOp`](teleop.md) underneath). The library's own buttons (driving,
+pause, menus) are always there; every other button is a line in `buttons(...)`, a part's too (each part's
+"buttons to add" below). A [`Pad`](#controlmap) has every input by name:
 `a b x y lb rb lt rt back start guide dpadUp dpadDown dpadLeft dpadRight leftStickButton rightStickButton`
 (buttons; a trigger counts as pressed past half way) and `leftStickX leftStickY rightStickX rightStickY`
 (sticks, up and right +).
@@ -1648,7 +1866,7 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | `with(other, job)` | a pair: hold this button (the shift key, no job of its own), press `other` (same gamepad): `job` once. `other` keeps its own job alone |
 | `rumble()`, `rumble(n)` | feedback: buzzes when the job (or the gesture just before) runs; a toggle buzzes 2 = on, 1 = off |
 | `slow()` | one driver (or two after `lib.slow(null)`): on a trigger, drives slower the further it is pulled (down to `slowSpeed`); on a button, slow while held |
-| `free()` | no job: the button stays free, even if a module suggested one for it |
+| `free()` | no job: the button stays free |
 | `says(words)` | the words on the help page |
 | `needs(part...)` | the job needs these parts: while one is not on the robot ([`optional()`](#parts-not-on-the-robot-yet), not in the configuration) the button does nothing and the map says `- off: IntakeDeploy not on the robot`. A part's own buttons and `toggle(part)` know their part already |
 | on a pad: `g2.rumbleWhen(test)`, `rumbleWhen(test, n)` | feedback from the robot: a buzz each time `test` becomes true |
@@ -1665,8 +1883,8 @@ button has a longer gesture that starts the same way; then it waits until it kno
 a tuned value back into `Tunables.java`.
 Every option as a menu: [the button menu](../guides/buttons.md).
 
-In `Controls.java` you can also override `useStandardButtons()` (return false: only your own jobs, no
-module suggestions) and `libraryButtons(LibraryButtons lib, Pad g1, Pad g2)` (move or free the
+In `Controls.java` you can also override `useStandardButtons()` (return true: each part adds its usual
+buttons by itself, the way before v0.39.0; default false, and INIT names a part's usual button still free) and `libraryButtons(LibraryButtons lib, Pad g1, Pad g2)` (move or free the
 library's own buttons, below); `robot()` and `oneDriver()` read the robot and the one-driver switch.
 
 **Moving the library's buttons:** every library job can go on another button, or none (`null`):

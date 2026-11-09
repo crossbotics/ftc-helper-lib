@@ -41,6 +41,7 @@ public class ExampleRobotsInitTest {
             com.crossbotics.ftchelper.examples.pedrobot.Robot.class,
             com.crossbotics.ftchelper.examples.quickstart.Robot.class,
             com.crossbotics.ftchelper.examples.firstrobot.Robot.class,
+            com.crossbotics.ftchelper.examples.allbuttons.Robot.class,
             com.crossbotics.ftchelper.examples.cookbook.Robot.class);
 
     @Test public void everyExampleRobotInitsWithNoError() throws Exception {

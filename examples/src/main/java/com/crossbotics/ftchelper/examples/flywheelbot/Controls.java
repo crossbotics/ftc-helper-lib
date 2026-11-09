@@ -15,8 +15,25 @@ import com.crossbotics.ftchelper.robot.Pad;
 public class Controls extends ControlMap<Robot> {
     public static boolean oneDriver = false;   // true: everything on gamepad 1
 
+    // Always pre-assigned on gamepad 1 (the library's): sticks: drive; LT: slow; BACK: pause; GUIDE: button
+    // map (held: tuning menu); START + BACK: debug lines; X / B in INIT: alliance.
+
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
+        // The intake's own buttons.
+        g2.rt.toggle(robot.intake).says("in on/off");
+        g2.lt.hold(robot.intake::reverse, robot.intake::endReverse).says("out (hold)");
+
+        // The launcher's own buttons.
+        g2.lb.toggle(robot.launcher).says("spin up / down");
+        g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
+        g2.dpadUp.hold(() -> robot.launcher.repeatStep(1), robot.launcher::repeatEnd).says("speed up, 4 a second")
+                .tap(() -> robot.launcher.step(1)).says("speed up");
+        g2.dpadDown.hold(() -> robot.launcher.repeatStep(-1), robot.launcher::repeatEnd).says("speed down, 4 a second")
+                .tap(() -> robot.launcher.step(-1)).says("speed down")
+                .doubleTap(robot.launcher::resetTrim).says("back to speedRpm");
+
+        // Ours.
         // RB: whole-robot aim on/off (two buzzes = on, one = off). Numbers: Tunables.Aim.
         g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
         // Gamepad 2 buzzes while the robot points at the goal (the closer, the stronger).
