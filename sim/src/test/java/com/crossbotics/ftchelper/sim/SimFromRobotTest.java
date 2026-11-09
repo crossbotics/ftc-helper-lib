@@ -600,6 +600,37 @@ public class SimFromRobotTest {
         }
     }
 
+    // ----------------------------- the goBILDA starter bot with mecanum wheels (Strafer) -----------------------------
+
+    @Test public void goBildaStraferBotMatchesTheMeasuredRobotFile() throws Exception {
+        String existing = new String(Files.readAllBytes(java.nio.file.Paths.get("robots/starter-bot-gobilda-strafer.properties")),
+                StandardCharsets.UTF_8);
+        SimFromRobot.Result r = SimFromRobot.merge(existing,
+                new com.crossbotics.ftchelper.examples.gobildastraferbot.Robot().simLines(), "Robot", "biobuzz-2026");
+        assertTrue("Robot.java and the CAD-made robot file agree: " + r.problems, r.problems.isEmpty());
+        assertTrue("the measured shapes are kept: " + r.kept, r.kept.contains("shape.intake") && r.kept.contains("motor.launcher"));
+    }
+
+    @Test public void goBildaStraferBotRunsOnItsRobotFile() throws Exception {
+        kitBotRuns("robots/starter-bot-gobilda-strafer.properties",
+                com.crossbotics.ftchelper.examples.gobildastraferbot.Tunables.Drive.class.getField("calibrated"),
+                "goBILDA Strafer Bot TeleOp", "goBILDA Strafer Bot Launch and Leave");
+    }
+
+    @Test public void goBildaStraferBotStrafes() throws Exception {
+        try (SimRun s = new SimRun("robots/starter-bot-gobilda-strafer.properties")) {
+            s.init("goBILDA Strafer Bot TeleOp");
+            s.start();
+            double x0 = s.robot().x, y0 = s.robot().y;
+            s.g1().left_stick_x = 1;                                  // stick right: slide right, no turn
+            SimRun.pause(1.0);
+            s.g1().left_stick_x = 0;
+            assertTrue("it moved sideways: x " + x0 + " -> " + s.robot().x, Math.abs(s.robot().x - x0) > 6);
+            assertEquals("not forward", y0, s.robot().y, 3);
+            assertEquals("", s.error());
+        }
+    }
+
     // ----------------------------- the REV, AndyMark and Studica starter bots -----------------------------
 
     // Each kit bot's TeleOp and autonomous start and stop cleanly on its own robot file

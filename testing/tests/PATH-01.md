@@ -6,7 +6,7 @@ priority: medium
 where: sim
 minutes: 20
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
 docs: [tutorials/start/08-paths-with-pedro.md#6-try-it-in-the-simulator-first]
 ---

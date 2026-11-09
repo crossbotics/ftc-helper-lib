@@ -6,7 +6,7 @@ priority: high
 where: both
 minutes: 60
 needs: [mecanum|tank]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
 docs: [quick-start.md, templates.md]
 ---

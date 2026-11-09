@@ -29,6 +29,7 @@ public class ExampleRobotsInitTest {
     // One Robot.java per example robot (docs/templates.md lists them), and the cookbook's.
     private static final List<Class<? extends RobotDefinition>> ROBOTS = Arrays.asList(
             com.crossbotics.ftchelper.examples.gobildabot.Robot.class,
+            com.crossbotics.ftchelper.examples.gobildastraferbot.Robot.class,
             com.crossbotics.ftchelper.examples.revbot.Robot.class,
             com.crossbotics.ftchelper.examples.andymarkbot.Robot.class,
             com.crossbotics.ftchelper.examples.studicabot.Robot.class,

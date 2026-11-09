@@ -6,7 +6,7 @@ priority: medium
 where: both
 minutes: 15
 needs: [flywheel]
-kit_bots: []
+kit_bots: [gobilda-strafer]
 since: v0.34.0
 docs: [modules/robot.md#firing-shot-modes-feed-stop-piece-path, guides/tunables.md#launcher]
 ---

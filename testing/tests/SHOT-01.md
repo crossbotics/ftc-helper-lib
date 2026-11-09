@@ -6,7 +6,7 @@ priority: high
 where: real
 minutes: 30
 needs: [flywheel]
-kit_bots: [gobilda, rev, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, studica]
 since: v0.16.0
 docs: [guides/finders.md#flywheel-finder-gains-and-recovery, tutorials/start/09-shooter-and-camera.md#2-its-numbers]
 ---

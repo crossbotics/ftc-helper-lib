@@ -4,6 +4,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- **goBILDA's StarterBot with mecanum wheels** (on a Strafer chassis), a fifth BIOBUZZ starter bot: the template
+  `gobildastraferbot` (five files with goBILDA's own configuration names: `left_front_drive` and the others,
+  `windmillServo`), its simulator robot file `sim/robots/starter-bot-gobilda-strafer.properties` (measured from
+  goBILDA's STEP CAD), its scenario, and an autonomous, "goBILDA Strafer Bot Launch and Leave" (goBILDA's code has
+  a TeleOp only). The test report form and 43 community tests list it as a kit bot.
+
 ### Changed
 
 - **Set up, one small page per step** ([docs/setup/](docs/setup/README.md)). Nine pages take a team from an

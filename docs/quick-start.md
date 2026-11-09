@@ -30,7 +30,8 @@ the robot project, adds the library and makes the robot configuration. Already d
 
 ### Road 1: an unchanged starter bot
 
-The library has the code for each of the four starter bots, with the seller's own configuration names.
+The library has the code for each starter bot, with the seller's own configuration names (goBILDA has two:
+the 6-wheel tank one and the mecanum one on a Strafer chassis).
 You copy it, check it and measure a few numbers. You write almost no code.
 
 1. [Add the library](#1-add-the-library).
@@ -40,7 +41,7 @@ You copy it, check it and measure a few numbers. You write almost no code.
    starter bot's template.
 4. [Change the STEP lines](#4-change-the-step-lines): only how your Control Hub is mounted (STEP 3).
    Then read the notes for your starter bot ([REV](guides/starter-bots.md#rev-bot-code),
-   [goBILDA](guides/starter-bots.md#gobilda-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code),
+   [goBILDA](guides/starter-bots.md#gobilda-bot-code), [goBILDA mecanum](guides/starter-bots.md#gobilda-strafer-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code),
    [Studica](guides/starter-bots.md#studica-bot-code)): they say which numbers are guesses.
 5. [Build and check the hardware](#5-build-and-check-the-hardware).
 6. [Measure the numbers](#6-measure-the-numbers): the guessed ones first.
@@ -313,7 +314,7 @@ Guessing them can push a part into the frame. **So the finders come before the f
   name the finder to use. The finders still run: they do not read `Tunables.java`.
 - **Road 1 and 2:** the REV bot has two `MEASURE` numbers (its poker's `up` and `down`): INIT stops on
   them. The other starter bots have none, but some numbers are the seller's or our guesses. Your starter bot's notes list them ([REV](guides/starter-bots.md#rev-bot-code),
-  [goBILDA](guides/starter-bots.md#gobilda-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code),
+  [goBILDA](guides/starter-bots.md#gobilda-bot-code), [goBILDA mecanum](guides/starter-bots.md#gobilda-strafer-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code),
   [Studica](guides/starter-bots.md#studica-bot-code)). Measure every servo position on that list
   before the first TeleOp (REV's poker, Studica's flap). Road 2: also every part you added.
 

@@ -6,7 +6,7 @@ priority: medium
 where: both
 minutes: 30
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
 docs: [guides/autos.md#what-the-init-menu-can-choose, guides/autos.md#example-2-one-opmode-the-drivers-choose-in-init]
 ---

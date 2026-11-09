@@ -6,7 +6,7 @@ priority: medium
 where: real
 minutes: 15
 needs: [mecanum]
-kit_bots: []
+kit_bots: [gobilda-strafer]
 since: v0.16.0
 docs: [tutorials/start/02-drive.md#6-the-driving-you-get-for-free, guides/buttons.md#moving-the-librarys-buttons]
 ---

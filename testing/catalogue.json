@@ -205,6 +205,16 @@
     ],
     "robot_file": "sim/robots/starter-bot-gobilda.properties"
    },
+   "gobilda-strafer": {
+    "label": "goBILDA starter bot with mecanum wheels",
+    "option": "goBILDA starter bot with mecanum wheels (Strafer)",
+    "has": [
+     "mecanum",
+     "flywheel",
+     "intake"
+    ],
+    "robot_file": "sim/robots/starter-bot-gobilda-strafer.properties"
+   },
    "rev": {
     "label": "REV DUO starter bot",
     "option": "REV DUO starter bot",
@@ -701,6 +711,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -786,6 +797,7 @@
    ],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -871,6 +883,7 @@
    ],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -953,7 +966,9 @@
    "where": "both",
    "minutes": 10,
    "needs": [],
-   "kit_bots": [],
+   "kit_bots": [
+    "gobilda-strafer"
+   ],
    "since": "v0.30.0",
    "docs": [
     {
@@ -1026,7 +1041,9 @@
    "where": "both",
    "minutes": 20,
    "needs": [],
-   "kit_bots": [],
+   "kit_bots": [
+    "gobilda-strafer"
+   ],
    "since": "v0.33.0",
    "docs": [
     {
@@ -1867,6 +1884,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -1951,6 +1969,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -2039,6 +2058,7 @@
    ],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "studica"
    ],
@@ -2126,6 +2146,7 @@
    ],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "studica"
    ],
@@ -2386,6 +2407,7 @@
    ],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "studica"
    ],
@@ -2473,6 +2495,7 @@
    ],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "studica"
    ],
@@ -2557,6 +2580,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -2632,6 +2656,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -2706,6 +2731,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -2783,6 +2809,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -2861,6 +2888,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -3590,6 +3618,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -3671,6 +3700,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -3749,6 +3779,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -3825,6 +3856,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -3900,6 +3932,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -3974,6 +4007,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -4051,6 +4085,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -4120,6 +4155,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -4194,7 +4230,9 @@
      "mecanum"
     ]
    ],
-   "kit_bots": [],
+   "kit_bots": [
+    "gobilda-strafer"
+   ],
    "since": "v0.16.0",
    "docs": [
     {
@@ -4520,6 +4558,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -4600,7 +4639,9 @@
    "where": "both",
    "minutes": 15,
    "needs": [],
-   "kit_bots": [],
+   "kit_bots": [
+    "gobilda-strafer"
+   ],
    "since": "v0.30.0",
    "docs": [
     {
@@ -4838,6 +4879,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -4908,6 +4950,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -5144,6 +5187,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -5226,6 +5270,7 @@
    ],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "studica"
    ],
@@ -5309,6 +5354,7 @@
    ],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "studica"
    ],
@@ -5390,7 +5436,9 @@
      "flywheel"
     ]
    ],
-   "kit_bots": [],
+   "kit_bots": [
+    "gobilda-strafer"
+   ],
    "since": "v0.29.0",
    "docs": [
     {
@@ -5468,7 +5516,9 @@
      "flywheel"
     ]
    ],
-   "kit_bots": [],
+   "kit_bots": [
+    "gobilda-strafer"
+   ],
    "since": "v0.34.0",
    "docs": [
     {
@@ -5620,6 +5670,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -5692,6 +5743,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -5763,6 +5815,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -5837,6 +5890,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -5916,6 +5970,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -5988,6 +6043,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -6060,7 +6116,8 @@
     ]
    ],
    "kit_bots": [
-    "gobilda"
+    "gobilda",
+    "gobilda-strafer"
    ],
    "since": "v0.28.0",
    "docs": [
@@ -6129,6 +6186,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"
@@ -6206,6 +6264,7 @@
    "needs": [],
    "kit_bots": [
     "gobilda",
+    "gobilda-strafer",
     "rev",
     "andymark",
     "studica"

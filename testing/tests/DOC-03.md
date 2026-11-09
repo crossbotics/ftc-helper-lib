@@ -6,7 +6,7 @@ priority: medium
 where: sim
 minutes: 75
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
 docs: [setup/README.md]
 ---

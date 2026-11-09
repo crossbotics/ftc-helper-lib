@@ -190,6 +190,12 @@ public class BuiltAutoTest {
         } finally {
             gobilda.closeWorld();
         }
+        SimRobot strafer = SimRobot.load(Paths.get("robots/starter-bot-gobilda-strafer.properties"));
+        try {
+            assertEquals(com.crossbotics.ftchelper.examples.gobildastraferbot.Robot.class, BuiltAuto.guess(list, strafer));
+        } finally {
+            strafer.closeWorld();
+        }
         String d = BuiltAuto.describe(com.crossbotics.ftchelper.examples.pedrobot.Robot.class);
         assertTrue(d, d.contains("\"drive\":\"mecanum\"") && d.contains("\"odometry\":true") && d.contains("\"follower\":true"));
     }

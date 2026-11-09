@@ -6,7 +6,7 @@ priority: high
 where: real
 minutes: 20
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
 docs: [tutorials/19-testing-procedures.md, modules/testing.md#hardwarecheckopmode]
 ---

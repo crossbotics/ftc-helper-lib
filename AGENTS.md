@@ -17,8 +17,8 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   teams' JUnit tests (`PretendDevices` & co., in the library so TeamCode needs no extra Gradle lines; the
   library's own tests keep their older fakes; `examples/src/test/.../v2bot/V2botTest.java` shows it).
 - `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), one program per
-  tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and robots in five files (the four kit bots
-  `gobildabot/`, `revbot/`, `andymarkbot/`, `studicabot/`, and `lessonbot/`, `flywheelbot/`, `turretbot/`,
+  tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and robots in five files (the five kit bots
+  `gobildabot/`, `gobildastraferbot/`, `revbot/`, `andymarkbot/`, `studicabot/`, and `lessonbot/`, `flywheelbot/`, `turretbot/`,
   `v2bot/` (turret + lift with wrist and claw + an interlock rule), `odometrybot/`, `pedrobot/`, `quickstart/`; docs/templates.md lists them; main-track lesson 1 explains them; `SimFromRobotTest` runs them), and the cookbook's recipes (`cookbook/`, one file per topic,
   shown in `docs/cookbook.md`; `CookbookTest` in `sim/` INITs and runs every cookbook OpMode).
 - `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new

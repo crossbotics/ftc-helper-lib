@@ -6,7 +6,7 @@ priority: medium
 where: both
 minutes: 90
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
 docs: [tutorials/README.md#start-here-the-main-track]
 ---

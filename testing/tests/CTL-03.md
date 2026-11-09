@@ -6,7 +6,7 @@ priority: medium
 where: both
 minutes: 20
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
 docs: [guides/buttons.md#switching-the-alliance-in-teleop]
 ---

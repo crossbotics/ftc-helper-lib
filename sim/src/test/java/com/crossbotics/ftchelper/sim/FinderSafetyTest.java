@@ -243,6 +243,8 @@ public class FinderSafetyTest {
         EXPECTED.put("goBILDA Bot TeleOp", "\"left_drive\"");
         EXPECTED.put("goBILDA Bot Launch and Back Up", "\"left_drive\"");
         EXPECTED.put("goBILDA Bot Auto Cookbook", "\"left_drive\"");
+        EXPECTED.put("goBILDA Strafer Bot TeleOp", "\"left_front_drive\"");
+        EXPECTED.put("goBILDA Strafer Bot Launch and Leave", "\"left_front_drive\"");
         EXPECTED.put("REV Bot TeleOp", "\"leftDrive\"");
         EXPECTED.put("REV Bot Shoot and Leave", "\"leftDrive\"");
         EXPECTED.put("AndyMark Bot TeleOp", "\"left_drive\"");

@@ -6,7 +6,7 @@ priority: medium
 where: sim
 minutes: 20
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.1
 docs: [guides/tunables.md#default-and-measure, modules/robot.md#parts-not-in-the-catalog]
 ---

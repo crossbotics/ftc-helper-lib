@@ -6,7 +6,7 @@ priority: medium
 where: sim
 minutes: 40
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
 docs: [modules/testkit.md, guides/testing.md#test-your-robotjava-with-pretend-devices, tutorials/13-testing.md#7-test-your-robot-in-five-files]
 ---
