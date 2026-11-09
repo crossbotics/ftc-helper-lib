@@ -8,7 +8,7 @@
       <path d="M0,0 L10,5 L0,10 z" fill="#b07a00"/>
     </marker>
   </defs>
-  <text x="20" y="32" font-size="18" font-weight="bold" fill="#222">The setup pages, in order</text>
+  <text x="20" y="32" font-size="18" font-weight="bold" fill="#222">Set up: the tools and the library, in order</text>
 
   <!-- row 1: pages 1-4 -->
   <g fill="#eef2f8" stroke="#333" stroke-width="2">
@@ -61,7 +61,7 @@
 
   <!-- next -->
   <line x1="105" y1="306" x2="105" y2="318" stroke="#333" stroke-width="2"/>
-  <text x="200" y="324" font-size="13" fill="#1f4e9c" font-weight="bold">Next: the Quick start (pick your road)</text>
+  <text x="200" y="324" font-size="13" fill="#1f4e9c" font-weight="bold">Set up is done. Next: start using the library</text>
   <line x1="105" y1="318" x2="194" y2="318" stroke="#333" stroke-width="2" marker-end="url(#a)"/>
 
   <!-- page 9 -->

@@ -68,3 +68,5 @@ The push is refused (`rejected ... fetch first`)? A teammate pushed first. Pull 
 You pulled at the start, and your work is pushed at the end.
 
 **More git** (branches, conflicts, undo, before an event): [Git and GitHub for FTC teams](../guides/github.md).
+
+**Set up is done.** Next you start using the library: [Quick start: pick your road](../quick-start.md#pick-your-road).

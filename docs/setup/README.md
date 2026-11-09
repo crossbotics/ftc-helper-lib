@@ -1,4 +1,8 @@
-# Set up: from an empty laptop to a robot that runs your code
+# Set up: the tools and the library
+
+**Set up gets the base system ready. It writes no robot code yet.** It installs Android Studio, gets
+the robot project, adds the library, updates the hubs and makes the robot configuration. After it, you
+**start using the library**: pick the code you start from, then work through the five robot files.
 
 Do these pages in order, once. Each page is one job and ends with **Done when**. Already done a page?
 Check its "Done when" and go on to the next.
@@ -19,4 +23,4 @@ Check its "Done when" and go on to the next.
 
 **Only using the simulator on this laptop?** Skip pages 5, 6 and 7: they need the hubs.
 
-**Next, after page 7:** pick the code you start from: [Quick start: pick your road](../quick-start.md#pick-your-road).
+**After Set up:** start using the library. Pick the code you start from: [Quick start: pick your road](../quick-start.md#pick-your-road).
