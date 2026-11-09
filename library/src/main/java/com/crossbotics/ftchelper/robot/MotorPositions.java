@@ -104,6 +104,14 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         return secondMotor;
     }
 
+    // The first motor's encoder is read (the second gets the same power, so both are pushed together).
+    @Override
+    void encoderMotors(List<EncoderMotor> out) {
+        EncoderMotor m = new EncoderMotor(device, reversed, name(), true, null);
+        if (secondMotor != null) m.with(secondMotor, reversed != secondReversed);
+        out.add(m);
+    }
+
     @Override
     List<String> notes() {
         List<String> out = super.notes();

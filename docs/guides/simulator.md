@@ -1244,6 +1244,9 @@ set preload off                        # the robot holds no preload (now and aft
 set field start                        # every game piece back where the match starts it (the robot stays)
 set device intake_deploy missing       # take a device out of the configuration from the next INIT
                                        # (a part not on the robot yet); present = put it back
+set encoder lift none                  # a wiring fault for the Encoder Check: lift's port has no encoder
+                                       # cable; set encoder lift flywheel = it has the flywheel's cable
+                                       # (swapped); set encoder lift own = right again. Works at once
 set tunable IntakeDeploy.deployed 0.6  # a Tunables number for this file only (before init; see below)
 expect screen has "Ready"              # or: screen not "..."
 expect value "Lift" > 500              # the number on the screen line that starts with Lift

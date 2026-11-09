@@ -193,6 +193,12 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     }
 
     /**
+     * Adds the motors of this part to the Encoder Check's list (RobotDefinition.encoderMotors), each with
+     * the direction Robot.java gives it. Default: none (a servo part, a sensor).
+     */
+    void encoderMotors(List<EncoderMotor> out) { }
+
+    /**
      * Stops what an unfinished action told this part to do, safely and without counting as the
      * driver's command (see ActionRunner). Default: nothing (a servo is already where it was sent).
      */

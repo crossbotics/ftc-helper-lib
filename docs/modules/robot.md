@@ -61,6 +61,7 @@ flowchart LR
 | [`ControlMap`](#controlmap), [`Pad`](#controlmap) | `Controls.java`: the TeleOp and the button map |
 | [`Auto`](#auto), [`Steps`](#auto) | one autonomous as a list of steps |
 | [`Feature`](#what-your-robot-can-do) | what the library does by itself for your robot, ready or not (`robot.features()`) |
+| [`EncoderMotor`](#robotdefinition) | one motor for the [Encoder Check](../guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port) (`robot.encoderMotors()`) |
 | [`Toggleable`](#controlmap) | anything one button switches on and off |
 | [`Motors`](#motors) | look up the encoder counts and speed of common motors, by catalog id (a part's name in the [parts catalog](../guides/parts-catalog.md), e.g. `"gobilda-5203-312"`) |
 | [`Shape`](#shapes-and-parts), [`Parts`](#shapes-and-parts) | how each part looks and where it sits, for the simulator; wheels, rollers and servos by catalog id |
@@ -125,6 +126,7 @@ part each loop. Nothing moves in INIT.
 | `notes()` | INIT notes: missing Tunables sections or fields (the library's defaults are used), parts that are off (not in the configuration) |
 | `checkConfiguration(hardwareMap)` | one line per device Robot.java names that is NOT in the configuration, and what that means ("INIT will stop", or "optional, so the part is off"). The [Hardware Check](testing.md#hardwarecheckopmode) shows it |
 | `modules()`, `drive()`, `all()` | the parts, the drivetrain, the update group |
+| `encoderMotors()` | every motor Robot.java names, as [`EncoderMotor`](#robotdefinition)s for the [Encoder Check](../guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port): the drive first, then each part's. Each has `name`, `reversed`, `part`, `encoderRead` (false: nothing reads it, e.g. an intake), `skip` (why it is not checked, e.g. its port reads an odometry pod) and `alsoMotors()` (a lift's second motor, pushed with it). No hardware needed |
 | `pose()` | where the robot is now, from the odometry: a [`FieldPose`](util.md#fieldpose) (x in right, y in away from your wall, heading 0 = away, counterclockwise +); a copy; null with no odometry line |
 | `odometry()`, `odometrySpec()`, `odometryChecked()` | the running [`PoseTracker`](odometry.md#posetracker) (null before `setup`), the odometry line as written, and `Tunables.Odometry.checked` |
 | `resetPose()` | "set pose here": the pose becomes the reset spot in `Tunables.Odometry` (`resetX`, `resetY` inches, `resetHeading` degrees, as seen from your wall, written for BLUE; RED mirrored like the start spot). False (nothing changed) with no odometry or no spot. TeleOp's G1 START held 1 s calls it |

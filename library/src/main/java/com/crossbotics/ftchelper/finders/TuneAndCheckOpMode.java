@@ -258,6 +258,10 @@ public class TuneAndCheckOpMode extends LinearOpMode {
             out.add(new Tool("Motor Direction Check", "each drive wheel rolls forward", () -> new MotorDirectionCheckOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
+            // Every motor's encoder cable in its own port (a lift, the flywheel, the drive trust it).
+            out.add(new Tool("Encoder Check", "each encoder cable in its own motor's port", () -> new EncoderCheckOpMode() {
+                @Override protected RobotDefinition robot() { return fresh.get(); }
+            }));
         }
         if (!hardwareMap.getAllNames(Servo.class).isEmpty()) {
             // Two-servo parts (alsoServo... in Robot.java): the second servo moves with the first in the finder.

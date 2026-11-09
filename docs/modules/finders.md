@@ -25,6 +25,7 @@ device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 | --- | --- | --- |
 | [`TuneAndCheckOpMode`](#tuneandcheckopmode) | every check and finder that fits Robot.java, in one menu (added by itself) | no |
 | [`MotorDirectionCheckOpMode`](#motordirectioncheckopmode) | spin one drive motor at a time, with Robot.java's directions: each wheel must roll forward | `robot()` (five files) |
+| [`EncoderCheckOpMode`](#encodercheckopmode) | push each motor a little and find an encoder cable that is missing, in another motor's port, or counting backward | `robot()` (five files) |
 | [`ServoFinderOpMode`](#servofinderopmode) | find a servo's safe ends and positions | no |
 | [`HoodFinderOpMode`](#hoodfinderopmode) | find a launcher hood's two stops (`posA`, `posB`) and, if you measure them, its angles (a linkage's calibration table) | `robot()` (five files) or `hoodName()` |
 | [`MotorFinderOpMode`](#motorfinderopmode) | find a lift's, arm's or turret's limits, positions and top speed | no |
@@ -99,6 +100,26 @@ public class MotorDirectionCheck extends MotorDirectionCheckOpMode {
 
 Steps: [Motor Direction Check](../guides/finders.md#motor-direction-check-each-wheel-rolls-forward). A robot
 without five files (its own `DriveConfig`): copy `examples/.../MotorDirectionCheck.java` instead.
+
+## EncoderCheckOpMode
+
+Hold **A**: each motor in Robot.java gets a short push (30% for 0.3 s), one at a time, set up as Robot.java
+says. Every motor port's encoder is read; each motor shows OK, NO COUNTS, `counts on "X" (port N) instead`
+or `counts BACKWARD`. Let go of **A**: everything stops. **Y** = check again. In Tune and check for every
+robot in five files; on its own:
+
+```java
+@TeleOp(name = "Encoder Check", group = "Finders")
+public class EncoderCheck extends EncoderCheckOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+| Method | Does |
+| --- | --- |
+| `robot()` | your robot (`return new Robot();`): its motors and their directions ([`encoderMotors()`](robot.md#robotdefinition)) |
+
+Steps and what each result means: [Encoder Check](../guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port).
 
 ## ServoFinderOpMode
 

@@ -497,6 +497,12 @@ public final class Hood extends Module<Hood> {
         return reversed;
     }
 
+    // A motor hood reads its encoder (its angle); a servo hood has no motor.
+    @Override
+    void encoderMotors(List<EncoderMotor> out) {
+        if (kind == Kind.MOTOR) out.add(new EncoderMotor(device, reversed, name(), true, null));
+    }
+
     /** The hood as an {@link AngleDevice} (what the launcher drives), for anything this module does not offer. */
     public AngleDevice part() {
         return part;

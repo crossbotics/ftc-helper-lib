@@ -170,7 +170,11 @@ the ground.**
    add its name to the list, or take it out. Remember the list replaces the default (the left side). For
    example, if the lesson robot's back right wheel rolls backward, it needs
    `.reversed("front_left", "back_left", "back_right")`.
-4. **The IMU:** run your TeleOp, hold gamepad 1's small **START** button (OPTIONS on a PS controller), then press **BACK** while you
+4. **Each encoder in its own port:** in **Tune and check**, pick **Encoder Check**, press A, then ▶. Hold A:
+   each motor turns a little, one at a time. Every drive motor must say `OK: counts up`. A wrong line names
+   the fault (a cable missing, or two cables swapped). Later lessons trust these counts.
+   ([More](../../guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port))
+5. **The IMU:** run your TeleOp, hold gamepad 1's small **START** button (OPTIONS on a PS controller), then press **BACK** while you
    still hold START (this turns on the extra **debug lines**
    on the Driver Station: more numbers for checking, like powers and the `Heading`; it does
    not pause),

@@ -984,6 +984,40 @@ public abstract class RobotDefinition {
     }
 
     /**
+     * Every motor Robot.java names, for the Encoder Check (Tune and check): the drive motors first, then each
+     * part's motors (a lift's second motor rides with its first). Each has the direction Robot.java gives it,
+     * and says if the library reads its encoder. A drive motor whose port reads an odometry pod is listed
+     * with a {@code skip} reason (its port counts the pod, not the motor). Servos are not listed.
+     *
+     * <pre>{@code
+     * for (EncoderMotor m : new Robot().encoderMotors()) telemetry.addLine(m.toString());
+     * }</pre>
+     *
+     * @return the motors, each name once (no hardware needed)
+     */
+    public final List<EncoderMotor> encoderMotors() {
+        describe();
+        List<EncoderMotor> out = new ArrayList<>();
+        // Pods on motor ports (dead wheels): those ports count the pod. A Pinpoint or an OTOS uses none.
+        List<String> pods = new ArrayList<>();
+        boolean podsOnPorts = odometrySpec != null
+                && (odometrySpec.kindName().equals("threeWheels") || odometrySpec.kindName().equals("twoWheels"));
+        if (podsOnPorts) pods.addAll(odometrySpec.names());
+        // The drive's encoders are read only without odometry (the drive's distances then come from them).
+        boolean driveRead = odometrySpec == null;
+        for (String n : drive.motorNames()) {
+            out.add(new EncoderMotor(n, drive.isReversed(n), "drive", driveRead,
+                    pods.contains(n) ? "its port reads an odometry pod (the Odometry Tuner checks pods)" : null));
+        }
+        for (Module<?> m : modules) m.encoderMotors(out);
+        // Each motor once (a launcher's pusher can also be its own part).
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        List<EncoderMotor> once = new ArrayList<>();
+        for (EncoderMotor m : out) if (seen.add(m.name)) once.add(m);
+        return once;
+    }
+
+    /**
      * What the library can do for this robot by itself, ready or not, worked out from Robot.java's parts
      * (no hardware needed): the launcher's "Fire 1", "Fire 2"... and "Fire all" actions, "Aim at the goal"
      * in an autonomous, the aim toggles for TeleOp, and the Goal line on the Driver Station. A feature that

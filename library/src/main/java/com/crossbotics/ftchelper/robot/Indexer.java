@@ -520,6 +520,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         return reversed;
     }
 
+    // A motor feeder runs on power; only a jam check reads its speed, so "no counts" is fine there.
+    @Override
+    void encoderMotors(List<EncoderMotor> out) {
+        if (kind == Kind.MOTOR) out.add(new EncoderMotor(device, reversed, name(), false, null));
+    }
+
     /** True if the second servo mirrors the first ({@code alsoServoReversed}). */
     public boolean secondServoMirrored() {
         return alsoServo != null && !alsoSameWay;

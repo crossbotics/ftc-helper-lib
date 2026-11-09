@@ -706,6 +706,12 @@ public final class Turret extends Module<Turret> {
         return kind == Kind.SERVO;
     }
 
+    // A motor turret reads its own port's encoder (its angle). A CR servo turret has no motor to push.
+    @Override
+    void encoderMotors(List<EncoderMotor> out) {
+        if (kind == Kind.MOTOR) out.add(new EncoderMotor(device, reversed, name(), true, null));
+    }
+
     /**
      * True when it points where it should, within the tolerance. While FOLLOWING, that means at the
      * goal now: the goal is seen this moment (a fresh camera picture, or the odometry), the turret is

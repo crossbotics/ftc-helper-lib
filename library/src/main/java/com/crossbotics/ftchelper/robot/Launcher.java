@@ -240,6 +240,15 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return hood;
     }
 
+    // The flywheel reads its encoder (its speed). Then its own parts: the feeder, the feed wheel, the hood.
+    @Override
+    void encoderMotors(java.util.List<EncoderMotor> out) {
+        out.add(new EncoderMotor(device, reversed, name(), true, null));
+        if (indexer != null) indexer.encoderMotors(out);
+        if (feedWheel != null) feedWheel.encoderMotors(out);
+        if (hood != null) hood.encoderMotors(out);
+    }
+
     /**
      * A feed stop: a servo that holds the pieces back until a shot is allowed. It goes to {@code feedStopHold}
      * at START (never in INIT), opens to {@code feedStopRelease} for each piece, and closes when the wheel
