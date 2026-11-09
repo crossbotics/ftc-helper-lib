@@ -8,7 +8,7 @@ minutes: 75
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
 since: v0.16.0
-docs: [start-from-zero.md]
+docs: [setup/README.md]
 ---
 
 ## Why
@@ -23,7 +23,7 @@ differ a lot (school-managed Windows, old Macs, Chromebooks). We need to know wh
 
 ## Steps
 
-1. Start a timer. Follow [Start from zero](../../docs/start-from-zero.md) from the top, exactly as written.
+1. Start a timer. Follow [Set up](../../docs/setup/README.md) from the top, exactly as written.
 2. Write each step that did not match your screen (a button with another name, a missing menu).
 3. Go on until its last section: a first build and an edit that builds.
 4. Then run the simulator once (SIM-01 step 1 to 3).

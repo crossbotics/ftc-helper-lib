@@ -174,7 +174,7 @@ while (opModeIsActive()) {
 
 | Problem | Fix |
 | --- | --- |
-| Red `LoopTimer` in Android Studio | Import it (Alt+Enter). If the import is not offered, the library is not added: [Add it to a project](../01-add-to-project.md). |
+| Red `LoopTimer` in Android Studio | Import it (Alt+Enter). If the import is not offered, the library is not added: [Add the library](../setup/04-add-the-library.md). |
 | "Variable used in lambda expression should be final" | The variable a button changes must be a **field**. Move it out of `runOpMode`. |
 | The OpMode is not on the Driver Station | Delete the `@Disabled` line, build, and install again. |
 | Count goes up many times per press | You used `bindHold` instead of `bindPress`. |

@@ -27,7 +27,7 @@ click Run. When it is ready, the page (http://localhost:8780) opens in your brow
 opened? The address in the Run window (`Open http://localhost:8780`) is a blue link: click it. The red square
 **Stop** button stops the simulator. **Simulator tests** in the same list runs every test in your
 `simulator/scenarios` folder. The library adds the buttons when Android Studio syncs. Not in the list
-yet? close the project (**File > Close Project**) and open it again ([Step 7 of Add the library](../01-add-to-project.md#step-7-the-simulator-buttons-once)).
+yet? close the project (**File > Close Project**) and open it again ([Step 7 of Add the library](../setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing)).
 The buttons need no laptop setup.
 
 **In the Terminal:** first time on this laptop? Do the [laptop setup](#laptop-setup-once) just below first.

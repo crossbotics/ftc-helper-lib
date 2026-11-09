@@ -2,7 +2,7 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**Before this:** [Add it to a project](01-add-to-project.md). New to git? Read
+**Before this:** [Add the library](setup/04-add-the-library.md). New to git? Read
 [Git and GitHub for FTC teams](guides/github.md) first: it explains commit, push, pull and submodule.
 
 Your robot project remembers ONE exact version of the library (one git commit: one saved snapshot of
@@ -33,12 +33,12 @@ event may meet a change it has not tested. So: **update often, but not right bef
   ([github.com/crossbotics/ftc-helper-lib](https://github.com/crossbotics/ftc-helper-lib)), click
   **Watch** (top right) > **Custom** > tick **Releases** > **Apply**. GitHub then emails you when a
   version is released. (You need a GitHub account; one mentor or the programming lead is enough.)
-- **Read the [CHANGELOG](../CHANGELOG.md).** It lists every version, newest first. The part
-  "Unreleased" is what is coming next.
+- **Read the [CHANGELOG](../CHANGELOG.md).** It lists every version, newest first. When changes
+  are waiting for the next version, they are at the top, under "Unreleased".
 - **The version list:** the [tags page](https://github.com/crossbotics/ftc-helper-lib/tags) shows every
   version (`v0.16.0`, ...), newest first.
 - **Check once a week** in the season (for example after the first practice of the week). It takes one
-  minute. Releases come about once a week: the code changes of that week go out together.
+  minute. In the season, new versions can come out several times a week.
 - **The docs site shows the newest release.** Fixes to the docs go on the site between releases, so it
   can be a little ahead of the `ftc-helper-lib/docs` folder in your project. A box that says "Coming in
   the next release" is not in any version yet. On an older version? Read the `docs` folder in your own
@@ -86,7 +86,7 @@ not? [git is not recognized](troubleshooting.md#autonomous-choice-and-git-proble
 
 1. Commit and push your own work first. **Why:** you can then tell your changes apart from the update.
 2. In the list next to the green Run button, pick **Update library**, then click Run. (Not in the list?
-   Close the project and open it again: [the buttons](01-add-to-project.md#step-7-the-simulator-buttons-once).)
+   Close the project and open it again: [the buttons](setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing).)
 3. It gets the version list from GitHub, switches the `ftc-helper-lib` folder to the newest version, and
    shows **What changed** (the CHANGELOG parts since your version). Read it: a version can ask you to
    change a line in your code.

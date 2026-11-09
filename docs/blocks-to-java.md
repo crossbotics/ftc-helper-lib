@@ -6,7 +6,7 @@ This page is for you if you have made programs with blocks (Scratch, FTC Blocks,
 with Java. It shows where each block you know went in the robot's five files. Come back to it with
 [Lesson 3: Buttons](tutorials/start/03-buttons.md).
 
-**Before this:** [Start from zero](start-from-zero.md) (if you are new to Android Studio). Read this
+**Before this:** [Set up](setup/README.md) (if you are new to Android Studio). Read this
 page **before** the [Quick start](quick-start.md): the Quick start gives you the five files this page
 talks about. **The reading order:** Start from zero, then this page, then the Quick start, then
 [Lesson 1](tutorials/start/01-robot-in-five-files.md) and lessons 2 to 6 (then the lessons your robot needs).

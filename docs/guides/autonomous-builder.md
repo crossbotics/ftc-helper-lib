@@ -453,6 +453,12 @@ Both ways: [Several autonomous modes](autos.md#example-3-near-and-far-starts).
 | `move(label, inches, directionDeg, maxPower)` | drive (clockwise from forward) | yes |
 | `turn(label, degrees, maxPower)` | turn by (counterclockwise +) | yes |
 | `turnTo(label, headingDeg, maxPower)` | turn to a heading (0 = start) | yes |
+| `moveWithTurn(label, inches, directionDeg, headingDeg, maxPower)` | drive and turn at the same time, end at a heading | yes |
+| `rememberHeading(label)` | save the heading now, for `turnBack` | no |
+| `turnBack(label, maxPower)` | turn back to the saved heading | yes |
+| `waitForGoal(label[, timeoutSec])` | wait until the camera sees the goal and it is still (no time limit without `timeoutSec`) | yes |
+| `aimAtGoal(label, timeoutSec[, sweepDeg])` | point at the goal (whole robot, or wait for the turret); with `sweepDeg`, turn to look for it first | yes |
+| `readyToLaunch(label, timeoutSec)` | spin the launcher up and wait until it is ready to fire | yes |
 | `driveTo(label, xIn, yIn, headingDeg, maxPower[, toleranceIn][, PathAt...])` | drive to a field point and heading with odometry (mecanum) | yes |
 | `follow(label, path[, timeoutSec][, PathAt...])` | follow a path (pedro module); `PathAt` starts things along it | yes |
 | `run(label, command)` | start something | no |

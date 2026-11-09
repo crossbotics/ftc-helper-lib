@@ -47,7 +47,7 @@ section. The test catches it before the robot does.
    **Save**. The test is now `simulator/scenarios/main-teleop.sim` in your robot project. To find it in
    Android Studio's Project panel: open the top folder (the one that holds `TeamCode`), then
    `simulator`, then `scenarios`. Commit it with your code (save it to git:
-   [Git and GitHub](../../guides/github.md#every-practice-pull-commit-push)).
+   [Git and GitHub](../../setup/08-every-practice.md)).
 7. Press **Run it now**. The simulator plays your test back from a fresh field (hands off: the test
    drives) and shows **PASSED**, or **FAILED** with the line that failed.
 
@@ -167,7 +167,7 @@ Three ways, each runs every test in your `simulator/scenarios` folder:
 - **On the simulator page:** **Tests > Run all tests**. The page shows passed or failed for each test,
   with the failed lines. Click a test's name to open it.
 - **In Android Studio:** pick **Simulator tests** in the list next to the green Run button, and click
-  Run. (No such button? [Add the buttons once](../../01-add-to-project.md#step-7-the-simulator-buttons-once).)
+  Run. (No such button? [Add the buttons once](../../setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing).)
 - **In the Terminal,** from the `ftc-helper-lib` folder:
 
   ```bash

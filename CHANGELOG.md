@@ -2,6 +2,22 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- **Set up, one small page per step** ([docs/setup/](docs/setup/README.md)). Nine pages take a team from an
+  empty laptop to a robot that runs its code: what you need, Android Studio, GitHub and the robot project,
+  add the library, update the hubs, build and install, the robot configuration, every practice, and the
+  Terminal. Each page does one job and ends with "Done when". "Add it to a project" moved to Set up 4. "Start
+  from zero" keeps only reading Java and the first edit. The Quick start and the GitHub guide link to the
+  setup pages instead of repeating them.
+
+### Fixed
+
+- **The autonomous builder guide lists every step:** `moveWithTurn`, `rememberHeading`, `turnBack`,
+  `waitForGoal`, `aimAtGoal` and `readyToLaunch` were missing from its "Every method" table.
+
 ## v0.38.0 - 2026-11-08
 
 ### Added

@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** a team that starts its robot code. **You need:** the library in your robot project
-([Add it to a project](01-add-to-project.md)). New to the library? Start at
+([Add the library](setup/04-add-the-library.md)). New to the library? Start at
 [Pick your road](quick-start.md#pick-your-road) in the Quick start: it uses this page in its place and
 says what comes after (the configuration, the Hardware Check, the finders, the first autonomous).
 

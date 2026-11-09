@@ -59,7 +59,7 @@ flowchart LR
 
 ## Add it to your robot project
 
-Do this once, after the library itself works ([Add the library](../01-add-to-project.md)).
+Do this once, after the library itself works ([Add the library](../setup/04-add-the-library.md)).
 
 **1. `settings.gradle`** (the project folder, not TeamCode). Under the library's two lines, add:
 

@@ -10,7 +10,7 @@ in the simulator.
 **Robot needed:** none to start (the simulator), then your robot. **Time:** about 45 minutes.
 
 This is **lesson 1** of the [main track](../README.md#start-here-the-main-track). **Before this:** the
-[Quick start](../../quick-start.md), or at least [Add it to a project](../../01-add-to-project.md). New to
+[Quick start](../../quick-start.md), or at least [Add the library](../../setup/04-add-the-library.md). New to
 Java? [Under-the-hood tutorial 01](../01-opmode-basics.md) (not this lesson) explains imports, fields and lambdas.
 
 **Which robot:** you build your own robot, in the five files the Quick start put in your TeamCode.
@@ -366,7 +366,7 @@ the examples are hidden: they are marked `@Disabled`.) Open http://localhost:878
 up, RB fires (hold it to keep firing). ([Simulator guide](../../guides/simulator.md).)
 
 **Your own robot** (the five files in your TeamCode): in Android Studio, pick **Simulator** in the list
-next to the green Run button, and click Run. (No **Simulator** in the list? Close the project and open it again: [the buttons](../../01-add-to-project.md#step-7-the-simulator-buttons-once).)
+next to the green Run button, and click Run. (No **Simulator** in the list? Close the project and open it again: [the buttons](../../setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing).)
 Or, in the Terminal, from the `ftc-helper-lib` folder:
 
 ```bash

@@ -73,7 +73,7 @@ No robot, no field, no phone needed:
   meeting.
 
 In Android Studio, pick **Simulator** in the list next to the green Run button and click Run
-([the buttons](docs/01-add-to-project.md#step-7-the-simulator-buttons-once)). Or, in the `ftc-helper-lib` folder:
+([the buttons](docs/setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing)). Or, in the `ftc-helper-lib` folder:
 
 ```bash
 ./gradlew :sim:run
@@ -106,7 +106,7 @@ replacement for learning.
 
 **New to the library?** Read in this order:
 
-1. [Start from zero](docs/start-from-zero.md) (never used Android Studio, or new to Java): install
+1. [Set up](docs/setup/README.md) (never used Android Studio, or new to Java): install
    Android Studio, get the robot project, put a first program on the robot, and change one line of
    Java safely. Skip it if your robot project already builds and installs.
 2. [From Blocks to Java](docs/blocks-to-java.md) (used Scratch or Blocks before): where each block you
@@ -124,10 +124,10 @@ Everything else, by what you want to do:
 | I want to... | Read |
 | --- | --- |
 | **A quick answer: "how do I...?"** (a few lines of tested code to copy, by topic) | [Cookbook](docs/cookbook.md) |
-| **Install Android Studio and get the robot project** (no Java needed) | [Start from zero](docs/start-from-zero.md) |
+| **Install Android Studio and get the robot project** (no Java needed) | [Set up](docs/setup/README.md) |
 | Know Scratch or Blocks: see where each block went in Java | [From Blocks to Java](docs/blocks-to-java.md) |
 | **Get a robot driving, then a first autonomous** (an unchanged starter bot, a changed starter bot, or your own robot) | [Quick start: pick your road](docs/quick-start.md#pick-your-road) |
-| Add the library to our robot project | [Add it to a project](docs/01-add-to-project.md) |
+| Add the library to our robot project | [Add the library](docs/setup/04-add-the-library.md) |
 | **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/start/01-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
 | **Start from code for a robot like ours** (kit bots, example robots, or made from our configuration) | [Pick your template](docs/templates.md) |
 | **Learn it step by step** (a 9-lesson main track: 6 for every robot, 3 for the robots that need them; plus 21 "under the hood" tutorials) | [Tutorials](docs/tutorials/README.md) |

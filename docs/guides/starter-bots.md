@@ -70,7 +70,7 @@ motor directions come from the sellers' code where it has them.
 
 ## The configuration names
 
-Make the robot configuration on the Driver Station with these names ([how](../quick-start.md#2-make-the-robot-configuration)).
+Make the robot configuration on the Driver Station with these names ([how](../setup/07-robot-configuration.md)).
 They are the names in each seller's own code, so the template runs on the starter bot as it is. Use the
 port each wire is really in. Leave the `imu` line as it is (the Control Hub's own IMU). A motor type
 that is not in the Driver Station's list: pick the closest one (the library takes the motor's numbers

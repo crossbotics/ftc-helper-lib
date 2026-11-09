@@ -18,7 +18,7 @@ git submodule update --init
 **<samp>Cannot resolve symbol 'crossbotics'</samp> / red imports**
 
 Gradle does not know about the library yet. Check steps 2 and 3 in
-[Add it to a project](01-add-to-project.md), then **File > Sync Project with Gradle Files**.
+[Add the library](setup/04-add-the-library.md), then **File > Sync Project with Gradle Files**.
 
 **<samp>Plugin [id: 'com.android.library'] was not found</samp>**
 

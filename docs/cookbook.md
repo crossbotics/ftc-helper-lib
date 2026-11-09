@@ -328,7 +328,7 @@ robot configuration on the Driver Station, exactly. The section's name is that n
 | catalog id (`"gobilda-5203-312"`) | a motor's or servo's name in the [parts catalog](guides/parts-catalog.md): 5203 is goBILDA's motor series, 312 its RPM (on the motor's label) |
 | `.part("gobilda-5203-435")` | which motor or servo a part uses. Optional, recommended: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. An arm, a turret and a launcher take the id in their brackets instead, and need it |
 | tuning menu | change numbers while the robot runs (not the INIT choice menu of an autonomous) |
-| terminal | a window where you type commands. In Android Studio: the **Terminal** tab at the bottom ([how](start-from-zero.md#6-the-terminal-tab)) |
+| terminal | a window where you type commands. In Android Studio: the **Terminal** tab at the bottom ([how](setup/09-the-terminal.md)) |
 
 **One rule for every recipe:** a job never waits. No `sleep(...)` and no `while` loop in a button job
 or an action: they freeze the whole robot. To wait, see
@@ -3264,15 +3264,15 @@ linkage). Copy the lines into `Tunables.java`.
 
 The simulator runs your real code on a laptop, with the field in 3D. The easy way to start it is a
 button in Android Studio (below). Or type the commands in a terminal:
-in Android Studio, the **Terminal** tab at the bottom ([how](start-from-zero.md#6-the-terminal-tab)).
+in Android Studio, the **Terminal** tab at the bottom ([how](setup/09-the-terminal.md)).
 First go into the `ftc-helper-lib` folder by typing `cd ftc-helper-lib`. (It is the library's folder
 inside your robot project, next to `TeamCode` in Android Studio's Project panel. Not there? Ask your
-mentor, or see [Add it to a project](01-add-to-project.md).) `./gradlew` runs Gradle, the tool that builds the code; `-P...` gives it a setting.
+mentor, or see [Add the library](setup/04-add-the-library.md).) `./gradlew` runs Gradle, the tool that builds the code; `-P...` gives it a setting.
 
 ### How do I start the simulator?
 
 In Android Studio, pick **Simulator** in the list next to the green Run button, and click Run. (No
-**Simulator** in the list? Close the project and open it again: [the buttons](01-add-to-project.md#step-7-the-simulator-buttons-once).)
+**Simulator** in the list? Close the project and open it again: [the buttons](setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing).)
 Or, in the terminal:
 
 ```bash
