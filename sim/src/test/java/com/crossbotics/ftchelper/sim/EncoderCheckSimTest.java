@@ -1,7 +1,6 @@
 package com.crossbotics.ftchelper.sim;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.crossbotics.ftchelper.finders.TuneAndCheckOpMode;
@@ -87,7 +86,8 @@ public class EncoderCheckSimTest {
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> fl.userPower() > 0, 5));
             s.g1().a = false;
             assertTrue("let go: it stops", SimRun.waitFor(() -> fl.userPower() == 0, 0.5));
-            assertFalse(String.join("\n", s.screen()), s.screenHas("PUSHING"));
+            // The screen comes at the end of the same loop: wait for it.
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> !s.screenHas("PUSHING"), 1));
             assertEquals("", s.error());
         }
     }
