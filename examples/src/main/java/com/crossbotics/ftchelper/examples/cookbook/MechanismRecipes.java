@@ -27,7 +27,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 /**
  * Cookbook: mechanisms (docs/cookbook.md#mechanisms). Each part is one line in Robot.java's
  * {@code define()}, plus a field for it ({@code public Lift lift;}) and its numbers in Tunables.java.
- * Its standard buttons come with it.
+ * Its buttons: its usual lines in Controls.java.
  *
  * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
@@ -184,14 +184,19 @@ public class MechanismRecipes {
         }
     }
 
-    /** Its TeleOp: the lift's standard buttons (operator A, X, Y, D-pad, left stick) move both motors. */
+    /** Its TeleOp: the lift's usual buttons (operator A, X, Y, left stick) move both motors. */
     @TeleOp(name = "Cookbook Two Motor Lift", group = "Cookbook")
     @Disabled
     public static class TwoMotorLiftControls extends ControlMap<TwoMotorLift> {
         public static boolean oneDriver = false;
 
         @Override
-        protected void buttons(TwoMotorLift robot, Pad g1, Pad g2) { }
+        protected void buttons(TwoMotorLift robot, Pad g1, Pad g2) {
+            g2.a.press(() -> robot.lift.goTo("down")).says("down");   // the lift's usual buttons (Lift: buttons to add)
+            g2.x.press(() -> robot.lift.goTo("low")).says("low");
+            g2.y.press(() -> robot.lift.goTo("high")).says("high");
+            g2.leftStickY.use(robot.lift::manual).says("by hand");
+        }
     }
 
     /** A claw with a servo for each finger. */
@@ -217,7 +222,9 @@ public class MechanismRecipes {
         public static boolean oneDriver = false;
 
         @Override
-        protected void buttons(TwoServoClaw robot, Pad g1, Pad g2) { }
+        protected void buttons(TwoServoClaw robot, Pad g1, Pad g2) {
+            g2.b.toggle(robot.claw).says("open / close");   // the claw's usual button (Claw: buttons to add)
+        }
     }
 
     /** Parts that are not in the parts catalog: described in Robot.java with their own numbers. */

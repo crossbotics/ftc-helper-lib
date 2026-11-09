@@ -6,9 +6,9 @@ priority: high
 where: sim
 minutes: 20
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.18.3
-docs: [01-add-to-project.md#step-7-the-simulator-buttons-once, guides/simulator.md#start-it]
+docs: [setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing, guides/simulator.md#start-it]
 ---
 
 ## Why

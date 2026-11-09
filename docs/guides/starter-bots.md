@@ -1,4 +1,4 @@
-# The four BIOBUZZ starter bots: robot files and code
+# The BIOBUZZ starter bots: robot files and code
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
@@ -8,19 +8,22 @@ bot's [configuration names](#the-configuration-names), what its code does differ
 [what to change when you changed the robot](#you-changed-your-starter-bot).
 
 Each seller in FTC (REV, goBILDA, AndyMark, Studica) gives away the design of a simple "starter bot" for
-the season. For 2026-27 (BIOBUZZ) we wrote one robot file for each, so the simulator has four real,
-different robots to test with. They are also worked examples for the robot-file skill
+the season. For 2026-27 (BIOBUZZ) we wrote one robot file for each, so the simulator has real, different robots to
+test with. goBILDA has two: the standard StarterBot (6-wheel tank drive) and the StarterBot with mecanum
+wheels, built on a Strafer chassis. That makes five. They are also worked examples for the robot-file skill
 ([robot-file-skill.md](robot-file-skill.md)): every number has a note saying where it came from.
 
 | Robot file | Drive | Intake | Scores with | Size in the simulator |
 | --- | --- | --- | --- | --- |
 | [starter-bot-rev.properties](../../sim/robots/starter-bot-rev.properties) | 6 wheels, 2 motors | flap wheels (Core Hex) | flywheel + CR-servo feeder | 17.5 x 17.2 in, 15.0 in tall (20.0 in wide with the poker out) |
 | [starter-bot-gobilda.properties](../../sim/robots/starter-bot-gobilda.properties) | 6 wheels, drop center, 2 motors | Gecko wheels (motor + 2 CR servos) | flywheel + CR-servo "windmill" | 17.8 x 16.8 in, 12.0 in tall |
+| [starter-bot-gobilda-strafer.properties](../../sim/robots/starter-bot-gobilda-strafer.properties) | 4 mecanum wheels (Strafer), 4 motors | Gecko wheels (motor + 2 CR servos) | flywheel + CR-servo "windmill" | 17.8 x 17.8 in, 12.2 in tall |
 | [starter-bot-andymark.properties](../../sim/robots/starter-bot-andymark.properties) | 4 wheels, belts, 2 motors | rubber-band rollers (CR servo) | rubber-band catapult | 17.2 x 17.7 in, 17.5 in tall |
 | [starter-bot-studica.properties](../../sim/robots/starter-bot-studica.properties) | 2 driven wheels + 2 omni | 4 wheels (motor) | flywheel + servo flap | 14.0 x 15.0 in, 13.0 in tall |
 
 **Code for each one:** every kit bot is also a robot in five files with the seller's configuration names:
 [`gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot),
+[`gobildastraferbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildastraferbot),
 [`revbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/revbot),
 [`andymarkbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/andymarkbot) and
 [`studicabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/studicabot). To copy one into
@@ -31,17 +34,17 @@ so the starting values are those parts' real numbers. The parts that are not in 
 catalog (Studica's Maverick motors and Multi-Mode Smart Servo, AndyMark's High Speed programmable servo)
 are described with `Motors.custom(...)` and `Parts.customServo(...)` and the seller's numbers.
 
-**The autonomous programs** (`autos/`), the same for all four: each starts at the simulator robot file's
+**The autonomous programs** (`autos/`), the same for all five: each starts at the simulator robot file's
 start spot (back against your wall, 56 in left of the centre). `mirrorForRed()` returns false: BIOBUZZ's
 field is turned half a turn between the alliances (not mirrored), so the same route, driven from each
 alliance's own wall, works for both.
 
-**Shooting in the simulator:** only the goBILDA bot shoots. The REV, AndyMark and Studica files have no
+**Shooting in the simulator:** only the two goBILDA bots shoot. The REV, AndyMark and Studica files have no
 `shoot.` line (their sellers do not publish the launch direction and angle), so their launchers spin but
 no piece flies. Their flywheels may also not reach "ready" in the simulator: the stand-in motor numbers
 are guesses (see each robot below).
 
-All four fit the 18 in start cube and 18 x 24 x 29 in at full reach. Each has a scenario in
+All five fit the 18 in start cube and 18 x 24 x 29 in at full reach. Each has a scenario in
 `sim/scenarios/starter-bot-*.sim` (it loads the robot with a `robot ../robots/...` line, checks the size
 rules, rolls the robot forward by hand and checks for no error), so they run in the automatic tests.
 
@@ -64,13 +67,13 @@ check, so their sizes are worked out from the part lengths in the build guides a
 "est." in the file. No seller's CAD is in this repository: the licences were not checked, and the robot
 files hold only our own numbers.
 
-**Same for all four:** the start pose is x = -56 with the back against the red wall (field file: inside
+**Same for all five:** the start pose is x = -56 with the back against the red wall (field file: inside
 face at y = -70.585); the game-piece capacity is not stated by any seller, so `holds=4` is the game's limit;
 motor directions come from the sellers' code where it has them.
 
 ## The configuration names
 
-Make the robot configuration on the Driver Station with these names ([how](../quick-start.md#2-make-the-robot-configuration)).
+Make the robot configuration on the Driver Station with these names ([how](../setup/07-robot-configuration.md)).
 They are the names in each seller's own code, so the template runs on the starter bot as it is. Use the
 port each wire is really in. Leave the `imu` line as it is (the Control Hub's own IMU). A motor type
 that is not in the Driver Station's list: pick the closest one (the library takes the motor's numbers
@@ -85,6 +88,17 @@ from `Robot.java`).
 | `launcher` | Motor (goBILDA 5202/3/4 series) | the flywheel (a 312 RPM motor with its gearbox taken off) |
 | `left_intake_servo`, `right_intake_servo` | Continuous Rotation Servo | the two corner wheels |
 | `windmill` | Continuous Rotation Servo | the feeder |
+
+**goBILDA with mecanum wheels (Strafer):** the same mechanisms, four drive motors, and one other name: the
+feeder is `windmillServo`.
+
+| Name | Kind | What it is |
+| --- | --- | --- |
+| `left_front_drive`, `right_front_drive`, `left_back_drive`, `right_back_drive` | Motor (goBILDA 5202/3/4 series) | the drive motors (312 RPM) |
+| `intake` | Motor (goBILDA 5202/3/4 series) | the intake roller (117 RPM) |
+| `launcher` | Motor (goBILDA 5202/3/4 series) | the flywheel (a 312 RPM motor with its gearbox taken off) |
+| `left_intake_servo`, `right_intake_servo` | Continuous Rotation Servo | the two corner wheels |
+| `windmillServo` | Continuous Rotation Servo | the feeder |
 
 **REV:**
 
@@ -165,7 +179,7 @@ do not say:
   **Why:** a guess could swing the poker into the frame. (The simulator's REV robot file has stand-ins
   for them, so it runs before you measure.) Nothing moves at INIT, so the code does not fold it: fold the poker by hand
   before INIT, so the robot fits the 18 in start cube. It first moves when A, B or an action sends it.
-- **Buttons:** one driver on gamepad 1, with the library's standard buttons (LB flywheel on/off, RB fire
+- **Buttons:** one driver on gamepad 1, with each part's usual buttons written out (LB flywheel on/off, RB fire
   one, D-pad up/down speed +/- 100 RPM), so this robot drives like the other examples. REV's code puts
   the intake on RB and RT and runs the feeder by hand on the D-pad: change a button in `Controls.java` if
   your drivers want REV's layout.
@@ -229,6 +243,42 @@ Not modelled or not published:
 - The lower 264 mm roller of small "Intake Roller" parts at the front is not drawn.
 - Which side `left_intake_servo` is on is not stated.
 
+## goBILDA FTC StarterBot with Mecanum Wheels
+
+Sources, read 2026-11-09: [the resource guide page](https://www.gobilda.com/ftc-starterbot-with-mecanum-wheels-resource-guide-2026-2027/),
+the [Strafer Chassis Kit page](https://www.gobilda.com/strafer-chassis-kit-104mm-gripforce-mecanum-wheels/),
+[example code (ZIP)](https://www.gobilda.com/content/downloads/3200-2627-0004_example-code.zip) and
+[STEP CAD (ZIP)](https://www.gobilda.com/content/step_files/3200-2627-0004.zip), measured with `tools/cad/robot_cad.py`.
+
+The same robot as the goBILDA StarterBot above, on a different chassis: the 2026-2027 FTC Starter Kit, a
+Strafer Chassis Kit and two Flat Pattern Mounts.
+
+Modelled: a mecanum drive (`left_front_drive`, `right_front_drive`, `left_back_drive`, `right_back_drive`:
+312 RPM Yellow Jackets through 1:1 miter gears, 104 mm GripForce mecanum wheels); the same intake, corner
+wheels, launcher and windmill as the 6WD bot, measured again in this robot's CAD. The hood is tilted 37
+degrees here, so the shot leaves up and backward at 143 degrees from forward.
+
+goBILDA's mecanum code is a TeleOp only. Its autonomous here, **goBILDA Strafer Bot Launch and Leave**, is
+ours: it starts with the back against your wall like the 6WD bot's, fires the preload, then drives `Leave`
+forward (`Tunables.Auto.leaveInches`, a starting guess).
+
+### goBILDA Strafer bot code
+
+[`gobildastraferbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildastraferbot) is
+this robot in five files. It is the [goBILDA bot's code](#gobilda-bot-code) with three changes:
+
+- Drive: `Drive.mecanum(...)` with goBILDA's four names; the two left motors run reversed, as in goBILDA's code.
+- The feeder's name is `windmillServo`, so its numbers are in `Tunables.WindmillServo`.
+- The left stick also slides the robot sideways (left stick X), as in goBILDA's code.
+
+**The TeleOp buttons** are the 6WD bot's, plus the sideways slide.
+
+Not modelled or not published:
+- The exit angle and speed of a shot are not published (estimated from the hood; `share=0.5` is the default).
+- The drive wheels sit 24 mm behind the frame's centre in the CAD; the simulator turns the robot about the
+  frame's centre.
+- Which side `left_intake_servo` is on is not stated.
+
 ## AndyMark Robits BIOBUZZ StarterBot
 
 Sources, read 2026-10-16: [the kit page](https://andymark.com/products/robits-biobuzz-starterbot) (parts
@@ -284,7 +334,7 @@ as it is. What the comments in the code do not say:
   of the roller. For that one, take `"rollerF"` out of the intake line and add the commented `stick`
   line in `Robot.java` (`Tunables.Stick`: in = 0.46, out = 0.65). AndyMark does not say which of the
   kit's servos the stick has: use the one on yours (`"am-4955a"` if it is a High Speed servo too).
-- **Buttons:** one driver on gamepad 1, with the library's standard buttons (RT intake in, LT out, RB
+- **Buttons:** one driver on gamepad 1, with each part's usual buttons written out (RT intake in, LT out, RB
   throws one piece), so this robot drives like the other examples. AndyMark's code puts the intake on the
   bumpers (LB in, RB out) and runs the catapult while RT is held: change a button in `Controls.java` if
   your drivers want AndyMark's layout.
@@ -342,7 +392,7 @@ comments in the code do not say:
   first TeleOp. The push and return times are guesses.
 - **Fire all (Y):** spins up, then pushes the pieces in one by one with the flap as soon as the wheel is
   at speed. It uses only the launcher, so the driver can still run the intake.
-- **Buttons:** one driver on gamepad 1, one stick to drive, and the library's standard buttons, so this
+- **Buttons:** one driver on gamepad 1, one stick to drive, and each part's usual buttons written out, so this
   robot drives like the other examples. Studica's code drives "tank style" (each stick runs one side),
   puts the intake on the bumpers, the flywheel on RT and the flap on X and A: change a button in
   `Controls.java` if your drivers want Studica's layout.
@@ -369,7 +419,8 @@ robot file and the notes on this page all use them.
    `Tunables.IntakeDeploy`). Write `MEASURE` for each position and limit, and `DEFAULT` for the rest
    ([DEFAULT and MEASURE](tunables.md#default-and-measure)). **Why:** INIT then stops until a finder gives
    the real number, so a guess never pushes the part into the frame.
-4. **Buttons:** each part brings its own buttons. Move one, or add a job, in `Controls.java`
+4. **Buttons:** each part's buttons are written out in `Controls.java`, so a part you add has **no buttons**
+   until you write its lines there (each part's "buttons to add" in the [reference](../modules/robot.md)). Move one, or add a job, in `Controls.java`
    ([lesson 3](../tutorials/start/03-buttons.md)). Several parts together: an action in `Actions.java`
    ([lesson 5](../tutorials/start/05-actions.md)).
 5. **Changed the intake, or where the pieces ride?** Count again how many fit (POLLEN, NECTAR, a mix)

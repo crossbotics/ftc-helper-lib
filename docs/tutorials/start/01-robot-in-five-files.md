@@ -10,7 +10,7 @@ in the simulator.
 **Robot needed:** none to start (the simulator), then your robot. **Time:** about 45 minutes.
 
 This is **lesson 1** of the [main track](../README.md#start-here-the-main-track). **Before this:** the
-[Quick start](../../quick-start.md), or at least [Add it to a project](../../01-add-to-project.md). New to
+[Quick start](../../quick-start.md), or at least [Add the library](../../setup/04-add-the-library.md). New to
 Java? [Under-the-hood tutorial 01](../01-opmode-basics.md) (not this lesson) explains imports, fields and lambdas.
 
 **Which robot:** you build your own robot, in the five files the Quick start put in your TeamCode.
@@ -78,8 +78,8 @@ Here each file answers ONE question:
 
 And each mechanism is a **module** (here: a ready-made part class from the library, like `Intake` or
 `Lift`; not a Gradle module, which is a part of the build) that already knows how to work: an `Intake` can run in and out,
-a `Launcher` spins up and feeds one piece when the wheel is at speed. A module brings its numbers,
-its standard buttons and its simulator lines with it.
+a `Launcher` spins up and feeds one piece when the wheel is at speed. A module brings its numbers
+and its simulator lines with it; its buttons are lines you write in `Controls.java`.
 
 ## 1. Robot.java: what is on the robot
 
@@ -255,8 +255,21 @@ public class Tunables {
 public class Controls extends ControlMap<Robot> {
     public static boolean oneDriver = true;
 
+    // Always pre-assigned on gamepad 1 (the library's): sticks: drive; left stick click: slow; BACK: pause;
+    // GUIDE: button map (held: tuning menu); START + BACK: debug lines; X / B in INIT: alliance.
+
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
+        // The intake's own buttons.
+        g2.rt.hold(robot.intake::holdIn, robot.intake::stop).says("in (hold)");
+        g2.lt.hold(robot.intake::out, robot.intake::stop).says("out (hold)");
+
+        // The launcher's own buttons.
+        g2.lb.toggle(robot.launcher).says("spin up / down");
+        g2.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("fire one; hold: keep firing");
+        // (the D-pad's speed buttons: see the file)
+
+        // Ours.
         g1.y.press(Actions.fireAll(robot)).says("fire all");
     }
 }
@@ -265,17 +278,20 @@ public class Controls extends ControlMap<Robot> {
 `@TeleOp(name = ...)` is the name on the Driver Station. `ControlMap<Robot>` is a whole TeleOp from
 the library; the `<Robot>` in angle brackets says which robot it is for: yours.
 
-That is the whole TeleOp. The modules already have their **standard buttons**: the intake on the
-triggers, the launcher on the bumpers, its speed on the D-pad. `oneDriver = true` puts them all on
-gamepad 1, like goBILDA's code. You only write what is different: here, Y fires all four.
+Two kinds of buttons:
+
+- **Always pre-assigned: the library's own**, on gamepad 1: the sticks drive, BACK pauses, GUIDE shows
+  the button map. You write nothing for them; `libraryButtons(...)` can move them.
+- **Each part's buttons, written out:** the intake on the triggers, the launcher on the bumpers. A part has
+  no buttons until its lines are here, so you can read, change, move or delete each one. `oneDriver = true` puts the `g2`
+  lines on gamepad 1 too, like goBILDA's code. **Ours** is the button the team added: Y fires all four.
 
 - **INIT shows the map** on the Driver Station: every button with its job, and the free ones. During the
   match, a tap of GUIDE shows it again, without the free ones (tap again to close).
 - **BACK pauses the robot:** everything stops on **brake** (the motors hold still instead of coasting); BACK again and each part goes on as before
   (with field-centric on, hold BACK 1 s instead to reset "forward"; in robot-centric driving that does nothing). STOP brakes everything too.
 - Each button takes ONE job. Two jobs on one button in this file, or a job on a driving button (the
-  left stick, LT slow...), stop at INIT with the button's name. A job you put on a button a module
-  suggested replaces the suggestion.
+  left stick, LT slow...), stop at INIT with the button's name.
 - The kinds of jobs: `press(...)`, `hold(whileHeld, onRelease)`, `toggle(robot.intake)`,
   `release(...)`, and for sticks `g2.leftStickY.use(robot.lift::manual)`. `robot.lift::manual` means
   "the lift's `manual` method": the library calls it later, every loop. Lesson 3 has them all.
@@ -366,7 +382,7 @@ the examples are hidden: they are marked `@Disabled`.) Open http://localhost:878
 up, RB fires (hold it to keep firing). ([Simulator guide](../../guides/simulator.md).)
 
 **Your own robot** (the five files in your TeamCode): in Android Studio, pick **Simulator** in the list
-next to the green Run button, and click Run. (No **Simulator** in the list? Close the project and open it again: [the buttons](../../01-add-to-project.md#step-7-the-simulator-buttons-once).)
+next to the green Run button, and click Run. (No **Simulator** in the list? Close the project and open it again: [the buttons](../../setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing).)
 Or, in the Terminal, from the `ftc-helper-lib` folder:
 
 ```bash
@@ -433,8 +449,8 @@ Tunables section (here `Tunables.IntakeDeploy`).
    measures them (or the [robot-file skill](../../guides/robot-file-skill.md) does it from photos or CAD: a **skill** is a set
 of written instructions an AI coding agent, like Claude Code, follows). Your measured lines are kept
    each time.
-4. **Add a mechanism later:** one line in Robot.java (and its Tunables section). Its standard buttons
-   and its simulator lines come with it.
+4. **Add a mechanism later:** one line in Robot.java (and its Tunables section), and its button lines in
+   Controls.java (its "buttons to add" in the [reference](../../modules/robot.md)). Its simulator lines come with it.
 
 ## Check yourself
 

@@ -125,9 +125,29 @@ public class Tunables {
     }
     // end recipe
 
-    public static class Limelight {
-        public static double pipeline = 0;
+    // recipe: tunables-camera
+    public static class Limelight {                                 // "limelight" in the configuration
+        public static double pipeline = 0;                          // a Limelight: the pipeline to use (0)
+        public static boolean autoLighting = true;                  // try a few settings at INIT, keep the best (true)
+        public static double pitchDeg = DEFAULT;                    // its tilt up, degrees (0 = level)
     }
+    // end recipe
+
+    // recipe: tunables-lights
+    public static class Light {                                     // "light" in the configuration
+        public static boolean allianceAtInit = true;                // show the alliance in INIT, flash it at ▶ (true)
+    }
+    // end recipe
+
+    // recipe: tunables-piece-sensor
+    public static class IntakeColor {                               // "intake_color" in the configuration
+        public static double POLLEN = MEASURE;                      // the kind's hue, degrees (Piece Tuner)
+        public static double nearMm = DEFAULT;                      // a piece is there below this distance (40)
+        public static double hueTolerance = DEFAULT;                // how far from a kind's hue still counts (30)
+        public static double minSaturation = DEFAULT;               // how colourful it must be, 0 to 1 (0)
+        public static double steadyMs = DEFAULT;                    // a reading must stay this long (30)
+    }
+    // end recipe
 
     // recipe: tunables-turret
     public static class Turret {                                    // "turret" in the configuration

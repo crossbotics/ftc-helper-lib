@@ -104,6 +104,16 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         return secondMotor;
     }
 
+    // The first motor's encoder is read (the second gets the same power, so both are pushed together).
+    // 0 is where it is at INIT (or the switch): pushed toward the side of 0 with more of its range (a lift: up).
+    @Override
+    void encoderMotors(List<EncoderMotor> out, TunableSection t) {
+        double lo = t.has("min") ? t.number("min", 0) : 0, hi = t.has("max") ? t.number("max", 1) : 1;
+        EncoderMotor m = new EncoderMotor(device, reversed, name(), true, hi >= -lo ? 1 : -1);
+        if (secondMotor != null) m.with(secondMotor, reversed != secondReversed);
+        out.add(m);
+    }
+
     @Override
     List<String> notes() {
         List<String> out = super.notes();

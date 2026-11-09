@@ -6,7 +6,7 @@ priority: high
 where: real
 minutes: 30
 needs: [mecanum|tank]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
 docs: [tutorials/start/02-drive.md#7-check-the-motor-directions, quick-start.md#7-drive-then-each-mechanism]
 ---

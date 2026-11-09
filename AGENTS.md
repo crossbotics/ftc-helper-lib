@@ -17,13 +17,13 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   teams' JUnit tests (`PretendDevices` & co., in the library so TeamCode needs no extra Gradle lines; the
   library's own tests keep their older fakes; `examples/src/test/.../v2bot/V2botTest.java` shows it).
 - `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), one program per
-  tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and robots in five files (the four kit bots
-  `gobildabot/`, `revbot/`, `andymarkbot/`, `studicabot/`, and `lessonbot/`, `flywheelbot/`, `turretbot/`,
+  tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and robots in five files (the five kit bots
+  `gobildabot/`, `gobildastraferbot/`, `revbot/`, `andymarkbot/`, `studicabot/`, and `lessonbot/`, `flywheelbot/`, `turretbot/`,
   `v2bot/` (turret + lift with wrist and claw + an interlock rule), `odometrybot/`, `pedrobot/`, `quickstart/`; docs/templates.md lists them; main-track lesson 1 explains them; `SimFromRobotTest` runs them), and the cookbook's recipes (`cookbook/`, one file per topic,
   shown in `docs/cookbook.md`; `CookbookTest` in `sim/` INITs and runs every cookbook OpMode).
 - `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new
   module: extend `Module` (or `MotorPositions`/`ServoPositions`), read numbers through `TunableSection`,
-  route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` and
+  route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` (its usual buttons: INIT names the ones Controls.java left free) and the same lines in `examples/.../cookbook/UsualButtons.java` and a "buttons to add" in docs/modules/robot.md and
   `simLines`, a row in docs/modules/robot.md, and its fields in docs/guides/tunables.md and `TunableFields.java`. It must work when `optional()` and missing (built on
   `MissingPart`'s stand-in devices, never updated): its "done" questions true, its "busy" ones false
   (`OptionalPartsTest` calls every public method of every module kind that way). `./gradlew :sim:newRobot` (SimNewRobot) guesses modules
@@ -53,7 +53,9 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
     (points, match times, FLOWER heights, tip time, clean-shot rules), typed from the manual with section
     numbers (SimRules; scoring in SimScore, the clean-shot judge in SimCellJudge, a port of the turret
     simulator's judge() checked by SimCellJudgeTest).
-- `docs/` `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
+- `docs/` `setup/` (one page per setup step, in order, each ending with "Done when"), `five-files/` (one walkthrough
+  page per robot file; each page's code is a compiled program in `examples/.../firstrobot/` or a cookbook recipe,
+  shown with a `<!-- recipe: name -->` marker and kept the same by `tools/check_docs.py`), `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
 - `testing/` the community test list: one file per test in `testing/tests/`, words in `vocabulary.json`,
   `catalogue.json` made by `python3 tools/check_tests.py --fix` (crossbotics.com reads it). A new

@@ -29,6 +29,7 @@ public class ExampleRobotsInitTest {
     // One Robot.java per example robot (docs/templates.md lists them), and the cookbook's.
     private static final List<Class<? extends RobotDefinition>> ROBOTS = Arrays.asList(
             com.crossbotics.ftchelper.examples.gobildabot.Robot.class,
+            com.crossbotics.ftchelper.examples.gobildastraferbot.Robot.class,
             com.crossbotics.ftchelper.examples.revbot.Robot.class,
             com.crossbotics.ftchelper.examples.andymarkbot.Robot.class,
             com.crossbotics.ftchelper.examples.studicabot.Robot.class,
@@ -39,6 +40,8 @@ public class ExampleRobotsInitTest {
             com.crossbotics.ftchelper.examples.odometrybot.Robot.class,
             com.crossbotics.ftchelper.examples.pedrobot.Robot.class,
             com.crossbotics.ftchelper.examples.quickstart.Robot.class,
+            com.crossbotics.ftchelper.examples.firstrobot.Robot.class,
+            com.crossbotics.ftchelper.examples.allbuttons.Robot.class,
             com.crossbotics.ftchelper.examples.cookbook.Robot.class);
 
     @Test public void everyExampleRobotInitsWithNoError() throws Exception {

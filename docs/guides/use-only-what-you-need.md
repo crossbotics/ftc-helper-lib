@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** teams with their own code who do not want a framework. **You need:** your own
-`LinearOpMode` and the library [added to the project](../01-add-to-project.md).
+`LinearOpMode` and the library [added to the project](../setup/04-add-the-library.md).
 
 You do not have to use `EasyTeleOp`, `ControlMap` or the robot in five files. Every building block
 below works on its own, next to plain SDK code, in your own loop. For each one: the import, a short

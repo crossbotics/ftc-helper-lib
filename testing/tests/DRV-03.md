@@ -6,7 +6,7 @@ priority: high
 where: both
 minutes: 10
 needs: []
-kit_bots: []
+kit_bots: [gobilda-strafer]
 since: v0.30.0
 docs: [guides/finders.md#motor-direction-check-each-wheel-rolls-forward, modules/drive.md#check-motor-directions]
 ---

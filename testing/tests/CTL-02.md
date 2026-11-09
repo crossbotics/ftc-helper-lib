@@ -6,7 +6,7 @@ priority: medium
 where: both
 minutes: 25
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
 docs: [guides/buttons.md#moving-the-librarys-buttons, tutorials/start/03-buttons.md#7-pause-with-back-and-the-other-library-buttons]
 ---

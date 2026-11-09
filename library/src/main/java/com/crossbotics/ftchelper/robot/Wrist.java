@@ -14,7 +14,7 @@ import java.util.Map;
  * }
  * }</pre>
  *
- * <p>Suggested buttons: operator D-pad left/right go to the next position down/up (lowest value first).
+ * <p>Usual buttons (lines to write in Controls.java): operator D-pad left/right go to the next position down/up (lowest value first).
  *
  * Docs: docs/modules/robot.md (section "Wrist")
  */

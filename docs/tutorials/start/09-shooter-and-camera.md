@@ -925,7 +925,7 @@ choose "FlywheelBot TeleOp", drive until the goal is in view, and press RB on ga
 ./gradlew :sim:run
 ```
 
-Pick your TeleOp, INIT (read the map: the launcher's standard buttons are there), ▶, and fire.
+Pick your TeleOp, INIT (read the map: the launcher's buttons are there), ▶, and fire.
 For pieces to be picked up and shot, the simulator needs to know where your intake and flywheel are:
 give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from Robot.java](01-robot-in-five-files.md#draw-your-robot-from-robotjava)).
 

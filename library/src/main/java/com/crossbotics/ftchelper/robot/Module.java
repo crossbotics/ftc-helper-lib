@@ -9,7 +9,8 @@ import java.util.Locale;
 /**
  * One kind of mechanism in {@code Robot.java}: an {@link Intake}, a {@link Lift}, a {@link Claw}...
  * Each module brings four things: its line in {@code Robot.java}, its section in {@code Tunables.java},
- * its suggested buttons (the standard button map) and its lines in the simulator robot file.
+ * its usual buttons (the lines Controls.java writes for it; added by themselves only with
+ * useStandardButtons() true) and its lines in the simulator robot file.
  *
  * <pre>{@code
  * lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));   // in Robot.java's define()
@@ -193,6 +194,19 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     }
 
     /**
+     * Adds the motors of this part to the Encoder Check's list (RobotDefinition.encoderMotors), each with
+     * the direction Robot.java gives it and which way to push it (its range, from its Tunables section t,
+     * read without hardware). Default: none (a servo part, a sensor).
+     */
+    void encoderMotors(List<EncoderMotor> out, TunableSection t) { }
+
+    /**
+     * The motor ports whose encoder count this part reads for itself (a CR servo turret's encoder on another
+     * motor's port), with what it is: the Encoder Check skips the motor on that port. Default: none.
+     */
+    void encoderPortsRead(java.util.Map<String, String> out) { }
+
+    /**
      * Stops what an unfinished action told this part to do, safely and without counting as the
      * driver's command (see ActionRunner). Default: nothing (a servo is already where it was sent).
      */
@@ -212,7 +226,7 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
         return java.util.Collections.emptyList();
     }
 
-    /** Adds this module's suggested buttons to the standard map. */
+    /** Adds this module's usual buttons to a plan (INIT's "not in Controls.java" note, or useStandardButtons() true). */
     void suggestButtons(ButtonPlan plan) { }
 
     /**

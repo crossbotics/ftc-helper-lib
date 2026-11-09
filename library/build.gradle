@@ -1,5 +1,5 @@
 // ftc-helper-lib: the library module.
-// A robot project includes this folder as a Gradle module (see docs/01-add-to-project.md).
+// A robot project includes this folder as a Gradle module (see docs/setup/04-add-the-library.md).
 // The plugin version comes from the robot project's own build.gradle.
 plugins {
     id 'com.android.library'

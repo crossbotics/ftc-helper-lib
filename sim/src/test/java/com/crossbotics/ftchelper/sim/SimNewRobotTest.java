@@ -168,7 +168,13 @@ public class SimNewRobotTest {
         args.add("-cp");
         args.add(System.getProperty("java.class.path"));
         args.add("-proc:none");
-        for (Map.Entry<String, String> e : f.entrySet()) {
+        // The written Controls.java with the parts' own buttons switched back on: its button map must be the same.
+        Map<String, String> all = new java.util.LinkedHashMap<>(f);
+        if (f.containsKey("Controls.java")) {
+            all.put("TwinControls.java", "package org.firstinspires.ftc.teamcode;\n\npublic class TwinControls extends Controls {\n"
+                    + "    @Override protected boolean useStandardButtons() { return true; }\n}\n");
+        }
+        for (Map.Entry<String, String> e : all.entrySet()) {
             Path p = src.toPath().resolve("org/firstinspires/ftc/teamcode").resolve(e.getKey());
             Files.createDirectories(p.getParent());
             Files.write(p, e.getValue().getBytes(StandardCharsets.UTF_8));
@@ -214,6 +220,32 @@ public class SimNewRobotTest {
             }
             if (initStops != null) org.junit.Assert.fail("INIT should stop on a MEASURE line");
             fresh.all().stop();
+            if (f.containsKey("Controls.java")) {
+                @SuppressWarnings("unchecked")
+                Class<? extends com.qualcomm.robotcore.eventloop.opmode.OpMode> written =
+                        (Class<? extends com.qualcomm.robotcore.eventloop.opmode.OpMode>) loader.loadClass("org.firstinspires.ftc.teamcode.Controls");
+                @SuppressWarnings("unchecked")
+                Class<? extends com.qualcomm.robotcore.eventloop.opmode.OpMode> twin =
+                        (Class<? extends com.qualcomm.robotcore.eventloop.opmode.OpMode>) loader.loadClass("org.firstinspires.ftc.teamcode.TwinControls");
+                assertEquals(f.get("Controls.java"), teleOpMap(file, twin), teleOpMap(file, written));
+            }
+        }
+    }
+
+    // The button map's lines at INIT ("G1 ...", "G2 ..."), without a part's "[Intake]" tag (a written-out line has none).
+    private static List<String> teleOpMap(Path robotFile, Class<? extends com.qualcomm.robotcore.eventloop.opmode.OpMode> teleOp)
+            throws Exception {
+        try (SimRun s = new SimRun(robotFile.toString())) {
+            s.sim.ds.register("Generated TeleOp", "TeleOp", teleOp);
+            s.init("Generated TeleOp");
+            assertEquals(String.join("\n", s.screen()), "", s.error());
+            List<String> map = new ArrayList<>();
+            for (String line : s.screen()) {
+                String t = line.trim();
+                if (t.startsWith("G1 ") || t.startsWith("G2 ")) map.add(t.replaceAll(" \\[(?!library\\])[A-Za-z0-9]+\\]$", ""));
+            }
+            assertTrue("the button map is on the INIT screen", map.size() > 3);
+            return map;
         }
     }
 

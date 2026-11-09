@@ -6,7 +6,7 @@ priority: medium
 where: both
 minutes: 10
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.32.0
 docs: [modules/gamepad.md#buttonnames]
 ---

@@ -6,7 +6,7 @@ priority: high
 where: sim
 minutes: 40
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
 docs: [guides/simulator.md#a-robot-file-from-robotjava, tutorials/start/01-robot-in-five-files.md#try-it-in-the-simulator]
 ---

@@ -189,7 +189,8 @@ final class ButtonPlan {
         if (old != null && TEAM.equals(old.source) && old.kind == Kind.SHIFT && e.kind == Kind.SHIFT) return old;
         if (old != null && old.kind == Kind.RESERVED) {
             throw new IllegalStateException("Controls.java: " + input + " is the library's \"" + old.says
-                    + "\" button. Pick another button, or move the library's job (libraryButtons, docs/guides/buttons.md).");
+                    + "\" button. Pick another button, or move the library's job (libraryButtons, docs/guides/buttons.md)."
+                    + (oneDriver ? " One driver: your g2 lines are on gamepad 1 too, where the library drives." : ""));
         }
         if (old != null && TEAM.equals(old.source) && old.kind != Kind.FREE && e.kind != Kind.FREE
                 && (old.kind == Kind.SHIFT || e.kind == Kind.SHIFT)) {
@@ -234,6 +235,49 @@ final class ButtonPlan {
         List<String> out = new ArrayList<>();
         for (Entry e : rejected) out.add(e.source + " " + e.says + ": no button (" + e.input + " is taken by " + e.takenBy + ")");
         return out;
+    }
+
+    /**
+     * With the parts' own buttons off: each part's usual button (from {@code usual}, the same robot with them on)
+     * that is free in this plan, one line per part, e.g. "Intake: usual buttons not in Controls.java: G2 RT in
+     * (hold), G2 LT out (hold)". A button that has any job here counts as done: the team chose it.
+     */
+    List<String> usualButtonsFree(ButtonPlan usual) {
+        Map<String, StringBuilder> byPart = new LinkedHashMap<>();
+        Pad[] theirs = oneDriver ? new Pad[] {usual.g1} : new Pad[] {usual.g1, usual.g2};
+        Pad[] ours = oneDriver ? new Pad[] {g1} : new Pad[] {g1, g2};
+        for (int pi = 0; pi < theirs.length; pi++) {
+            Object[] in = inputs(theirs[pi]), mine = inputs(ours[pi]);   // the same inputs, in the same order
+            for (int i = 0; i < in.length; i++) {
+                // The part that got this input in the usual plan, and any part that wanted it but came later
+                // (two intakes both want RT): each one's usual button counts.
+                List<Entry> wanted = new ArrayList<>();
+                Entry got = usual.jobs.get(in[i]);
+                if (got != null) wanted.add(got);
+                for (Entry r : usual.rejected) if (r.input == in[i]) wanted.add(r);
+                if (usedHere(mine[i])) continue;
+                String name = in[i] instanceof Pad.Button ? ((Pad.Button) in[i]).label : ((Pad.Stick) in[i]).label;
+                for (Entry e : wanted) {
+                    if (e.kind == Kind.FREE || e.source == null || e.source.equals(TEAM) || e.source.equals(LIBRARY)) continue;
+                    StringBuilder sb = byPart.computeIfAbsent(e.source, k -> new StringBuilder());
+                    sb.append(sb.length() == 0 ? "" : ", ").append(ours[pi]).append(' ').append(name).append(" (").append(words(e)).append(')');
+                }
+            }
+        }
+        List<String> out = new ArrayList<>();
+        for (Map.Entry<String, StringBuilder> b : byPart.entrySet()) {
+            out.add(b.getKey() + ": usual buttons not in Controls.java: " + b.getValue()
+                    + ". The lines: docs/modules/robot.md, \"Buttons to add\"");
+        }
+        return out;
+    }
+
+    // True when this plan gives the input a job: its own, or as either button of a pair (LB + RT).
+    private boolean usedHere(Object input) {
+        Entry here = jobs.get(input);
+        if (here != null && here.kind != Kind.FREE) return true;
+        for (Entry p : pairs) if (p.shift == input || p.with == input) return true;
+        return false;
     }
 
     /** Notes for INIT, e.g. a module suggestion that found no free button. */

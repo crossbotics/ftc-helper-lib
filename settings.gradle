@@ -1,6 +1,6 @@
 // Standalone build of ftc-helper-lib (used for tests, CI and the examples).
 // Robot projects do NOT use this file. They include only the `library` folder.
-// See docs/01-add-to-project.md.
+// See docs/setup/04-add-the-library.md.
 
 pluginManagement {
     repositories {

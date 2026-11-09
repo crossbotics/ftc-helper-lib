@@ -313,6 +313,23 @@ The finders are: [Servo Finder](finders.md#servo-finder-ends-and-positions),
 <!-- tunables: Drive -->
 Section `Drive` (fixed name). Read once at INIT. Module: [Drive](../modules/robot.md#drive).
 
+**Copy into `Tunables.java`.** Change only what you need: `DEFAULT` keeps the starting value,
+`MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-drive -->
+```java title="Tunables.java"
+public static class Drive {                                     // a fixed name: always Drive
+    public static double maxPower = 0.6;                        // top wheel power: slow for first drives (1.0)
+    public static double practiceMaxPower = 0.4;                // top wheel power in PRACTICE (0.6)
+    public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
+    public static double strafeCorrection = DEFAULT;            // sideways moves: Drive Tuner (1.15)
+    public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
+    public static double turnKd = DEFAULT;                      // auto turns: brake near the end (0.003)
+    public static double moveMinPower = DEFAULT;                // auto: least power that moves it (0.30)
+    public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
+}
+```
+
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
 | `maxPower` | the most power the wheels get (COMPETITION profile) | 0 to 1 | 1.0 | yes, next INIT | test | the robot is too fast for the drivers |
@@ -331,6 +348,22 @@ Section `Drive` (fixed name). Read once at INIT. Module: [Drive](../modules/robo
 <!-- tunables: Odometry -->
 Section `Odometry` (fixed name). Read once at INIT. Module: [Odometry](../modules/robot.md#odometry).
 
+**Copy into `Tunables.java`.** Change only what you need: `DEFAULT` keeps the starting value,
+`MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-reset-spot -->
+```java title="Tunables.java"
+public static class Odometry {                                  // a fixed name: always Odometry
+    public static boolean checked = false;                      // true after the Odometry Tuner's Loop test
+    // "Set pose here" (TeleOp: hold gamepad 1 START 1 s on this spot), written for BLUE.
+    public static double resetX = -56;                          // inches right of centre, - = left
+    public static double resetY = -61;                          // inches from centre, - = our half
+    public static double resetHeading = 0;                      // degrees, 0 = facing the field
+    // RED: false = the same numbers from the red wall; true (or left out) = mirrored left-right.
+    public static boolean mirrorForRed = false;                 // BIOBUZZ: false
+}
+```
+
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
 | `checked` | like `Drive.calibrated`, for the odometry: `driveTo` and path steps run on a real robot only when this is `true`. Until then INIT warns `Odometry not checked` (the simulator runs them anyway) | true/false | false | no | Odometry Tuner | after the Odometry Tuner's loop check passes |
@@ -344,6 +377,26 @@ Section `Odometry` (fixed name). Read once at INIT. Module: [Odometry](../module
 
 <!-- tunables: Aim -->
 Section `Aim` (fixed name). Every line is optional. Module: [Aim](../modules/robot.md#aim).
+
+**Copy into `Tunables.java`.** Change only what you need: `DEFAULT` keeps the starting value,
+`MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-aim -->
+```java title="Tunables.java"
+/** Aiming (every line is optional; leave out what you do not use). */
+public static class Aim {                                       // a fixed name: always Aim
+    // The goal on the field, in inches, seen from your drivers' wall (the same numbers as driveTo).
+    public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
+    public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
+    public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
+    public static double turnKp = DEFAULT;                      // whole-robot aim: push per degree off (0.02)
+    public static double turnKd = DEFAULT;                      // brake near the goal (0.002)
+    public static double maxTurnPower = DEFAULT;                // the most it turns by itself (0.5)
+    public static double toleranceDeg = DEFAULT;                // "aimed" within this, degrees (2)
+    public static double rumbleDeg = DEFAULT;                   // rumbleWhenAimed(): buzz within this (4)
+    public static boolean aimOnFire = false;                    // no turret: a fire press turns to the goal first
+}
+```
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -380,6 +433,18 @@ Section `Aim` (fixed name). Every line is optional. Module: [Aim](../modules/rob
 <!-- tunables: Buttons -->
 Section `Buttons` (fixed name). For button gestures (double tap, hold). Module: [ControlMap](../modules/robot.md#controlmap).
 
+**Copy into `Tunables.java`.** Change only what you need: `DEFAULT` keeps the starting value,
+`MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-buttons -->
+```java title="Tunables.java"
+/** Optional: slower gestures, e.g. for new drivers. Leave the section out for the defaults (in brackets). */
+public static class Buttons {                                   // a fixed name: always Buttons
+    public static double tapGapSec = 0.45;                      // most time between the taps of a double-tap (0.35)
+    public static double holdSec = 0.4;                         // a press this long is a hold, not a tap (0.3)
+}
+```
+
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
 | `tapGapSec` | the most time between the two taps of a double tap (not the library's field-centric double tap: always 0.35 s) | seconds | 0.35 | yes, at once | test | double taps are missed (more) or single taps wait too long (less) |
@@ -389,6 +454,17 @@ Section `Buttons` (fixed name). For button gestures (double tap, hold). Module: 
 
 <!-- tunables: Intake -->
 Section: the device's name in CamelCase (`intake` reads `Intake`, `front_roller` reads `FrontRoller`). Module: [Intake](../modules/robot.md#intake).
+
+**Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-intake -->
+```java title="Tunables.java"
+public static class Intake {                                    // "intake" in the configuration
+    public static double inPower = DEFAULT;                     // power taking pieces in, 0 to 1 (1.0)
+    public static double outPower = DEFAULT;                    // power pushing pieces out (0.7)
+}
+```
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -401,6 +477,43 @@ Section: the device's name in CamelCase (`intake` reads `Intake`, `front_roller`
 Section: the device's name in CamelCase (`lift` reads `Lift`, `lift_left` reads `LiftLeft`, not `Lift`). With
 two motors ([`alsoMotor`](../modules/robot.md#two-motors-on-one-lift-or-arm)) it is the FIRST motor's name. A Lift is in encoder **counts**, an Arm in **degrees**.
 Module: [Lift](../modules/robot.md#lift), [Arm](../modules/robot.md#arm).
+
+**Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+A lift (counts):
+
+<!-- recipe: tunables-lift -->
+```java title="Tunables.java"
+public static class Lift {                                      // "lift" in the configuration
+    public static double min = MEASURE;                         // lowest safe point, counts (Motor Finder)
+    public static double max = MEASURE;                         // highest safe point, counts (Motor Finder)
+    public static double kP = DEFAULT;                          // push toward the target (from the motor)
+    public static double kI = DEFAULT;                          // fix a small steady miss (0)
+    public static double kD = DEFAULT;                          // brake near the target (from the motor)
+    public static double kF = DEFAULT;                          // hold up against gravity (0.05)
+    public static double down = MEASURE;                        // a named height, counts: any name you like
+    public static double low = MEASURE;                         // a named height (Motor Finder)
+    public static double high = MEASURE;                        // a named height (Motor Finder)
+}
+```
+
+An arm (degrees):
+
+<!-- recipe: tunables-arm -->
+```java title="Tunables.java"
+public static class Arm {                                       // "arm" in the configuration
+    public static double min = MEASURE;                         // lowest safe angle, degrees, 0 = at INIT
+    public static double max = MEASURE;                         // highest safe angle, degrees (Motor Finder)
+    public static double kP = DEFAULT;                          // push toward the target (0.02)
+    public static double kI = DEFAULT;                          // fix a small steady miss (0)
+    public static double kD = DEFAULT;                          // brake near the target (0.001)
+    public static double kF = 0.1;                              // hold up against gravity (0)
+    public static double stowed = MEASURE;                      // a named angle, degrees: any name you like
+    public static double pickup = MEASURE;                      // a named angle (Motor Finder)
+    public static double score = MEASURE;                       // a named angle (Motor Finder)
+}
+```
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -422,6 +535,44 @@ Module: [Lift](../modules/robot.md#lift), [Arm](../modules/robot.md#arm).
 Section: the device's name in CamelCase (`claw` reads `Claw`, `intake_deploy` reads `IntakeDeploy`). Module: [Claw](../modules/robot.md#claw),
 [Wrist](../modules/robot.md#wrist), [Positioner](../modules/robot.md#positioner).
 
+**Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+A claw:
+
+<!-- recipe: tunables-claw -->
+```java title="Tunables.java"
+public static class Claw {                                      // "claw" in the configuration
+    // The Servo Finder shows "Tunables.Claw: P1 = 0.210, P2 = 0.770": write P1 as open, P2 as closed.
+    public static double open = MEASURE;                        // servo position, open (Servo Finder)
+    public static double closed = MEASURE;                      // servo position, closed (Servo Finder)
+    public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
+}
+```
+
+A wrist:
+
+<!-- recipe: tunables-wrist -->
+```java title="Tunables.java"
+public static class Wrist {                                     // "wrist" in the configuration
+    public static double down = MEASURE;                        // servo position: any name you like
+    public static double level = MEASURE;                       // servo position (Servo Finder)
+    public static double up = MEASURE;                          // servo position (Servo Finder)
+    public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
+}
+```
+
+A positioner (a fold-out):
+
+<!-- recipe: tunables-positioner -->
+```java title="Tunables.java"
+public static class IntakeDeploy {                              // "intake_deploy" in the configuration
+    public static double stowed = MEASURE;                      // servo position, folded (Servo Finder)
+    public static double deployed = MEASURE;                    // servo position, folded out (Servo Finder)
+    public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
+}
+```
+
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
 | `travelSec` | how long the servo takes for a full move, from position 0 to 1 (a shorter move: its share): a servo cannot say when it has arrived, so this is the guess | seconds | 0.3 (with `.part(...)`: from the servo's catalog speed, [First run](#first-run-what-you-get-before-tuning)) | no | test: time a move, divide by its distance (below) | actions go on before it arrives (more) |
@@ -441,6 +592,23 @@ not servo travel: add `.waitSeconds(...)` to the action for that.
 <!-- tunables: Turret -->
 Section: the device's name in CamelCase (`turret` reads `Turret`). Degrees, 0 = straight forward, counterclockwise +. Which lines
 your turret needs: [Setting up a turret](turret-setup.md). Module: [Turret](../modules/robot.md#turret).
+
+**Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-turret -->
+```java title="Tunables.java"
+public static class Turret {                                    // "turret" in the configuration
+    public static double min = MEASURE;                         // furthest right, degrees (Motor Finder)
+    public static double max = MEASURE;                         // furthest left, degrees: 0 = forward, + = left
+    public static double startAngle = DEFAULT;                  // where you set it by hand before INIT (0)
+    public static double kP = DEFAULT;                          // push per degree off (0.02)
+    public static double kD = DEFAULT;                          // brake near the target (0.001)
+    public static double maxPower = DEFAULT;                    // the most power (0.8)
+    public static double tolerance = DEFAULT;                   // "aimed" within this, degrees (1.0)
+    public static double cameraOffset = DEFAULT;                // aims a little to one side: Aim Tuner (0)
+}
+```
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -474,6 +642,20 @@ Section: the rule's name, `keepApart("TurretLift", turret.zone(), lift.zoneAbove
 own units. Read once at INIT, never in the tuning menu: a zone that moved while the parts move could
 let them hit. Guide: [interlocks](interlocks.md). Module: [Interlock](../modules/robot.md#interlock).
 
+**Copy into `Tunables.java`.** The section's name is the rule's name. Change only what you need:
+`DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-interlock -->
+```java title="Tunables.java"
+// The rule's own section, named like the rule in Robot.java. Each zone in its part's units.
+public static class TurretLift {                                // keepApart("TurretLift", ...) in Robot.java
+    public static double turretFrom = MEASURE;                  // degrees: where the turret's zone starts
+    public static double turretTo = MEASURE;                    // degrees: where it ends (robot's back)
+    public static double liftAbove = MEASURE;                   // counts: the slide is up from here
+    public static double liftStopSec = 0.2;                     // a heavy slide takes longer to stop (0.15)
+}
+```
+
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
 | `<part>From`, `<part>To` | `part.zone()`: the zone between two numbers | the part's units | REQUIRED with `zone()` | no | measure: move the part by hand to the edges | the parts or their places changed |
@@ -487,6 +669,28 @@ let them hit. Guide: [interlocks](interlocks.md). Module: [Interlock](../modules
 <!-- tunables: Launcher -->
 Section: the device's name in CamelCase: a launcher on the motor `launcher` reads `Launcher`, one on
 `shooter` reads **`Shooter`** (not `Launcher`). Module: [Launcher](../modules/robot.md#launcher).
+
+**Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-launcher -->
+```java title="Tunables.java"
+public static class Launcher {                                  // "launcher" in the configuration
+    public static double speedRpm = DEFAULT;                    // shot speed without the table (60% of top)
+    public static double stepRpm = DEFAULT;                     // speed change per D-pad press (100)
+    public static double readyBandRpm = DEFAULT;                // "at speed" = this close to the target (60)
+    public static double idleRpm = 1500;                        // spins between shots: quicker first shot (0)
+    public static double shotIntervalSec = DEFAULT;             // least time between two pieces (0.25)
+    // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
+    // Then write the Finder's numbers in their place.
+    public static double kP = DEFAULT;                          // push per speed error (kF / 10)
+    public static double kI = DEFAULT;                          // fix a steady error (kP / 10)
+    public static double kD = DEFAULT;                          // brake changes (0)
+    public static double kF = DEFAULT;                          // steady power for a speed (from the motor)
+    // {inches to the goal, RPM}, blended between rows. Example rows: write the Shot Tuner's instead.
+    public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
+}
+```
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -532,6 +736,21 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 Section: the device's name in CamelCase: `Indexer.servo("feeder")` reads **`Feeder`**, `windmill` reads `Windmill`
 (not `Indexer`). Module: [Indexer](../modules/robot.md#indexer).
 
+**Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+A servo indexer:
+
+<!-- recipe: tunables-indexer -->
+```java title="Tunables.java"
+public static class Indexer {                                   // "indexer" in the configuration
+    public static double rest = MEASURE;                        // servo position, out of the way (Servo Finder)
+    public static double push = MEASURE;                        // servo position, piece pushed (Servo Finder)
+    public static double pushSec = DEFAULT;                     // time to push (0.25, or the servo's speed)
+    public static double returnSec = DEFAULT;                   // time to come back (the same as pushSec)
+}
+```
+
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
 | `rest` | a servo indexer: where it waits | 0 to 1 | 0.0 | yes, at once | Servo Finder | it blocks the pieces |
@@ -553,6 +772,23 @@ Section: the device's name in CamelCase (`hood` reads `Hood`, `shooter_hood` rea
 encoder counts. "Angle" below is your angle, in degrees or any scale you chose, when `angleA`, `angleB`
 (or a `calibration`) are written; without them it is the position itself. Every
 default that says "of the range" fits degrees, positions and counts. Module: [Hood](../modules/robot.md#hood).
+
+**Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-hood -->
+```java title="Tunables.java"
+public static class Hood {                                      // "hood" in the configuration
+    // posA and posB: the servo positions a hair off the hood's two hard stops. Never past them.
+    public static double posA = MEASURE;                        // servo position at stop A (Hood Finder)
+    public static double posB = MEASURE;                        // servo position at stop B (Hood Finder)
+    // Optional: the hood's angle at each stop (any scale, e.g. 0 = steep end, 30 = flat end).
+    public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
+    public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
+    public static double travelSec = DEFAULT;                   // stop to stop, seconds (0.5, or the servo's)
+    public static double startAngle = DEFAULT;                  // where it goes at ▶ (angle A)
+}
+```
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -593,6 +829,18 @@ HIVE). Only with `cameraFix(camera)` in Robot.java. Module: [Camera fix (alpha)]
 Section: the device's name in CamelCase (`limelight` reads `Limelight`, `Webcam 1` reads `Webcam1`). Read once at INIT; not in the tuning
 menu. Module: [Camera](../modules/robot.md#camera).
 
+**Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-camera -->
+```java title="Tunables.java"
+public static class Limelight {                                 // "limelight" in the configuration
+    public static double pipeline = 0;                          // a Limelight: the pipeline to use (0)
+    public static boolean autoLighting = true;                  // try a few settings at INIT, keep the best (true)
+    public static double pitchDeg = DEFAULT;                    // its tilt up, degrees (0 = level)
+}
+```
+
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
 | `liveView` | a webcam: show its picture (the Driver Station's Camera Stream, in INIT) in the PRACTICE profile; never in COMPETITION (it costs speed) | true/false | true | no | none | `false` to save speed in practice too |
@@ -614,6 +862,20 @@ menu. Module: [Camera](../modules/robot.md#camera).
 Section: each sensor's device name in CamelCase (`intake_color` reads `IntakeColor`). Module:
 [Pieces and PieceSensor](../modules/robot.md#pieces-and-piecesensor). (`Pieces` itself reads no numbers.)
 
+**Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-piece-sensor -->
+```java title="Tunables.java"
+public static class IntakeColor {                               // "intake_color" in the configuration
+    public static double POLLEN = MEASURE;                      // the kind's hue, degrees (Piece Tuner)
+    public static double nearMm = DEFAULT;                      // a piece is there below this distance (40)
+    public static double hueTolerance = DEFAULT;                // how far from a kind's hue still counts (30)
+    public static double minSaturation = DEFAULT;               // how colourful it must be, 0 to 1 (0)
+    public static double steadyMs = DEFAULT;                    // a reading must stay this long (30)
+}
+```
+
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
 | `<KIND>` | one per kind, the same name as in `kinds(...)`, e.g. `POLLEN`: the kind's hue (colour sensor, camera) or the mm read with it (distance sensor) | degrees 0 to 360 / mm | none: that kind reads `UNKNOWN` (INIT says so) | yes, at once | Piece Tuner | new lights at a venue, or a moved sensor |
@@ -629,6 +891,16 @@ Section: each sensor's device name in CamelCase (`intake_color` reads `IntakeCol
 
 <!-- tunables: Lights -->
 Section: the device's name in CamelCase (`light` reads `Light`, `blinkin` reads `Blinkin`). Module: [Lights](../modules/robot.md#lights).
+
+**Copy into `Tunables.java`.** The section's name is your device's name in CamelCase. Change only
+what you need: `DEFAULT` keeps the starting value, `MEASURE` must be measured (a few lines have example numbers).
+
+<!-- recipe: tunables-lights -->
+```java title="Tunables.java"
+public static class Light {                                     // "light" in the configuration
+    public static boolean allianceAtInit = true;                // show the alliance in INIT, flash it at ▶ (true)
+}
+```
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |

@@ -54,6 +54,7 @@
   },
   "kit_bots": {
     "gobilda": {"label": "goBILDA starter bot", "option": "goBILDA starter bot", "has": ["tank", "flywheel", "intake"], "robot_file": "sim/robots/starter-bot-gobilda.properties"},
+    "gobilda-strafer": {"label": "goBILDA starter bot with mecanum wheels", "option": "goBILDA starter bot with mecanum wheels (Strafer)", "has": ["mecanum", "flywheel", "intake"], "robot_file": "sim/robots/starter-bot-gobilda-strafer.properties"},
     "rev": {"label": "REV DUO starter bot", "option": "REV DUO starter bot", "has": ["tank", "flywheel", "intake"], "robot_file": "sim/robots/starter-bot-rev.properties"},
     "andymark": {"label": "AndyMark Robits starter bot", "option": "AndyMark Robits starter bot", "has": ["tank", "intake"], "robot_file": "sim/robots/starter-bot-andymark.properties"},
     "studica": {"label": "Studica starter bot", "option": "Studica starter bot", "has": ["tank", "flywheel", "intake"], "robot_file": "sim/robots/starter-bot-studica.properties"}

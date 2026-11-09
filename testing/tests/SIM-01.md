@@ -6,7 +6,7 @@ priority: high
 where: sim
 minutes: 30
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
 docs: [guides/simulator.md#start-it, guides/starter-bots.md]
 ---

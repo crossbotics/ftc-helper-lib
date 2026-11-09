@@ -50,127 +50,20 @@ Contents: [words](#words-in-one-line-each) · [team workflow](#the-team-workflow
 
 ## The team workflow
 
-Five rules. Put them on the wall of the pit.
-
-1. **`main` always works.** Anyone can clone `main`, build it, and drive the robot. Never push code to
-   `main` that does not build.
-2. **Pull before you start.** Every practice, first get the newest code. Then you do not work on an old
-   copy.
-3. **Commit often, with a good message.** One commit per small change that works. The message says
-   what changed and why, in a few words: `Lift: high step 2400 -> 2350 (it hit the stop)`.
-   Bad: `stuff`, `fix`, `asdf`.
-4. **Push before you leave.** Your commits are only on your laptop until you push. The next person
-   cannot get them otherwise.
-5. **Try big ideas on a branch.** A new autonomous, a new part, a big change: make a branch. Merge it
-   into `main` only after it is tested on the robot.
-
-**One laptop at a time per file.** Two people who change the same file at the same time get a
-conflict. Talk first: "I am changing `Tunables.java`".
+The five team rules: [Set up 8, team rules](../setup/08-every-practice.md#team-rules).
 
 ## Set up once
 
-**Command line.** Check that git is there, and tell it your name (it goes in every commit):
-
-```bash
-git --version
-git config --global user.name "YOUR-NAME"
-git config --global user.email "12345678+YOUR-NAME@users.noreply.github.com"
-git config --global pull.rebase false
-```
-
-`git --version` says `not recognized` (Windows)? GitHub Desktop's own git does not work in the Terminal.
-See [git is not recognized](../troubleshooting.md#autonomous-choice-and-git-problems).
-
-**Change the two lines before you run them:** `YOUR-NAME` is your first name or GitHub username, and
-the email is YOUR private GitHub address (below), not the example's. Keep the quotes.
-
-The last line says what `git pull` does when you and a teammate both made commits: join them with a
-merge (the simplest way). Without it, a new git stops with `You have divergent branches`.
-
-Use your first name or your GitHub username, not your full name, and the private email GitHub gives you
-(below). **Why:** the history of a public repository is public, names and emails included.
-
-**GitHub Desktop.** Install it, then **GitHub Desktop > Settings > Accounts** (Windows: **File >
-Options > Accounts**) and sign in. Desktop then knows your name and email.
-
-**Keep your email private.** On github.com: your picture (top right) > **Settings** > **Emails** >
-tick **Keep my email addresses private**. GitHub shows your private address there
-(`12345678+name@users.noreply.github.com`). Use that one in `git config`.
+Step by step, for GitHub Desktop and the command line: [Set up 3: GitHub and the robot project](../setup/03-github-and-the-project.md#1-tell-git-who-you-are).
 
 ## Clone the robot project (copy it to a laptop)
 
-Do this once per laptop. The robot project has the library inside it as a **submodule**, so the clone
-must get the submodule too.
-
-**Command line** (in a folder where you keep projects; the URL is on the repository's GitHub page,
-green **Code** button):
-
-```bash
-git clone --recurse-submodules https://github.com/OUR-TEAM/OUR-ROBOT.git
-```
-
-`--recurse-submodules` also gets the `ftc-helper-lib` folder. Forgot it? Go into the project folder
-and run:
-
-```bash
-git submodule update --init
-```
-
-**GitHub Desktop:** **File > Clone Repository…**, choose the **GitHub.com** tab (or **URL** and paste
-it), choose the local path, click **Clone**. Desktop gets submodules by itself.
-
-Then open the project folder in Android Studio (**File > Open**). **Android Studio's own Git > Clone
-does not always get submodules**: if the build says
-`Project directory '.../ftc-helper-lib/library' does not exist`, run `git submodule update --init`.
+Step by step: [Set up 3, get the robot project](../setup/03-github-and-the-project.md#2-get-the-robot-project).
+An empty `ftc-helper-lib` folder after a clone: `git submodule update --init`.
 
 ## Every practice: pull, commit, push
 
-**1. Pull first** (get the team's newest code).
-
-Command line, in the project folder:
-
-```bash
-git pull
-git submodule update
-```
-
-`git submodule update` puts the library at the version the project expects (only needed when someone
-changed the library version; it does no harm otherwise).
-
-GitHub Desktop: click **Fetch origin** (top bar). If it changes to **Pull origin**, click it.
-Desktop updates the submodule by itself.
-
-**2. Work.** Change the code, build, test on the robot.
-
-**3. Commit** (save a snapshot) each time a small change works.
-
-Command line:
-
-```bash
-git status
-git add TeamCode
-git commit -m "Auto: park 2 in further left"
-```
-
-`git status` lists what changed: read it, so you only commit what you meant to. `git add TeamCode`
-picks the changes in the `TeamCode` folder for the commit (`git add .` picks every change; check
-`git status` first). `git commit -m "..."` saves them with the message.
-
-GitHub Desktop: the **Changes** tab lists the changed files. Untick a file you do not want. Type a
-message in **Summary** (bottom left), click **Commit to main**.
-
-**4. Push** (send your commits to GitHub) before you leave, or when a teammate needs them.
-
-Command line:
-
-```bash
-git push
-```
-
-GitHub Desktop: click **Push origin** (top bar).
-
-If the push is refused (`rejected ... fetch first`), a teammate pushed first. Pull (step 1), then push
-again.
+Step by step: [Set up 8: every practice](../setup/08-every-practice.md).
 
 ## Try an idea on a branch
 
@@ -372,5 +265,5 @@ git switch --detach event-2026-11-14
 ## Next
 
 - Keep the library up to date: [Keep it up to date](../02-keep-up-to-date.md).
-- Add the library to a new robot project: [Add it to a project](../01-add-to-project.md).
+- Add the library to a new robot project: [Add the library](../setup/04-add-the-library.md).
 - Several autos and choosing one at the field: [Several autonomous modes](autos.md).

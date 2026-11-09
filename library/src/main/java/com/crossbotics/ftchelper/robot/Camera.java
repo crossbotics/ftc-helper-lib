@@ -31,7 +31,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  * ({@code Tunables.Limelight} for device "limelight"): {@code pipeline} (Limelight only, default 0), {@code pitchDeg}
  * (webcam or Limelight: its tilt up in degrees, 0 = level: then bearings and distances are along the floor, see
  * {@link com.crossbotics.ftchelper.vision.CameraTilt}).
- * No suggested buttons. It starts in INIT (a webcam needs a second or two). A camera missing from the
+ * No usual buttons. It starts in INIT (a webcam needs a second or two). A camera missing from the
  * robot configuration never stops the OpMode: it warns on the Driver Station and sees nothing.
  *
  * <p>Venue lighting: {@link #autoPipelines} (Limelight) or {@link #autoExposure} (webcam) tries a few

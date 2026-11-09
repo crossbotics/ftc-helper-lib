@@ -17,8 +17,17 @@ import java.util.Locale;
 public class Controls extends ControlMap<Robot> {
     public static boolean oneDriver = false;
 
+    // Always pre-assigned on gamepad 1 (the library's): sticks: drive; LT: slow; Y: field-centric (double
+    // tap); BACK: pause; GUIDE: button map (held: tuning menu); START held 1 s: set pose; START + BACK held
+    // 1.5 s: switch alliance; START + BACK: debug lines; X / B in INIT: alliance.
+
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
+        // The intake's own buttons.
+        robot.intake.inOn(g2.rt);
+        robot.intake.outOn(g2.lt);
+
+        // Ours.
         show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in", robot.pose().x, robot.pose().y));
         // Drives to the park spot by itself, around the HIVE frames. Any drive stick stops it.
         Runnable park = route("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);

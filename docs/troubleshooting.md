@@ -18,7 +18,7 @@ git submodule update --init
 **<samp>Cannot resolve symbol 'crossbotics'</samp> / red imports**
 
 Gradle does not know about the library yet. Check steps 2 and 3 in
-[Add it to a project](01-add-to-project.md), then **File > Sync Project with Gradle Files**.
+[Add the library](setup/04-add-the-library.md), then **File > Sync Project with Gradle Files**.
 
 **<samp>Plugin [id: 'com.android.library'] was not found</samp>**
 
@@ -171,6 +171,19 @@ Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) o
 
 ## Robot behavior
 
+**A lift or arm runs past its stop, never stops, or does not move; the flywheel never gets to speed; the robot drives the wrong distance**
+
+The encoder count is wrong: its cable is missing, in another motor's port, or counting backward. Run the
+[Encoder Check](guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port) (Tune and check) with the
+robot on a block. It names the fault for each motor:
+
+| The Encoder Check says | Fix |
+| --- | --- |
+| <samp>NO COUNTS: encoder cable missing?</samp> | plug in the encoder cable, or replace it |
+| <samp>counts on "X" instead: encoder cables swapped?</samp> | put each encoder cable in its own motor's port |
+| <samp>counts on "lift_right" instead: plug the encoder cable into "lift_left"'s port</samp> | a two-motor lift: only the first motor's encoder is read. Move the cable |
+| <samp>counts BACKWARD</samp> | the motor's power wires are swapped (red and black), or an outside encoder is mounted the other way |
+
 **A route says <samp>Park: stopped: a drive stick moved</samp>, or it never seems to start**
 
 Any drive stick stops a TeleOp route at once. A route that a time starts waits 5 s for the driver to let go
@@ -189,12 +202,12 @@ robot also ends this way: the robot presses the wall.
 The spot you gave `routeTo` or `route` is on a box, or other boxes close every way to it. Move the spot. For
 the second one, a smaller margin in `fieldMap(...)` can also help.
 
-**A part's button does nothing, and INIT says <samp>... no button (G2 RB is your "score high" in Controls.java)</samp>**
+**A part does nothing on its buttons, and INIT says <samp>Intake: usual buttons not in Controls.java: ...</samp>**
 
-A job of yours in `Controls.java` is on a button that part suggested, so yours won and the part has no
-button for that job. It often happens when a later lesson adds a part (a launcher wants gamepad 2's LB
-and RB). Move your job to a free button (INIT lists them: <samp>G2 free: ...</samp>), or free the part's job and
-give it another button ([lesson 3](tutorials/start/03-buttons.md#5-one-job-per-button-or-several-gestures)).
+Since v0.39.0 a part has no buttons until `Controls.java` has its lines. Copy the part's lines from its
+"buttons to add" in the [reference](modules/robot.md) (for example [Intake](modules/robot.md#intake-buttons-to-add))
+into `buttons(...)`. A button that line wants is already yours? Put the part's job on a free one (INIT lists
+them: <samp>G2 free: ...</samp>).
 
 **A servo turns less than its seller says (a goBILDA 2000 servo: about 270 degrees, not 300)**
 The hub sends 600 to 2400 microseconds for positions 0 to 1 (the FTC SDK's normal range); the servo's

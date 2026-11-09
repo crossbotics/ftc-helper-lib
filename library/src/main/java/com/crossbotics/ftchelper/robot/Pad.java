@@ -417,7 +417,7 @@ public final class Pad {
             return put(ButtonPlan.Kind.HOLD, () -> p.slowHeld = true, () -> p.slowHeld = false, "slow (hold)");
         }
 
-        /** No job: it stays free, even if a module suggested one for it. Listed as free on the help page. */
+        /** No job: it stays free (a placeholder to replace with a job). Listed as free on the help page. */
         public Button free() {
             lastGesture = null;
             last = pad.plan.put(this, new ButtonPlan.Entry(ButtonPlan.Kind.FREE, null, null, "free", null));
@@ -493,7 +493,7 @@ public final class Pad {
             return this;
         }
 
-        /** No job: it stays free, even if a module suggested one for it. */
+        /** No job: it stays free (a placeholder to replace with a job). */
         public Stick free() {
             last = pad.plan.put(this, new ButtonPlan.Entry(ButtonPlan.Kind.FREE, null, null, "free", null));
             return this;

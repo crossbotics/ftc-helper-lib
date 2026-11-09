@@ -6,7 +6,7 @@ priority: medium
 where: sim
 minutes: 15
 needs: [any]
-kit_bots: [gobilda, rev, andymark, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.22.0
 docs: [guides/simulator.md#edit-robot-shape-your-robot, guides/simulator.md#the-page]
 ---

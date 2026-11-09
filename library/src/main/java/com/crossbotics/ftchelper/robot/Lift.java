@@ -17,7 +17,7 @@ import java.util.Map;
  * }
  * }</pre>
  *
- * <p>Suggested buttons (operator): A = lowest height, X = the second one, Y = the highest, D-pad
+ * <p>Usual buttons (lines to write in Controls.java) (operator): A = lowest height, X = the second one, Y = the highest, D-pad
  * up/down = next height up/down, left stick Y = by hand (it holds where you let go).
  *
  * <p>A bottom switch makes the bottom always right: pressing it sets the height to 0. Until it has

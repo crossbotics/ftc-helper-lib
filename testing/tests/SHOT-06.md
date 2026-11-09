@@ -6,7 +6,7 @@ priority: high
 where: both
 minutes: 10
 needs: [flywheel]
-kit_bots: [gobilda, rev, studica]
+kit_bots: [gobilda, gobilda-strafer, rev, studica]
 since: v0.17.1
 docs: [guides/tunables.md#default-and-measure, guides/tunables.md#first-run-what-you-get-before-tuning, tutorials/start/09-shooter-and-camera.md#the-first-spin-up-with-no-numbers]
 ---

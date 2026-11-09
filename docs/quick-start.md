@@ -15,23 +15,23 @@ autonomous take one or two more sessions.
 
 | Your robot | Your road |
 | --- | --- |
-| A **starter bot** from goBILDA, REV (DUO), AndyMark (Robits) or Studica, built as the seller's guide says | [Road 1: an unchanged starter bot](#road-1-an-unchanged-starter-bot) |
+| A **starter bot** from goBILDA (tank or mecanum), REV (DUO), AndyMark (Robits) or Studica, built as the seller's guide says | [Road 1: an unchanged starter bot](#road-1-an-unchanged-starter-bot) |
 | One of those starter bots **with your own changes**: a part added, taken off or moved, another motor or servo | [Road 2: a changed starter bot](#road-2-a-changed-starter-bot) |
-| **Your own design**, or a kit robot that is not one of those four | [Road 3: your own robot](#road-3-your-own-robot) |
+| **Your own design**, or a kit robot that is not one of those | [Road 3: your own robot](#road-3-your-own-robot) |
 
 Not sure? Only new buttons, or new numbers? That is still road 1: buttons are in `Controls.java` and
 numbers in `Tunables.java`. One part added, taken off or changed makes it road 2.
 
-**Before every road:** never used Android Studio, or no robot project yet? Do
-[Start from zero](start-from-zero.md) first (45 to 60 minutes). It installs Android Studio, gets the
-robot project, and shows how to read and change one line of Java. Skip it if Android Studio already
-builds and installs your robot project. Used Scratch or Blocks before? Read
+**Before every road:** do [Set up](setup/README.md), pages 1 to 7. It installs Android Studio, gets
+the robot project, adds the library and makes the robot configuration. Already done? Each page's
+"Done when" tells you. New to Java? Read [Read Java and make your first edit](start-from-zero.md) too. Used Scratch or Blocks before? Read
 [From Blocks to Java](blocks-to-java.md) too. Wrote Java with this library last season? See
 [Coming from last season's code](from-last-season.md).
 
 ### Road 1: an unchanged starter bot
 
-The library has the code for each of the four starter bots, with the seller's own configuration names.
+The library has the code for each starter bot, with the seller's own configuration names (goBILDA has two:
+the 6-wheel tank one and the mecanum one on a Strafer chassis).
 You copy it, check it and measure a few numbers. You write almost no code.
 
 1. [Add the library](#1-add-the-library).
@@ -41,7 +41,7 @@ You copy it, check it and measure a few numbers. You write almost no code.
    starter bot's template.
 4. [Change the STEP lines](#4-change-the-step-lines): only how your Control Hub is mounted (STEP 3).
    Then read the notes for your starter bot ([REV](guides/starter-bots.md#rev-bot-code),
-   [goBILDA](guides/starter-bots.md#gobilda-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code),
+   [goBILDA](guides/starter-bots.md#gobilda-bot-code), [goBILDA mecanum](guides/starter-bots.md#gobilda-strafer-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code),
    [Studica](guides/starter-bots.md#studica-bot-code)): they say which numbers are guesses.
 5. [Build and check the hardware](#5-build-and-check-the-hardware).
 6. [Measure the numbers](#6-measure-the-numbers): the guessed ones first.
@@ -109,41 +109,13 @@ Words used on this page:
 
 ## 1. Add the library
 
-Follow [Add it to a project](01-add-to-project.md) (about 10 minutes). After it, your robot project has
-an `ftc-helper-lib` folder next to `TeamCode`, and a test build passes.
-
-- **Is there already an `ftc-helper-lib` folder next to `TeamCode`, with files in it?** A mentor added
-  it. Skip this step.
-- **Is the folder there but empty?** Your clone did not get it. In the Terminal
-  ([how](start-from-zero.md#6-the-terminal-tab)), in the robot project's folder, run
-  `git submodule update --init`. **Why:** the library is a **submodule** (a project kept inside
-  another project), and a clone does not always fetch it
-  ([more](01-add-to-project.md#for-everyone-else-on-the-team)).
+Done in [Set up 4: add the library](setup/04-add-the-library.md). **Done when:** an `ftc-helper-lib`
+folder with files in it is next to `TeamCode`. Empty folder? [Set up 3, problems](setup/03-github-and-the-project.md#problems).
 
 ## 2. Make the robot configuration
 
-The **robot configuration** tells the Control Hub which device is in which port, and its name. Your
-code finds each device by that name, so the names must be the same as in `Robot.java` (capitals and
-`_` count).
-
-1. Connect the Driver Station to the Control Hub. Open the **⋮** menu, then **Configure Robot**, then
-   **New**.
-2. Choose the Control Hub (and the Expansion Hub, if the robot has one).
-3. For each port with a device: choose its kind (a motor's type, **Servo**, **Continuous Rotation
-   Servo**, a sensor) and type its name. A motor type that is not in the list? Use the closest one:
-   the library takes the motor's numbers from `.part(...)` in `Robot.java`.
-4. Leave the **imu** line as it is: it is the Control Hub's own IMU.
-5. **Save**, give the configuration a name (for example `MyRobot`), and **activate** it.
-
-Where the names come from:
-
-- **Road 1 and 2:** the seller's names, in [the table for your starter bot](guides/starter-bots.md#the-configuration-names).
-  Road 2 adds a name for each new part.
-- **Road 3:** your own names. Short, small letters, with `_` between words: `left_front`, `lift`,
-  `claw`. **Why:** way A below copies them into `Robot.java`, so they become your code's names too.
-
-**Why this comes first:** a wrong name stops the program at INIT, and the Driver Station then lists the
-names that do exist. More: [hardware names](modules/hardware.md).
+Done in [Set up 7: make the robot configuration](setup/07-robot-configuration.md). Road 1 and 2 use the
+seller's names; road 3 uses your own.
 
 ## 3. Get the five files
 
@@ -255,6 +227,7 @@ folders are inside `ftc-helper-lib/examples/src/main/java/com/crossbotics/ftchel
 | Starter bot | Its folder | Its autonomous |
 | --- | --- | --- |
 | goBILDA FTC StarterBot | [`gobildabot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot) | `autos/LaunchAndBackUp.java` |
+| goBILDA FTC StarterBot with Mecanum Wheels (Strafer) | [`gobildastraferbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildastraferbot) | `autos/LaunchAndLeave.java` |
 | REV DUO FTC Starter Bot | [`revbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/revbot) | `autos/ShootAndLeave.java` |
 | AndyMark Robits BIOBUZZ StarterBot | [`andymarkbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/andymarkbot) | `autos/ThrowAndLeave.java` |
 | Studica FTC Starter Bot | [`studicabot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/studicabot) | `autos/ShootAndLeave.java` |
@@ -293,7 +266,7 @@ went (the loop, "when pressed", "wait") in these files.
 4. **`Robot.java`:** only if a wheel turns the wrong way (you find out in section 7, step 4, below): add `.reversed(...)` listing **every** reversed drive motor, on its own line **before** `.imu(...)` (the STEP 4 comment marks the place).
    **Why:** The list replaces the default (the left side reversed); `.imu(...)` ends the drive line with `));`, so a `.reversed(...)` after it does not build.
 5. **`Robot.java`:** your mechanisms: keep, delete or add `add(...)` lines (and a field for each). On each line, `.part("gobilda-5203-1150")`: your motor's or servo's id (on its label; optional but recommended). No intake? Also delete the `g2.dpadLeft` line in `Controls.java` and `spitOut` in `Actions.java`.
-   **Why:** Each part brings its numbers and buttons; with `.part(...)` its starting values are that part's real numbers, and the simulator moves it like the real one.
+   **Why:** Each part brings its numbers (its buttons are lines in `Controls.java`); with `.part(...)` its starting values are that part's real numbers, and the simulator moves it like the real one.
 6. **`Tunables.java`:** leave `maxPower` and `practiceMaxPower` at 0.4 for now.
    **Why:** A slow first drive is a safe first drive.
 7. **`Controls.java`:** the TeleOp's name (renamed it? Change `preselectTeleOp` in `autos/FirstAuto.java` to the same name); `group = "Examples"` to your own group name (or delete it); `oneDriver = true` if one person drives and runs the mechanisms.
@@ -322,7 +295,7 @@ In `Controls.java` and `autos/FirstAuto.java`, also delete the `@Disabled` line 
 
 ## 5. Build and check the hardware
 
-1. Build (the green hammer in Android Studio), then Run to install it on the Control Hub.
+1. Build (**Build > Make Project**), then Run to install it on the Control Hub ([the buttons](setup/06-build-and-install.md#the-buttons)).
    **Why:** the robot runs the app that is on the hub, not the code on your laptop.
 2. Add the small **Hardware Check** OpMode from [Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md#1-the-3-line-opmode)
    (it is not one of the five files), build and install again.
@@ -342,7 +315,7 @@ Guessing them can push a part into the frame. **So the finders come before the f
   name the finder to use. The finders still run: they do not read `Tunables.java`.
 - **Road 1 and 2:** the REV bot has two `MEASURE` numbers (its poker's `up` and `down`): INIT stops on
   them. The other starter bots have none, but some numbers are the seller's or our guesses. Your starter bot's notes list them ([REV](guides/starter-bots.md#rev-bot-code),
-  [goBILDA](guides/starter-bots.md#gobilda-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code),
+  [goBILDA](guides/starter-bots.md#gobilda-bot-code), [goBILDA mecanum](guides/starter-bots.md#gobilda-strafer-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code),
   [Studica](guides/starter-bots.md#studica-bot-code)). Measure every servo position on that list
   before the first TeleOp (REV's poker, Studica's flap). Road 2: also every part you added.
 
@@ -404,7 +377,7 @@ with no robot nearby: try buttons, actions and autonomous routes there first.
 **In Android Studio:** pick **Simulator** in the list next to the green Run button, and click Run.
 The page opens in your browser when the simulator is ready. (No browser opened? The address in the Run
 window is a blue link: click it.)
-(No **Simulator** in the list? Close the project and open it again: [Step 7 of Add the library](01-add-to-project.md#step-7-the-simulator-buttons-once).)
+(No **Simulator** in the list? Close the project and open it again: [Set up 4](setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing).)
 The red **Stop** button stops it.
 
 **Or in the Terminal** (do the laptop setup below once), in the `ftc-helper-lib` folder (`cd ftc-helper-lib`):
@@ -434,7 +407,7 @@ servos, and how they look. The names and the drive come from `Robot.java`; the s
 - **Changed your code?** Stop the simulator and start it again. **Why:** it builds your code when it
   starts. To stop it in the Terminal: click in the Terminal and press **Ctrl+C**.
 - **Road 1 and 2: use your starter bot's measured robot file.** Before the first start, copy
-  `ftc-helper-lib/sim/robots/starter-bot-gobilda.properties` (or `-rev`, `-andymark`, `-studica`) to
+  `ftc-helper-lib/sim/robots/starter-bot-gobilda.properties` (or `-gobilda-strafer`, `-rev`, `-andymark`, `-studica`) to
   `simulator/robot.properties` in your robot project. **Why:** it has the starter bot's real size and
   shapes; a file made from `Robot.java` guesses an 18 x 18 in robot. A copied file has no "made from"
   line at the top, so the simulator does not change it when it starts. **Road 2:** after each change,
@@ -448,54 +421,7 @@ servos, and how they look. The names and the drive come from `Robot.java`; the s
 
 ### Laptop setup (once)
 
-Only for the Terminal commands (the Simulator button needs none of this). The library is its own
-Gradle build, separate from your robot project's. So it needs these, even when the robot project already builds:
-
-- **Java.** The commands need `JAVA_HOME` (where Java is; Java 17 or newer). Android Studio has its
-  own Java, usually in its `jbr` folder. Set it in the terminal (it lasts until you close that
-  terminal):
-
-  ```bash
-  # Mac
-  export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-  # Windows (PowerShell)
-  $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
-  ```
-
-  **That folder may not exist on your computer** (Android Studio installed somewhere else, or a
-  different name). To find a Java folder:
-
-  - In Android Studio: **Settings > Build, Execution, Deployment > Build Tools > Gradle**. The
-    **Gradle JDK** line names the Java that Android Studio uses, with its folder. Use that folder.
-  - On a Mac, in the Terminal: `/usr/libexec/java_home -V` lists the Javas installed for the whole
-    Mac, with their folders. (Android Studio's own Java may not be in that list.)
-  - **Neither one finds a Java?** Install a **JDK** 17 or 21 (a JDK is Java with the tools that build
-    code), for example Eclipse Temurin from [adoptium.net](https://adoptium.net), with the normal
-    settings. Then use its folder (on a Mac, `/usr/libexec/java_home -V` now lists it). You do
-    **not** need the Java from java.com.
-
-- **The Android SDK.** If the first command stops with `SDK location not found`, make a plain text file
-  `ftc-helper-lib/local.properties` ([how to make a file](start-from-zero.md#make-a-new-file-or-folder):
-  right-click the `ftc-helper-lib` folder, **New > File**) with one line (put your user name in place of `<you>`; on a Mac,
-  `whoami` in the Terminal prints it, on Windows `$env:USERNAME` in PowerShell):
-
-  ```text
-  sdk.dir=/Users/<you>/Library/Android/sdk
-  ```
-
-  On Windows: `sdk.dir=C\:\\Users\\<you>\\AppData\\Local\\Android\\Sdk`. **Why:** your robot project's own
-  `local.properties` does not count; the library is its own build. (Android Studio shows the SDK path in
-  **Settings > Languages & Frameworks > Android SDK**.)
-- **Windows:** type `gradlew.bat` (or `.\gradlew` in PowerShell) instead of `./gradlew`.
-- **Normal warnings you can ignore:** `source value 8 is obsolete` (and `target value 8`),
-  `Java compiler version 21 has deprecated support for compiling with source/target version 8` (it
-  goes on with `Try one of the following options: 1. [Recommended] Use Java toolchain...`: do
-  nothing), `SDK processing. This version only understands SDK XML versions up to 3`,
-  `Deprecated Gradle features were used`, `[Incubating] Problems report`. Android Studio's
-  "Start AGP Upgrade Assistant" note: do not click it (the FTC SDK sets its own Android build
-  version). The first run downloads a lot
-  and takes a few minutes. How to read the rest of the output: [Start from zero: the Terminal
-  tab](start-from-zero.md#6-the-terminal-tab).
+Only for commands you type in the Terminal: [Set up 9: laptop setup](setup/09-the-terminal.md#laptop-setup-for-gradlew-commands-once-per-laptop).
 
 ## 9. A first autonomous
 
@@ -527,7 +453,7 @@ to add steps.
 
 | Problem | Fix |
 | --- | --- |
-| The build cannot find `com.crossbotics.ftchelper` | step 1 is not finished: [Add it to a project](01-add-to-project.md) |
+| The build cannot find `com.crossbotics.ftchelper` | step 1 is not finished: [Add the library](setup/04-add-the-library.md) |
 | A `package` error | the `package` line of a copied file still says `com.crossbotics.ftchelper.examples...` |
 | `class, interface, or enum expected` | the file has two `package` lines, or its first line is broken (a typo, a missing `;`): it must be exactly one `package ...;` line at the top |
 | `cannot find symbol` ... `Robot` or `Tunables` in `FirstAuto.java` | its two imports still say `com.crossbotics.ftchelper.examples.quickstart`: section 3, way B, step 4 |
@@ -551,4 +477,4 @@ lessons your robot needs (7 odometry, 8 paths, 9 a shooter). A quick question
 ("how do I add a claw?")? The [cookbook](cookbook.md) has short answers with code to copy.
 
 Road 1 and 2: your starter bot's page says what its code does differently, and what the simulator
-cannot show yet: [The four BIOBUZZ starter bots](guides/starter-bots.md).
+cannot show yet: [The BIOBUZZ starter bots](guides/starter-bots.md).

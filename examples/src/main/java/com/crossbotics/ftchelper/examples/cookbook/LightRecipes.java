@@ -101,6 +101,9 @@ public class LightRecipes {
 
         @Override
         protected void buttons(Robot robot, Pad g1, Pad g2) {
+            robot.intake.inOn(g2.rt);   // the intake's usual buttons
+            robot.intake.outOn(g2.lt);
+
             // recipe: light-flash
             // A flash beats every rule while it lasts (write it first: it reads that way).
             // A short white flash for each piece fired, and one from a button.

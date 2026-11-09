@@ -86,7 +86,7 @@ import java.util.function.DoubleSupplier;
  * <p>A following turret and whole-robot aim ({@code robot.aimMode()}) are separate modes: use one (see
  * {@link Aim}).
  *
- * <p>Suggested buttons: operator right stick X turns it by hand; operator BACK switches following
+ * <p>Usual buttons (lines to write in Controls.java): operator right stick X turns it by hand; operator BACK switches following
  * on and off.
  *
  * Docs: docs/modules/robot.md (section "Turret"), docs/guides/turret-setup.md
@@ -704,6 +704,26 @@ public final class Turret extends Module<Turret> {
     /** True for {@code Turret.servo} (a positional servo; not a motor or CR servo turret). */
     public boolean isServoTurret() {
         return kind == Kind.SERVO;
+    }
+
+    // A motor turret reads its own port's encoder (its angle). A CR servo turret has no motor to push.
+    // Pushed toward the side of its start angle with more room (a turret that only turns one way from INIT).
+    @Override
+    void encoderMotors(List<EncoderMotor> out, TunableSection t) {
+        if (kind != Kind.MOTOR) return;
+        int sign = 1;
+        if (!continuous) {
+            double lo = t.number("min", -90), hi = t.number("max", 90), start = t.number("startAngle", 0);
+            if (!t.has("startAngle") && (start < lo || start > hi)) start = (lo + hi) / 2;
+            sign = hi - start >= start - lo ? 1 : -1;
+        }
+        out.add(new EncoderMotor(device, reversed, name(), true, sign));
+    }
+
+    // A CR servo turret's encoder sits on a motor port (maybe another part's motor): that port counts the turret.
+    @Override
+    void encoderPortsRead(java.util.Map<String, String> out) {
+        if (kind == Kind.CR_SERVO && !analog && encoderName != null) out.put(encoderName, name() + "'s encoder");
     }
 
     /**

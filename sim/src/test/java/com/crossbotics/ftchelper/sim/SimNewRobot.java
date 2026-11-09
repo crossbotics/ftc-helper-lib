@@ -16,7 +16,7 @@ import java.util.Set;
 /**
  * Writes a team's five starting files (Robot.java, Tunables.java, Controls.java, Actions.java and one
  * autonomous) from the robot configuration the Driver Station saved, so the drive works on day one and
- * each mechanism already has its module, its numbers and its standard buttons.
+ * each mechanism already has its module, its numbers and its usual buttons, written out in Controls.java.
  *
  * <pre>
  * ./gradlew :sim:newRobot -Pconfig=path/to/config.xml -PteamCode=../TeamCode [-Ppackage=org.firstinspires.ftc.teamcode]
@@ -393,7 +393,7 @@ public final class SimNewRobot {
         Map<String, String> files = new LinkedHashMap<>();
         files.put("Robot.java", robotJava(pkg, drive, imu, odometry, parts, todo));
         files.put("Tunables.java", tunablesJava(pkg, parts, odometry != null));
-        files.put("Controls.java", controlsJava(pkg));
+        files.put("Controls.java", controlsJava(pkg, parts, drive == null || drive.length == 4, odometry != null));
         files.put("Actions.java", actionsJava(pkg, parts));
         files.put("autos/LeaveStart.java", autoJava(pkg));
         return files;
@@ -524,33 +524,125 @@ public final class SimNewRobot {
         return sb.toString();
     }
 
-    private static String controlsJava(String pkg) {
-        return "package " + pkg + ";\n\n"
-                + "import com.qualcomm.robotcore.eventloop.opmode.TeleOp;\n"
-                + "import com.crossbotics.ftchelper.robot.ControlMap;\n"
-                + "import com.crossbotics.ftchelper.robot.Pad;\n\n"
-                + "/**\n"
-                + " * The buttons, and the TeleOp itself. Every part already has its standard buttons: INIT shows the\n"
-                + " * whole map, and which buttons are free. Put a job here only to change one or to add one:\n"
-                + " * <pre>\n"
-                + " * g2.y.press(Actions.scoreHigh(robot));              // an action from Actions.java (press again: cancel)\n"
-                + " * g2.b.toggle(robot.claw);                           // on / off\n"
-                + " * g2.rt.hold(robot.intake::in, robot.intake::stop);  // while held, then on release\n"
-                + " * g2.leftStickY.use(robot.lift::manual);             // a stick, every loop\n"
-                + " * </pre>\n"
-                + " * Gamepad 1 drives: left stick, right stick X turns, LT slow, Y field-centric (mecanum). BACK: a tap\n"
-                + " * pauses everything (again: go on), held 1 s resets \"forward\". GUIDE: a tap shows the button map,\n"
-                + " * held 1 s opens the tuning menu (PRACTICE profile).\n"
-                + " */\n"
-                + "@TeleOp(name = \"TeleOp\")\n"
-                + "public class Controls extends ControlMap<Robot> {\n"
-                + "    // true: one driver does everything on gamepad 1 (the operator's buttons move there).\n"
-                + "    public static boolean oneDriver = false;\n\n"
-                + "    @Override\n"
-                + "    protected void buttons(Robot robot, Pad g1, Pad g2) {\n"
-                + "        // Your buttons here. A job on a button a part suggested replaces the suggestion.\n"
-                + "    }\n"
-                + "}\n";
+    // Each part's own buttons, written out as the library would add them (RobotDefinition.suggestButtons: a part's
+    // inner parts first, then the part; the first part to take a button keeps it). AllButtonsTest checks the
+    // examples the same way; SimNewRobotTest INITs the written TeleOp and compares its button map.
+    private static void partButtons(Part p, String ref, boolean inLauncher, java.util.Set<String> used, List<String> out) {
+        List<String[]> b = new ArrayList<>();   // {button, line}
+        switch (p.type) {
+            case "Intake":
+                b.add(new String[] {"rt", ref + ".inOn(g2.rt);"});
+                b.add(new String[] {"lt", ref + ".outOn(g2.lt);"});
+                break;
+            case "Lift": {
+                List<String> pos = new ArrayList<>();
+                for (String k : p.numbers.keySet()) {
+                    if (!java.util.Arrays.asList("min", "max", "kP", "kI", "kD", "kF", "maxPower", "slowZone", "slowZonePower",
+                            "tolerance").contains(k)) pos.add(k);
+                }
+                if (pos.size() >= 1) b.add(new String[] {"a", "g2.a.press(() -> " + ref + ".goTo(\"" + pos.get(0) + "\")).says(\"" + pos.get(0) + "\");"});
+                if (pos.size() >= 3) b.add(new String[] {"x", "g2.x.press(() -> " + ref + ".goTo(\"" + pos.get(1) + "\")).says(\"" + pos.get(1) + "\");"});
+                if (pos.size() >= 2) {
+                    String top = pos.get(pos.size() - 1);
+                    b.add(new String[] {"y", "g2.y.press(() -> " + ref + ".goTo(\"" + top + "\")).says(\"" + top + "\");"});
+                }
+                b.add(new String[] {"dpadUp", "g2.dpadUp.press(" + ref + "::stepUp).says(\"next height up\");"});
+                b.add(new String[] {"dpadDown", "g2.dpadDown.press(" + ref + "::stepDown).says(\"next height down\");"});
+                b.add(new String[] {"leftStickY", "g2.leftStickY.use(" + ref + "::manual).says(\"by hand\");"});
+                break;
+            }
+            case "Arm":
+                b.add(new String[] {"rightStickY", "g2.rightStickY.use(" + ref + "::manual).says(\"by hand\");"});
+                break;
+            case "Claw":
+                b.add(new String[] {"b", "g2.b.toggle(" + ref + ").says(\"open / close\");"});
+                break;
+            case "Wrist":
+                b.add(new String[] {"dpadLeft", "g2.dpadLeft.press(" + ref + "::previous).says(\"previous position\");"});
+                b.add(new String[] {"dpadRight", "g2.dpadRight.press(" + ref + "::next).says(\"next position\");"});
+                break;
+            case "Turret":
+                b.add(new String[] {"rightStickX", "g2.rightStickX.use(v -> " + ref + ".manual(-v)).says(\"by hand (right = clockwise)\");"});
+                break;
+            case "Indexer":
+                if (!inLauncher) b.add(new String[] {"rb", "g2.rb.press(" + ref + "::feedOne).says(\"feed one\");"});
+                break;
+            case "Hood":
+                b.add(new String[] {"leftStickY", "g2.leftStickY.use(" + ref + "::byHand).says(\"hood angle (up = bigger angle)\");"});
+                break;
+            case "Launcher":
+                b.add(new String[] {"lb", ref + ".spinOn(g2.lb);"});
+                b.add(new String[] {"rb", ref + ".fireOn(g2.rb);"});
+                // speedOn takes both D-pad buttons; one another part already has stays null, as the part did.
+                String up = used.contains("dpadUp") ? "null" : "g2.dpadUp", down = used.contains("dpadDown") ? "null" : "g2.dpadDown";
+                if (!(up.equals("null") && down.equals("null"))) {
+                    b.add(new String[] {"speed", ref + ".speedOn(" + up + ", " + down + ");"});
+                    if (!up.equals("null")) used.add("dpadUp");
+                    if (!down.equals("null")) used.add("dpadDown");
+                }
+                break;
+            default:
+                break;
+        }
+        List<String> mine = new ArrayList<>();
+        for (String[] l : b) {
+            String[] keys = l[0].equals("speed") ? new String[0] : l[0].split("\\+");
+            boolean free = true;
+            for (String k : keys) free &= !used.contains(k);
+            if (free) {
+                used.addAll(java.util.Arrays.asList(keys));
+                mine.add("        " + l[1]);
+            }
+            else mine.add("        // " + l[0] + " is already another part's: " + p.type + " " + p.field + " has no button for it here");
+        }
+        if (mine.isEmpty()) return;
+        out.add("        // The " + p.type.toLowerCase(java.util.Locale.US) + "'s own buttons (" + p.field + ").");
+        out.addAll(mine);
+        out.add("");
+    }
+
+    private static String controlsJava(String pkg, List<Part> parts, boolean mecanum, boolean odometry) {
+        List<String> lines = new ArrayList<>();
+        java.util.Set<String> used = new java.util.HashSet<>();
+        for (Part p : parts) {
+            for (Part c : p.inner) {
+                String ref = p.type.equals("Launcher") && c.type.equals("Hood") ? "robot." + p.field + ".hood()" : "robot." + c.field;
+                partButtons(c, ref, p.type.equals("Launcher"), used, lines);
+            }
+            partButtons(p, "robot." + p.field, false, used, lines);
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("package ").append(pkg).append(";\n\n")
+                .append("import com.qualcomm.robotcore.eventloop.opmode.TeleOp;\n")
+                .append("import com.crossbotics.ftchelper.robot.ControlMap;\n")
+                .append("import com.crossbotics.ftchelper.robot.Pad;\n\n")
+                .append("/**\n")
+                .append(" * The buttons, and the TeleOp itself. Every part's own buttons are written out below, so you can\n")
+                .append(" * read, change, move or delete each one. INIT shows the whole map, and which buttons are free:\n")
+                .append(" * <pre>\n")
+                .append(" * g2.y.press(Actions.scoreHigh(robot));              // an action from Actions.java (press again: cancel)\n")
+                .append(" * g2.b.toggle(robot.claw);                           // on / off\n")
+                .append(" * g2.rt.hold(robot.intake::in, robot.intake::stop);  // while held, then on release\n")
+                .append(" * g2.leftStickY.use(robot.lift::manual);             // a stick, every loop\n")
+                .append(" * </pre>\n")
+                .append(" */\n")
+                .append("@TeleOp(name = \"TeleOp\")\n")
+                .append("public class Controls extends ControlMap<Robot> {\n")
+                .append("    // true: one driver does everything on gamepad 1 (the operator's buttons move there).\n")
+                .append("    public static boolean oneDriver = false;\n\n")
+                .append("    // Always pre-assigned on gamepad 1 (the library's): sticks: drive; LT: slow")
+                .append(mecanum ? "; Y: field-centric (double tap)" : "").append(";\n")
+                .append("    // BACK: pause; GUIDE: button map (held: tuning menu)").append(odometry ? "; START held 1 s: set pose" : "")
+                .append("; START + BACK: debug lines;\n")
+                .append("    // X / B in INIT: alliance. (One driver: left stick click slow, right stick click field-centric.)\n")
+                .append("    // Every other button is a line in buttons(...): a part has no buttons until its lines are there.\n\n")
+                .append("    @Override\n")
+                .append("    protected void buttons(Robot robot, Pad g1, Pad g2) {\n");
+        for (String l : lines) sb.append(l).append('\n');
+        sb.append("        // Your buttons here. To use a part's button for something else, change or delete its line above.\n")
+                .append("    }\n")
+                .append("}\n");
+        return sb.toString();
     }
 
     private static String actionsJava(String pkg, List<Part> parts) {

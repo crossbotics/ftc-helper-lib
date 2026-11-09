@@ -19,7 +19,7 @@ import java.util.Map;
  *
  * <p>0 degrees is where the arm is when the program starts (the encoder counts from there). Start
  * every match with the arm resting on the same stop, and measure the angles from it (so {@code min}
- * is usually 0). Suggested button: operator right stick Y moves it by hand.
+ * is usually 0). Usual button (a line to write in Controls.java): operator right stick Y moves it by hand.
  *
  * Docs: docs/modules/robot.md (section "Arm")
  */

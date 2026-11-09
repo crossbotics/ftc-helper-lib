@@ -13,7 +13,7 @@ The tutorials are the "how and why": what to write, in what order, and what to c
 
 ## Start here: the main track
 
-Never used Android Studio? Start with [Start from zero](../start-from-zero.md) (45 to 60 minutes). Used
+Never used Android Studio? Start with [Set up](../setup/README.md) (45 to 60 minutes). Used
 Scratch or Blocks before? Read [From Blocks to Java](../blocks-to-java.md) next, before the Quick start:
 it shows where each block you know went.
 
@@ -30,13 +30,13 @@ put in your TeamCode), a few lines per lesson. Each lesson explains with a worke
 a mecanum drive, an intake, a lift and a claw, in five short files. Read the lesson robot's lines, then
 make the same change in your own TeamCode; the lesson robot's files are also the answer key. (Lesson 1
 explains with goBILDA's starter bot, lesson 7 with an odometry robot, and lesson 9 with two shooter robots, the same way.) Every part
-brings its own numbers and buttons, so each lesson adds only a few lines. A simulator test runs the
+brings its own numbers, and its buttons are a few lines to copy, so each lesson adds only a few lines. A simulator test runs the
 finished lesson robot, so the code here always works.
 
 **The simulator commands:** each lesson shows two sets. The lesson robot's use `-PteamCode=none` (the
 library's examples). Your own robot's use `-PteamCode=../TeamCode`:
 `./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then `./gradlew :sim:run -PteamCode=../TeamCode`.
-Run them from the `ftc-helper-lib` folder ([the Terminal tab](../start-from-zero.md#6-the-terminal-tab)).
+Run them from the `ftc-helper-lib` folder ([the Terminal tab](../setup/09-the-terminal.md)).
 Simulator tests (lesson 10) for your own robot go in your robot project's
 `simulator/scenarios/` folder, so they are saved with your code.
 
@@ -102,7 +102,7 @@ it explains imports, fields and lambdas (`() -> ...`), which every lesson uses.
 
 ## Before you start
 
-1. The library is in your robot project: [Add it to a project](../01-add-to-project.md).
+1. The library is in your robot project: [Add the library](../setup/04-add-the-library.md).
 2. Read [Signs and units](../conventions.md) once. It saves hours of "why does it turn the wrong way".
 3. Have the robot configuration on the Driver Station (the list of devices and their names) match
    the names in the tutorial, or change the names in the code. Each tutorial lists the names it uses.

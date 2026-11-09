@@ -139,7 +139,7 @@ public class SimFromRobotTest {
         Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
             s.init("FlywheelBot TeleOp");
-            assertTrue("the help page shows in INIT", s.screenHas("G2 RT: in on/off [Intake]"));
+            assertTrue("the help page shows in INIT", s.screenHas("G2 RT: in on/off"));
             assertFalse(String.join("\n", s.screen()), s.screenHas("not written"));
             assertEquals("nothing moves in INIT", 0, s.robot().motors.get("intake").userPower(), 1e-9);
             // The shapes from Robot.java: folded, it fits the start cube; at full reach, 18 x 24 x 29 in.
@@ -284,7 +284,7 @@ public class SimFromRobotTest {
             assertFalse(String.join("\n", s.screen()), s.screenHas("not written"));
             // autoPipelines: the lighting test runs in INIT and its line is on the Driver Station.
             assertTrue(SimRun.waitFor(() -> s.screenHas("limelight lighting"), 2));
-            assertTrue(s.screenHas("G2 BACK: follow the goal on/off [Turret]"));
+            assertTrue(s.screenHas("G2 BACK: follow the goal on/off"));
             s.start();
             SimLight light = s.robot().lights.get("light");          // the light: purple while following the goal
             assertTrue(light.words(), SimRun.waitFor(() -> light.words().equals("PURPLE"), 3));
@@ -577,7 +577,7 @@ public class SimFromRobotTest {
         com.crossbotics.ftchelper.examples.gobildabot.Tunables.Drive.calibrated = true;
         try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
             s.init("goBILDA Bot TeleOp");
-            assertTrue(String.join("\n", s.screen()), s.screenHas("G1 RT: in (hold) [Intake]"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("G1 RT: in (hold)"));
             s.start();
             s.press(v -> s.g1().left_bumper = v);                     // spin up
             int before = s.robot().shots();
@@ -597,6 +597,55 @@ public class SimFromRobotTest {
             assertEquals("", s.error());
         } finally {
             com.crossbotics.ftchelper.examples.gobildabot.Tunables.Drive.calibrated = was;
+        }
+    }
+
+    // ----------------------------- the five files walkthrough's first robot (docs/five-files/) -----------------------------
+
+    // Robot.java + Tunables.java + Controls.java with no buttons of its own: the robot drives (the walkthrough's goal).
+    @Test public void theFirstRobotDrivesOnTheLibrarysButtons() throws Exception {
+        try (SimRun s = new SimRun("robots/starter.properties")) {
+            s.init("First Robot TeleOp");
+            assertEquals(String.join("\n", s.screen()), "", s.error());
+            s.start();
+            double y0 = s.robot().y;
+            s.g1().left_stick_y = -1;                                 // stick forward: drive forward
+            SimRun.pause(1.0);
+            s.g1().left_stick_y = 0;
+            // It starts against an alliance wall facing the field: forward is toward the centre (y nearer 0).
+            assertTrue("it drove forward: y " + y0 + " -> " + s.robot().y, Math.abs(y0) - Math.abs(s.robot().y) > 6);
+            assertEquals("", s.error());
+        }
+    }
+
+    // ----------------------------- the goBILDA starter bot with mecanum wheels (Strafer) -----------------------------
+
+    @Test public void goBildaStraferBotMatchesTheMeasuredRobotFile() throws Exception {
+        String existing = new String(Files.readAllBytes(java.nio.file.Paths.get("robots/starter-bot-gobilda-strafer.properties")),
+                StandardCharsets.UTF_8);
+        SimFromRobot.Result r = SimFromRobot.merge(existing,
+                new com.crossbotics.ftchelper.examples.gobildastraferbot.Robot().simLines(), "Robot", "biobuzz-2026");
+        assertTrue("Robot.java and the CAD-made robot file agree: " + r.problems, r.problems.isEmpty());
+        assertTrue("the measured shapes are kept: " + r.kept, r.kept.contains("shape.intake") && r.kept.contains("motor.launcher"));
+    }
+
+    @Test public void goBildaStraferBotRunsOnItsRobotFile() throws Exception {
+        kitBotRuns("robots/starter-bot-gobilda-strafer.properties",
+                com.crossbotics.ftchelper.examples.gobildastraferbot.Tunables.Drive.class.getField("calibrated"),
+                "goBILDA Strafer Bot TeleOp", "goBILDA Strafer Bot Launch and Leave");
+    }
+
+    @Test public void goBildaStraferBotStrafes() throws Exception {
+        try (SimRun s = new SimRun("robots/starter-bot-gobilda-strafer.properties")) {
+            s.init("goBILDA Strafer Bot TeleOp");
+            s.start();
+            double x0 = s.robot().x, y0 = s.robot().y;
+            s.g1().left_stick_x = 1;                                  // stick right: slide right, no turn
+            SimRun.pause(1.0);
+            s.g1().left_stick_x = 0;
+            assertTrue("it moved sideways: x " + x0 + " -> " + s.robot().x, Math.abs(s.robot().x - x0) > 6);
+            assertEquals("not forward", y0, s.robot().y, 3);
+            assertEquals("", s.error());
         }
     }
 
@@ -935,7 +984,7 @@ public class SimFromRobotTest {
             assertFalse(s.screenHas("Buttons (GUIDE: close)"));
             s.press(v -> s.g1().guide = v);                      // a tap
             assertTrue(SimRun.waitFor(() -> s.screenHas("Buttons (GUIDE: close)"), 1));
-            assertTrue(s.screenHas("G2 RB: fire one; hold: keep firing [Launcher]"));
+            assertTrue(s.screenHas("G2 RB: fire one; hold: keep firing"));
             s.press(v -> s.g1().guide = v);                      // tap again: closed
             assertTrue(SimRun.waitFor(() -> !s.screenHas("Buttons (GUIDE: close)"), 1));
             assertEquals("", s.error());

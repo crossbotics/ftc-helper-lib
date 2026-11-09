@@ -27,7 +27,7 @@ click Run. When it is ready, the page (http://localhost:8780) opens in your brow
 opened? The address in the Run window (`Open http://localhost:8780`) is a blue link: click it. The red square
 **Stop** button stops the simulator. **Simulator tests** in the same list runs every test in your
 `simulator/scenarios` folder. The library adds the buttons when Android Studio syncs. Not in the list
-yet? close the project (**File > Close Project**) and open it again ([Step 7 of Add the library](../01-add-to-project.md#step-7-the-simulator-buttons-once)).
+yet? close the project (**File > Close Project**) and open it again ([Step 7 of Add the library](../setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing)).
 The buttons need no laptop setup.
 
 **In the Terminal:** first time on this laptop? Do the [laptop setup](#laptop-setup-once) just below first.
@@ -566,7 +566,7 @@ TeamCode and a tape measure: see the [robot-file skill](robot-file-skill.md).
 The robot file is a plain text file of `name = value` lines (a "properties" file). Text after `#` is a
 note for people. It describes the pretend robot: every device with the SAME name as the robot
 configuration, the motors and servos from the parts catalog, the robot's size, where it starts, and the
-season's field. The library's example is `sim/robots/starter.properties`; the four sellers' BIOBUZZ starter bots are in `sim/robots/starter-bot-*.properties` ([starter-bots.md](starter-bots.md)); a team keeps its own in its
+season's field. The library's example is `sim/robots/starter.properties`; the sellers' BIOBUZZ starter bots (five: goBILDA has two) are in `sim/robots/starter-bot-*.properties` ([starter-bots.md](starter-bots.md)); a team keeps its own in its
 robot project as `simulator/robot.properties` (used automatically, see below).
 
 ```properties
@@ -1244,6 +1244,9 @@ set preload off                        # the robot holds no preload (now and aft
 set field start                        # every game piece back where the match starts it (the robot stays)
 set device intake_deploy missing       # take a device out of the configuration from the next INIT
                                        # (a part not on the robot yet); present = put it back
+set encoder lift none                  # a wiring fault for the Encoder Check: lift's port has no encoder
+                                       # cable; set encoder lift flywheel = it has the flywheel's cable
+                                       # (swapped); set encoder lift own = right again. Works at once
 set tunable IntakeDeploy.deployed 0.6  # a Tunables number for this file only (before init; see below)
 expect screen has "Ready"              # or: screen not "..."
 expect value "Lift" > 500              # the number on the screen line that starts with Lift

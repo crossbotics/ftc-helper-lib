@@ -39,6 +39,7 @@ The menu lists only the tools that fit your robot. It finds Robot.java by itself
 | --- | --- |
 | Hardware Check | always |
 | Motor Direction Check | there is a Robot.java |
+| Encoder Check | there is a Robot.java |
 | Servo Finder | the configuration has a servo |
 | Hood Finder | the robot has a hood |
 | Motor Finder | the robot has a lift or an arm (or there is no Robot.java) |
@@ -61,7 +62,8 @@ The same order as the **Tune and check** menu. Two tools keep their own file (no
 ```mermaid
 flowchart LR
     H["Hardware Check<br/>everything plugged in<br/>and turning the right way"] --> MD["Motor Direction Check<br/>each wheel rolls forward"]
-    MD --> S["Servo Finder<br/>ends + positions"]
+    MD --> E["Encoder Check<br/>each encoder cable<br/>in its own port"]
+    E --> S["Servo Finder<br/>ends + positions"]
     S --> HO["Hood Finder<br/>a hood's two stops"]
     HO --> M["Motor Finder<br/>limits + positions"]
     M --> F["Flywheel Finder<br/>gains + recovery"]
@@ -77,6 +79,7 @@ flowchart LR
 
 1. **Hardware Check first** ([testing](testing.md)): every device found, every motor turns the right way.
    Then the **Motor Direction Check**: each drive wheel rolls forward, with Robot.java's directions.
+   Then the **Encoder Check**: each motor's encoder cable is in that motor's port.
 2. **Servo Finder** for each servo, **Hood Finder** for a launcher's hood, **Motor Finder** for each lift,
    arm or turret: put the limits and positions in your code (five files: `min`, `max` and the named heights
    in `Tunables.Lift`, `open` and `closed` in `Tunables.Claw`). Do this BEFORE you drive a mechanism with
@@ -157,6 +160,48 @@ yours, so it shows what the robot will really do.
 
 Run it on every new robot, and again after any motor or wire is changed: a wrong direction makes the robot
 drive in circles, strafe the wrong way, or fight itself.
+
+## Encoder Check: each encoder cable in its own port
+
+**You need:** the robot on a block (the wheels spin), lifts and arms at their bottom stop, hands clear.
+**Done when:** every motor says OK (or "no counts (fine...)" for a motor whose encoder nothing reads).
+
+A motor's encoder counts its turns. It has its own small cable, plugged into the hub next to the motor's
+power cable. A lift, an arm, a flywheel's speed and the drive's distances all trust that count. If the
+cable is in ANOTHER motor's port, the lift reads the wrong motor and never stops. If it is missing, the
+count stays at 0 and the lift pushes into its stop.
+
+The check pushes each motor in Robot.java a little (30% power for 0.3 s), one at a time. It reads EVERY
+motor port's count, and shows a result for each motor:
+
+| Result | What it means | Fix |
+| --- | --- | --- |
+| OK: counts up (or down) | its own port counted, the way it was pushed | nothing |
+| NO COUNTS | no port counted | plug in the encoder cable, or replace it. (Or the motor did not turn: did you see it move?) |
+| counts on "X" instead | another motor's port counted | encoder cables swapped: put each one in its own motor's port |
+| counts on "lift_right" instead: plug the encoder cable into "lift_left"'s port | a two-motor lift or arm: only the first motor's encoder is read | move the cable to the first motor's port |
+| counts BACKWARD | its port counted the other way from the push | the motor's power wires are swapped (red and black), or an outside encoder is mounted the other way |
+| no counts (fine: nothing reads this encoder) | an intake or feeder with no encoder cable | nothing |
+| could not read its encoder | the hub did not answer | press **Y** to check again; still there: check the hub's cables |
+| NOT IN THE CONFIGURATION | Robot.java names a motor the configuration does not have | add it to the configuration, or mark the part `optional()` |
+
+1. Robot on a block. Lifts and arms down. In **Tune and check**, open **Encoder Check**, then press **▶**.
+2. Hold **A**. Each motor gets its short push in turn. Let go of **A** and everything stops at once.
+3. Read the results. Fix the cables. Press **Y** to check again.
+
+Each motor is set up as Robot.java says (its direction). It is pushed toward the side where its part has
+room, from your `Tunables.java`: a lift up from its bottom stop, a hood toward `posB`, a turret toward the
+end of its range that is farther from its start angle. Its count must move the same way.
+
+**Watch each part while it is pushed.** The count turns with the direction setting, so the check cannot
+see a wrong `reversed()` in Robot.java: only your eyes can. A lift or arm must move UP, away from its stop.
+It moves down? Fix `reversed()` on its line in Robot.java (the drive: the [Motor Direction Check](#motor-direction-check-each-wheel-rolls-forward)).
+
+Before each push the check waits until every port is still (a flywheel spins down), so one motor is never
+mistaken for another. Something keeps moving? The screen names it. Not checked: servos, CR servos, a CR servo
+turret, and a motor whose port reads something else: an odometry pod (the [Odometry Tuner](#odometry-tuner-directions-offsets-and-a-loop-check) checks pods) or a CR servo turret's encoder.
+
+Run it on every new robot, and again after any motor or cable is changed.
 
 ## Servo Finder: ends and positions
 

@@ -46,6 +46,7 @@ body:
       description: A kit bot is a seller's starter bot (built from their guide, or close to it).
       options:
         - goBILDA starter bot
+        - goBILDA starter bot with mecanum wheels (Strafer)
         - REV DUO starter bot
         - AndyMark Robits starter bot
         - Studica starter bot

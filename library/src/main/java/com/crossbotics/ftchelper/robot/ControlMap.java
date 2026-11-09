@@ -18,8 +18,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The team's TeleOp and button map in one file, {@code Controls.java}. Every module on the robot
- * already has its standard buttons; you only write what is different.
+ * The team's TeleOp and button map in one file, {@code Controls.java}. The library's own buttons
+ * (driving, pause, menus) are always there; every other button is a line in {@code buttons(...)}, a
+ * part's too (each part's "buttons to add" in docs/modules/robot.md).
  *
  * <pre>{@code
  * @TeleOp(name = "TeleOp")
@@ -27,7 +28,7 @@ import java.util.Set;
  *     public static boolean oneDriver = false;   // true: everything on gamepad 1
  *
  *     @Override protected void buttons(Robot robot, Pad g1, Pad g2) {
- *         g2.y.press(Actions.scoreHigh(robot));   // replaces the lift's "high" on Y
+ *         g2.y.press(Actions.scoreHigh(robot));   // an action on Y
  *         g2.rightStickButton.free();              // free: nothing yet
  *     }
  * }
@@ -96,10 +97,19 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      */
     protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) { }
 
-    /** False to switch the modules' suggested buttons off (only Controls.java's jobs). Default true. */
+    /**
+     * True: each part adds its usual buttons by itself (the way before v0.39.0), and a line of yours on one
+     * of those buttons replaces it. Default false: a part has no buttons until Controls.java writes its lines,
+     * so every button is a line you can read. INIT names each part's usual button that is still free
+     * ("Intake: usual buttons not in Controls.java: G2 RT (in (hold)), ..."). The usual lines: docs/modules/robot.md, each part's
+     * "Buttons to add".
+     */
     protected boolean useStandardButtons() {
-        return true;
+        return false;
     }
+
+    // A part's usual buttons that Controls.java left free (useStandardButtons() false), shown at INIT.
+    private List<String> usualFree = java.util.Collections.emptyList();
 
     /** The robot, made from {@code ControlMap<Robot>}'s type. */
     @SuppressWarnings("unchecked")
@@ -255,6 +265,9 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     protected final void bindButtons(ControllerBindings driver, ControllerBindings operator) {
         Set<LibraryButtons.Job> jobs = libraryJobs(true);
         plan = makePlan(robot(), oneDriver(), useStandardButtons(), libraryKeys(), jobs, (g1, g2) -> buttons(robot(), g1, g2));
+        // Without the parts' own buttons: which of their usual buttons Controls.java left free (an INIT note each).
+        usualFree = useStandardButtons() ? java.util.Collections.<String>emptyList()
+                : plan.usualButtonsFree(makePlan(robot(), oneDriver(), true, libraryKeys(), jobs, (g1, g2) -> { }));
         plan.compile(robot(), driver, operator, sticks, () -> gamepad1, () -> gamepad2);
         // Whole-robot aim (robot.aimMode()): while it is on, the robot's turn comes from the aim
         // unless the driver moves the turn stick.
@@ -635,6 +648,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         if (noSlow != null) t.warn(noSlow);
         robot().showNotes(t);   // a part that is off: a "!!" warning in COMPETITION
         if (plan != null) for (String n : plan.screenNotes()) t.text(n);
+        for (String n : usualFree) t.text(n);
         if (plan != null && !buttonNotesLogged) {
             // The rest (a part's button that Controls.java took or freed on purpose): the robot log only.
             buttonNotesLogged = true;

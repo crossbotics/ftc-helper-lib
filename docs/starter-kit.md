@@ -12,7 +12,7 @@ names and numbers, and you have a working robot.
 > This starter kit still works and is kept for teams that use it. New team? Start at
 > [Pick your road](quick-start.md#pick-your-road) in the Quick start.
 
-**Before this:** [Add it to a project](01-add-to-project.md).
+**Before this:** [Add the library](setup/04-add-the-library.md).
 
 **Files:** [`examples/.../starter/`](../examples/src/main/java/com/crossbotics/ftchelper/examples/starter)
 
@@ -39,7 +39,7 @@ flowchart LR
 
 ## Steps
 
-1. **Add the library** to the robot project: [Add it to a project](01-add-to-project.md).
+1. **Add the library** to the robot project: [Add the library](setup/04-add-the-library.md).
 2. **Copy the 6 files (and the 5 finder files)** into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/` and change the
    first line of each to `package org.firstinspires.ftc.teamcode;`. Delete each `@Disabled` line.
 3. **Configure the robot** on the Driver Station with the names in `RobotSettings` and `Robot`

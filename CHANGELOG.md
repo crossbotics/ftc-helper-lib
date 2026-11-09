@@ -2,6 +2,61 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.39.0 - 2026-11-09
+
+### Added
+
+- **Each part's buttons to add:** docs/modules/robot.md has a "buttons to add" block for every part with usual
+  buttons (intake, lift, arm, claw, wrist, turret, launcher, indexer, hood, pieces), compiled in
+  `examples/.../cookbook/UsualButtons.java`. The example `allbuttons/Controls.java` writes out every library button
+  and every intake and launcher button, with a `free()` line for each free button. One-line button methods do exactly what a part's own buttons did: `robot.intake.inOn(g2.rt)`,
+  `outOn(g2.lt)` (with `stopsWhen`, held 1 s: in anyway), `robot.launcher.speedOn(g2.dpadUp, g2.dpadDown)` (steps, trim,
+  reset, last match's trim) and `tableOn(g2.dpadRight)`, beside the older `fireOn` and `spinOn`. `Intake.holdIn()`,
+  `Launcher.step(direction)`, `repeatStep(direction)` and `repeatEnd()` are public too.
+- **Encoder Check** (in Tune and check for every robot in five files, or `EncoderCheckOpMode` on its own): finds an
+  encoder cable that is missing, in another motor's port, or counting backward. Hold A: each motor in Robot.java
+  gets a short push (30% for 0.3 s), one at a time, with Robot.java's direction, and every motor port's count is
+  read. Each motor shows OK, `NO COUNTS`, `counts on "X" instead` or `counts BACKWARD`. Each part is pushed toward
+  the side where it has room (a lift up, a hood toward `posB`). A two-motor lift is pushed with both motors; an
+  intake's missing encoder is fine; a port that reads an odometry pod or a CR servo turret's encoder is skipped; a
+  read the hub fails says "could not read" instead of a fault. It cannot see a wrong `reversed()`: watch the part. `RobotDefinition.encoderMotors()` lists the motors. The simulator's scenarios can make the faults
+  (`set encoder lift none`, `set encoder lift flywheel`). Guide: [Encoder Check](docs/guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port);
+  community test SET-04.
+- **goBILDA's StarterBot with mecanum wheels** (on a Strafer chassis), a fifth BIOBUZZ starter bot: the template
+  `gobildastraferbot` (five files with goBILDA's own configuration names: `left_front_drive` and the others,
+  `windmillServo`), its simulator robot file `sim/robots/starter-bot-gobilda-strafer.properties` (measured from
+  goBILDA's STEP CAD), its scenario, and an autonomous, "goBILDA Strafer Bot Launch and Leave" (goBILDA's code has
+  a TeleOp only). The test report form and 43 community tests list it as a kit bot.
+
+### Changed
+
+- **A part has no buttons until Controls.java has its lines** (`useStandardButtons()` is now false by
+  default). Before, each part put its usual buttons on the gamepads by itself, hidden; now every button is a line
+  you can read: the library's own (driving, BACK, GUIDE, START: always there) in `libraryButtons(...)`, everything
+  else in `buttons(...)`. **Your code:** a `Controls.java` that relied on a part's own buttons loses them. INIT
+  names each one ("Intake: usual buttons not in Controls.java: G2 RT (in (hold)), ..."): copy the part's lines
+  from its new "buttons to add" in docs/modules/robot.md, or write `useStandardButtons()` returning `true` to get
+  the old way back. The example robots and `:sim:newRobot` write each part's buttons out, and their tests check
+  that the button maps did not change.
+- **The Tunables reference has a block to copy for each part** ([tunables.md](docs/guides/tunables.md)): every
+  section starts with the part's lines, most set to `DEFAULT` or `MEASURE`. New blocks for Camera, Lights and a piece
+  sensor; the blocks are the cookbook's compiled code, checked by `tools/check_docs.py`.
+- **The five files, one walkthrough page per file** ([docs/five-files/](docs/five-files/README.md)), starting with
+  `Robot.java`, `Tunables.java` and `Controls.java`: the smallest files for a robot that drives (a simulator test drives it), every line explained, each part's
+  attributes and numbers (needed or not, and the default), then how to add a part. Each page's code is a compiled program (`examples/.../firstrobot/`) or a cookbook recipe, and
+  `tools/check_docs.py` keeps the page and the code the same.
+- **Set up, one small page per step** ([docs/setup/](docs/setup/README.md)). Nine pages take a team from an
+  empty laptop to a robot that runs its code: what you need, Android Studio, GitHub and the robot project,
+  add the library, update the hubs, build and install, the robot configuration, every practice, and the
+  Terminal. Each page does one job and ends with "Done when". "Add it to a project" moved to Set up 4. "Start
+  from zero" keeps only reading Java and the first edit. The Quick start and the GitHub guide link to the
+  setup pages instead of repeating them.
+
+### Fixed
+
+- **The autonomous builder guide lists every step:** `moveWithTurn`, `rememberHeading`, `turnBack`,
+  `waitForGoal`, `aimAtGoal` and `readyToLaunch` were missing from its "Every method" table.
+
 ## v0.38.0 - 2026-11-08
 
 ### Added

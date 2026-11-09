@@ -600,6 +600,25 @@ final class SimRobot {
         else missingDevices.remove(name);
     }
 
+    /**
+     * A wiring fault for the Encoder Check: this motor port's encoder cable is missing (from = "none": the
+     * count never changes), or comes from another motor (from = its name: the port counts THAT motor's turns),
+     * or is right again (from = "own"). Works at once.
+     */
+    synchronized void setEncoder(String name, String from) {
+        SimMotor m = motors.get(name);
+        if (m == null) throw new IllegalArgumentException("set encoder: no motor \"" + name + "\" in the robot file (motors: " + motors.keySet() + ")");
+        if (from.equals("own")) {
+            m.encoderOverride = null;
+        } else if (from.equals("none")) {
+            m.encoderOverride = () -> 0;
+        } else {
+            final SimMotor other = motors.get(from);
+            if (other == null) throw new IllegalArgumentException("set encoder: no motor \"" + from + "\" in the robot file (motors: " + motors.keySet() + ")");
+            m.encoderOverride = () -> (int) Math.round(other.shaft());
+        }
+    }
+
     /** True if this device is left out of the configuration (see {@link #setMissing}). */
     synchronized boolean isMissing(String name) {
         return missingDevices.contains(name);

@@ -368,11 +368,17 @@ public final class SimScenario {
                         if (!t.get(2).equals("start")) throw new IllegalArgumentException("set field start");
                         sim.robot.pieces.reset();
                         break;
+                    // set encoder NAME none|own|OTHER: a wiring fault (the Encoder Check finds it): NAME's
+                    // port has no encoder cable, its own again, or OTHER motor's cable
+                    case "encoder":
+                        if (t.size() < 4) throw new IllegalArgumentException("set encoder NAME none|own|OTHER");
+                        sim.robot.setEncoder(t.get(2), t.get(3));
+                        break;
                     // set tunable Section.field VALUE: a Tunables number for this file only
                     case "tunable":
                         ok(n, line, setTunable(t));
                         return;
-                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | scatter off|realistic|rough|file | field start | device NAME missing|present | tunable Section.field VALUE");
+                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | scatter off|realistic|rough|file | field start | device NAME missing|present | encoder NAME none|own|OTHER | tunable Section.field VALUE");
                 }
                 ok(n, line, "");
                 return;

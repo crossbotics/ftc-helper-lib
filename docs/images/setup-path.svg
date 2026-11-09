@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" width="720" height="340" font-family="Helvetica, Arial, sans-serif" font-size="14">
+  <rect width="720" height="340" fill="#ffffff"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <marker id="y" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b07a00"/>
+    </marker>
+  </defs>
+  <text x="20" y="32" font-size="18" font-weight="bold" fill="#222">Set up: the tools and the library, in order</text>
+
+  <!-- row 1: pages 1-4 -->
+  <g fill="#eef2f8" stroke="#333" stroke-width="2">
+    <rect x="20" y="60" width="150" height="56" rx="8"/>
+    <rect x="195" y="60" width="150" height="56" rx="8"/>
+    <rect x="370" y="60" width="150" height="56" rx="8"/>
+    <rect x="545" y="60" width="155" height="56" rx="8"/>
+  </g>
+  <g text-anchor="middle" fill="#222">
+    <text x="95" y="84" font-weight="bold">1</text><text x="95" y="104">Before you start</text>
+    <text x="270" y="84" font-weight="bold">2</text><text x="270" y="104">Android Studio</text>
+    <text x="445" y="84" font-weight="bold">3</text><text x="445" y="104">GitHub, the project</text>
+    <text x="622" y="84" font-weight="bold">4</text><text x="622" y="104">Add the library</text>
+  </g>
+  <g stroke="#333" stroke-width="2" marker-end="url(#a)">
+    <line x1="170" y1="88" x2="191" y2="88"/>
+    <line x1="345" y1="88" x2="366" y2="88"/>
+    <line x1="520" y1="88" x2="541" y2="88"/>
+  </g>
+
+  <!-- row 2: hub pages 5-7 -->
+  <rect x="190" y="150" width="510" height="76" rx="10" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="200" y="168" font-size="12" fill="#777">needs the robot's hubs</text>
+  <g fill="#eef2f8" stroke="#333" stroke-width="2">
+    <rect x="545" y="174" width="140" height="44" rx="8"/>
+    <rect x="375" y="174" width="140" height="44" rx="8"/>
+    <rect x="205" y="174" width="140" height="44" rx="8"/>
+  </g>
+  <g text-anchor="middle" fill="#222">
+    <text x="615" y="201"><tspan font-weight="bold">5</tspan> Update the hubs</text>
+    <text x="445" y="201"><tspan font-weight="bold">6</tspan> Build, install</text>
+    <text x="275" y="201"><tspan font-weight="bold">7</tspan> Configuration</text>
+  </g>
+  <g stroke="#333" stroke-width="2" marker-end="url(#a)">
+    <line x1="622" y1="116" x2="622" y2="170"/>
+    <line x1="545" y1="196" x2="519" y2="196"/>
+    <line x1="375" y1="196" x2="349" y2="196"/>
+  </g>
+
+  <!-- page 8 -->
+  <rect x="20" y="250" width="170" height="56" rx="8" fill="#eef2f8" stroke="#333" stroke-width="2"/>
+  <text x="105" y="274" text-anchor="middle" font-weight="bold" fill="#222">8</text>
+  <text x="105" y="294" text-anchor="middle" fill="#222">Every practice</text>
+  <line x1="205" y1="196" x2="105" y2="196" stroke="#333" stroke-width="2"/>
+  <line x1="105" y1="196" x2="105" y2="246" stroke="#333" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- simulator only shortcut: from 4 straight to 8 -->
+  <path d="M 700 104 C 712 140, 712 240, 640 278 L 194 278" fill="none" stroke="#b07a00" stroke-width="3" stroke-dasharray="7,5" marker-end="url(#y)"/>
+  <text x="560" y="300" text-anchor="middle" font-size="13" fill="#b07a00" font-weight="bold">only the simulator? skip 5, 6 and 7</text>
+
+  <!-- next -->
+  <line x1="105" y1="306" x2="105" y2="318" stroke="#333" stroke-width="2"/>
+  <text x="200" y="324" font-size="13" fill="#1f4e9c" font-weight="bold">Set up is done. Next: start using the library</text>
+  <line x1="105" y1="318" x2="194" y2="318" stroke="#333" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- page 9 -->
+  <text x="20" y="140" font-size="13" fill="#555"><tspan font-weight="bold">9 The Terminal:</tspan> open it when a page gives you a command.</text>
+</svg>
