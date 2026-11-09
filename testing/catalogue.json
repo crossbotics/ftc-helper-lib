@@ -3516,7 +3516,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.38.0",
    "docs": [
     {
      "path": "docs/modules/vision.md",
