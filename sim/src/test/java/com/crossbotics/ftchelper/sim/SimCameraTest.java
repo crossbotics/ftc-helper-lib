@@ -140,6 +140,36 @@ public class SimCameraTest {
         }
     }
 
+    // The camera here is tilted 30 degrees up. Without pitchDeg its bearing to a goal off to the side reads too
+    // small (it is measured in the camera's own tilted view); with pitchDeg it is the floor's, as the geometry says.
+    @Test public void aTiltedWebcamWithItsPitchGivesTheFloorsBearingAndDistance() throws Exception {
+        SimRobot r = robot();
+        WebcamTags level = WebcamTags.create(r.hardwareMap(), "Webcam 1").pitchDeg(30);
+        level.start();
+        TargetObservation ahead = waitForTarget(level, "RED SCORING");
+        assertNotNull(ahead);
+        assertEquals(0, ahead.bearingDeg, 0.5);
+        // The aiming point, on the floor: straight ahead, 8 in (the camera) + its floor distance from the centre.
+        double fromCentre = 8 + ahead.distanceIn;
+        assertTrue("the floor distance is less than the slanted one (52.1): " + ahead, ahead.distanceIn < 50);
+        synchronized (r) { r.headingDeg = 115; }        // turned 25 degrees left: the goal is to the right
+        Thread.sleep(80);
+        TargetObservation side = waitForTarget(level, "RED SCORING");
+        assertNotNull(side);
+        double fwd = fromCentre * Math.cos(Math.toRadians(25)) - 8, left = -fromCentre * Math.sin(Math.toRadians(25));
+        double truth = Math.toDegrees(Math.atan2(left, fwd));
+        assertEquals("the floor's bearing from the camera", truth, side.bearingDeg, 0.5);
+        assertEquals("the floor's distance from the camera", Math.hypot(fwd, left), side.distanceIn, 0.5);
+        level.close();
+        // The same camera without its pitch: the bearing reads too small (why pitchDeg exists).
+        WebcamTags raw = WebcamTags.create(r.hardwareMap(), "Webcam 1");
+        raw.start();
+        TargetObservation tilted = waitForTarget(raw, "RED SCORING");
+        assertNotNull(tilted);
+        assertTrue("tilted view: " + tilted.bearingDeg + " vs " + truth, Math.abs(tilted.bearingDeg) < Math.abs(truth) - 2);
+        raw.close();
+    }
+
     @Test public void limelightGroupTargetAimsLikeTheWebcamCluster() throws Exception {
         SimRobot r = robot();
         synchronized (r) { r.headingDeg = 100; }       // 10 degrees left of the group: it is to the right

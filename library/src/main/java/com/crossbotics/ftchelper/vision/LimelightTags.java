@@ -62,6 +62,7 @@ public class LimelightTags implements TargetSource {
     // The Limelight's time stamp of the last picture we read, to notice when it sends the same one again.
     private double lastTimestamp = Double.NaN;
     private double keepMs = 500;
+    private double pitchDeg = 0;
     private List<TagGroup> groups = TagGroup.currentSeason();
     // pipelineSwitch() and updateRobotOrientation() are network requests that WAIT for an answer.
     // They run on this worker so the robot's loop never waits.
@@ -164,6 +165,19 @@ public class LimelightTags implements TargetSource {
     }
 
     /** How often to ask for results, per second. Default 100. Set it before {@link #start()}. */
+    /**
+     * How far the Limelight is tilted up (degrees, + = up, 0 = level, the default). With a tilt, each
+     * target's bearing and distance are turned into the floor's (see {@link CameraTilt}): a tilted camera's
+     * own tx reads too small to the side, and its distance is the slanted line up to the target.
+     * Set it before start(). In the robot in five files: {@code pitchDeg} in the camera's Tunables section.
+     *
+     * @param degrees the tilt, measured on the robot
+     */
+    public LimelightTags pitchDeg(double degrees) {
+        pitchDeg = degrees;
+        return this;
+    }
+
     public LimelightTags pollRate(int hz) {
         pollRateHz = hz;
         return this;
@@ -232,12 +246,23 @@ public class LimelightTags implements TargetSource {
             if (p != null) places.put(f.getFiducialId(), p);
             // The minus sign flips the Limelight's tx (positive = RIGHT) into our bearing (positive = LEFT),
             // so the Limelight and the webcam agree. See docs/conventions.md.
+            double bearing = -f.getTargetXDegrees(), distance = distanceInches(f.getTargetPoseCameraSpace());
+            if (pitchDeg != 0) {
+                // A tilted camera: the floor's bearing and distance (CameraTilt). From the tag's place when the
+                // pipeline gives one (y is DOWN, so -y = up); else from tx (+ = right) and ty (+ = up).
+                if (p != null) {
+                    bearing = CameraTilt.bearingDeg(p[0], p[2], -p[1], pitchDeg);
+                    distance = CameraTilt.floorDistance(p[0], p[2], -p[1], pitchDeg);
+                } else {
+                    bearing = CameraTilt.bearingDeg(Math.tan(Math.toRadians(f.getTargetXDegrees())), 1,
+                            Math.tan(Math.toRadians(f.getTargetYDegrees())), pitchDeg);
+                }
+            }
             out.add(new TargetObservation(f.getFiducialId(), "Tag " + f.getFiducialId(),
-                    -f.getTargetXDegrees(), distanceInches(f.getTargetPoseCameraSpace()), pictureTime,
-                    rollDegrees(f.getTargetPoseCameraSpace())));
+                    bearing, distance, pictureTime, rollDegrees(f.getTargetPoseCameraSpace())));
         }
         for (TagGroup g : groups) {
-            TargetObservation o = groupTarget(g, places, pictureTime);
+            TargetObservation o = groupTarget(g, places, pictureTime, pitchDeg);
             if (o != null) out.add(o);
         }
         latest = out;
@@ -282,6 +307,15 @@ public class LimelightTags implements TargetSource {
      * @param places each seen tag's place in camera space, inches (x right, y down, z out of the lens)
      */
     public static TargetObservation groupTarget(TagGroup group, java.util.Map<Integer, double[]> places, long timeNanos) {
+        return groupTarget(group, places, timeNanos, 0);
+    }
+
+    /**
+     * {@link #groupTarget(TagGroup, java.util.Map, long)} for a camera tilted up by {@code pitchDeg} (0 = level):
+     * bearing and distance along the floor ({@link CameraTilt}). Public for tests.
+     */
+    public static TargetObservation groupTarget(TagGroup group, java.util.Map<Integer, double[]> places, long timeNanos,
+                                                double pitchDeg) {
         int lo = -1, hi = -1;
         int count = 0;
         for (int id : group.ids()) {
@@ -303,11 +337,13 @@ public class LimelightTags implements TargetSource {
             for (int k = 0; k < 3; k++) mid[k] += (p[k] - dir[k] * along) / count;
         }
         // Limelight camera space: x right, z forward. The bearing is positive to the LEFT, so the minus sign.
-        double bearing = -Math.toDegrees(Math.atan2(mid[0], mid[2]));
+        // A tilted camera (pitchDeg): turned flat first (y is DOWN, so -y = up). Level: the same as before.
+        double bearing = CameraTilt.bearingDeg(mid[0], mid[2], -mid[1], pitchDeg);
         // The row's turn in the picture: the tag numbers rise to the RIGHT when the tags are right side up
         // (as printed). Rising to the left (x negative) = upside down. y is down, so + = turned clockwise.
         double roll = Math.toDegrees(Math.atan2(dir[1], dir[0]));
-        return new TargetObservation(TargetObservation.CLUSTER, group.name, bearing, Math.hypot(mid[0], mid[2]), timeNanos, roll);
+        return new TargetObservation(TargetObservation.CLUSTER, group.name, bearing,
+                CameraTilt.floorDistance(mid[0], mid[2], -mid[1], pitchDeg), timeNanos, roll);
     }
 
     // One tag's turn as the FTC SDK reads it from the Limelight's pose (NaN without a pose). Not used to

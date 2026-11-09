@@ -310,6 +310,22 @@ INIT, not changed live). Every match there then uses that pipeline, with no test
 `autoLighting = true` again. A webcam shows `exposureMs` instead of `pipeline`: that is a new line to add
 to the camera's section (its name in CamelCase: `Webcam 1` reads `Tunables.Webcam1`).
 
+**A camera tilted up: tell it the tilt.** Goals are often high (BIOBUZZ: up to 50 in), so the camera
+is tilted up to see them. A tilted camera measures in its own tilted view: a goal off to the side reads
+too few degrees (35 degrees up: about 21 instead of 27.5), and its distance is the slanted line up to the
+goal. Measure the tilt (a phone's level app on the camera's face) and write it in the camera's section:
+
+```java
+public static class Webcam1 {
+    public static double pitchDeg = 35;   // the camera's tilt, degrees up (0 = level)
+}
+```
+
+Then the camera gives the goal's direction and distance **along the floor**: the aim turns the right
+amount at once, and the camera's distance agrees with the odometry's (section 9). The simulator's robot
+file then gets the same tilt (`pitch=35`). It works for a webcam and a Limelight (a HuskyLens: not yet).
+Change `pitchDeg` and the camera's distances change too: make the shot table (section 7) again.
+
 ## 6. A turret that follows it
 
 ```java
@@ -889,7 +905,9 @@ the CELL's underside, so the camera must be **below and in front of** them, look
 up CELL is on the HIVE's right side, seen from your own wall. RED: stand on the audience side, e.g. x 57,
 y -13 facing the HIVE (heading 90). BLUE: stand on the far side, e.g. x -57, y 13 facing the HIVE
 (heading -90), not too close (the tags must fit in the picture). Drag the robot there on the map, or
-drive. The turret robot's camera is tilted 30 degrees up for that. Press BACK on gamepad 2 to stop
+drive. The turret robot's camera is tilted 30 degrees up for that. (Its Tunables have no `pitchDeg`: its
+POLLEN table was made from the tilted camera's own distances, and a turret that follows the goal ends
+pointed at it either way. Your robot: write `pitchDeg` (section 5), then make your table.) Press BACK on gamepad 2 to stop
 following, D-pad right to switch between the POLLEN and NECTAR tables.
 
 **Shots.** Spin up (LB) and fire (RB) from those spots. The turret robot's POLLEN table was tuned in the

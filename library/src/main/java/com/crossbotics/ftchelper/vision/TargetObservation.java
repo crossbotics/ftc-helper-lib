@@ -15,7 +15,8 @@ import java.util.Locale;
  *       number": the camera could not tell) if unknown. It equals the distance along the floor only when
  *       the camera is level; a camera tilted up reads more (with the camera 20 degrees up and the target
  *       2 ft higher: about 51 in instead of 46 in). So make the shot table with the camera mounted as it
- *       will be on the robot.
+ *       will be on the robot. A webcam or Limelight told its tilt ({@code pitchDeg} in its Tunables
+ *       section, {@link CameraTilt}) gives the distance along the floor instead, and a bearing along the floor.
  *       Same meaning for every camera.</li>
  *   <li>{@link #timeNanos}: when the camera took the picture, on the {@code System.nanoTime()} clock
  *       (a stopwatch that counts nanoseconds, billionths of a second).</li>

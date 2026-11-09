@@ -67,6 +67,7 @@ public class WebcamTags implements TargetSource {
     private volatile boolean controlsApplied = false;
     private BackgroundWorker worker = null;
     private double keepMs = 500;
+    private double pitchDeg = 0;
     // A note for status(), written by the background worker ("manual exposure", "exposure failed"...).
     private volatile String controlsNote = "";
     // Venue lighting (autoExposure): the exposures to try (0 = the camera's own automatic exposure),
@@ -110,6 +111,19 @@ public class WebcamTags implements TargetSource {
      */
     public WebcamTags keepTargetsMs(double ms) {
         keepMs = Math.abs(ms);
+        return this;
+    }
+
+    /**
+     * How far the camera is tilted up (degrees, + = up, 0 = level, the default). With a tilt, each target's
+     * bearing and distance are turned into the floor's (see {@link CameraTilt}): a tilted camera's own
+     * bearing reads too small to the side, and its distance is the slanted line up to the target.
+     * Set it before start(). In the robot in five files: {@code pitchDeg} in the camera's Tunables section.
+     *
+     * @param degrees the tilt, measured on the robot (a phone's level app on the camera's face)
+     */
+    public WebcamTags pitchDeg(double degrees) {
+        pitchDeg = degrees;
         return this;
     }
 
@@ -298,17 +312,30 @@ public class WebcamTags implements TargetSource {
         }
         // A new picture: turn each SDK detection into our own TargetObservation.
         List<TargetObservation> out = new ArrayList<>();
-        for (AprilTagDetection d : fresh) out.add(convert(d));
+        for (AprilTagDetection d : fresh) out.add(convert(d, pitchDeg));
         latest = out;
     }
 
-    /** Turns one SDK detection (single tag or cluster) into a TargetObservation. Public for tests. */
+    /** Turns one SDK detection (single tag or cluster) into a TargetObservation, for a level camera. Public for tests. */
     public static TargetObservation convert(AprilTagDetection d) {
+        return convert(d, 0);
+    }
+
+    /**
+     * Turns one SDK detection (single tag or cluster) into a TargetObservation, for a camera tilted up by
+     * {@code pitchDeg} (0 = level): bearing and distance along the floor ({@link CameraTilt}). Public for tests.
+     */
+    public static TargetObservation convert(AprilTagDetection d, double pitchDeg) {
         // ftcPose is null for a tag that is not in the tag library (the SDK cannot measure it): use NaN.
         // The SDK's bearing is already positive = LEFT, and its range is measured flat in the camera's own
         // view (sideways and forward only), the same kind of distance as the Limelight's.
         double bearing = d.ftcPose != null ? d.ftcPose.bearing : Double.NaN;
         double range = d.ftcPose != null ? d.ftcPose.range : Double.NaN;
+        if (d.ftcPose != null && pitchDeg != 0) {
+            // A tilted camera: ftcPose's x = right, y = forward along the lens, z = up in the picture (inches).
+            bearing = CameraTilt.bearingDeg(d.ftcPose.x, d.ftcPose.y, d.ftcPose.z, pitchDeg);
+            range = CameraTilt.floorDistance(d.ftcPose.x, d.ftcPose.y, d.ftcPose.z, pitchDeg);
+        }
         // roll: how far the tag (or the cluster's row of tags) is turned in the picture; 0 = right side up.
         double roll = d.ftcPose != null ? d.ftcPose.roll : Double.NaN;
         // "instanceof" asks "is this a single tag?"; then "(AprilTagSingleDetection) d" lets us use it as one.

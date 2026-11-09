@@ -2,6 +2,18 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **A tilted camera gives the floor's bearing and distance** (`pitchDeg` in the camera's Tunables section; webcam and
+  Limelight). A camera tilted up measured in its own tilted view: a goal off to the side read too few degrees (35
+  degrees up: about 21 instead of 27.5), and its distance was the slanted line up to the goal. With `pitchDeg`, the
+  aim turns the right amount at once, and the camera's distance agrees with the odometry's. New `CameraTilt`,
+  `WebcamTags.pitchDeg(...)`, `LimelightTags.pitchDeg(...)`, `WebcamTags.convert(detection, pitchDeg)`. The
+  simulator robot file's `pitch` comes from it. Without `pitchDeg`: no change. After setting it, make the shot
+  table again (the distances change).
+
 ## v0.37.1 - 2026-11-08
 
 ### Fixed
