@@ -121,8 +121,36 @@ const C = await importFrom(dir, 'simcore.js');
 	ok(S.actionWords('robot.launcher.fireAllAction(2525)') === 'Fire all pieces at 2525 RPM', 'actionWords: fireAllAction(2525)');
 	ok(S.actionWords('robot.launcher.fireAction(1)') === 'Fire 1 piece', 'actionWords: fireAction(1)');
 	ok(S.actionWords('Actions.deployIntake(robot)') === 'Deploy intake', 'actionWords: Actions.deployIntake(robot) -> ' + S.actionWords('Actions.deployIntake(robot)'));
-	ok(S.dirWords(0) === 'forward' && S.dirWords(-90) === 'left' && S.dirWords(308) === 'forward and left (308°)' && S.dirWords(135) === 'back and right (135°)', 'dirWords');
-	ok(S.sheetWords({ kind: 'move', label: 'Off the wall', inches: 42.8, dir: 308 }) === 'Off the wall: drive 42.8 in forward and left (308°)', 'sheetWords: a move');
+	// A plan's dir is clockwise inside; the words give the number counterclockwise, like the Java (90 = left).
+	ok(S.dirWords(0) === 'forward' && S.dirWords(-90) === 'left' && S.dirWords(308) === 'forward and left (52°)' && S.dirWords(135) === 'back and right (-135°)', 'dirWords');
+	ok(S.sheetWords({ kind: 'move', label: 'Off the wall', inches: 42.8, dir: 308 }) === 'Off the wall: drive 42.8 in forward and left (52°)', 'sheetWords: a move');
+	ok(S.dirToCcw(90) === -90 && S.dirToCcw(270) === 90 && S.dirToCcw(0) === 0 && S.dirToCcw(180) === 180 && S.dirToCcw(308) === 52, 'dirToCcw: clockwise inside, counterclockwise out');
+	ok(S.dirFromCcw(90) === 270 && S.dirFromCcw(-90) === 90 && S.dirFromCcw(52) === 308 && S.dirFromCcw(0) === 0, 'dirFromCcw');
+	{
+		// The Java counts counterclockwise: move(..., 90, ...) is LEFT; straight moves and turns come back as words.
+		const r = S.fromJava('s.start("x", 0, -61, 0).move("L", 10, 90, 0.5).move("A", 10, 52, 0.5).left("L2", 5, 0.4).right("R", 6, 0.4).forward("F", 7, 0.4).back("B", 8, 0.4).turnLeft("TL", 45, 0.5).turnRight("TR", 30, 0.5).moveWithTurn("MT", 20, -20, 45, 0.6);');
+		const st = r.plan.steps;
+		ok(r.problems.length === 0 && st.length === 9, 'fromJava: the word steps are read: ' + r.problems.join(' | '));
+		ok(st[0].dir === 270 && st[1].dir === 308 && st[2].dir === 270 && st[3].dir === 90 && st[4].dir === 0 && st[5].dir === 180, 'fromJava: move directions counterclockwise, words as directions');
+		ok(st[6].deg === 45 && st[7].deg === -30 && st[8].dir === 20, 'fromJava: turnLeft +, turnRight -, moveWithTurn counterclockwise');
+		const j = S.toJava({ ...r.plan, drive: 'mecanum' }).steps;
+		ok(/left\("L", 10, 0\.5\)/.test(j) && /move\("A", 10, 52, 0\.5\)/.test(j) && /right\("R", 6, 0\.4\)/.test(j) && /forward\("F", 7, 0\.4\)/.test(j) && /back\("B", 8, 0\.4\)/.test(j)
+			&& /turnLeft\("TL", 45, 0\.5\)/.test(j) && /turnRight\("TR", 30, 0\.5\)/.test(j) && /moveWithTurn\("MT", 20, -20, 45, 0\.6\)/.test(j), 'toJava: words for straight moves and turns, angles counterclockwise: ' + j);
+		const n = S.fromJava('s.start("x", 0, -61, 0).turnRight("T", Tunables.Auto.turnDeg, 0.5);', { values: { 'Tunables.Auto.turnDeg': 30 } });
+		ok(S.stepCode({ kind: 'move', label: 'Back', inches: -8, dir: 0, power: 0.5 }) === 'back("Back", 8, 0.5)', 'toJava: minus inches forward is written as back');
+		// A plan saved before v0.40.0 with a named direction: the name had the old clockwise meaning, so the number is written.
+		ok(/move\("Old", 12, -90, 0\.5\)/.test(S.stepCode({ kind: 'move', label: 'Old', inches: 12, dir: 90, power: 0.5, names: { dir: { code: 'Tunables.Auto.dir', v: 90 } } })), 'an old saved named direction is written as the number');
+		const nd = S.fromJava('s.start("x", 0, -61, 0).move("New", 12, Tunables.Auto.dir, 0.5);', { values: { 'Tunables.Auto.dir': -90 } });
+		ok(nd.plan.steps[0].dir === 90 && /move\("New", 12, Tunables\.Auto\.dir, 0\.5\)/.test(S.toJava(nd.plan).steps), 'a direction read through a name now keeps the name');
+		ok(/at -90°/.test(S.stepWords({ kind: 'moveTurn', label: 'Slide', inches: -12, dir: 270, heading: 0, power: 0.5 })), 'stepWords: a moveTurn with minus inches names the way it really goes');
+		const oldJava = S.fromJava('s.start("x", 0, -61, 0).move("Side", 12, 90, 0.5);');
+		ok(oldJava.notes.some((t) => /90 = LEFT/.test(t)), 'fromJava: an auto with angles and no word steps gets the v0.40.0 note');
+		ok(!r.notes.some((t) => /90 = LEFT/.test(t)), 'fromJava: an auto with word steps gets no v0.40.0 note');
+		// Every direction a person sees goes through dirToCcw: the page never shows a plan's clockwise dir.
+		const page = fs.readFileSync(path.join(root, 'sim/src/test/resources/sim/builder/builder.js'), 'utf8');
+		ok(!/fmt\(\+s\.dir\)|\$\{s\.dir\}/.test(page), 'builder.js shows no raw (clockwise) dir');
+		ok(n.plan.steps[0].deg === -30 && /turnRight\("T", Tunables\.Auto\.turnDeg, 0\.5\)/.test(S.toJava(n.plan).steps), 'a turnRight through a Tunables name is written back as turnRight');
+	}
 	ok(S.sheetWords({ kind: 'action', code: 'robot.launcher.fireAllAction()', timeout: 12 }) === 'Fire all pieces (up to 12 s)', 'sheetWords: an action');
 	ok(S.sheetWords({ kind: 'turn', label: 'Turn', deg: 90 }) === S.stepWords({ kind: 'turn', label: 'Turn', deg: 90 }), 'sheetWords: other steps as stepWords');
 	const marks = SC.sheetMarkers([{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 20, y: 0 }, { x: NaN, y: 0 }, { x: 20.5, y: 0 }]);
@@ -267,10 +295,10 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		const r = S.fromJava(src, { values: { START_X: 52, 'Tunables.Auto.offWallInches': 4, 'turnToField(PARK_HEADING)': 142.2, 'Tunables.Auto.parkSeconds': 6 } });
 		const j = S.toJava({ ...r.plan, drive: 'tank' }).steps;
 		ok(r.problems.length === 0 && r.plan.steps.length === 3, 'fromJava with values: every step read');
-		ok(/start\("Spot", 52, -61, 0\)/.test(j) && /move\("Off", Tunables\.Auto\.offWallInches, 180, 0\.3\)/.test(j) && /turnTo\("Turn", 142\.2, 0\.5\)/.test(j) && /parkWithSeconds\(Tunables\.Auto\.parkSeconds\)/.test(j),
+		ok(/start\("Spot", 52, -61, 0\)/.test(j) && /back\("Off", Tunables\.Auto\.offWallInches, 0\.3\)/.test(j) && /turnTo\("Turn", 142\.2, 0\.5\)/.test(j) && /parkWithSeconds\(Tunables\.Auto\.parkSeconds\)/.test(j),
 			'toJava: Tunables names stay, the auto\'s own names become numbers');
 		r.plan.steps[0].inches = 5;
-		ok(/move\("Off", 5, 180/.test(S.toJava({ ...r.plan, drive: 'tank' }).steps), 'toJava: a changed number is written as the number');
+		ok(/back\("Off", 5, 0\.3/.test(S.toJava({ ...r.plan, drive: 'tank' }).steps), 'toJava: a changed number is written as the number');
 	}
 	ok(/Centred on tile 4 from the left\.$/.test(S.startInches({ x: -half + 3.5 * tile, y: wallY, h: 0 }, R, half)), 'startInches: names the tile it is centred on');
 	ok(/Left side on the seam 2\|3/.test(S.startInches({ x: -half + 2 * tile + R[1] / 2, y: wallY, h: 0 }, R, half)), 'startInches: a side on a seam');

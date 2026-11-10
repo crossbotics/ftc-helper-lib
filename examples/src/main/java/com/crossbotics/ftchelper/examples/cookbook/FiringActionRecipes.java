@@ -84,9 +84,9 @@ public class FiringActionRecipes {
             // recipe: action-fire-in-auto
             s.start("Against our wall, facing the field", 0)
              .alongside(robot.launcher.readyAction(3))          // spin up while it drives
-             .move("To the shooting spot", 24, 0, 0.5)
+             .forward("To the shooting spot", 24, 0.5)
              .action(Actions.fireWithIntake(robot), 9)          // waits until it is done (at most 9 s)
-             .move("Park", 12, 90, 0.5);
+             .right("Park", 12, 0.5);
             // end recipe
         }
     }

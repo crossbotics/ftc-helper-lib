@@ -385,7 +385,7 @@ public class MechanismRecipes {
         protected void steps(Steps s, NotOnTheRobotYet robot) {
             s.start("Against our wall, facing the field", 0)
              .action(Actions.deployIntake(robot))
-             .move("Forward", 12, 0, 0.5);
+             .forward("Forward", 12, 0.5);
         }
     }
 }

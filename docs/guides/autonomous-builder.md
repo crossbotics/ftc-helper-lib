@@ -144,24 +144,28 @@ for a route that shares nothing. The decision table, naming, and worked examples
 
 ## Driving: move, turn, turnTo
 
-> **Two different 90s.** A **move's direction** is measured clockwise, like a compass: 0 = forward,
-> **90 = right**, 180 = backward, 270 = left. A **turn or a heading** (`turn`, `turnTo`, the heading in
-> `start(...)` and `driveTo(...)`) is counterclockwise, like math class: **90 = left**, -90 = right.
-> So `.move("Right", 12, 90, 0.5)` slides right, and `.turn("Left", 90, 0.4)` turns left. Read every 90 twice.
+> **One rule for every angle.** A move's direction, a turn and a heading (`turnTo`, the heading in
+> `start(...)` and `driveTo(...)`) all count counterclockwise, like the IMU: 0 = forward, **90 = left**,
+> 180 = back, -90 = right. So `.move("Left", 12, 90, 0.5)` slides left, and `.turn("Left", 90, 0.4)`
+> turns left. For straight moves and turns, the words need no angle: `forward`, `back`, `left`, `right`,
+> `turnLeft`, `turnRight` ([signs and units](../conventions.md)).
 
 ```java
-.move("To the pieces", 24, 0, 0.5)      // 24 in forward, at most half power
-.move("Back to the goal", 24, 180, 0.5) // 180 = backward
-.turn("Face the goal", 45, 0.5)         // 45 degrees left (counterclockwise +)
+.forward("To the pieces", 24, 0.5)      // 24 in forward, at most half power
+.back("Back to the goal", 24, 0.5)      // backward
+.right("Slide over", 12, 0.5)           // to the right, still facing forward (mecanum)
+.turnLeft("Face the goal", 45, 0.5)     // 45 degrees left
 .turnTo("Square up", 0, 0.5)            // back to the heading it started with
 ```
 
 | | Direction | Notes |
 | --- | --- | --- |
-| `move(label, inches, directionDeg, maxPower)` | degrees **clockwise** from forward: 0 forward, 90 right, 180 back, 270 left | mecanum strafes at any angle; a tank drive only 0 and 180 (any other angle stops with "Turn first, then move") |
+| `forward`, `back`, `left`, `right` `(label, inches, maxPower)` | the word | the same as `move` at 0, 180, 90 and -90; `left` and `right` are mecanum only |
+| `move(label, inches, directionDeg, maxPower)` | **counterclockwise +** from forward: 0 forward, 90 left, 180 back, -90 right | mecanum strafes at any angle; a tank drive only 0 and 180 (any other angle stops with "Turn first, then move") |
+| `turnLeft`, `turnRight` `(label, degrees, maxPower)` | the word | the same as `turn` by +degrees and -degrees |
 | `turn(label, degrees, maxPower)` | **counterclockwise +** | by an angle from where it is now |
 | `turnTo(label, headingDeg, maxPower)` | **counterclockwise +** | to a heading; 0 = the way it faced at the start (the IMU's heading, not the field's: see [driveTo](#drive-to-a-field-point-driveto)) |
-| `moveWithTurn(label, inches, directionDeg, headingDeg, maxPower)` | direction **clockwise from the start heading**; heading **counterclockwise +** (0 = the start heading) | mecanum only: drives and turns at the same time. The direction stays fixed on the field while it turns, so it is not "from forward" |
+| `moveWithTurn(label, inches, directionDeg, headingDeg, maxPower)` | both **counterclockwise +, from the start heading** (0 = the way it faced at the start, 90 = its left then) | mecanum only: drives and turns at the same time. The direction stays fixed on the field while it turns, so it is not "from forward" |
 
 Each waits until it is done. A move slows down near its end so it does not overshoot. It does not
 correct the heading on the way: after a bump or a long drive, add a `turnTo` to square up. A move that
@@ -450,7 +454,9 @@ Both ways: [Several autonomous modes](autos.md#example-3-near-and-far-starts).
 | `menuChoice(label, options...)` | a choice between options in the INIT menu | — |
 | `isYes(label)`, `choice(label)` | read a choice in your own code | — |
 | `onlyIf(label)`, `onlyIf(label, option)`, `end()` | steps that run only for a choice | — |
-| `move(label, inches, directionDeg, maxPower)` | drive (clockwise from forward) | yes |
+| `forward`, `back`, `left`, `right` `(label, inches, maxPower)` | drive that way (no angle) | yes |
+| `move(label, inches, directionDeg, maxPower)` | drive at an angle (counterclockwise +: 90 = left) | yes |
+| `turnLeft`, `turnRight` `(label, degrees, maxPower)` | turn that way (no sign) | yes |
 | `turn(label, degrees, maxPower)` | turn by (counterclockwise +) | yes |
 | `turnTo(label, headingDeg, maxPower)` | turn to a heading (0 = start) | yes |
 | `moveWithTurn(label, inches, directionDeg, headingDeg, maxPower)` | drive and turn at the same time, end at a heading | yes |
@@ -485,7 +491,7 @@ Every class and method of the library: the [reference](../reference.md).
 - **Code between steps runs several times** (already in INIT). Put it in `run(...)` or `step(...)`.
 - **`sleep()` in a step** freezes every part and the timer. Use `ctx.waitFor`.
 - **Forgetting `end()`**: everything after the `onlyIf` becomes part of the branch.
-- **Wrong turn direction**: turns are counterclockwise + (left), moves are clockwise from forward.
+- **Wrong turn or move direction**: every angle is counterclockwise + (90 = left), for turns and moves. Or use the words: `left`, `right`, `turnLeft`, `turnRight`.
 - **A route that works on BLUE but not RED**: check `mirrorForRed()` against the field drawing.
 - **Untuned drive**: the inches are wrong until the Drive Tuner is done; the autonomous refuses to run
   on the robot until `Tunables.Drive.calibrated = true`.

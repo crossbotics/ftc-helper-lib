@@ -11,10 +11,7 @@ Your robot's code is five files in the `teamcode` folder. Each file has one job:
 | [`Tunables.java`](02-tunables-java.md) | The numbers: speeds, positions, powers | you measure or tune a number |
 | [`Controls.java`](03-controls-java.md) | The buttons, and the TeleOp | you change what a button does |
 | [`Actions.java`](04-actions-java.md) | Steps that use several parts together, like "score" | you want one button or step to do several things |
-| `autos/` | The autonomous programs, one file each | you write or change an autonomous |
-
-The page for `autos/` is coming. Until then, autonomous files are explained in
-[lesson 6](../tutorials/start/06-first-autonomous.md).
+| [`autos/`](05-autos.md) | The autonomous programs, one file each | you write or change an autonomous |
 
 ## Start small, then add
 

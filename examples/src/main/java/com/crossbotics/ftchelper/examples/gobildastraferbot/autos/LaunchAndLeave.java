@@ -22,7 +22,7 @@ public class LaunchAndLeave extends Auto<Robot> {
         // Inches: y -62.95 = the back against our wall (the robot's centre is 7.5 in from it).
         s.start("Back against our wall, left of centre, facing the field", -56, -62.95, 0)
          .action(Actions.fireAllWithIntake(robot), 12)
-         .move("Leave", Tunables.Auto.leaveInches, 0, Tunables.Auto.leavePower);
+         .forward("Leave", Tunables.Auto.leaveInches, Tunables.Auto.leavePower);
     }
 
     // BIOBUZZ's field is turned half a turn between the alliances: the same route works for both.

@@ -26,9 +26,9 @@ public class ScoreAndPark extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         s.start("Against our wall, facing the field", 0)
          .run("Hold the piece", robot.claw::close)
-         .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)
+         .forward("To the goal", Tunables.Auto.toGoalInches, 0.6)
          .action(Actions.scoreHigh(robot), 5)
          .parkWithSeconds(3)
-         .move("Park", Tunables.Auto.parkInches, 90, 0.7);
+         .right("Park", Tunables.Auto.parkInches, 0.7);
     }
 }

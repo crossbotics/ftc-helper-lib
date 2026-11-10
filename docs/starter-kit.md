@@ -204,7 +204,7 @@ protected void buildRoutine(AutoRoutine r) {
 
     // Everything after thenPark() is the park: it still runs when the steps above ran out of time.
     r.thenPark() // (4)!
-     .move("Park", 20, 90, 0.7);                                // right on BLUE, left on RED
+     .right("Park", 20, 0.7);                                   // right on BLUE, left on RED
 }
 ```
 

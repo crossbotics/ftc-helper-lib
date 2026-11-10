@@ -37,7 +37,7 @@ flowchart TB
 public class ParkOnly extends StarterAuto {           // StarterAuto = the robot setup (starter kit)
     @Override                                         // fills in the method EasyAuto asks for
     protected void buildRoutine(AutoRoutine r) {
-        r.move("Park", 24, 90, 0.6);                  // 24 in to the right (left on RED, unless mirrorForRed() is false)
+        r.right("Park", 24, 0.6);                     // 24 in to the right (left on RED, unless mirrorForRed() is false)
     }
 }
 ```
@@ -117,7 +117,7 @@ autonomous the same is one call in the steps: `.parkWithSeconds(4)` ([robot modu
 ...
 r.move(...).move(...)          // main steps: cut short when 4 s are left
  .thenPark()
- .move("Park", 20, 90, 0.8);   // always runs
+ .right("Park", 20, 0.8);      // always runs
 ```
 
 ## Where to place the robot

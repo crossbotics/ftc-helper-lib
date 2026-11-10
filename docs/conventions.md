@@ -15,10 +15,15 @@ This library uses ONE set of rules everywhere. Learn these and you can read any 
 | `strafeRight` | robot moves to its right (mecanum only) | `MecanumDrive.drive`, `MecanumMixer.mix` |
 | `turnClockwise` | robot turns right (clockwise, seen from above) | same |
 | IMU heading | robot turned **left** (counterclockwise) | `ImuSetup.headingDeg`, `AutoDrive.turn`, `AutoDrive.turnTo`, `FieldPose.headingDeg` |
-| `move(..., directionDeg, ...)` | clockwise from forward: 0 forward, 90 right, 180 back, -90 left | `AutoDrive.move`, `Steps.move` |
-| `moveWithTurn(..., directionDeg, headingDeg, ...)` | the direction clockwise, but from the start heading (fixed on the field, because the robot turns on the way); the heading counterclockwise, 0 = the start heading | `AutoDrive.moveWithTurn`, `Steps.moveWithTurn` |
+| `move(..., directionDeg, ...)` | counterclockwise from forward, like a heading: 0 forward, 90 **left**, 180 back, -90 **right** | `AutoDrive.move`, `Steps.move` |
+| `moveWithTurn(..., directionDeg, headingDeg, ...)` | both counterclockwise, from the start heading (the direction stays fixed on the field, because the robot turns on the way): 90 = left | `AutoDrive.moveWithTurn`, `Steps.moveWithTurn` |
 
-Why is turning clockwise-positive but heading counterclockwise-positive?
+**In an autonomous, every angle counts the same way: counterclockwise, 90 = left.** That is a move's
+direction, a turn, and a heading. In `Steps`, words say it with no angle at all: `forward`, `back`,
+`left`, `right`, `turnLeft`, `turnRight` ([the autos/ page](five-files/05-autos.md#more-steps)).
+Before v0.40.0 a move's direction counted clockwise (90 = right): see the CHANGELOG to update an old auto.
+
+Why is TeleOp's turn command clockwise-positive, but every autonomous angle counterclockwise-positive?
 
 - The right stick's X is positive when pushed right, and pushing right should turn the robot right.
   So `drive(forward, strafe, gamepad1.right_stick_x)` just works.

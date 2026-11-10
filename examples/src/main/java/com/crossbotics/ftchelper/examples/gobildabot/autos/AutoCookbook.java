@@ -43,9 +43,9 @@ public class AutoCookbook extends Auto<Robot> {
          // 5. A branch: these steps run only when "Collect more" was chosen.
          .onlyIf("Then", "Collect more")
              .run("Intake in", robot.intake::in)
-             .move("To the pieces", Tunables.Auto.collectInches, 0, 0.5)
+             .forward("To the pieces", Tunables.Auto.collectInches, 0.5)
              .waitSeconds("Let them in", 0.5)
-             .move("Back to the goal", Tunables.Auto.collectInches, 180, 0.5)
+             .back("Back to the goal", Tunables.Auto.collectInches, 0.5)
              .run("Intake off", robot.intake::stop)
              .action(Actions.fireAllWithIntake(robot), 8)
          .end()
@@ -60,7 +60,7 @@ public class AutoCookbook extends Auto<Robot> {
          // 7. Parking: the steps below always get the last 3 seconds of autonomous.
          .parkWithSeconds(3)
          .onlyIf("Then", "Leave")
-             .move("Leave the launch zone", Tunables.Auto.leaveInches, 0, 0.7)
+             .forward("Leave the launch zone", Tunables.Auto.leaveInches, 0.7)
          .end();
     }
 }

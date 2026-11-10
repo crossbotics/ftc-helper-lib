@@ -90,11 +90,10 @@ How to read it:
 | 180 | toward you |
 | -90 | right |
 
-> **Two different 90s.** A **heading** (here, and in `start(...)`, `driveTo`, `turnTo`) goes
-> counterclockwise: heading 90 = facing **left**. A `move`'s **direction** (lesson 6) goes clockwise
-> from the robot's front: direction 90 = moving to the robot's **right**. **Why two rules?** A move's
-> direction is like the stick (pushed right = go right); a heading is the IMU's own rule (turning left
-> counts up). The word tells you which ([signs and units](../../conventions.md)).
+> **One rule for every angle.** A **heading** (here, and in `start(...)`, `driveTo`, `turnTo`) goes
+> counterclockwise: heading 90 = facing **left**. A `move`'s **direction** (lesson 6) counts the same
+> way, from the robot's front: direction 90 = moving to the robot's **left**. It is the IMU's own rule
+> (turning left counts up) ([signs and units](../../conventions.md)).
 
 **Two new words.** A **field point** is a place on the field written as x and y (and, for `driveTo`,
 a heading). The **start spot** is the field point where you put the robot before ▶ (start on the Driver Hub). You write it

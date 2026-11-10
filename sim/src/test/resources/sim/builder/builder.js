@@ -1169,13 +1169,13 @@ function stepForm(s, i) {
 				.map(([d, t]) => `<option value="${d}"${d === +s.dir ? ' selected' : ''}>${t}</option>`).join('')
 				+ (tank ? '' : `<option value="other"${known ? '' : ' selected'}>another angle</option>`);
 			return `<div class="row">${name('To the goal')}</div><div class="row"><label><input type="number" step="0.5" data-k="inches" value="${fmt(+s.inches)}"> in</label>
-				<select data-k="dirSel" aria-label="Direction">${opts}</select>${known ? '' : `<label><input type="number" step="5" data-k="dir" value="${fmt(+s.dir)}"> deg</label>`}${power}</div>
+				<select data-k="dirSel" aria-label="Direction">${opts}</select>${known ? '' : `<label><input type="number" step="5" data-k="dir" value="${fmt(S.dirToCcw(s.dir))}"> deg <span class="muted">(90 = left)</span></label>`}${power}</div>
 				${tank ? '' : turnWhile(false, B.steps.plan.steps[i - 1]?.kind === 'turn')}`;
 		}
 		case 'moveTurn':
 			return `<div class="row">${name('To the goal')}</div><div class="row"><label><input type="number" step="0.5" data-k="inches" value="${fmt(+s.inches)}"> in</label>
-				<label>at <input type="number" step="5" data-k="dir" value="${fmt(+s.dir)}"> deg</label><label>end facing <input type="number" step="5" data-k="heading" value="${fmt(+s.heading)}"> deg</label>${power}</div>
-				${turnWhile(true)}<p class="muted">Both from the way the robot faced at the start: the direction clockwise (90 = its right), the heading counterclockwise (90 = left). Drag the yellow knob to turn it.</p>`;
+				<label>at <input type="number" step="5" data-k="dir" value="${fmt(S.dirToCcw(s.dir))}"> deg</label><label>end facing <input type="number" step="5" data-k="heading" value="${fmt(+s.heading)}"> deg</label>${power}</div>
+				${turnWhile(true)}<p class="muted">Both from the way the robot faced at the start, counterclockwise: 90 = to its left, -90 = to its right. Drag the yellow knob to turn it.</p>`;
 		case 'turn': return `<div class="row">${name('Face the goal')}</div><div class="row"><label>by <input type="number" step="5" data-k="deg" value="${fmt(+s.deg)}"> deg</label>${power}</div><p class="muted">+ left, - right. Ends facing ${fmt(e.h)}.</p>`;
 		case 'turnTo': return `<div class="row">${name('Square up')}</div><div class="row"><label>to <input type="number" step="5" data-k="heading" value="${fmt(+s.heading)}"> deg</label>${power}</div><p class="muted">0 = the start heading. Ends facing ${fmt(e.h)} on the field.</p>`;
 		case 'wait': return `<div class="row">${name('Let it settle')}<label><input type="number" min="0" step="0.1" data-k="sec" value="${fmt(+s.sec)}"> s</label></div>`;
@@ -1276,7 +1276,13 @@ function stepInput(i, t) {
 			return;
 		}
 		if (k === 'dirSel') { if (t.value !== 'other') s.dir = +t.value; else if (DIRS.some(([d]) => d === +s.dir)) s.dir = 45; }
-		else if (k === 'dir' && B.steps.plan.drive === 'tank' && S.sideways(v)) return;   // a tank drive: forward or back only
+		else if (k === 'dir') {
+			// The box counts counterclockwise (90 = left), like the Java; the plan keeps it clockwise.
+			if (!Number.isFinite(v)) return;
+			const dir = S.dirFromCcw(v);
+			if (B.steps.plan.drive === 'tank' && S.sideways(dir)) return;   // a tank drive: forward or back only
+			s.dir = dir;
+		}
 		else if (k === 'wait') { if (t.checked) { s.kind = 'action'; s.timeout = s.timeout ?? ACTION_LIMIT_SEC; } else s.kind = 'alongside'; }
 		else if (k === 'goOn') { s.goOn = t.checked; if (!(+s.timeout > 0)) s.timeout = 10; }
 		else if (k === 'fireRpm') s.code = S.withFireSpeed(s.code, t.value === '' ? null : v);

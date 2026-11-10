@@ -1992,15 +1992,15 @@ public class ScoreAndPark extends Auto<Robot> {
         s.start("Back wall, 2nd tile from the left, facing the field", 0)
          .menuYesNo("Score", true)
          .run("Hold the piece", robot.claw::close)
-         .move("Leave the wall", 4, 0, 0.4)
+         .forward("Leave the wall", 4, 0.4)
          .onlyIf("Score")
              .run("Lift up", () -> robot.lift.goTo("high"))
-             .move("Drive to the goal", 24, 0, 0.6)
+             .forward("Drive to the goal", 24, 0.6)
              .waitUntil("Lift at the top", robot.lift::isAtTarget, 2.0)
              .run("Drop", robot.claw::open)
          .end()
          .parkWithSeconds(4)
-         .move("Park", 20, 90, 0.7);
+         .right("Park", 20, 0.7);
     }
 }
 ```
@@ -2014,9 +2014,12 @@ What [`Steps`](#auto) can do:
 | `menuYesNo(label, yes)`, `menuChoice(label, options...)` | a choice for the drivers in INIT |
 | `onlyIf(label)` / `onlyIf(label, option)` ... `end()` | the steps in between run only for that choice; a `start(...)` or `parkWithSeconds(...)` in between is used only for that choice, and the INIT note follows the menu ([choose the start in INIT](../guides/autos.md#example-2-one-opmode-the-drivers-choose-in-init)) |
 | `isYes(label)`, `choice(label)` | read a choice |
-| `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right: clockwise, like a compass) |
-| `turn(label, degrees, power)`, `turnTo(label, headingDeg, power)` | turn by an angle / to a heading (90 = left: counterclockwise, the other way from a move's direction) |
-| `moveWithTurn(label, inches, directionDeg, headingDeg, power)` | drive AND turn at the same time (mecanum only). The direction is fixed on the field: clockwise from the start heading (0 = the way the robot faced at the start, 90 = its right then). It ends facing `headingDeg` (0 = the start heading, counterclockwise +). A tank drive cannot: use `move`, then `turnTo` |
+| `forward(label, inches, power)`, `back(...)` | drive forward / backward |
+| `left(label, inches, power)`, `right(...)` | slide to the robot's left / right, still facing the same way (mecanum only) |
+| `move(label, inches, directionDeg, power)` | drive at an angle: counterclockwise, like a heading (0 forward, 90 left, 180 back, -90 right) |
+| `turnLeft(label, degrees, power)`, `turnRight(...)` | turn left / right by this many degrees |
+| `turn(label, degrees, power)`, `turnTo(label, headingDeg, power)` | turn by an angle / to a heading (counterclockwise: 90 = left, the same rule as a move) |
+| `moveWithTurn(label, inches, directionDeg, headingDeg, power)` | drive AND turn at the same time (mecanum only). The direction is fixed on the field, counterclockwise from the start heading (0 = the way the robot faced at the start, 90 = its left then). It ends facing `headingDeg` (0 = the start heading, counterclockwise +). A tank drive cannot: use `forward`, then `turnTo` |
 | `aimAtGoal(label, timeoutSec)` | turn to the goal with the camera (or the odometry backup), or wait for a following turret; "not seen" in the report if there was no goal ([Aim](#aim)) |
 | `aimAtGoal(label, timeoutSec, sweepDeg)` | the same, with a [sweep](#aim) when the goal is not in view: up to `sweepDeg` each way, slowly, then aim. A turret that follows the goal does not sweep: the step waits for the turret |
 | `waitForGoal(label)` | WAIT until the camera sees the goal (from `goal(...)` on a camera; the camera only, not the odometry backup) and the goal is still: in view and moving less than 2 degrees and 2 inches for 1 s (`Tunables.Aim` `goalSteadySec`, `goalSteadyDeg`, `goalSteadyIn`: a tipped HIVE can swing). Then go on. For a start where the goal is not in view yet, e.g. behind the HIVE: wait for a tip, then fire. No time limit: if the goal is never seen, it waits until `parkWithSeconds` takes over (the steps between are skipped) or autonomous ends. It does not turn the robot. An upside-down CELL (a down CELL) is not the goal: it keeps waiting |

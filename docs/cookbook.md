@@ -2129,9 +2129,9 @@ fold-out waits for ▶. The game rules would allow it (R103.B), but the robot mu
 <!-- recipe: action-in-auto -->
 ```java title="autos/YourAuto.java"
 s.start("Against our wall, facing the field", 0)
- .move("To the goal", 24, 0, 0.5)
+ .forward("To the goal", 24, 0.5)
  .action(Actions.scoreHigh(robot), 5)     // waits until it is done (at most 5 s)
- .move("Back up", 12, 180, 0.5);
+ .back("Back up", 12, 0.5);
 ```
 
 **Why:** write the move once, use it in TeleOp and autonomous; the report says if it timed out.
@@ -2142,10 +2142,10 @@ s.start("Against our wall, facing the field", 0)
 An autonomous is one file in `autos/`: a list of named steps. Distances are in **inches** (1 foot = 12
 inches, so 2 feet = 24), directions in degrees, power from 0 to 1.
 
-> **Two different 90s.** A **move's direction** is measured clockwise, like a compass: 0 = forward,
-> **90 = right**, 180 = backward, 270 = left (`.move("Right", 12, 90, 0.5)`). A **turn or a heading**
-> is counterclockwise, like math class: **90 = left**, -90 = right (`.turn("Left", 90, 0.4)`,
-> `turnTo(...)`, the heading in `start(...)` and `driveTo(...)`). Read every 90 twice.
+> **One rule for every angle:** counterclockwise, like the IMU: 0 = forward, **90 = left**, 180 = back,
+> -90 = right. For a move (`.move("Left", 12, 90, 0.5)`), a turn (`.turn("Left", 90, 0.4)`), `turnTo(...)`,
+> and the heading in `start(...)` and `driveTo(...)`. Straight moves and turns can use words instead:
+> `.forward`, `.back`, `.left`, `.right`, `.turnLeft`, `.turnRight`.
 
 **The robot only drives after the Drive Tuner.** Until then the autonomous shows "AUTONOMOUS IS OFF".
 Run the [Drive Tuner](#how-do-i-tune-the-drive-for-autonomous), copy its lines, then set
@@ -2177,7 +2177,7 @@ public class LeaveTheStart extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         // s = the list of steps, robot = your Robot.java. Step lines go here:
         s.start("Against our wall, facing the field", 0)        // the note the drive team reads
-         .move("Leave the start", 24, 0, 0.4);                  // 24 inches = 2 feet, forward, 0.4 power
+         .forward("Leave the start", 24, 0.4);                  // 24 inches = 2 feet, forward, 0.4 power
     }
 }
 ```
@@ -2192,10 +2192,11 @@ public class LeaveTheStart extends Auto<Robot> {
 <!-- recipe: auto-moves -->
 ```java title="autos/YourAuto.java"
 s.start("Against our wall, facing the field", 0)
- .move("Forward", 24, 0, 0.5)            // inches, direction (0 = forward), max power
- .move("Sideways to the right", 12, 90, 0.5)   // mecanum only
- .turn("Turn left 90", 90, 0.4)         // turns: counterclockwise (left) is +
- .turn("Turn right 90", -90, 0.4)       // so a right turn is minus
+ .forward("Forward", 24, 0.5)                 // inches, max power
+ .right("Sideways to the right", 12, 0.5)     // mecanum only; also back(...), left(...)
+ .turnLeft("Turn left 90", 90, 0.4)           // also turnRight(...)
+ .move("At an angle", 12, 45, 0.5)            // angles count counterclockwise: 45 = forward and left
+ .turn("Turn right 90", -90, 0.4)             // the same rule: a right turn is minus
  .moveWithTurn("Back, turning", 12, 180, 90, 0.4)   // mecanum only: drive and turn at once
  .turnTo("Face the start way", 0, 0.4); // to a heading: 0 = the way it faced at the start
 ```
@@ -2232,7 +2233,7 @@ s.start("Against our wall, facing the field", 0)
  .menuYesNo("Score", true)                  // the drivers choose in INIT with the D-pad
  .menuChoice("Park", "Near", "Far")
  .onlyIf("Score")                           // these steps run only if "Score" is yes
-     .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.5)
+     .forward("To the goal", Tunables.Auto.toGoalInches, 0.5)
      .action(Actions.scoreHigh(robot), 5)
  .end()                                     // never forget end()
 ```
@@ -2248,10 +2249,10 @@ Add `parkWithSeconds` before the park steps (this follows the menu recipe above)
 ```java title="autos/YourAuto.java"
 .parkWithSeconds(4)                        // the steps below always get the last 4 s
 .onlyIf("Park", "Near")
-    .move("Park near", Tunables.Auto.parkInches, 90, 0.7)
+    .right("Park near", Tunables.Auto.parkInches, 0.7)
 .end()
 .onlyIf("Park", "Far")
-    .move("Park far", Tunables.Auto.parkInches * 2, 90, 0.7)
+    .right("Park far", Tunables.Auto.parkInches * 2, 0.7)
 .end();
 ```
 
@@ -2267,7 +2268,7 @@ Add `parkWithSeconds` before the park steps (this follows the menu recipe above)
 s.start("Against our wall, facing the field", 0)
  .run("Intake on", robot.intake::in)        // starts it and goes on at once
  .run("Lift up", () -> robot.lift.goTo("high"))
- .move("To the pieces", 24, 0, 0.4)         // the intake and lift work while it drives
+ .forward("To the pieces", 24, 0.4)         // the intake and lift work while it drives
  .waitUntil("Lift at the top", robot.lift::isAtTarget, 2.0)
  .run("Intake off", robot.intake::stop);
 ```
@@ -2341,10 +2342,10 @@ saved only on the hub is lost with a new Control Hub.
 ```java title="autos/YourAuto.java"
 /** The same first steps for several autos: a method that adds them to the list. */
 static Steps scorePreload(Steps s, Robot robot) {
-    return s.move("To the goal", Tunables.Auto.toGoalInches, 0, 0.5)
+    return s.forward("To the goal", Tunables.Auto.toGoalInches, 0.5)
             .action(Actions.scoreHigh(robot), 5);
 }
-// in each autonomous:  scorePreload(s.start("...", 0), robot).move("Park", 20, 90, 0.7);
+// in each autonomous:  scorePreload(s.start("...", 0), robot).right("Park", 20, 0.7);
 ```
 
 **Why:** fix the opening once and every autonomous gets the fix.
@@ -2375,7 +2376,7 @@ One number that is different on RED (most routes need none: RED is mirrored or t
 double waitSec = alliance().pick(0.0, 2.0);
 s.start("Against our wall, facing the field", 0)
  .waitSeconds("Let our partner go first", waitSec)
- .move("Leave the start", 24, 0, 0.4);
+ .forward("Leave the start", 24, 0.4);
 ```
 
 **Why:** the start delay waits before the first step, so a partner can go first; 10 s is a lot to scroll
@@ -2412,23 +2413,23 @@ public class Routes {
     /** Score the piece the robot starts with: hold it, drive to the goal, score. */
     public static Steps scorePreload(Steps s, Robot robot) {
         return s.run("Hold the preload", robot.claw::close)
-                .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)          // 0 = forward
+                .forward("To the goal", Tunables.Auto.toGoalInches, 0.6)
                 .action(Actions.scoreHigh(robot), 5);
     }
 
     /** One more piece: back to the pieces, grab one, forward to the goal, score. */
     public static Steps cycle(Steps s, Robot robot) {
-        return s.move("To the pieces", Tunables.Auto.pickupInches, 180, 0.6)    // 180 = backward
+        return s.back("To the pieces", Tunables.Auto.pickupInches, 0.6)
                 .run("Grab", robot.claw::close)
                 .waitSeconds("Let the claw close", 0.3)
-                .move("Back to the goal", Tunables.Auto.pickupInches, 0, 0.6)
+                .forward("Back to the goal", Tunables.Auto.pickupInches, 0.6)
                 .action(Actions.scoreHigh(robot), 5);
     }
 
     /** The park: back toward our wall. It keeps the last 3 seconds for itself, so it always runs. */
     public static Steps park(Steps s) {
         return s.parkWithSeconds(3)
-                .move("Park", Tunables.Auto.parkInches, 180, 0.7);
+                .back("Park", Tunables.Auto.parkInches, 0.7);
     }
 }
 ```
@@ -2550,8 +2551,8 @@ public class ChooseInInit extends Auto<Robot> {
          .onlyIf("Start", "Far")
              .start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -61, 0)
              // Off the wall first: the FLOWER on our wall stands between the two start spots.
-             .move("Off the wall", Tunables.Auto.offWallInches, 0, 0.5)
-             .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7)   // 270 = left
+             .forward("Off the wall", Tunables.Auto.offWallInches, 0.5)
+             .left("Across to the near side", Tunables.Auto.farToNearInches, 0.7)
          .end();
 
         // The plan: plain Java "if". choice(...) = the option chosen, as text. (1)!

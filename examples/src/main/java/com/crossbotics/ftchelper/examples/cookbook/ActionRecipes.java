@@ -147,9 +147,9 @@ public class ActionRecipes {
         protected void steps(Steps s, Robot robot) {
             // recipe: action-in-auto
             s.start("Against our wall, facing the field", 0)
-             .move("To the goal", 24, 0, 0.5)
+             .forward("To the goal", 24, 0.5)
              .action(Actions.scoreHigh(robot), 5)     // waits until it is done (at most 5 s)
-             .move("Back up", 12, 180, 0.5);
+             .back("Back up", 12, 0.5);
             // end recipe
         }
     }

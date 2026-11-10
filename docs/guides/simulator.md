@@ -386,7 +386,7 @@ What a team does, step by step:
      THEN turns (or turns, then drives). Tick **turn while driving** on a drive to make it one step that
      drives and turns at the same time (`Steps.moveWithTurn`; a turn just before the drive goes into it, so
      the robot ends at the same spot, facing the same way). Its direction is then fixed on the field: degrees
-     clockwise from the way the robot faced at the start, like "turn to"'s heading. Untick it to get a drive
+     counterclockwise from the way the robot faced at the start (90 = left), like "turn to"'s heading. Untick it to get a drive
      and a "turn to" again. A tank drive cannot do this: a drive that turns becomes a turn, a drive and a
      turn there (INIT also refuses one on a tank robot).
      **Numbers are places, letters are things the robot does.** The points it drives to have a number on a

@@ -178,7 +178,7 @@ protected void steps(Steps s, Robot robot) {
   numbers in pairs: start (-48, -50), control point (-44, -36), end (-30, -30). **Start each part where the last one ended** (here, -48, -50). The robot does not stop
   between the parts.
 - **`.turnTo(0, 45)`**: on this part, it turns evenly from heading 0 to heading 45 (headings go
-  counterclockwise, as in lesson 7: 45 = turned to the left. Only a `move`'s direction goes clockwise.)
+  counterclockwise, as in lesson 7: 45 = turned to the left. Every angle in an autonomous counts this way.)
   To turn on one stretch only, add two numbers: where the turn starts and ends, as parts of the way
   (0 = the part's start, 1 = its end). `.turnTo(0, 45, 0, 0.3)` turns first, then drives;
   `.turnTo(0, 45, 0.7, 1)` drives first, then turns (on the last part, add `.holdEnd()` so the turn finishes).

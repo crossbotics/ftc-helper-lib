@@ -21,13 +21,13 @@ public class ShootFromStart extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         // Inches: x 44 = the 2nd tile right of the centre line; y -61.5 = back against our wall.
         s.start("Back against our wall, 2nd tile right of the centre line, facing the field", 44, -61.5, 0)
-         .move("Into range", 20, 0, 0.6)
+         .forward("Into range", 20, 0.6)
          .turn("Face the HIVE", 45, 0.5)               // 45 degrees left: the camera sees the up CELL
          .readyToLaunch("Ready", 3)                    // spins up, waits until at speed
          .aimAtGoal("Aim", 3)                          // waits until the turret points at the goal
          .action(robot.launcher.fireAllAction())       // fires every piece it holds
          .parkWithSeconds(3)
-         .move("Leave", 12, 90, 0.7);
+         .right("Leave", 12, 0.7);
     }
 
     // BIOBUZZ's field is turned half a turn between the alliances: the same route works for both.

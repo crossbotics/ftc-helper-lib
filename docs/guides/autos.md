@@ -140,23 +140,23 @@ public class Routes {
     /** Score the piece the robot starts with: hold it, drive to the goal, score. */
     public static Steps scorePreload(Steps s, Robot robot) {
         return s.run("Hold the preload", robot.claw::close)
-                .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)          // 0 = forward
+                .forward("To the goal", Tunables.Auto.toGoalInches, 0.6)
                 .action(Actions.scoreHigh(robot), 5);
     }
 
     /** One more piece: back to the pieces, grab one, forward to the goal, score. */
     public static Steps cycle(Steps s, Robot robot) {
-        return s.move("To the pieces", Tunables.Auto.pickupInches, 180, 0.6)    // 180 = backward
+        return s.back("To the pieces", Tunables.Auto.pickupInches, 0.6)
                 .run("Grab", robot.claw::close)
                 .waitSeconds("Let the claw close", 0.3)
-                .move("Back to the goal", Tunables.Auto.pickupInches, 0, 0.6)
+                .forward("Back to the goal", Tunables.Auto.pickupInches, 0.6)
                 .action(Actions.scoreHigh(robot), 5);
     }
 
     /** The park: back toward our wall. It keeps the last 3 seconds for itself, so it always runs. */
     public static Steps park(Steps s) {
         return s.parkWithSeconds(3)
-                .move("Park", Tunables.Auto.parkInches, 180, 0.7);
+                .back("Park", Tunables.Auto.parkInches, 0.7);
     }
 }
 ```
@@ -329,8 +329,8 @@ public class ChooseInInit extends Auto<Robot> {
          .onlyIf("Start", "Far")
              .start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -61, 0)
              // Off the wall first: the FLOWER on our wall stands between the two start spots.
-             .move("Off the wall", Tunables.Auto.offWallInches, 0, 0.5)
-             .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7)   // 270 = left
+             .forward("Off the wall", Tunables.Auto.offWallInches, 0.5)
+             .left("Across to the near side", Tunables.Auto.farToNearInches, 0.7)
          .end();
 
         // The plan: plain Java "if". choice(...) = the option chosen, as text. (1)!
@@ -386,8 +386,8 @@ calls the same pieces:
 ```java
 // FarPreloadPark.java, inside steps(...): the same pieces, after its own first moves.
 s.start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -61, 0)
- .move("Off the wall", Tunables.Auto.offWallInches, 0, 0.5)              // clear of the FLOWER
- .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7);
+ .forward("Off the wall", Tunables.Auto.offWallInches, 0.5)              // clear of the FLOWER
+ .left("Across to the near side", Tunables.Auto.farToNearInches, 0.7);
 Routes.scorePreload(s, robot);
 Routes.park(s);
 ```

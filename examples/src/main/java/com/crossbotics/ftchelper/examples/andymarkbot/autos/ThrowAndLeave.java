@@ -22,7 +22,7 @@ public class ThrowAndLeave extends Auto<Robot> {
         s.start("Back against our wall, launcher in line with the goal", -56, -62.55, 0)
          .action(Actions.throwAll(robot), 12)
          .parkWithSeconds(3)                                          // the last 3 s are for leaving
-         .move("Leave", Tunables.Auto.leaveInches, 0, Tunables.Auto.leavePower);
+         .forward("Leave", Tunables.Auto.leaveInches, Tunables.Auto.leavePower);
     }
 
     // BIOBUZZ's field is turned half a turn between alliances (not mirrored): one route works for both.

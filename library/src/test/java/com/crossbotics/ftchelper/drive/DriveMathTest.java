@@ -51,7 +51,7 @@ public class DriveMathTest {
             for (int dir = -180; dir <= 180; dir += 45) {
                 double rad = Math.toRadians(dir);
                 double[] a = MecanumMixer.fieldDirection(dir, heading);
-                double[] b = MecanumMixer.fieldToRobot(Math.cos(rad), Math.sin(rad), heading);
+                double[] b = MecanumMixer.fieldToRobot(Math.cos(rad), -Math.sin(rad), heading);   // 90 = field-left
                 assertArrayEquals(a, b, 1e-9);
             }
         }

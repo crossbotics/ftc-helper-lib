@@ -27,6 +27,6 @@ public class FirstAuto extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         // STEP 8: where the drive team puts the robot, and how far it drives.
         s.start("Against our wall, facing the field", 0)
-         .move("Leave the start", Tunables.Auto.leaveInches, 0, 0.4);
+         .forward("Leave the start", Tunables.Auto.leaveInches, 0.4);
     }
 }

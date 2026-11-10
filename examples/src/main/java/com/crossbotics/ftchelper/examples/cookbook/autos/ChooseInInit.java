@@ -34,8 +34,8 @@ public class ChooseInInit extends Auto<Robot> {
          .onlyIf("Start", "Far")
              .start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -61, 0)
              // Off the wall first: the FLOWER on our wall stands between the two start spots.
-             .move("Off the wall", Tunables.Auto.offWallInches, 0, 0.5)
-             .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7)   // 270 = left
+             .forward("Off the wall", Tunables.Auto.offWallInches, 0.5)
+             .left("Across to the near side", Tunables.Auto.farToNearInches, 0.7)
          .end();
 
         // The plan: plain Java "if". choice(...) = the option chosen, as text.

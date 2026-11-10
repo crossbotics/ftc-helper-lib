@@ -78,7 +78,7 @@ auto.turn(-90, 0.5);       // turn 90 degrees to the RIGHT (negative = right)
 Each call **waits until the move is done**, then the next line runs. That is fine in autonomous
 (and only there). Each move also stops by itself if it takes too long (10 s) or the robot is stuck.
 
-Directions for `move`: 0 forward, 90 right, 180 back, -90 left (mecanum; a standard drive only
+Directions for `move` count counterclockwise, like a heading: 0 forward, 90 left, 180 back, -90 right (mecanum; a standard drive only
 does 0 and 180). Turns: positive = left, like the IMU.
 
 ## 3. Tune it
