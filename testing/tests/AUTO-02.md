@@ -7,7 +7,7 @@ where: both
 minutes: 20
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
-since: unreleased
+since: v0.40.0
 docs: [five-files/05-autos.md#more-steps, conventions.md#driving]
 ---
 

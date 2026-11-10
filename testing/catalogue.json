@@ -716,7 +716,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.40.0",
    "docs": [
     {
      "path": "docs/five-files/05-autos.md",
