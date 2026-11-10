@@ -2,6 +2,16 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **Docs: the Actions.java page** (docs/five-files/04-actions-java.md): do you need it yet (the ready-made
+  actions), the smallest file, a first action line by line (fire 3 with the intake running), the four steps, what
+  each part can wait for, the action on a button and in an autonomous, the rules, checks and fixes. Its code is
+  compiled: `examples/.../firstrobot/Actions.java` and `examples/.../cookbook/FiringActionRecipes.java`
+  (CookbookTest runs its TeleOp and autonomous).
+
 ## v0.39.0 - 2026-11-09
 
 ### Added
