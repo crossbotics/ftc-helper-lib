@@ -61,6 +61,9 @@ public class AllButtonsTest {
     public static class Twin_odometrybot extends com.crossbotics.ftchelper.examples.odometrybot.Controls {
         @Override protected boolean useStandardButtons() { return true; }
     }
+    public static class Twin_pedrobot extends com.crossbotics.ftchelper.examples.pedrobot.Controls {
+        @Override protected boolean useStandardButtons() { return true; }
+    }
     public static class Twin_quickstart extends com.crossbotics.ftchelper.examples.quickstart.Controls {
         @Override protected boolean useStandardButtons() { return true; }
     }
@@ -76,6 +79,7 @@ public class AllButtonsTest {
             new Object[] {"turretbot", com.crossbotics.ftchelper.examples.turretbot.Robot.class, com.crossbotics.ftchelper.examples.turretbot.Controls.class, Twin_turretbot.class},
             new Object[] {"v2bot", com.crossbotics.ftchelper.examples.v2bot.Robot.class, com.crossbotics.ftchelper.examples.v2bot.Controls.class, Twin_v2bot.class},
             new Object[] {"odometrybot", com.crossbotics.ftchelper.examples.odometrybot.Robot.class, com.crossbotics.ftchelper.examples.odometrybot.Controls.class, Twin_odometrybot.class},
+            new Object[] {"pedrobot", com.crossbotics.ftchelper.examples.pedrobot.Robot.class, com.crossbotics.ftchelper.examples.pedrobot.Controls.class, Twin_pedrobot.class},
             new Object[] {"quickstart", com.crossbotics.ftchelper.examples.quickstart.Robot.class, com.crossbotics.ftchelper.examples.quickstart.Controls.class, Twin_quickstart.class}
     };
 

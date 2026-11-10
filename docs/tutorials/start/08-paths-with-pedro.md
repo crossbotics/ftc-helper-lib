@@ -33,7 +33,9 @@ need more. Read section 1, then decide.
 **The code:** the Pedro robot, [`examples/.../pedrobot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot):
 [`Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/Robot.java),
 [`PedroConstants.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/PedroConstants.java),
-[`Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/Tunables.java) and
+[`Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/Tunables.java),
+[`Controls.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/Controls.java),
+[`Actions.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/Actions.java) (empty) and
 [`autos/CurveToTheGoal.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/autos/CurveToTheGoal.java).
 It is lesson 7's robot plus one line.
 **Reference:** [the pedro module](../../modules/pedro.md).

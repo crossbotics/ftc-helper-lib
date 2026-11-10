@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
  * starting halfway, holding still to score, then a driveTo to park.
  * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/08-paths-with-pedro/#5-write-your-first-path
  */
-@Autonomous(name = "Pedro Bot Curve to the Goal", group = "Examples")
+@Autonomous(name = "Pedro Bot Curve to the Goal", group = "Examples", preselectTeleOp = "Pedro Bot TeleOp")
 @Disabled
 public class CurveToTheGoal extends Auto<Robot> {
     // Two parts with no stop between them, then hold the end point.

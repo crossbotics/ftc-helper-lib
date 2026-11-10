@@ -255,6 +255,7 @@ public class FinderSafetyTest {
         EXPECTED.put("Odometry Bot To the Goal", "\"pinpoint\"");
         EXPECTED.put("Odometry Bot Park Around", "\"pinpoint\"");
         EXPECTED.put("Odometry Bot Odometry Tuner", "\"pinpoint\"");
+        EXPECTED.put("Pedro Bot TeleOp", "\"pinpoint\"");
         EXPECTED.put("Pedro Bot Curve to the Goal", "\"pinpoint\"");
         // The cookbook's robot has a Pinpoint (CookbookTest runs its files on their own robot file).
         EXPECTED.put("Cookbook TeleOp", "\"pinpoint\"");
