@@ -22,7 +22,7 @@ public class LaunchAndBackUp extends Auto<Robot> {
         // Inches: y -63 = the back against our wall (the robot's centre is 7.5 in from it).
         s.start("Back against our wall, left of centre, facing the field", -56, -63, 0)
          .action(Actions.fireAllWithIntake(robot), 12)
-         .move("Away from the wall", Tunables.Auto.backInches, 0, Tunables.Auto.backPower);
+         .forward("Away from the wall", Tunables.Auto.backInches, Tunables.Auto.backPower);
     }
 
     // BIOBUZZ's field is turned half a turn between the alliances: the same route works for both.

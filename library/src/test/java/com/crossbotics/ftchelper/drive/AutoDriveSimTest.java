@@ -127,7 +127,7 @@ public class AutoDriveSimTest {
     @Test public void diagonalMoveTravelsTheFullDistance() {
         SimRobot r = new SimRobot();
         AutoDriveConfig c = config();
-        assertEquals(AutoDrive.Result.DONE, r.auto(c, 1).move(24, 45, 0.6));
+        assertEquals(AutoDrive.Result.DONE, r.auto(c, 1).move(24, -45, 0.6));   // forward and right
         double tpi = c.ticksPerInch();
         double forward = (r.fl.position + r.fr.position + r.bl.position + r.br.position) / 4 / tpi;
         double right = (r.fl.position - r.fr.position - r.bl.position + r.br.position) / 4 / tpi;
@@ -139,7 +139,7 @@ public class AutoDriveSimTest {
         SimRobot r = new SimRobot();
         AutoDriveConfig c = config();
         c.strafeCorrection = 1.2;
-        r.auto(c, 1).move(24, 90, 0.6);
+        r.auto(c, 1).move(24, -90, 0.6);   // right
         double wheelRight = (r.fl.position - r.fr.position - r.bl.position + r.br.position) / 4 / c.ticksPerInch();
         assertEquals(24 * 1.2, wheelRight, 0.6);
     }
@@ -149,11 +149,11 @@ public class AutoDriveSimTest {
         c.strafeCorrection = 1.1;
         c.strafeCorrectionLeft = 1.3;
         SimRobot left = new SimRobot();
-        left.auto(c, 1).move(24, -90, 0.6);
+        left.auto(c, 1).move(24, 90, 0.6);   // 90 = left
         double wheelLeft = -(left.fl.position - left.fr.position - left.bl.position + left.br.position) / 4 / c.ticksPerInch();
         assertEquals(24 * 1.3, wheelLeft, 0.6);
         SimRobot right = new SimRobot();
-        right.auto(c, 1).move(24, 90, 0.6);
+        right.auto(c, 1).move(24, -90, 0.6);   // -90 = right
         double wheelRight = (right.fl.position - right.fr.position - right.bl.position + right.br.position) / 4 / c.ticksPerInch();
         assertEquals(24 * 1.1, wheelRight, 0.6);
         // Not set: the same number both ways.

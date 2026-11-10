@@ -183,7 +183,8 @@ public class BuiltAuto extends Auto<RobotDefinition> {
                                 + "(the auto builder does this for a tank drive)");
                     }
                     if (tank && kind.equals("move") && Math.abs(Math.sin(Math.toRadians(dir))) > 1e-6) {
-                        throw new IllegalArgumentException("a strafe (a move at " + (dir == Math.rint(dir) ? String.valueOf((long) dir) : String.valueOf(dir))
+                        double ccw = ccw(dir);   // as the Java says it
+                        throw new IllegalArgumentException("a strafe (a move at " + (ccw == Math.rint(ccw) ? String.valueOf((long) ccw) : String.valueOf(ccw))
                                 + " degrees), not possible on a tank drive: " + robot.getClass().getSimpleName()
                                 + " has a tank drive, which only moves at 0 (forward) or 180 (back). Turn first, then move "
                                 + "(the auto builder does this for a tank drive)");
@@ -206,10 +207,18 @@ public class BuiltAuto extends Auto<RobotDefinition> {
             }
         }
 
+        /** A plan's clockwise direction as Steps counts it: counterclockwise, -180 to 180 (like stepscore.js dirToCcw). */
+        static double ccw(double clockwiseDeg) {
+            double a = ((-clockwiseDeg % 360) + 360) % 360;
+            if (a > 180) a -= 360;
+            return a == 0 ? 0 : a;   // no -0
+        }
+
         private void addStep(Steps s, RobotDefinition robot, Map<String, Object> st, String kind, String label, String where) {
             switch (kind) {
-                case "move": s.move(label, need(st, "inches", where), need(st, "dir", where), need(st, "power", where)); break;
-                case "moveTurn": s.moveWithTurn(label, need(st, "inches", where), need(st, "dir", where), need(st, "heading", where),
+                // A plan's "dir" is clockwise (the builder keeps it so, for saved plans); Steps counts counterclockwise.
+                case "move": s.move(label, need(st, "inches", where), ccw(need(st, "dir", where)), need(st, "power", where)); break;
+                case "moveTurn": s.moveWithTurn(label, need(st, "inches", where), ccw(need(st, "dir", where)), need(st, "heading", where),
                         need(st, "power", where)); break;
                 case "turn": s.turn(label, need(st, "deg", where), need(st, "power", where)); break;
                 case "turnTo": s.turnTo(label, need(st, "heading", where), need(st, "power", where)); break;

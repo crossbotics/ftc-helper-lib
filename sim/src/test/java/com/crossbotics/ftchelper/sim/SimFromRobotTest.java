@@ -170,6 +170,58 @@ public class SimFromRobotTest {
         }
     }
 
+    // The five files' smallest auto (docs/five-files/05-autos.md): before the Drive Tuner it runs in the simulator
+    // only, with a warning, and drives 12 in forward.
+    @Test public void theFirstRobotAutoLeavesTheStart() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.firstrobot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("First Robot Auto");
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Against our wall, facing the field"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Drive not tuned: runs in the simulator only"));
+            assertTrue("word steps only: no angle note\n" + String.join("\n", s.screen()), !s.screenHas("Moves at an angle"));
+            double x0 = s.robot().x, y0 = s.robot().y;
+            s.start();
+            assertTrue("it finishes", SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 15));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Leave the start: done"));
+            double moved = Math.hypot(s.robot().x - x0, s.robot().y - y0);
+            assertEquals("it drives about 12 in", 12, moved, 2.5);
+            assertEquals("", s.error());
+        }
+    }
+
+    /** The word steps: left slides left, forward goes forward, turnLeft turns counterclockwise. */
+    public static class WordSteps extends com.crossbotics.ftchelper.robot.Auto<com.crossbotics.ftchelper.examples.firstrobot.Robot> {
+        @Override
+        protected void steps(com.crossbotics.ftchelper.robot.Steps s, com.crossbotics.ftchelper.examples.firstrobot.Robot robot) {
+            s.start("Against our wall, facing the field", 0)
+             .left("Left", 12, 0.4)
+             .forward("Forward", 12, 0.4)
+             .turnLeft("Turn left", 90, 0.4)
+             .move("At 90 (left)", 12, 90, 0.4);   // facing left now: its left is toward our wall
+        }
+    }
+
+    // One rule for every angle (counterclockwise +): the word steps and move(..., 90, ...) go LEFT.
+    @Test public void theWordStepsAndAMoveAt90GoLeft() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.firstrobot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.sim.ds.register("Word Steps", "Autonomous", WordSteps.class);
+            s.init("Word Steps");
+            // A move written with an angle is named in INIT (its meaning changed in v0.40.0); the words are not.
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Moves at an angle (At 90 (left)): since library v0.40.0, 90 = LEFT"));
+            s.sim.robot.setPose(-24, -48, 0);   // near our wall, facing away from it: room on every side
+            double x0 = s.robot().x, y0 = s.robot().y;
+            s.start();
+            assertTrue("it finishes", SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 20));
+            String screen = String.join("\n", s.screen());
+            assertTrue(screen, s.screenHas("At 90 (left): done"));
+            assertEquals("left 12 in (x)\n" + screen, x0 - 12, s.robot().x, 2.5);
+            assertEquals("forward 12, then 12 back toward our wall (y)\n" + screen, y0, s.robot().y, 2.5);
+            assertEquals("turned left 90\n" + screen, 90, s.robot().headingDeg, 4);
+            assertEquals("", s.error());
+        }
+    }
+
     @Test public void flywheelBotAutoShootsAndLeaves() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
         boolean was = Tunables.Drive.calibrated;

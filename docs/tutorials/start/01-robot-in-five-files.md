@@ -351,9 +351,9 @@ public class LaunchAndBackUp extends Auto<Robot> {
 
 `extends Auto<Robot>`: an autonomous from the library, for your `Robot`. You fill in
 `steps(...)`. `mirrorForRed()` you add only when the answer is false (it is explained just below).
-In `move(label, inches, direction, power)` the direction goes clockwise from the robot's front
-(0 = forward, 90 = right); the last number of `start(...)` is a heading, which goes the other way
-(90 = turned left). [Lesson 6](06-first-autonomous.md) explains these two different 90s.
+Every angle in an autonomous counts counterclockwise: 90 = left, for a move's direction, a turn, and
+the heading (the last number of `start(...)`). Straight moves can use words instead: `forward`, `back`,
+`left`, `right` ([the autos/ page](../../five-files/05-autos.md#more-steps)).
 
 One short file per autonomous, read top to bottom. The INIT menu (alliance, start delay, the profile)
 comes for free; moves and turns are written for BLUE and mirrored for RED (or, on a field turned half a

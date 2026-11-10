@@ -44,10 +44,10 @@ and the `autos` folder the autonomous programs, each a list of steps:
 
 ```java
 s.start("Against our wall, facing the field", 0)
- .move("To the goal", 24, 0, 0.6)
+ .forward("To the goal", 24, 0.6)
  .action(Actions.scoreHigh(robot), 5)
  .parkWithSeconds(3)
- .move("Park", 20, 90, 0.7);
+ .right("Park", 20, 0.7);
 ```
 
 New to Java? Do not worry if this looks strange. The [lessons](docs/tutorials/README.md) explain each

@@ -17,7 +17,7 @@ public class LeaveTheStart extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         // s = the list of steps, robot = your Robot.java. Step lines go here:
         s.start("Against our wall, facing the field", 0)        // the note the drive team reads
-         .move("Leave the start", 24, 0, 0.4);                  // 24 inches = 2 feet, forward, 0.4 power
+         .forward("Leave the start", 24, 0.4);                  // 24 inches = 2 feet, forward, 0.4 power
     }
 }
 // end recipe

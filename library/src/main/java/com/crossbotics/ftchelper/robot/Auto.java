@@ -19,10 +19,10 @@ import java.util.List;
  *     @Override protected void steps(Steps s, Robot robot) {
  *         s.start("Back wall, 2nd tile from the left, facing the field", 0)
  *          .run("Hold the piece", robot.claw::close)
- *          .move("Drive to the goal", 24, 0, 0.6)
+ *          .forward("Drive to the goal", 24, 0.6)
  *          .action(Actions.scoreHigh(robot))
  *          .parkWithSeconds(4)
- *          .move("Park", 20, 90, 0.7);
+ *          .right("Park", 20, 0.7);
  *     }
  * }
  * }</pre>
@@ -223,6 +223,15 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
             // The modules' INIT work (a camera's lighting test), with their lines.
             robot.initLoop(t);
             robot.showNotes(t);   // a part that is off: a "!!" warning in COMPETITION
+        }
+        // Moves at an angle: their meaning changed in v0.40.0 (90 = left now). Say so for a few releases,
+        // so a team that updated without reading the CHANGELOG checks them. (Remove after v0.42.)
+        Steps l = learned();
+        if (l != null && !l.angledMoves.isEmpty()) {
+            List<String> m = l.angledMoves;
+            String names = m.get(0) + (m.size() > 1 ? ", " + m.get(1) : "") + (m.size() > 2 ? " +" + (m.size() - 2) : "");
+            t.text("Moves at an angle (" + names
+                    + "): since library v0.40.0, 90 = LEFT. Check them in the simulator.");
         }
         List<String> changed = RobotDefinition.changedTunables();
         if (!changed.isEmpty()) {

@@ -6,8 +6,10 @@
 //
 // Frame (FTC-Helper-Lib's, as in pathcore.js): seen from your drivers' wall, x inches right of the
 // centre line, y inches toward the far wall, heading degrees, 0 = facing away, counterclockwise +.
-// Steps are robot-relative, like the library's: move directions are degrees CLOCKWISE from forward
-// (0 forward, 90 right, 180 back, 270 left); turns are COUNTERCLOCKWISE + (left); turnTo's 0 is the way
+// Steps are robot-relative, like the library's. INSIDE a plan, a move's `dir` is degrees CLOCKWISE from
+// forward (0 forward, 90 right, 180 back, 270 left): kept that way so saved plans still load. Everything
+// people see or type, and the Java, count COUNTERCLOCKWISE like the library (90 = left): dirToCcw() and
+// dirFromCcw() convert at those edges. Turns are COUNTERCLOCKWISE + (left); turnTo's 0 is the way
 // the robot faced at the start (the IMU's heading, not the field's).
 //
 // A plan: { drive: 'tank' | 'mecanum', start: { x, y, h, note, spot (write x, y) },
@@ -84,6 +86,25 @@ function moveVector(h, dir) {
 	const r = h * Math.PI / 180, d = dir * Math.PI / 180;
 	const f = [-Math.sin(r), Math.cos(r)], right = [Math.cos(r), Math.sin(r)];
 	return [f[0] * Math.cos(d) + right[0] * Math.sin(d), f[1] * Math.cos(d) + right[1] * Math.sin(d)];
+}
+
+/**
+ * The words for a plan's straight `dir`, which counts CLOCKWISE inside a plan (90 = right): not a mistake.
+ * The Java and the boxes count counterclockwise (dirToCcw).
+ */
+export const CW_WORDS = { 0: 'forward', 90: 'right', 180: 'back', 270: 'left' };
+
+/** A plan's clockwise `dir` as people and the Java see it: counterclockwise, -180 to 180 (90 = left, -90 = right). */
+export function dirToCcw(dir) {
+	let a = ((-(+dir || 0)) % 360 + 360) % 360;
+	if (a > 180) a -= 360;
+	return Math.abs(a) < 1e-9 ? 0 : a;
+}
+
+/** A counterclockwise direction (from a person or the Java) as a plan's clockwise `dir`, 0 to 360. */
+export function dirFromCcw(ccw) {
+	const a = ((-(+ccw || 0)) % 360 + 360) % 360;
+	return Math.abs(a) < 1e-9 ? 0 : a;
 }
 
 /** True if a move direction has a sideways part (a tank drive cannot do it). Like AutoDrive.move. */
@@ -720,10 +741,10 @@ export function autoNote(start, robot = [18, 18], half = 70.585) {
 
 /** One step in plain words, for the setup card ("Drive 24 in forward", "Turn 45° right"). */
 export function stepWords(s) {
-	const dirWord = (d) => ({ 0: 'forward', 180: 'back', 90: 'right', 270: 'left' }[((+d % 360) + 360) % 360] ?? `at ${num(+d)}° (clockwise from forward)`);
+	const dirWord = (d) => (CW_WORDS[((+d % 360) + 360) % 360] ?? `at ${num(dirToCcw(d))}° (counterclockwise from forward: 90 = left)`);
 	switch (s.kind) {
 		case 'move': return `${s.label}: drive ${num(Math.abs(+s.inches))} in ${dirWord((+s.dir || 0) + (+s.inches < 0 ? 180 : 0))}`;
-		case 'moveTurn': return `${s.label}: drive ${num(Math.abs(+s.inches))} in at ${num(+s.dir)}° and turn to ${num(+s.heading)}° on the way (both from the start heading)`;
+		case 'moveTurn': return `${s.label}: drive ${num(Math.abs(+s.inches))} in at ${num(dirToCcw((+s.dir || 0) + (+s.inches < 0 ? 180 : 0)))}° and turn to ${num(+s.heading)}° on the way (both from the start heading, counterclockwise)`;
 		case 'turn': return `${s.label}: turn ${num(Math.abs(+s.deg))}° ${+s.deg >= 0 ? 'left' : 'right'}`;
 		case 'turnTo': return `${s.label}: turn to ${num(+s.heading)}° (0 = the start heading)`;
 		case 'wait': return `${s.label}: wait ${num(+s.sec)} s`;
@@ -756,13 +777,13 @@ export function actionWords(code) {
 	return words ? words[0].toUpperCase() + words.slice(1) : c;
 }
 
-/** A drive direction in words (degrees clockwise from forward): "forward", "forward and left (308°)". */
+/** A plan's drive direction (clockwise inside) in words: "forward", "forward and left (52°)" (the number counterclockwise). */
 export function dirWords(d) {
 	const a = ((Math.round(+d) % 360) + 360) % 360;
-	const exact = { 0: 'forward', 90: 'right', 180: 'back', 270: 'left' }[a];
+	const exact = CW_WORDS[a];
 	if (exact) return exact;
 	const fb = a < 90 || a > 270 ? 'forward' : 'back', lr = a < 180 ? 'right' : 'left';
-	return `${fb} and ${lr} (${num(a)}°)`;
+	return `${fb} and ${lr} (${num(dirToCcw(a))}°)`;
 }
 
 /** One step in words for another team (the auto sheet): stepWords, with actions and directions in plain words. */
@@ -805,7 +826,7 @@ export function checkPlan(plan, opts = {}) {
 			if (!Number.isFinite(+s.inches) || !Number.isFinite(+s.dir)) add(i, 'bad', `${n}: give the inches and the direction as numbers.`);
 			else {
 				if (plan.drive === 'tank' && sideways(+s.dir)) {
-					add(i, 'bad', `${n} (${stepName(s)}): a strafe, not possible on a tank drive: it can only move at 0 (forward) or 180 (back), not ${num(+s.dir)}. Turn first, then move (the robot stops with "Turn first, then move").`);
+					add(i, 'bad', `${n} (${stepName(s)}): a strafe, not possible on a tank drive: it can only move at 0 (forward) or 180 (back), not ${num(dirToCcw(s.dir))}. Turn first, then move (the robot stops with "Turn first, then move").`);
 				}
 				if (Math.abs(+s.inches) < 0.05) add(i, 'warn', `${n} (${stepName(s)}): 0 inches, so it does nothing.`);
 			}
@@ -905,9 +926,27 @@ export function className(name) {
 /** One step as Java (no leading dot). */
 export function stepCode(s) {
 	switch (s.kind) {
-		case 'move': return `move(${javaString(s.label)}, ${val(s, 'inches')}, ${val(s, 'dir')}, ${val(s, 'power')})`;
-		case 'moveTurn': return `moveWithTurn(${javaString(s.label)}, ${val(s, 'inches')}, ${val(s, 'dir')}, ${val(s, 'heading')}, ${val(s, 'power')})`;
-		case 'turn': return `turn(${javaString(s.label)}, ${val(s, 'deg')}, ${val(s, 'power')})`;
+		case 'move': {
+			// A straight move in words (forward, back, left, right); another angle as move(...), counterclockwise.
+			const word = s.names?.dir ? null : CW_WORDS[(((+s.dir || 0) % 360) + 360) % 360];
+			// minus inches with a plain number: the other word ("back 8", not "forward -8")
+			if (word && +s.inches < 0 && !s.names?.inches) {
+				const other = { forward: 'back', back: 'forward', left: 'right', right: 'left' }[word];
+				return `${other}(${javaString(s.label)}, ${num(-s.inches)}, ${val(s, 'power')})`;
+			}
+			if (word) return `${word}(${javaString(s.label)}, ${val(s, 'inches')}, ${val(s, 'power')})`;
+			return `move(${javaString(s.label)}, ${val(s, 'inches')}, ${dirVal(s)}, ${val(s, 'power')})`;
+		}
+		case 'moveTurn': return `moveWithTurn(${javaString(s.label)}, ${val(s, 'inches')}, ${dirVal(s)}, ${val(s, 'heading')}, ${val(s, 'power')})`;
+		case 'turn': {
+			// turnLeft / turnRight with a plain number; a turn read through a name is written the way it was read.
+			const n = s.names?.deg;
+			if (n && Math.abs(+n.v - +s.deg) < 1e-9) return `${n.word || 'turn'}(${javaString(s.label)}, ${n.code}, ${val(s, 'power')})`;
+			if (Number.isFinite(+s.deg) && +s.deg !== 0) {
+				return `${+s.deg > 0 ? 'turnLeft' : 'turnRight'}(${javaString(s.label)}, ${num(Math.abs(+s.deg))}, ${val(s, 'power')})`;
+			}
+			return `turn(${javaString(s.label)}, ${val(s, 'deg')}, ${val(s, 'power')})`;
+		}
 		case 'turnTo': return `turnTo(${javaString(s.label)}, ${val(s, 'heading')}, ${val(s, 'power')})`;
 		case 'wait': return `waitSeconds(${javaString(s.label)}, ${val(s, 'sec')})`;
 		case 'run': return `run(${javaString(s.label)}, ${String(s.code ?? '').trim() || 'null'})`;
@@ -928,6 +967,14 @@ export function stepCode(s) {
 function val(o, k) {
 	const n = o.names?.[k];
 	return n && Math.abs(+n.v - +o[k]) < 1e-9 ? n.code : num(+o[k] || 0);
+}
+
+// A step's direction as Java: the name it was read through while unchanged, else the number, counterclockwise.
+// Only a name read under the counterclockwise rule (ccw: true, from fromJava since v0.40.0) is kept: a plan
+// saved before then has the name's old clockwise meaning, so its number is written instead.
+function dirVal(s) {
+	const n = s.names?.dir;
+	return n && n.ccw && Math.abs(+n.v - +s.dir) < 1e-9 ? n.code : num(Math.round(dirToCcw(s.dir) * 10) / 10);
 }
 
 function startCode(st) {
@@ -1045,7 +1092,7 @@ export function toScenario(plan, opts = {}) {
 
 // ------------------------------------------------------------------ Java in
 
-const STEP_METHODS = { move: 4, moveWithTurn: 5, turn: 3, turnTo: 3, waitSeconds: 2, run: 2, action: null, aimAtGoal: null, readyToLaunch: 2, waitForGoal: null, rememberHeading: 1, turnBack: 2, alongside: 1, parkWithSeconds: 1 };
+const STEP_METHODS = { move: 4, forward: 3, back: 3, left: 3, right: 3, moveWithTurn: 5, turn: 3, turnLeft: 3, turnRight: 3, turnTo: 3, waitSeconds: 2, run: 2, action: null, aimAtGoal: null, readyToLaunch: 2, waitForGoal: null, rememberHeading: 1, turnBack: 2, alongside: 1, parkWithSeconds: 1 };
 const OTHER_METHODS = ['menuChoice', 'menuYesNo', 'onlyIf', 'end', 'driveTo', 'follow', 'step', 'waitUntil'];
 
 /**
@@ -1145,11 +1192,12 @@ export function fromJava(src, opts = {}) {
 			const c = v.names[i];
 			if (!c) return;
 			if (/[A-Za-z_$]/.test(c.replace(/\bTunables(\s*\.\s*[A-Za-z_$][\w$]*)+/g, ''))) { own.add(c); return; }
-			(obj.names ??= {})[k] = { code: c, v: obj[k] };
+			(obj.names ??= {})[k] = k === 'dir' ? { code: c, v: obj[k], ccw: true } : { code: c, v: obj[k] };   // ccw: see dirVal
 		});
 		return obj;
 	};
 	const others = new Set();
+	let angledRead = 0, wordsRead = 0;   // for the note on autos from before v0.40.0
 	for (let i = 0; i < tk.length; i++) {
 		const t = tk[i];
 		// package a.b.c;
@@ -1217,13 +1265,28 @@ export function fromJava(src, opts = {}) {
 		if (m === 'waitForGoal' && args.length !== 1 && args.length !== 2) { problems.push(`${what}: needs 1 or 2 things, found ${args.length}. This step was left out.`); continue; }
 		if (m === 'aimAtGoal' && args.length !== 2 && args.length !== 3) { problems.push(`${what}: needs 2 or 3 things, found ${args.length}. This step was left out.`); continue; }
 		if (want != null && args.length !== want) { problems.push(`${what}: needs ${want} things, found ${args.length}. This step was left out.`); continue; }
-		if (['move', 'turn', 'turnTo', 'waitSeconds', 'run', 'aimAtGoal', 'readyToLaunch', 'waitForGoal', 'rememberHeading', 'turnBack'].includes(m) && label == null) {
+		if (['move', 'forward', 'back', 'left', 'right', 'turn', 'turnLeft', 'turnRight', 'turnTo', 'waitSeconds', 'run', 'aimAtGoal', 'readyToLaunch', 'waitForGoal', 'rememberHeading', 'turnBack'].includes(m) && label == null) {
 			problems.push(`${m}(${text(args[0])}, ...): write the name in quotes, e.g. "To the goal". This step was left out.`);
 			continue;
 		}
-		if (m === 'move') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'move', label, inches: v[0], dir: v[1], power: v[2] }, ['inches', 'dir', 'power'], v)); }
-		else if (m === 'moveWithTurn') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'moveTurn', label, inches: v[0], dir: v[1], heading: v[2], power: v[3] }, ['inches', 'dir', 'heading', 'power'], v)); }
+		// The Java's directions count counterclockwise (90 = left); a plan keeps them clockwise (dirFromCcw).
+		if (m === 'move' || m === 'moveWithTurn') { const d = evalNum(args[2] || []); if (d.bad == null && sideways(d.v)) angledRead++; }
+		if (['forward', 'back', 'left', 'right', 'turnLeft', 'turnRight'].includes(m)) wordsRead++;
+		if (m === 'move') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'move', label, inches: v[0], dir: dirFromCcw(v[1]), power: v[2] }, ['inches', 'dir', 'power'], v)); }
+		else if (['forward', 'back', 'left', 'right'].includes(m)) {
+			const v = nums(args.slice(1), what);
+			if (v) steps.push(named({ kind: 'move', label, inches: v[0], dir: { forward: 0, back: 180, right: 90, left: 270 }[m], power: v[1] }, ['inches', 'power'], v));
+		}
+		else if (m === 'moveWithTurn') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'moveTurn', label, inches: v[0], dir: dirFromCcw(v[1]), heading: v[2], power: v[3] }, ['inches', 'dir', 'heading', 'power'], v)); }
 		else if (m === 'turn') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'turn', label, deg: v[0], power: v[1] }, ['deg', 'power'], v)); }
+		else if (m === 'turnLeft' || m === 'turnRight') {
+			const v = nums(args.slice(1), what);
+			if (v) {
+				const st = named({ kind: 'turn', label, deg: m === 'turnLeft' ? v[0] : -v[0], power: v[1] }, ['deg', 'power'], v);
+				if (st.names?.deg) st.names.deg.word = m;   // written back the same way: turnRight(label, Tunables..., power)
+				steps.push(st);
+			}
+		}
 		else if (m === 'turnTo') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'turnTo', label, heading: v[0], power: v[1] }, ['heading', 'power'], v)); }
 		else if (m === 'waitSeconds') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'wait', label, sec: v[0] }, ['sec'], v)); }
 		else if (m === 'aimAtGoal') { const v = nums(args.slice(1), what); if (v) steps.push(v.length > 1 ? named({ kind: 'aim', label, timeout: v[0], sweep: v[1] }, ['timeout', 'sweep'], v) : named({ kind: 'aim', label, timeout: v[0] }, ['timeout'], v)); }
@@ -1253,6 +1316,8 @@ export function fromJava(src, opts = {}) {
 	}
 	const anything = start || steps.length;
 	if (!anything) problems.push('No s.start(...) or steps (move, turn, turnTo, waitSeconds, run, action, alongside, parkWithSeconds) found.');
+	// Moves at an angle and no word steps: maybe Java from before v0.40.0, when a move's 90 was right.
+	if (angledRead && !wordsRead) notes.push('This auto has moves at an angle. Since library v0.40.0, a move\'s 90 = LEFT (counterclockwise). If it was written before, its moves to the side show the wrong way round on the map: change each angle to its minus.');
 	if (anything && !start) notes.push('No s.start(...) line: the start spot stays as it was.');
 	else if (start && start.spot === false) notes.push('s.start(note, heading) gives no spot: the robot stays where it was on the map. Drag it to the real spot (the simulator needs the spot too).');
 	// A tank drive cannot strafe: each strafe becomes a turn and a drive, and the page lists them.

@@ -35,13 +35,13 @@ import com.crossbotics.ftchelper.util.MathUtil;
  * AutoDrive auto = new AutoDrive(this, driveConfig, autoConfig, imu);
  * waitForStart();
  * auto.move(24, 0, 0.6);      // 24 inches forward
- * auto.move(12, 90, 0.5);     // 12 inches right
+ * auto.move(12, -90, 0.5);    // 12 inches right (90 would be left)
  * auto.turn(90, 0.5);         // turn 90 degrees left
  * auto.turnTo(0, 0.5);        // face the starting direction again
  * }</pre>
  *
- * <p>Directions in {@link #move}: 0 = forward, 90 = right, 180 = back, -90 = left (clockwise).
- * Turns: positive = left (counterclockwise), like the IMU. The full sign rules: docs/conventions.md.
+ * <p>Every angle counts counterclockwise, like the IMU: in {@link #move}, 0 = forward, 90 = left,
+ * 180 = back, -90 = right; in turns, positive = left. The full sign rules: docs/conventions.md.
  *
  * Docs: docs/modules/drive.md (section "AutoDrive"). Tutorial 09 builds a first autonomous with it.
  */
@@ -227,7 +227,8 @@ public class AutoDrive {
      * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.
      *
      * @param distanceIn   inches. A negative distance goes the opposite way.
-     * @param directionDeg robot-relative direction: 0 forward, 90 right, 180 back, -90 left
+     * @param directionDeg robot-relative direction, counterclockwise like a heading: 0 forward, 90 left,
+     *                     180 back, -90 right
      * @param maxPower     0.1 to 1 (0.3 to 0.7 is usual). Never more than the DriveConfig power limit.
      * @return how the move ended: DONE, STALLED, TIMED_OUT or STOPPED
      * @throws IllegalArgumentException on a standard (tank) drive, for any direction except 0 or 180
@@ -256,9 +257,10 @@ public class AutoDrive {
             // Cruise speed: inside 0.1..1, and never below the slowest power the taper ends at.
             double maxSpeed = Math.max(cfg.moveMinPower, MathUtil.clamp(maxPower, 0.1, 1.0));
             double rad = Math.toRadians(directionDeg);
-            // Split the direction into a forward part (cosine) and a right part (sine).
+            // Split the direction into a forward part (cosine) and a left part (sine). The drive wants
+            // "right", so the left part goes in with a minus sign.
             // Tank: just +1 (forward) or -1 (back). Mecanum: see commandFor() below.
-            double[] command = tank ? new double[]{Math.signum(Math.cos(rad)), 0} : commandFor(Math.cos(rad), Math.sin(rad));
+            double[] command = tank ? new double[]{Math.signum(Math.cos(rad)), 0} : commandFor(Math.cos(rad), -Math.sin(rad));
 
             // Remember where the wheels started, so we can measure how far we have gone.
             int[] last = getWheelTicks();
@@ -316,8 +318,8 @@ public class AutoDrive {
      * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.
      *
      * @param distanceIn        inches (negative = opposite way)
-     * @param fieldDirectionDeg direction on the field, clockwise from where heading 0 points:
-     *                          0 forward, 90 right, 180 back, -90 left
+     * @param fieldDirectionDeg direction on the field, counterclockwise from where heading 0 points
+     *                          (like a heading): 0 forward, 90 left, 180 back, -90 right
      * @param targetHeadingDeg  heading to end at, IMU degrees (counterclockwise positive)
      * @param maxPower          translation power, 0.1 to 1
      * @param maxTurnPower      turn power, 0.1 to 1

@@ -75,8 +75,9 @@ read a number without it. Names count, with their capitals: `maxPower` works, `M
 **Why `MEASURE` stops:** a guessed limit or servo position can drive a part into the frame and break it.
 A guessed tuning number only makes a part slow or soft. More: [DEFAULT and MEASURE](../guides/tunables.md#default-and-measure).
 
-**Your own numbers.** A section that no part reads is yours, for example `Auto` for your autonomous
-distances. Your code reads them as `Tunables.Auto.parkInches`.
+**Your own numbers.** A section that no part reads is yours, for example `Score` for a wait in one of
+your actions. Your code reads it as `Tunables.Score.dropWaitSec`. An autonomous's distances stay in its
+own file ([why](05-autos.md#the-numbers-are-in-the-step)).
 
 ## The drive's numbers
 

@@ -47,7 +47,7 @@ public class AutoScoreAndPark extends StarterAuto {
     }
 
     // The route, run in order after ▶. Written for BLUE: RED flips the turns and sideways moves.
-    // move(name, inches, direction, power): direction 0 = forward, 90 = right, 180 = back, -90 = left.
+    // move(name, inches, direction, power): counterclockwise, 0 = forward, 90 = left, 180 = back, -90 = right.
     // turn(name, degrees, power): positive = left.
     @Override
     protected void buildRoutine(AutoRoutine r) {
@@ -72,7 +72,7 @@ public class AutoScoreAndPark extends StarterAuto {
 
         // Everything after thenPark() is the park: it still runs when the steps above ran out of time.
         r.thenPark()
-         .move("Park", 20, 90, 0.7);                                // right on BLUE, left on RED
+         .right("Park", 20, 0.7);                                   // right on BLUE, left on RED
     }
 
     // True when the yes/no INIT choice with this name is "YES" (false if it is missing).

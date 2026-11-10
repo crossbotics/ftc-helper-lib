@@ -14,7 +14,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 /**
  * Cookbook: autonomous (docs/cookbook.md#autonomous). An autonomous is one file in autos/: a list of
  * named steps, read in INIT (for the menu and the start note, again when a choice changes; nothing runs)
- * and after ▶ (start on the Driver Hub). Inches, degrees (0 forward, 90 right), power 0 to 1. The robot only drives after the
+ * and after ▶ (start on the Driver Hub). Inches, degrees (counterclockwise: 0 forward, 90 left), power 0 to 1. The robot only drives after the
  * Drive Tuner (Tunables.Drive.calibrated = true); the simulator runs it anyway.
  * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
@@ -64,10 +64,11 @@ public class AutonomousRecipes {
         protected void steps(Steps s, Robot robot) {
             // recipe: auto-moves
             s.start("Against our wall, facing the field", 0)
-             .move("Forward", 24, 0, 0.5)            // inches, direction (0 = forward), max power
-             .move("Sideways to the right", 12, 90, 0.5)   // mecanum only
-             .turn("Turn left 90", 90, 0.4)         // turns: counterclockwise (left) is +
-             .turn("Turn right 90", -90, 0.4)       // so a right turn is minus
+             .forward("Forward", 24, 0.5)                 // inches, max power
+             .right("Sideways to the right", 12, 0.5)     // mecanum only; also back(...), left(...)
+             .turnLeft("Turn left 90", 90, 0.4)           // also turnRight(...)
+             .move("At an angle", 12, 45, 0.5)            // angles count counterclockwise: 45 = forward and left
+             .turn("Turn right 90", -90, 0.4)             // the same rule: a right turn is minus
              .moveWithTurn("Back, turning", 12, 180, 90, 0.4)   // mecanum only: drive and turn at once
              .turnTo("Face the start way", 0, 0.4); // to a heading: 0 = the way it faced at the start
             // end recipe
@@ -100,7 +101,7 @@ public class AutonomousRecipes {
             double waitSec = alliance().pick(0.0, 2.0);
             s.start("Against our wall, facing the field", 0)
              .waitSeconds("Let our partner go first", waitSec)
-             .move("Leave the start", 24, 0, 0.4);
+             .forward("Leave the start", 24, 0.4);
             // end recipe
         }
     }
@@ -121,17 +122,17 @@ public class AutonomousRecipes {
              .menuYesNo("Score", true)                  // the drivers choose in INIT with the D-pad
              .menuChoice("Park", "Near", "Far")
              .onlyIf("Score")                           // these steps run only if "Score" is yes
-                 .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.5)
+                 .forward("To the goal", Tunables.Auto.toGoalInches, 0.5)
                  .action(Actions.scoreHigh(robot), 5)
              .end()                                     // never forget end()
              // end recipe
              // recipe: auto-park
              .parkWithSeconds(4)                        // the steps below always get the last 4 s
              .onlyIf("Park", "Near")
-                 .move("Park near", Tunables.Auto.parkInches, 90, 0.7)
+                 .right("Park near", Tunables.Auto.parkInches, 0.7)
              .end()
              .onlyIf("Park", "Far")
-                 .move("Park far", Tunables.Auto.parkInches * 2, 90, 0.7)
+                 .right("Park far", Tunables.Auto.parkInches * 2, 0.7)
              .end();
             // end recipe
         }
@@ -152,7 +153,7 @@ public class AutonomousRecipes {
             s.start("Against our wall, facing the field", 0)
              .run("Intake on", robot.intake::in)        // starts it and goes on at once
              .run("Lift up", () -> robot.lift.goTo("high"))
-             .move("To the pieces", 24, 0, 0.4)         // the intake and lift work while it drives
+             .forward("To the pieces", 24, 0.4)         // the intake and lift work while it drives
              .waitUntil("Lift at the top", robot.lift::isAtTarget, 2.0)
              .run("Intake off", robot.intake::stop);
             // end recipe
@@ -184,10 +185,10 @@ public class AutonomousRecipes {
     // recipe: auto-shared-opening
     /** The same first steps for several autos: a method that adds them to the list. */
     static Steps scorePreload(Steps s, Robot robot) {
-        return s.move("To the goal", Tunables.Auto.toGoalInches, 0, 0.5)
+        return s.forward("To the goal", Tunables.Auto.toGoalInches, 0.5)
                 .action(Actions.scoreHigh(robot), 5);
     }
-    // in each autonomous:  scorePreload(s.start("...", 0), robot).move("Park", 20, 90, 0.7);
+    // in each autonomous:  scorePreload(s.start("...", 0), robot).right("Park", 20, 0.7);
     // end recipe
 
     @Autonomous(name = "Cookbook Shared Opening", group = "Cookbook")
@@ -200,7 +201,7 @@ public class AutonomousRecipes {
 
         @Override
         protected void steps(Steps s, Robot robot) {
-            scorePreload(s.start("Against our wall, facing the field", 0), robot).move("Park", 20, 90, 0.7);
+            scorePreload(s.start("Against our wall, facing the field", 0), robot).right("Park", 20, 0.7);
         }
     }
 }

@@ -48,11 +48,12 @@ public class ExampleAuto extends LinearOpMode {
         waitForStart();
 
         // ---- RUN: each move WAITS until it is done (autonomous only, never in TeleOp) ----
-        // move(inches, direction, power): 0 = forward, 90 = right, 180 = back, -90 = left.
+        // move(inches, direction, power): counterclockwise, like a heading: 0 = forward, 90 = left,
+        // 180 = back, -90 = right.
         auto.move(24, 0, 0.6);      // forward
-        auto.move(24, 90, 0.5);     // right
+        auto.move(24, -90, 0.5);    // right
         auto.move(24, 180, 0.6);    // back
-        AutoDrive.Result last = auto.move(24, -90, 0.5);   // left
+        AutoDrive.Result last = auto.move(24, 90, 0.5);   // left
         auto.turnTo(0, 0.5);        // face the start direction
 
         telemetry.addData("Last move", last);

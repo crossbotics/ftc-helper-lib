@@ -69,7 +69,9 @@ your TeleOp after autonomous.
 
 | Step | What it does |
 | --- | --- |
-| `move(label, inches, direction, power)` | drive (0 forward, 90 right, 180 back, -90 left) |
+| `forward`, `back`, `left`, `right` `(label, inches, power)` | drive that way (no angle; `left`/`right` mecanum only) |
+| `move(label, inches, direction, power)` | drive at an angle (counterclockwise: 0 forward, 90 left, 180 back, -90 right) |
+| `turnLeft`, `turnRight` `(label, degrees, power)` | turn that way (no sign) |
 | `turn(label, degrees, power)` | turn by (positive = left) |
 | `turnTo(label, heading, power)` | turn to a heading (0 = start direction) |
 | `turnToward(label, bearingDeg, toleranceDeg, maxPower, timeoutSec)` | turn toward something the robot measures (`bearingDeg` gives degrees to turn, + left, NaN = not seen): up to 4 turns, a fresh reading after each, all inside `timeoutSec`. Not mirrored. `Steps.aimAtGoal` uses it |

@@ -44,7 +44,7 @@ public class Tut09DriveTuner extends LinearOpMode {
         // ---- RUN: one test, at half power so the measurements repeat well ----
         AutoDrive.Result result;
         switch (test) {
-            case "right 48": result = auto.move(48, 90, 0.5); break;   // 90 = right (mecanum only)
+            case "right 48": result = auto.move(48, -90, 0.5); break;  // -90 = right (mecanum only)
             case "turn left 90": result = auto.turn(90, 0.5); break;
             case "turn right 90": result = auto.turn(-90, 0.5); break;
             default: result = auto.move(48, 0, 0.5); break;

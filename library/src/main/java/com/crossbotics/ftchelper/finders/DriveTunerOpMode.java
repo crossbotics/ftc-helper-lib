@@ -290,10 +290,10 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
                 afterMove("Drive", auto.move(testDistanceIn(), 0, testPower));
                 break;
             case 2:
-                afterMove("Strafe", auto.move(testDistanceIn(), 90, testPower));
+                afterMove("Strafe", auto.move(testDistanceIn(), -90, testPower));
                 break;
             case 3:
-                afterMove("Strafe left", auto.move(testDistanceIn(), -90, testPower));
+                afterMove("Strafe left", auto.move(testDistanceIn(), 90, testPower));
                 break;
             default:
                 auto.resetHeading();

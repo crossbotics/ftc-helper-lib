@@ -98,16 +98,16 @@ public final class MecanumMixer {
     /**
      * The robot-relative direction of a field direction. Used by autonomous moves.
      *
-     * @param fieldClockwiseDeg direction to travel on the field, degrees clockwise from field-forward
-     *                          (0 = forward, 90 = right, 180 = back, -90 = left)
-     * @param headingCcwDeg     the robot's IMU heading, degrees, counterclockwise positive
+     * @param fieldCcwDeg   direction to travel on the field, degrees counterclockwise from field-forward,
+     *                      like a heading (0 = forward, 90 = left, 180 = back, -90 = right)
+     * @param headingCcwDeg the robot's IMU heading, degrees, counterclockwise positive
      * @return {forward, strafeRight}, a unit vector
      */
-    public static double[] fieldDirection(double fieldClockwiseDeg, double headingCcwDeg) {
-        // The robot turned LEFT by the heading, so a field direction looks that much further to the
-        // RIGHT (clockwise) from the robot. Adding the two gives the clockwise angle from the robot's front.
-        double radians = Math.toRadians(fieldClockwiseDeg + headingCcwDeg);
-        // Cosine = the forward part, sine = the right part (each between -1 and 1).
-        return new double[]{Math.cos(radians), Math.sin(radians)};
+    public static double[] fieldDirection(double fieldCcwDeg, double headingCcwDeg) {
+        // Both count the same way, so the direction seen from the robot is the difference: a robot
+        // turned 90 left sees a field-forward move as 90 to its right (-90).
+        double radians = Math.toRadians(fieldCcwDeg - headingCcwDeg);
+        // Cosine = the forward part, sine = the LEFT part; the drive wants right, so minus.
+        return new double[]{Math.cos(radians), -Math.sin(radians)};
     }
 }

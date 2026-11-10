@@ -296,7 +296,7 @@ AutoDrive auto = new AutoDrive(this, driveConfig, autoConfig, imu);   // this = 
 waitForStart();
 // Each line waits until that move is done, then the next one starts. 0.6 = top power.
 auto.move(24, 0, 0.6);    // 24 in forward
-auto.move(12, 90, 0.5);   // 12 in right
+auto.move(12, -90, 0.5);  // 12 in right (90 = left)
 auto.turn(90, 0.5);       // turn 90 degrees left
 auto.turnTo(0, 0.5);      // face the start direction
 ```
@@ -321,8 +321,8 @@ It resets the drive encoders, uses RUN_USING_ENCODER and brake, and sets power t
 
 | Method | What it does |
 | --- | --- |
-| `move(distanceIn, directionDeg, maxPower)` | drive straight, no turning. `directionDeg` is robot-relative: 0 forward, 90 right, 180 back, -90 left. A negative distance goes the other way. |
-| `moveWithTurn(distanceIn, fieldDirectionDeg, targetHeadingDeg, maxPower, maxTurnPower)` | drive in a FIELD direction (fixed even while turning) and turn to a heading at the same time. If the move finishes and the heading is not there yet, it finishes the turn inside the same time limit. After a stall it does not turn. |
+| `move(distanceIn, directionDeg, maxPower)` | drive straight, no turning. `directionDeg` is robot-relative and counterclockwise, like a heading: 0 forward, 90 left, 180 back, -90 right. A negative distance goes the other way. |
+| `moveWithTurn(distanceIn, fieldDirectionDeg, targetHeadingDeg, maxPower, maxTurnPower)` | drive in a FIELD direction (fixed even while turning; counterclockwise, 90 = left) and turn to a heading at the same time. If the move finishes and the heading is not there yet, it finishes the turn inside the same time limit. After a stall it does not turn. |
 | `turn(degrees, maxPower)` | turn in place by an amount. Positive = left. |
 | `turnTo(headingDeg, maxPower)` | turn in place to face a heading (IMU degrees, 0 = start direction) |
 | `turn(degrees, maxPower, timeoutSec)`, `turnTo(headingDeg, maxPower, timeoutSec)` | the same with a shorter time limit, for a step that has its own (never more than `actionTimeoutSec`) |
@@ -414,7 +414,7 @@ Do these in order. Write each result in your team's log.
 2. **Ticks per inch:** set `ticksPerRev` from the motor's product page and `wheelDiameterIn` to the
    real wheel size. Run `auto.move(48, 0, 0.5)`. Measure the real distance. New diameter =
    old diameter x (real distance / 48). Repeat until within half an inch.
-3. **Strafe (mecanum only):** run `auto.move(48, 90, 0.5)`. New `strafeCorrection` = old x (48 / real distance).
+3. **Strafe (mecanum only):** run `auto.move(48, -90, 0.5)` (to the right). New `strafeCorrection` = old x (48 / real distance).
 4. **Turns:** run `auto.turn(90, 0.5)` and `auto.turn(-90, 0.5)`. If it overshoots, raise `turnKd`
    or lower `turnKp`. If it stops short, raise `turnKp` (small steps, like 0.002) or set `turnMinPower`.
 5. Set `calibrationConfirmed = true`.
@@ -429,7 +429,7 @@ The math under `MecanumDrive`. It uses no hardware, so you can test it on a lapt
 | --- | --- |
 | `mix(forward, strafeRight, turnClockwise, limit)` | four wheel powers (FL, FR, BL, BR), scaled together so none is over `limit`. All zero if an input is NaN. |
 | `fieldToRobot(fieldForward, fieldRight, headingCcwDeg)` | changes a field-relative command into `{forward, strafeRight}` for the robot |
-| `fieldDirection(fieldClockwiseDeg, headingCcwDeg)` | a field direction as `{forward, strafeRight}` for the robot, with a length of 1 |
+| `fieldDirection(fieldCcwDeg, headingCcwDeg)` | a field direction as `{forward, strafeRight}` for the robot, with a length of 1 |
 | `FRONT_LEFT`, `FRONT_RIGHT`, `BACK_LEFT`, `BACK_RIGHT` | the index of each wheel (0-3) |
 
 ## DifferentialMixer

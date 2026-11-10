@@ -16,7 +16,7 @@ Game-specific code (launcher, feed, intake, vision, routes) is NOT in the librar
 | `input/ReverseDriveControl` | `drive.ReverseDrive` | No longer binds a button itself; you bind it (see [drive.md](modules/drive.md#reversedrive)). |
 | `utils/RumbleNotifier` | `gamepad.AimRumble` | Same feel and defaults. `setMinMax` is now `setFeel`; `setActive` is `setEnabled`. |
 | `utils/ToggleRumble` | `gamepad.ToggleRumble` | Pattern is set with `setPattern` instead of a static config class. `isConfirming` is now `isPlaying`. |
-| `drive/MecanumMixer` | `drive.MecanumMixer` | Same `mix`. `fieldVector` is now `fieldDirection`. New: `fieldToRobot` for field-centric TeleOp. |
+| `drive/MecanumMixer` | `drive.MecanumMixer` | Same `mix`. `fieldVector` is now `fieldDirection`, and its first number counts counterclockwise (90 = left) since v0.40.0. New: `fieldToRobot` for field-centric TeleOp. |
 | `drive/MecanumDrive` | `drive.MecanumDrive` | Takes a `DriveConfig` object instead of the static `RobotConfig`. New: `driveFieldCentric`, `setPowers`, `setBrake`. |
 | `drive/Drivebase` (Auto helpers) | `drive.AutoDrive` | Settings come from `AutoDriveConfig` (same default numbers as `DriveTuning`). `moveWithTwist` is now `moveWithTurn`. New: `turnTo`, a `Result` for each move. Changes below. |
 | `config/DriveTuning` | `drive.AutoDriveConfig` | Fields renamed in plain words, for example `TURN_KP` is `turnKp`, `AUTO_MOVE_MIN_SPEED` is `moveMinPower`. |

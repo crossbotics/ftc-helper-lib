@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.crossbotics.ftchelper.examples.cookbook.ActionRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.AimRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.AutonomousRecipes;
+import com.crossbotics.ftchelper.examples.cookbook.FiringActionRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.ButtonRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.DrivingRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.HoodRecipes;
@@ -49,7 +50,7 @@ public class CookbookTest {
     private static final List<Class<?>> GROUPS = Arrays.asList(DrivingRecipes.class, ButtonRecipes.class,
             MechanismRecipes.class, ActionRecipes.class, AutonomousRecipes.class, OdometryRecipes.class,
             PedroRecipes.class, TelemetryRecipes.class, PieceRecipes.class, AimRecipes.class, LightRecipes.class,
-            HoodRecipes.class, InterlockRecipes.class);
+            HoodRecipes.class, InterlockRecipes.class, FiringActionRecipes.class);
 
     // The whole files (one class per file, as in TeamCode): the robot, its TeleOp, an autonomous, the finders.
     private static final List<Class<?>> FILES = Arrays.asList(
@@ -163,6 +164,23 @@ public class CookbookTest {
             s.press(v -> s.g2().y = v);                            // score high
             assertTrue("the lift rises\n" + String.join("\n", s.screen()),
                     SimRun.waitFor(() -> s.robot().motors.get("lift").shaft() > 1000, 5));
+            assertEquals("", s.error());
+        }
+    }
+
+    // The five files page's first action (docs/five-files/04-actions-java.md): Y fires 3 pieces with the
+    // intake running, then the intake stops and the action is done.
+    @Test public void theFireWithIntakeActionFiresThreeThenStopsTheIntake() throws Exception {
+        try (SimRun s = new SimRun(robotFile(FiringActionRecipes.Robot.class).toString())) {
+            s.sim.ds.register("Cookbook Fire With Intake", "TeleOp", FiringActionRecipes.Controls.class);
+            s.init("Cookbook Fire With Intake");
+            s.start();
+            s.press(v -> s.g2().y = v);
+            assertTrue("the intake runs while it fires", SimRun.waitFor(() -> s.robot().motors.get("intake").userPower() > 0.5, 1));
+            assertTrue("3 shots, then done\n" + String.join("\n", s.screen()) + "\nshots: " + s.robot().shots(),
+                    SimRun.waitFor(() -> s.screenHas("Fire with intake: done"), 12));
+            assertEquals("3 pieces fired", 3, s.robot().shots());
+            assertEquals("the last step stops the intake", 0, s.robot().motors.get("intake").userPower(), 1e-9);
             assertEquals("", s.error());
         }
     }

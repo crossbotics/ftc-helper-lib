@@ -169,11 +169,11 @@ public class AutoRoutine {
     // ---------------------------------------------------------------------------------------
 
     /**
-     * Drives a distance: direction 0 forward, 90 right, 180 back, -90 left (robot-relative).
+     * Drives a distance: direction 0 forward, 90 left, 180 back, -90 right (robot-relative, counterclockwise).
      *
      * @param label       the name shown on the Driver Station and in the report
      * @param distanceIn  inches
-     * @param directionDeg degrees, clockwise from forward (mirrored for RED)
+     * @param directionDeg degrees from forward, counterclockwise like a heading: 90 = left (mirrored for RED)
      * @param maxPower    0 to 1
      */
     public AutoRoutine move(String label, double distanceIn, double directionDeg, double maxPower) {
@@ -183,6 +183,36 @@ public class AutoRoutine {
     /** Turns by an amount, in degrees: positive = left (mirrored for RED). */
     public AutoRoutine turn(String label, double degrees, double maxPower) {
         return add(label, ctx -> record(takeDrive().turn(m(degrees), maxPower)));
+    }
+
+    /** Drives forward: {@code move(label, inches, 0, maxPower)}. A plus number of inches (minus goes back). */
+    public AutoRoutine forward(String label, double inches, double maxPower) {
+        return move(label, inches, 0, maxPower);
+    }
+
+    /** Drives backward: {@code move(label, inches, 180, maxPower)}. A plus number of inches (minus goes forward). */
+    public AutoRoutine back(String label, double inches, double maxPower) {
+        return move(label, inches, 180, maxPower);
+    }
+
+    /** Slides left, still facing the same way (mecanum only): {@code move(label, inches, 90, maxPower)}. Mirrored for RED. */
+    public AutoRoutine left(String label, double inches, double maxPower) {
+        return move(label, inches, 90, maxPower);
+    }
+
+    /** Slides right, still facing the same way (mecanum only): {@code move(label, inches, -90, maxPower)}. Mirrored for RED. */
+    public AutoRoutine right(String label, double inches, double maxPower) {
+        return move(label, inches, -90, maxPower);
+    }
+
+    /** Turns left by this many degrees: {@code turn(label, degrees, maxPower)}. A plus number (minus turns right). */
+    public AutoRoutine turnLeft(String label, double degrees, double maxPower) {
+        return turn(label, degrees, maxPower);
+    }
+
+    /** Turns right by this many degrees: {@code turn(label, -degrees, maxPower)}. A plus number (minus turns left). */
+    public AutoRoutine turnRight(String label, double degrees, double maxPower) {
+        return turn(label, -degrees, maxPower);
     }
 
     /** Turns to a heading (0 = the direction at the start, positive = left; mirrored for RED). */

@@ -61,7 +61,7 @@ public class Tut16EasyAuto extends EasyAuto {
     }
 
     // ---- 3. The steps (written for BLUE; RED is mirrored) ----
-    // move(name, inches, direction, power): 0 = forward, 90 = right. Turns: positive = left.
+    // move(name, inches, direction, power): 0 = forward, 90 = left (counterclockwise). Turns: positive = left.
     @Override
     protected void buildRoutine(AutoRoutine r) {
         r.step("Grab", claw.goToStep("CLOSED"))
@@ -81,6 +81,6 @@ public class Tut16EasyAuto extends EasyAuto {
 
         // The park part runs even if the main steps ran out of time.
         r.thenPark()
-         .move("Park", 20, 90, 0.7);
+         .right("Park", 20, 0.7);
     }
 }

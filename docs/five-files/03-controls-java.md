@@ -246,6 +246,6 @@ buttons. The message names the button.
 
 ---
 
-**Next:** `Actions.java` (coming). Until then: [lesson 5, actions](../tutorials/start/05-actions.md).
+**Next:** [Actions.java](04-actions-java.md).
 **Look it up:** [every press type and option](../guides/buttons.md). **Go deeper:**
 [the cookbook's button recipes](../cookbook.md#buttons-and-gestures).

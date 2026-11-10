@@ -93,7 +93,7 @@ Route, profile), and warnings. The distances in the steps only work from that ex
     }
 
     r.thenPark()
-     .move("Park", 20, 90, 0.7);
+     .right("Park", 20, 0.7);
 }
 ```
 
@@ -102,8 +102,8 @@ Read it out loud: it IS the plan. Things to notice:
 - **Labels** show on the Driver Station during the run and in the report. Make them say what the robot does.
 - **`startStep` vs `goToStep`:** `lift.startStep("HIGH")` starts the lift and goes on at once; it
   rises while the robot drives. `claw.goToStep("CLOSED")` waits until the claw should be closed.
-- **Moves and turns:** `move(name, inches, direction, power)`, with direction 0 = forward, 90 = right,
-  180 = back, -90 = left. Turns: positive degrees = left. `turnTo(..., 0, ...)` faces the start direction.
+- **Moves and turns:** `move(name, inches, direction, power)`, with direction 0 = forward, 90 = left,
+  180 = back, -90 = right. Turns: positive degrees = left too. Every angle counts counterclockwise. `turnTo(..., 0, ...)` faces the start direction.
   A mecanum robot can also drive AND turn at once: `moveWithTurn(name, inches, direction, heading, power)`.
   Its direction counts from the start direction (like `turnTo`), because the robot turns on the way.
 - **`waitUntil` has a time limit** (2 s). `lift::isAtTarget` is short for `() -> lift.isAtTarget()`:

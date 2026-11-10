@@ -15,20 +15,22 @@ import java.util.function.BooleanSupplier;
  * s.start("Back wall, 2nd tile from the left, facing the field", 0)
  *  .menuYesNo("Score", true)
  *  .run("Hold the piece", robot.claw::close)
- *  .move("Leave the wall", 4, 0, 0.4)
+ *  .forward("Leave the wall", 4, 0.4)
  *  .onlyIf("Score")
  *      .run("Lift up", () -> robot.lift.goTo("high"))       // rises during the next moves
- *      .move("Drive to the goal", 24, 0, 0.6)
- *      .turn("Face the goal", 45, 0.5)                      // mirrored for RED
+ *      .forward("Drive to the goal", 24, 0.6)
+ *      .turnLeft("Face the goal", 45, 0.5)                  // mirrored for RED
  *      .waitUntil("Lift at the top", robot.lift::isAtTarget, 2.0)
  *      .run("Drop", robot.claw::open)
  *  .end()
  *  .parkWithSeconds(4)
- *  .move("Park", 20, 90, 0.7);
+ *  .right("Park", 20, 0.7);
  * }</pre>
  *
- * <p>Moves and turns: directions in degrees, clockwise from forward for moves (0 forward, 90 right),
- * counterclockwise + for turns; written for BLUE and mirrored for RED. Distances in inches, powers
+ * <p>Moves and turns: say the way in words ({@code forward}, {@code back}, {@code left}, {@code right},
+ * {@code turnLeft}, {@code turnRight}), or give an angle. Every angle counts counterclockwise, like the
+ * IMU: 0 = forward, 90 = left, 180 = back, -90 = right, for a move's direction, a turn and a heading.
+ * Written for BLUE and mirrored for RED. Distances in inches, powers
  * 0 to 1. Each move or turn waits until it is done; {@code run} starts something and goes on at once
  * (the mechanisms keep moving during the next steps).
  *
@@ -57,6 +59,9 @@ public final class Steps {
     double headingDeg = 0;
     double spotX = Double.NaN, spotY = Double.NaN;
     double parkSec = 0;
+    // The moves written with an angle that is not straight (not 0 or 180): Auto names them in INIT, because
+    // their meaning changed in v0.40.0 (90 = left now). Word steps (left, right) are not listed.
+    final java.util.List<String> angledMoves = new java.util.ArrayList<>();
 
     Steps(AutoRoutine routine, InitMenu menu, RobotDefinition robot) {
         this(routine, menu, robot, routine == null);
@@ -185,10 +190,67 @@ public final class Steps {
 
     // ----------------------------- steps -----------------------------
 
-    /** Drives a distance in a direction (clockwise from forward: 0 forward, 90 right, 180 back). Waits until done. */
+    /**
+     * Drives a distance at an angle, without turning. Waits until done. The angle counts counterclockwise,
+     * like a heading: 0 forward, 90 left, 180 back, -90 right, 45 forward and to the left. Only a mecanum
+     * drive can go at an angle other than 0 or 180. For a straight move, the words are easier:
+     * {@link #forward}, {@link #back}, {@link #left}, {@link #right}.
+     *
+     * @param label        the name in the report
+     * @param inches       how far, inches (negative = the other way)
+     * @param directionDeg the way to drive, degrees from the robot's front, counterclockwise +
+     * @param maxPower     0.1 to 1
+     * @return this list, to add the next step
+     */
     public Steps move(String label, double inches, double directionDeg, double maxPower) {
+        if (!straight(directionDeg) && !angledMoves.contains(label)) angledMoves.add(label);
+        return moveAt(label, inches, directionDeg, maxPower);
+    }
+
+    // A move with no INIT note: the word steps use it.
+    private Steps moveAt(String label, double inches, double directionDeg, double maxPower) {
         if (adding()) routine.move(label, inches, directionDeg, maxPower);
         return this;
+    }
+
+    // 0 or 180 (forward or back): the same in the old and the new angle rule.
+    private static boolean straight(double directionDeg) {
+        double a = ((directionDeg % 360) + 360) % 360;
+        return Math.abs(a) < 1e-9 || Math.abs(a - 180) < 1e-9 || Math.abs(a - 360) < 1e-9;
+    }
+
+    /**
+     * Drives forward, without turning. The same as {@code move(label, inches, 0, maxPower)}, and the same
+     * for both alliances. Waits until done. Write the inches as a plus number: a minus number goes back.
+     */
+    public Steps forward(String label, double inches, double maxPower) {
+        return moveAt(label, inches, 0, maxPower);
+    }
+
+    /**
+     * Drives backward, without turning. The same as {@code move(label, inches, 180, maxPower)}, and the
+     * same for both alliances. Waits until done. Write the inches as a plus number: a minus number goes forward.
+     */
+    public Steps back(String label, double inches, double maxPower) {
+        return moveAt(label, inches, 180, maxPower);
+    }
+
+    /**
+     * Slides to the robot's left, still facing the same way. The same as {@code move(label, inches, 90,
+     * maxPower)}. Mirrored for RED. Waits until done. Mecanum only: on a tank drive the step stops with
+     * "Turn first, then move". Write the inches as a plus number: a minus number goes right.
+     */
+    public Steps left(String label, double inches, double maxPower) {
+        return moveAt(label, inches, 90, maxPower);
+    }
+
+    /**
+     * Slides to the robot's right, still facing the same way. The same as {@code move(label, inches, -90,
+     * maxPower)}. Mirrored for RED. Waits until done. Mecanum only: on a tank drive the step stops with
+     * "Turn first, then move". Write the inches as a plus number: a minus number goes left.
+     */
+    public Steps right(String label, double inches, double maxPower) {
+        return moveAt(label, inches, -90, maxPower);
     }
 
     /**
@@ -197,22 +259,23 @@ public final class Steps {
      * drive ends before the turn, it finishes the turn (inside the same time limit). Mirrored for RED.
      *
      * <p>The direction stays fixed on the FIELD while the robot turns, so it is measured like
-     * {@link #turnTo}'s heading: from the way the robot faced at the start, but clockwise (0 = that way,
-     * 90 = to its right then, 180 = the opposite way, -90 = left).
+     * {@link #turnTo}'s heading: from the way the robot faced at the start, counterclockwise (0 = that
+     * way, 90 = to its left then, 180 = the opposite way, -90 = right).
      *
      * <pre>{@code
      * s.start("Back wall, left corner tile, facing the field", 0)
-     *  .moveWithTurn("Out and face the goal", 30, 20, 45, 0.6);   // 30 in, 20° right of straight out, end facing 45° left
+     *  .moveWithTurn("Out and face the goal", 30, -20, 45, 0.6);   // 30 in, 20° right of straight out, end facing 45° left
      * }</pre>
      *
      * @param label        the name in the report
      * @param inches       how far, inches (negative = the other way)
-     * @param directionDeg the way to drive, degrees clockwise from the start heading
+     * @param directionDeg the way to drive, degrees from the start heading, counterclockwise +
      * @param headingDeg   the heading to end at, degrees (0 = the start heading, counterclockwise +)
      * @param maxPower     0.1 to 1, for driving and for turning
      * @return this list, to add the next step
      */
     public Steps moveWithTurn(String label, double inches, double directionDeg, double headingDeg, double maxPower) {
+        if (!straight(directionDeg) && !angledMoves.contains(label)) angledMoves.add(label);
         if (adding()) routine.moveWithTurn(label, inches, directionDeg, headingDeg, maxPower, maxPower);
         return this;
     }
@@ -404,10 +467,26 @@ public final class Steps {
         return this;
     }
 
-    /** Turns by an angle (counterclockwise +). Waits until done. */
+    /** Turns in place by an angle, counterclockwise +: 90 = a quarter turn left, -90 = right. Waits until done. */
     public Steps turn(String label, double degrees, double maxPower) {
         if (adding()) routine.turn(label, degrees, maxPower);
         return this;
+    }
+
+    /**
+     * Turns in place to the left by this many degrees. The same as {@code turn(label, degrees, maxPower)}.
+     * Waits until done. Write the degrees as a plus number: a minus number turns right.
+     */
+    public Steps turnLeft(String label, double degrees, double maxPower) {
+        return turn(label, degrees, maxPower);
+    }
+
+    /**
+     * Turns in place to the right by this many degrees. The same as {@code turn(label, -degrees, maxPower)}.
+     * Waits until done. Write the degrees as a plus number: a minus number turns left.
+     */
+    public Steps turnRight(String label, double degrees, double maxPower) {
+        return turn(label, -degrees, maxPower);
     }
 
     /** Turns to a heading (0 = the way it faced at the start, counterclockwise +). Waits until done. */

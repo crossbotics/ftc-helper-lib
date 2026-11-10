@@ -2,6 +2,46 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.40.0 - 2026-11-10
+
+### Changed (read this before you update)
+
+- **Every angle in an autonomous now counts counterclockwise: 90 = LEFT.** A move's direction in `move(...)` and
+  `moveWithTurn(...)` used to count clockwise (90 = right), the other way from turns and headings. Now one rule
+  covers all of them: 0 forward, 90 left, 180 back, -90 right, like the IMU. This is in `Steps`, `AutoRoutine`,
+  `EasyAuto` and `AutoDrive`, and in the auto builder (its boxes and the Java it reads and writes).
+  **To update an old auto:** a move at 0 or 180 does not change. Any other direction becomes its minus:
+  `move("Park", 20, 90, 0.7)` (right) becomes `move("Park", 20, -90, 0.7)`, or `right("Park", 20, 0.7)`;
+  `moveWithTurn(..., 305, ...)` becomes `moveWithTurn(..., 55, ...)` (the minus, or 360 minus it: 270 = left
+  becomes 90). **Check every auto:** look at each `move(` and `moveWithTurn(` whose direction is not 0 or 180.
+  Java that the auto builder wrote before this version counts clockwise too: change it the same way (if you
+  load it into the new builder, its moves to the side show the wrong way round on the map until you do).
+  Builder plans saved in the browser need nothing. INIT now names an auto's moves at an angle, with
+  "since library v0.40.0, 90 = LEFT", for a few releases. **Why:** two rules for "90" were the most confusing
+  part of an autonomous. TeleOp driving does not change, and the Drive Tuner's Strafe test still drives right.
+  `MecanumMixer.fieldDirection(fieldCcwDeg, headingCcwDeg)` counts counterclockwise too.
+
+### Added
+
+- **Docs: the Actions.java page** (docs/five-files/04-actions-java.md): do you need it yet (the ready-made
+  actions), the smallest file, a first action line by line (fire 3 with the intake running), the four steps, what
+  each part can wait for, the action on a button and in an autonomous, the rules, checks and fixes. Its code is
+  compiled: `examples/.../firstrobot/Actions.java` and `examples/.../cookbook/FiringActionRecipes.java`
+  (CookbookTest runs its TeleOp and autonomous).
+- **Docs: the autos/ page** (docs/five-files/05-autos.md): the smallest autonomous (it drives out of the start
+  spot), line by line; why an auto's distances stay in its own file (each auto keeps its own numbers, and the auto
+  builder can read and change them); tune the drive first (Tune and check, Drive Tuner, `calibrated = true`); what
+  every auto gets; the first steps to add; checks and fixes. Its code is compiled:
+  `examples/.../firstrobot/autos/FirstAuto.java` (a simulator test runs it).
+- **Word steps for autonomous:** `forward`, `back`, `left`, `right` `(label, inches, power)` and `turnLeft`,
+  `turnRight` `(label, degrees, power)`, in `Steps` (the five files' autos) and `AutoRoutine` (EasyAuto, the starter kit). The word says which way, so there is no angle to get wrong. The auto
+  builder writes them for straight moves and turns, and reads them. `move` and `turn` stay, for any angle.
+  Pictures: docs/images/autonomous-angles.svg (new) and robot-signs.svg (updated).
+
+### Changed
+
+- **Docs:** the Tunables.java page's "your own numbers" example is no longer an autonomous distance.
+
 ## v0.39.0 - 2026-11-09
 
 ### Added

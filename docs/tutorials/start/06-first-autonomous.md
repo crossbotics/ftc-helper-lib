@@ -104,10 +104,10 @@ public class ScoreAndPark extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         s.start("Against our wall, facing the field", 0)
          .run("Hold the piece", robot.claw::close)
-         .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)
+         .forward("To the goal", Tunables.Auto.toGoalInches, 0.6)
          .action(Actions.scoreHigh(robot), 5)
          .parkWithSeconds(3)
-         .move("Park", Tunables.Auto.parkInches, 90, 0.7);
+         .right("Park", Tunables.Auto.parkInches, 0.7);
     }
 }
 ```
@@ -139,10 +139,10 @@ public class ScoreAndPark extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         s.start("Against our wall, facing the field", 0)
          .run("Hold the piece", robot.claw::close)
-         .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)
+         .forward("To the goal", Tunables.Auto.toGoalInches, 0.6)
          .action(Actions.scoreHigh(robot), 5)
          .parkWithSeconds(3)
-         .move("Park", Tunables.Auto.parkInches, 90, 0.7);
+         .right("Park", Tunables.Auto.parkInches, 0.7);
     }
 }
 ```
@@ -170,25 +170,29 @@ public class ScoreAndPark extends Auto<Robot> {
   robot faces, in degrees): 0 = straight away from your drivers. TeleOp's field-centric "forward" uses it, so get it right.
 - `run("Hold the piece", robot.claw::close)` **starts** something and goes on at once. The claw closes
   while the next step already drives.
-- `move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)`: drive this many inches, in direction 0
-  (forward), at most 60% power. Directions go **clockwise** from forward: 90 right, 180 back, 270 left.
-  A move waits until it is done, and slows down near the end so it does not overshoot.
+- `forward("To the goal", Tunables.Auto.toGoalInches, 0.6)`: drive this many inches forward, at most 60%
+  power. The other words: `back`, `left`, `right`. A move waits until it is done, and slows down near the
+  end so it does not overshoot.
 - `action(Actions.scoreHigh(robot), 5)`: the same "score high" action a button runs in TeleOp, written
   once in `Actions.java`. The list waits until it is done, at most 5 s. If the lift never reaches the
   top, the action stops safely (the claw stays shut) and the report says why.
 - `parkWithSeconds(3)` splits the list in two. Parking points come at the very end, so the park
   must never run out of time. The steps **above** it stop when only 3 s are left; the steps **below**
   it always run.
-- `move("Park", Tunables.Auto.parkInches, 90, 0.7)`: 90 = to the right (a mecanum robot strafes).
+- `right("Park", Tunables.Auto.parkInches, 0.7)`: slide to the right, still facing the same way (a
+  mecanum robot strafes).
 
-> **Two different 90s.** A **move's direction** goes clockwise from the robot's front: 90 = to the
-> robot's **right**. A **heading** (`start(note, 0)`, `turnTo(...)`, and lesson 7's field points) goes
-> counterclockwise: heading 90 = turned to the **left**. **Why two rules?** A move's direction is like
-> the stick (pushed right = go right); a heading is the IMU's own rule (turning left counts up). The
-> word tells you which: *direction* in a move, *heading* everywhere else
+> **One rule for every angle.** When a step needs an angle (`move` at an angle, `turn`, a heading in
+> `start(note, 0)`, `turnTo(...)`, and lesson 7's field points), it counts counterclockwise, like the
+> IMU: 90 = **left**, -90 = right. So `move("Slide", 12, 90, 0.5)` slides left
 > ([signs and units](../../conventions.md)).
 
 ## 3. Route numbers live in Tunables.Auto
+
+> **Newer advice: plain numbers in the step.** The [autos/ page](../../five-files/05-autos.md#the-numbers-are-in-the-step)
+> keeps each auto's distances in its own file (`forward("To the goal", 24, 0.6)`), so a change to one auto
+> never changes another, and the auto builder can change them. `Tunables.Auto` still works, and this lesson
+> uses it; the lesson is being rewritten to match.
 
 Add the two numbers to the `Auto` section of your `Tunables.java`. **Keep the lines that are already
 there** (the Quick start's `leaveInches` is read by its `FirstAuto`: delete it and that file no longer
