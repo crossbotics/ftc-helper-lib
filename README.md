@@ -127,7 +127,7 @@ Everything else, by what you want to do:
 | **A quick answer: "how do I...?"** (a few lines of tested code to copy, by topic) | [Cookbook](docs/cookbook.md) |
 | **Install Android Studio and get the robot project** (no Java needed) | [Set up](docs/setup/README.md) |
 | Know Scratch or Blocks: see where each block went in Java | [From Blocks to Java](docs/blocks-to-java.md) |
-| **Get a robot driving, then a first autonomous** (an unchanged starter bot, a changed starter bot, or your own robot) | [Quick start: pick your road](docs/quick-start.md#pick-your-road) |
+| **Get a robot driving, then a first autonomous** (a starter bot, a robot like an example, or your own design) | [Pick your start](docs/pick-your-start/README.md), then [the five files](docs/five-files/README.md) |
 | Add the library to our robot project | [Add the library](docs/setup/04-add-the-library.md) |
 | **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/start/01-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
 | **Start from code for a robot like ours** (kit bots, example robots, or made from our configuration) | [Pick your template](docs/templates.md) |

@@ -2,6 +2,18 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **Docs: Pick your start** (`docs/pick-your-start/`), between Set up and the five files. One page to pick
+  how you start (a starter bot, a common setup, or a blank slate), one short page for each, and one page
+  for copying example files into TeamCode. Quick start, Pick your template and the starter bots guide now
+  link to it.
+- **Examples: every common setup has all five files.** `odometrybot` gets an empty `Actions.java`, and
+  `pedrobot` gets an empty `Actions.java` and a `Controls.java` ("Pedro Bot TeleOp": the intake's buttons and
+  the "Where" line). Its autonomous now picks that TeleOp after it ends.
+
 ## v0.40.0 - 2026-11-10
 
 ### Changed (read this before you update)

@@ -23,4 +23,4 @@ Check its "Done when" and go on to the next.
 
 **Only using the simulator on this laptop?** Skip pages 5, 6 and 7: they need the hubs.
 
-**After Set up:** start using the library. Pick the code you start from: [Quick start: pick your road](../quick-start.md#pick-your-road).
+**After Set up:** start using the library. Pick the code you start from: [Pick your start](../pick-your-start/README.md).

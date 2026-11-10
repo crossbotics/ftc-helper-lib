@@ -27,7 +27,7 @@ wheels, built on a Strafer chassis. That makes five. They are also worked exampl
 [`revbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/revbot),
 [`andymarkbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/andymarkbot) and
 [`studicabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/studicabot). To copy one into
-your TeamCode: [Pick your template](../templates.md). The library has no catapult part (AndyMark) and no
+your TeamCode: [Start from a starter bot](../pick-your-start/01-starter-bot.md). The library has no catapult part (AndyMark) and no
 gear between a flywheel motor and its wheel (Studica): those two files use the closest part and say so.
 Each file names each part's motor or servo (`.part(...)`, or the motor's id in a launcher's brackets),
 so the starting values are those parts' real numbers. The parts that are not in the parts
@@ -400,8 +400,7 @@ comments in the code do not say:
 
 ## You changed your starter bot
 
-This is road 2 of the [Quick start](../quick-start.md#road-2-a-changed-starter-bot). Start from your
-starter bot's template ([way C](../quick-start.md#c-copy-your-starter-bots-template)), then make your
+Start from your starter bot's code ([Start from a starter bot](../pick-your-start/01-starter-bot.md)), then make your
 changes **one at a time**: change, build, check. **Why:** when something breaks, you know which change
 did it.
 

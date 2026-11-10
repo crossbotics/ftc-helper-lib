@@ -13,6 +13,8 @@ autonomous take one or two more sessions.
 
 ## Pick your road
 
+The same choice as short pages, one per start: [Pick your start](pick-your-start/README.md).
+
 | Your robot | Your road |
 | --- | --- |
 | A **starter bot** from goBILDA (tank or mecanum), REV (DUO), AndyMark (Robits) or Studica, built as the seller's guide says | [Road 1: an unchanged starter bot](#road-1-an-unchanged-starter-bot) |
@@ -233,9 +235,8 @@ folders are inside `ftc-helper-lib/examples/src/main/java/com/crossbotics/ftchel
 | Studica FTC Starter Bot | [`studicabot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/studicabot) | `autos/ShootAndLeave.java` |
 
 Copy your starter bot's files into TeamCode with the steps in
-[Copy a template into TeamCode](templates.md#copy-a-template-into-teamcode) (the `package` lines, the
-imports in `autos/`, and the `@Disabled` lines). Do its steps 1 to 5 now. Its step 6 (build and check)
-is section 5 below. (goBILDA's `autos/AutoCookbook.java` is a menu of example steps: copy it only if you
+[Copy example files into TeamCode](pick-your-start/04-copy-into-teamcode.md) (the `package` lines, the
+imports in `autos/`, and the `@Disabled` lines). Build and check them in section 5 below. (goBILDA's `autos/AutoCookbook.java` is a menu of example steps: copy it only if you
 want it.)
 
 ## 4. Change the STEP lines

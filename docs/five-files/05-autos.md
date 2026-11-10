@@ -10,6 +10,9 @@ the **smallest robot that works**: it drives in TeleOp, and it runs an autonomou
 
 ## Make the folder
 
+**Came from [Pick your start](../pick-your-start/README.md)?** You already have the `autos` folder and an
+autonomous in it. Do not make them again. Read this page, and compare your file with the one below.
+
 In Android Studio's **Project** panel, right-click the `teamcode` folder, then **New > Package**. Type
 `autos` after the `teamcode.` that is already there.
 

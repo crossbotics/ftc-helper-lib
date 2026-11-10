@@ -4,19 +4,16 @@
 
 **For:** a team that starts its robot code. **You need:** the library in your robot project
 ([Add the library](setup/04-add-the-library.md)). New to the library? Start at
-[Pick your road](quick-start.md#pick-your-road) in the Quick start: it uses this page in its place and
-says what comes after (the configuration, the Hardware Check, the finders, the first autonomous).
+[Pick your start](pick-your-start/README.md): short pages for the same choice, one per start.
 
 A **template** is robot code you copy and then change. Start from the one that looks most like your
 robot: you delete less and type less. Most of them (all but the last row) are a robot in five files:
 `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and an `autos` folder
-([Lesson 1](tutorials/start/01-robot-in-five-files.md) explains them). The exceptions:
+([Lesson 1](tutorials/start/01-robot-in-five-files.md) explains them).
 
-- `odometrybot` has no `Actions.java` (it needs none), and `pedrobot` has no `Controls.java` (so no
-  TeleOp of its own) and no `Actions.java`. Use `odometrybot`'s `Controls.java`, or your own, with it.
-- Some have extra files: a finder that knows the robot (`lessonbot/DriveTuner.java`,
-  `odometrybot/OdometryTuner.java`, `turretbot/HoodFinder.java` and `ShotTuner.java`), or Pedro's
-  numbers (`pedrobot/PedroConstants.java`). Copy them with the rest.
+Some have extra files: a finder that knows the robot (`lessonbot/DriveTuner.java`,
+`odometrybot/OdometryTuner.java`, `turretbot/HoodFinder.java` and `ShotTuner.java`), or Pedro's
+numbers (`pedrobot/PedroConstants.java`). Copy them with the rest.
 
 ## Your robot looks like this: start from that
 
@@ -42,7 +39,7 @@ copy single lines from the other templates later (for example the launcher line 
 
 **The kit bots** use the same configuration names as each seller's own code, so the files run on that
 kit as it is. Where each number comes from, and what each kit bot's code does differently (buttons,
-guessed numbers): [The four BIOBUZZ starter bots](guides/starter-bots.md) ([REV](guides/starter-bots.md#rev-bot-code),
+guessed numbers): [The BIOBUZZ starter bots](guides/starter-bots.md) ([REV](guides/starter-bots.md#rev-bot-code),
 [goBILDA](guides/starter-bots.md#gobilda-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code), [Studica](guides/starter-bots.md#studica-bot-code)).
 Two kit mechanisms are not parts of the library, so their templates use the closest part and say so
 in `Robot.java`:
@@ -57,34 +54,13 @@ in `Robot.java`:
 
 ## Copy a template into TeamCode
 
-`:sim:newRobot` writes the files into TeamCode for you: skip this part. For every other template:
+`:sim:newRobot` writes the files into TeamCode for you: skip this part. For every other template,
+follow [Copy example files into TeamCode](pick-your-start/04-copy-into-teamcode.md): the `package` lines,
+the imports, the `@Disabled` lines and the OpMode names.
 
-1. Copy the template's `.java` files into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/`.
-   Make a folder `autos` there (right-click `teamcode`, **New > Package**, `autos`) and copy the files
-   from the template's `autos` folder into it.
-2. **Change the first line of each file** (the `package` line) to the folder it is in now:
-   - files next to `Robot.java`: `package org.firstinspires.ftc.teamcode;`
-   - files in `autos`: `package org.firstinspires.ftc.teamcode.autos;`
-
-   **Why:** the `package` line must match the folder the file is in, or it does not build.
-3. In the files in `autos` (and any other file that imports them), change the imports of the
-   template's classes to your package. For example, in `gobildabot/autos/LaunchAndBackUp.java`:
-
-   ```java
-   import com.crossbotics.ftchelper.examples.gobildabot.Robot;   // before
-   import org.firstinspires.ftc.teamcode.Robot;                 // after
-   ```
-
-   Do the same for `Actions` and `Tunables`. Android Studio marks every line it cannot find in red.
-4. **Delete the `@Disabled` line** in every OpMode file you copied: `Controls.java`, each autonomous,
-   and the finder files (`DriveTuner.java`, `OdometryTuner.java`, `HoodFinder.java`, `ShotTuner.java`).
-   Delete its `import com.qualcomm.robotcore.eventloop.opmode.Disabled;` line too. **Why:** the examples are hidden on
-   the Driver Station with `@Disabled`, so they do not fill the list on a real robot.
-5. Change the names in `@TeleOp(name = ...)` and `@Autonomous(name = ..., preselectTeleOp = ...)` to
-   your own; `preselectTeleOp` must be the TeleOp's name exactly.
-6. Build. Then check the motor directions with the wheels off the ground
-   ([Lesson 2](tutorials/start/02-drive.md)), and every part with the Hardware Check:
-   [Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md).
+Then build, and check the motor directions with the wheels off the ground
+([Lesson 2](tutorials/start/02-drive.md)), and every part with the Hardware Check:
+[Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md).
 
 **Numbers:** every number in `Tunables.java` is a starting value. Find the real ones with the
 [finders](guides/finders.md). If you change a number live on the robot (the tuning menu), copy the new

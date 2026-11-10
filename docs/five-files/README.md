@@ -1,7 +1,7 @@
 # The five files: your robot's code
 
-**Before this:** [Set up](../setup/README.md) is done. The library is in your project, and the robot
-configuration has your motors' names.
+**Before this:** [Set up](../setup/README.md) is done, and you have the five files in `TeamCode`
+([Pick your start](../pick-your-start/README.md)).
 
 Your robot's code is five files in the `teamcode` folder. Each file has one job:
 
@@ -24,14 +24,8 @@ anywhere.
 ## Where your five files come from
 
 You do not type them from nothing. You copy them, then change them:
-
-| You have | Copy |
-| --- | --- |
-| A seller's starter bot | its five files ([Pick your template](../templates.md)). They already have every part. |
-| A robot like one of our examples | that example's five files ([Pick your template](../templates.md)) |
-| Your own design | the smallest files on these pages, then add your parts |
-
-With a starter bot's files, these pages still explain every line you see.
+[Pick your start](../pick-your-start/README.md) (a starter bot, a common setup, or a blank slate).
+With a starter bot's or an example's files, these pages still explain every line you see.
 
 ## Done when
 
