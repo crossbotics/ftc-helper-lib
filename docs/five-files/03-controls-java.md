@@ -1,7 +1,5 @@
 # Controls.java: the buttons, and the TeleOp
 
-**The five files, page 3 of 5.**
-
 `Controls.java` is your TeleOp: the program the drivers pick on the Driver Hub. It says what each button
 does. The library always sets up its own buttons (driving, pause, the button map). Each part's buttons
 are lines in this file, so you can read and change every one.
@@ -65,8 +63,10 @@ public class Controls extends ControlMap<Robot> { // (2)!
 1. The TeleOp's name in the Driver Hub's list. Change it to your robot's name.
 2. `ControlMap<Robot>`: a TeleOp for the robot in your `Robot.java`. The library runs the loop, drives,
    and keeps every part updated.
-3. `true`: one driver does everything on gamepad 1. `false`: two drivers. Gamepad 1 drives, and
-   gamepad 2 runs the parts.
+3. `true`: one gamepad. The driver drives and runs the parts, and `g2` lines are on gamepad 1 too.
+   Most teams start here. `false`: add gamepad 2 when you want to split the work, or for jobs that are
+   hard to do while you drive (like arm control). Then the `g2` lines move to gamepad 2
+   ([One gamepad, and a second one](../controls/01-how-buttons-work.md#one-gamepad-and-a-second-one-when-you-want-it)).
 4. **Always there:** the library's own buttons, one line each. These lines are the defaults, so without
    this method the buttons are the same. Change a line to move a button. `null` = no button.
 5. BACK pauses the robot at once: every motor stops. Keep it on a button: it is the drivers' safety stop.
@@ -104,18 +104,18 @@ When a wheel turns the wrong way, fix it in `Robot.java`: [a wheel turns the wro
 **The library's own buttons are always there**, on gamepad 1. You write nothing for them, and every
 TeleOp has them. **Why:** BACK must always pause the robot, even in a file with a mistake.
 
-| Job | Two drivers | One driver (`oneDriver = true`) |
+| Job | One gamepad (`oneDriver = true`) | Two gamepads |
 | --- | --- | --- |
 | Drive and slide | left stick | left stick |
 | Turn | right stick, left and right | right stick, left and right |
-| Slow | LT (the further, the slower) | left stick click: slow on/off |
-| Field-centric on/off (mecanum) | Y (a double tap) | right stick click (a double tap) |
+| Slow | left stick click: slow on/off | LT (the further, the slower) |
+| Field-centric on/off (mecanum) | right stick click (a double tap) | Y (a double tap) |
 | Pause / go on | BACK (a tap) | BACK (a tap) |
 | Button map on the screen | GUIDE (a tap) | GUIDE (a tap) |
 | Tuning menu | GUIDE (held 1 s) | GUIDE (held 1 s) |
 | Choose the alliance (in INIT) | X = BLUE, B = RED | X = BLUE, B = RED |
 
-To move one: [Moving the library's buttons](../guides/buttons.md#moving-the-librarys-buttons).
+To move one: [Moving the library's buttons](../controls/04-move-library-buttons.md).
 
 **Every other button is a line in `buttons(...)`.** A part has no buttons until you add its lines, so
 every button the robot has is a line you can read in this file. Each part's usual lines, ready to copy:
@@ -200,8 +200,8 @@ g2.rb.tap(robot.launcher::fire).says("fire one")
      .hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("keep firing");
 ```
 
-`press`, `toggle` and `release` each need a button of their own. The button menu says when each gesture's
-job runs, and which two times you can change: [the button menu](../guides/buttons.md#2-how-it-starts).
+`press`, `toggle` and `release` each need a button of their own. [Press types](../controls/02-press-types.md)
+says when each gesture's job runs, and how to change the double-tap time and the hold time.
 
 ### 3. What it does
 
@@ -248,5 +248,5 @@ buttons. The message names the button.
 ---
 
 **Next:** [Actions.java](04-actions-java.md).
-**Look it up:** [every press type and option](../guides/buttons.md). **Go deeper:**
+**Look it up:** [every press type and option](../controls/README.md). **Go deeper:**
 [the cookbook's button recipes](../cookbook.md#buttons-and-gestures).

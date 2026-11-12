@@ -1,6 +1,6 @@
 # Copy example files into TeamCode
 
-**Pick your start, page 4 of 4.** Pages 1 to 3 send you here. Do these steps, then go back.
+Pages 1 to 3 send you here. Do these steps, then go back.
 
 The example files are in the library. Your robot's code must be in `TeamCode`. You copy the files,
 then change a few lines so that they belong to `TeamCode`.

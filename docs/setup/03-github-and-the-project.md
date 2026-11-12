@@ -1,6 +1,6 @@
 # Set up 3: GitHub and the robot project
 
-**Set up, page 3 of 9.** Do it on each laptop.
+Do it on each laptop.
 
 You get the **robot project** onto the laptop and open it in Android Studio. Each step has two
 ways. Use the one your team likes:

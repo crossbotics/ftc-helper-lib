@@ -135,7 +135,7 @@ Everything else, by what you want to do:
 | **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/start/01-robot-in-five-files.md), [robot module](docs/reference/robot-java.md) |
 | **Start from code for a robot like ours** (kit bots, example robots, or made from our configuration) | [Pick your template](docs/templates.md) |
 | **Learn it step by step** (a 9-lesson main track: 6 for every robot, 3 for the robots that need them; plus 21 "under the hood" tutorials) | [Tutorials](docs/tutorials/README.md) |
-| **Every way a button can work: tap, hold, double-tap, tap then hold, pairs, buzzes** | [The button menu](docs/guides/buttons.md) |
+| **Every way a button can work: tap, hold, double-tap, tap then hold, pairs, buzzes** | [Controls](docs/controls/README.md) |
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
 | **Write autonomous modes with the builder (every feature, with a tested example)** | [Building autos](docs/building-autos/README.md) |
 | **Several autos, and choosing one at the field (one file per plan, names, INIT menu choices)** | [Having multiple autos](docs/building-autos/03-multiple-autos.md), [Advanced autos](docs/building-autos/06-advanced-autos.md) |

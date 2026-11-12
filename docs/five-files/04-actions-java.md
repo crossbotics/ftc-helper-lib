@@ -1,7 +1,5 @@
 # Actions.java: several parts together
 
-**The five files, page 4 of 5.**
-
 An **action** is a list of steps that use several parts, with waits between them: "intake on, fire 3,
 wait until the shots are done, intake off". You write it once in `Actions.java`. Then one button starts
 it in TeleOp, and the same action is a step in an autonomous.

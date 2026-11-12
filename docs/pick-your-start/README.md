@@ -1,7 +1,5 @@
 # Pick your start
 
-**Before this:** [Set up](../setup/README.md) is done. The library is in your robot project.
-
 Your robot's code is five files in `TeamCode`: `Robot.java`, `Tunables.java`, `Controls.java`,
 `Actions.java` and an `autos` folder. You do not type them from nothing. You start from files that
 are already written, and then change them. **Why:** code that already builds and drives is a safe

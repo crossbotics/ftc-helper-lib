@@ -1,9 +1,7 @@
 # Match day
 
-**Building autos, page 7 of 7.** Get the auto right at an event: before the event, before each match, and
+Get the auto right at an event: before the event, before each match, and
 after it.
-
-**Before this:** at least one auto that works on the real robot.
 
 A good auto scores nothing when it starts in the wrong place, or runs the wrong plan. Most auto mistakes
 at an event are not code mistakes. These checks stop them.
@@ -71,7 +69,7 @@ A checklist for the drive team:
 | In TeleOp | Hold gamepad 1 **START**, then also hold **BACK**, for 1.5 s. The screen says `Alliance now RED (was BLUE)`. Hold them again to switch back. If you let go before 1.5 s, the alliance stays the same and the debug lines turn on or off. |
 
 **The TeleOp switch is off until you turn it on.** Add one line to `Controls.java`:
-`lib.switchAlliance(g1.start, g1.back);` ([switching the alliance in TeleOp](../guides/buttons.md#switching-the-alliance-in-teleop)).
+`lib.switchAlliance(g1.start, g1.back);` ([switching the alliance in TeleOp](../controls/04-move-library-buttons.md#switching-the-alliance-in-teleop)).
 With odometry on BIOBUZZ, a switch turns off aiming by odometry. The robot does not aim at a wrong spot: it does not aim by
 odometry at all. The screen says `odometry aim OFF until the pose is set`. To turn it on again, park on the reset spot and hold START
 1 s. TeleOp keeps the alliance from the auto, so a wrong alliance in INIT is wrong in TeleOp too. Turn the switch on before the event, and

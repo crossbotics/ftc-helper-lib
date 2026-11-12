@@ -1,6 +1,6 @@
 # Set up 2: install Android Studio
 
-**Set up, page 2 of 9.** Do it on each laptop.
+Do it on each laptop.
 
 **Android Studio** is the program you write and build the robot code in.
 

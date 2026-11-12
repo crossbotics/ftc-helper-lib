@@ -1,6 +1,6 @@
 # Start from a common setup
 
-**Pick your start, page 2 of 4.** For a robot that is like one of the library's example robots.
+For a robot that is like one of the library's example robots.
 
 Each example robot is a robot in five files that builds and drives. Pick the one most like your
 robot. You copy it, and then delete what your robot does not have. **Why:** deleting a line is

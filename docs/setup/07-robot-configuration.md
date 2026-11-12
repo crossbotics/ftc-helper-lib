@@ -1,6 +1,6 @@
 # Set up 7: make the robot configuration
 
-**Set up, page 7 of 9.** Do it once per robot, and again when you add a part.
+Do it once per robot, and again when you add a part.
 
 **If you use only the simulator on this laptop,** skip this page: the simulator needs no hubs. Go to [Every practice](08-every-practice.md).
 

@@ -1,7 +1,5 @@
 # Robot.java: what is on the robot
 
-**The five files, page 1 of 5.**
-
 `Robot.java` lists what is on your robot: the drive, and each part, with the names from the robot
 configuration. The buttons are in `Controls.java`, and the speeds are in `Tunables.java`.
 

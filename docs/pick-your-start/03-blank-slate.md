@@ -1,6 +1,6 @@
 # Start from a blank slate
 
-**Pick your start, page 3 of 4.** For your own robot design.
+For your own robot design.
 
 You start with the **smallest robot that works: it drives.** Then you add your parts one at a time,
 on the five files pages. **Why:** when only one part is new, a problem can only be in that part.

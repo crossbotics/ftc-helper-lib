@@ -66,7 +66,7 @@ the configuration is missing.
 In `libraryButtons(...)` in Controls.java, you moved one of the library's features onto a button that
 already has one. The message ends with the line to change: move that feature to a free button
 (`lib.debug(g1.start, null)`), or turn it off with `null` (`lib.debug(null, null)`).
-[Moving the library's buttons](guides/buttons.md#moving-the-librarys-buttons).
+[Moving the library's buttons](controls/04-move-library-buttons.md).
 
 **<samp>Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.</samp>**
 - or <samp>has no min</samp>
@@ -141,7 +141,7 @@ robot in five files, run the Drive Tuner, then set `Tunables.Drive.calibrated = 
 | <samp>Aim odometry: the pose was never set ...</samp> | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended)) |
 | <samp>No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry</samp> | someone held gamepad 1 START 1 s ("set pose here"), but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
 | <samp>Alliance now RED (was BLUE)</samp> | the alliance switch is on (`lib.switchAlliance(...)`) and someone held gamepad 1 START, then BACK, 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](reference/controls.md#controlmap)) |
-| <samp>Alliance now RED: odometry aim OFF until the pose is set (...)</samp> | someone switched the alliance on a turned field (`mirrorForRed = false`): the library cannot fix the pose from autonomous. Park on the reset spot and hold gamepad 1 START 1 s ([buttons guide](guides/buttons.md#switching-the-alliance-in-teleop)) |
+| <samp>Alliance now RED: odometry aim OFF until the pose is set (...)</samp> | someone switched the alliance on a turned field (`mirrorForRed = false`): the library cannot fix the pose from autonomous. Park on the reset spot and hold gamepad 1 START 1 s ([buttons guide](controls/04-move-library-buttons.md#switching-the-alliance-in-teleop)) |
 | <samp>Set pose here needs odometry: ...</samp> | someone held gamepad 1 START 1 s, but the robot has no `odometry(...)` line in Robot.java, so it cannot know where it is ([lesson 7](tutorials/start/07-odometry.md)). Nothing changed |
 | <samp>Launcher : WAITING_READY  left 1  waits for: turret aimed</samp> | the launcher holds the piece until that check is true (here: the turret on the goal). <samp>Launcher gave up: ...</samp> shows for 5 s when it waited too long |
 | <samp>Pose NOT set: stop first ...</samp> | someone held "set pose here" while the robot drove (a drive stick pushed) or whole-robot aim was on. Stop, then hold gamepad 1 START 1 s again |
@@ -243,7 +243,7 @@ simulator, the robot box turns red on a bump, and a scenario can check `expect b
 **The robot paused when I used the gamepad's START + BACK** (the debug lines, or the alliance switch)
 You pressed BACK first. BACK is the pause button, and it pauses the moment it goes down. Pressing START
 after it does not undo that, so you get a plain pause (and no debug lines or switch). Tap BACK to go on.
-Next time **hold START first, then press BACK** ([the button menu](guides/buttons.md#moving-the-librarys-buttons)).
+Next time **hold START first, then press BACK** ([Move the library's buttons](controls/04-move-library-buttons.md)).
 
 **Y does nothing (no field-centric) in an EasyTeleOp**
 Field-centric needs mecanum wheels and the IMU. A tank drivetrain, or `imu()` returning null, keeps

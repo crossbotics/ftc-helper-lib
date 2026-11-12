@@ -467,13 +467,13 @@ it is `false` wherever you write it.
 INIT shows the button and the spot (`Set pose: hold G1 START 1 s at ...`) and the mirroring it uses
 (`Reset spot for RED: the same numbers from the red wall (Tunables.Odometry.mirrorForRed = false)`).
 From code, or in an action, use `robot.resetPose()` (this spot) or `robot.resetPose(x, y, heading)` (any
-spot). You can move the button: `lib.setPose(...)` ([the button menu](../../guides/buttons.md#moving-the-librarys-buttons)).
+spot). You can move the button: `lib.setPose(...)` ([Move the library's buttons](../../controls/04-move-library-buttons.md)).
 
 **When the autonomous ran with the wrong alliance:** this robot's `Controls.java` turns on the TeleOp
 alliance switch (`lib.switchAlliance(g1.start, g1.back)`, off unless you write it). Hold START, then
 BACK, for 1.5 s. On BIOBUZZ's turned field, the switch cannot fix the pose from that autonomous. So the
 odometry aim goes off until you set the pose here again. On a mirrored field, the library mirrors the
-pose for you ([the buttons guide](../../guides/buttons.md#switching-the-alliance-in-teleop)).
+pose for you ([the buttons guide](../../controls/04-move-library-buttons.md#switching-the-alliance-in-teleop)).
 
 To show the pose your own way, add one line inside `buttons(...)` in `Controls.java`:
 

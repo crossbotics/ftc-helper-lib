@@ -1,6 +1,6 @@
 # Start from a starter bot
 
-**Pick your start, page 1 of 4.** For a starter bot from goBILDA (tank or Strafer), REV, AndyMark or Studica.
+For a starter bot from goBILDA (tank or Strafer), REV, AndyMark or Studica.
 
 The library has the whole code for each of these starter bots. It uses the same configuration names
 as the seller's own code, so it runs on the bot as it is. You copy it, change one line, and build.

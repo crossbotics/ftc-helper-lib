@@ -1,9 +1,7 @@
 # Put steps together
 
-**Building autos, page 2 of 7.** Make parts work while the robot drives, keep time to park, and drive
+Make parts work while the robot drives, keep time to park, and drive
 the right way for red and blue.
-
-**Before this:** [What an auto can do](01-what-an-auto-can-do.md).
 
 > **The auto builder writes everything on this page:** `run`, `action`, `alongside`, `parkWithSeconds`
 > and `mirrorForRed()`. [Advanced autos](06-advanced-autos.md) covers what it cannot write (menus, your own

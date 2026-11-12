@@ -6,6 +6,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Docs: Controls** (`docs/controls/`), after the five files: how buttons work, every press type with one
+  line of code, what the drivers see and feel (buzzes, lights, `show`, modes), and moving the library's
+  buttons. They replace guides/buttons.md, which now points to the new pages.
+
 - **Odometry measured from the robot's edges.** `.robotSizeMm(length, width)` with
   `.podsFromEdgesMm(forwardPodFromLeft, sidewaysPodFromFront)` (Pinpoint) or
   `.mountFromEdgesMm(fromFront, fromLeft, heading)` (OTOS): a tape from the frame's edges, and the library

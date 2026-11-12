@@ -1,6 +1,6 @@
 # Set up 4: add the library
 
-**Set up, page 4 of 9.** Do it **once per robot project**, usually a mentor or the
+Do it **once per robot project**, usually a mentor or the
 code lead. After you commit and push it, everyone who clones the project gets the library.
 
 **Skip this page** if there is already an `ftc-helper-lib` folder next to `TeamCode`, with files in it.

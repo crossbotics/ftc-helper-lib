@@ -124,7 +124,7 @@ later. `robot.claw::open` is a shorter way to write the same thing (a **method r
 - **Which double-tap to use:** use `tap(...).doubleTap(...)` when the tap must not run on a double-tap.
   The tap waits 0.35 s to be sure. Use `tapOrDoubleTap(tap, doubleTap)` when the tap should run at once and
   the two fit together. Its first tap has already run `tap`, so tap = intake on/off, double-tap = push
-  out. More: [the button menu](../../guides/buttons.md#which-double-tap).
+  out. More: [Press types](../../controls/02-press-types.md#tap-and-double-tap-two-ways).
 - `slow()` works only with `oneDriver = true`. With two drivers, gamepad 1 LT is slow already, and
   INIT stops with a message. On a trigger, the further you pull, the slower, down to
   `Tunables.Drive.slowSpeed`. On a button, the robot is slow while the button is held.
@@ -180,7 +180,7 @@ g2.lb.tap(Actions.grabAndLift(robot)).says("grab and lift")
 
 The library tells them apart for you. A tap is a press let go before the hold starts (0.3 s, or with only
 `heldFor`, before its time). A double-tap is two taps less than 0.35 s apart. Every gesture, pairs of
-buttons and buzzes: [the button menu](../../guides/buttons.md).
+buttons and buzzes: [Controls](../../controls/README.md).
 
 INIT checks these rules:
 
@@ -274,7 +274,7 @@ public class Controls extends ControlMap<Robot> {
 `libraryButtons` method.) INIT checks it like your own buttons: when two library jobs are on one button,
 INIT stops and names the button. INIT also names a job you free: with `lib.pause(null)`, INIT warns that
 nothing pauses the robot. Every job and how to move it:
-[the button menu](../../guides/buttons.md#moving-the-librarys-buttons).
+[Move the library's buttons](../../controls/04-move-library-buttons.md).
 
 ## 8. The lesson robot's two actions, and a buzz
 

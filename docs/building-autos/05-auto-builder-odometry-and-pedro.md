@@ -1,10 +1,9 @@
 # The auto builder: odometry and Pedro
 
-**Building autos, page 5 of 7.** Drive to points on the field, go around field parts, and follow curved
+Drive to points on the field, go around field parts, and follow curved
 paths.
 
-**Before this:** [The auto builder: steps](04-auto-builder-steps.md). Your robot has odometry: the
-`odometry(...)` line in `Robot.java`, and the Odometry Tuner passed. Lesson 7 adds both
+**You need:** odometry: the `odometry(...)` line in `Robot.java`, and the Odometry Tuner passed. Lesson 7 adds both
 ([Odometry](../tutorials/start/07-odometry.md)).
 
 **Odometry** is a sensor set (a Pinpoint, an OTOS, or dead wheels) that tracks where the robot is on the

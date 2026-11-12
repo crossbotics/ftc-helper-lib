@@ -1,10 +1,10 @@
 # The auto builder: steps
 
-**Building autos, page 4 of 7.** Build an auto on a picture of the field, run it with your own code, and
+Build an auto on a picture of the field, run it with your own code, and
 copy the Java into your project.
 
-**Before this:** [Having multiple autos](03-multiple-autos.md). Or come here first, if you like to see the field
-before you read code. Step 1 uses the red-and-blue table on [page 2](02-put-steps-together.md#red-and-blue).
+You can come here first, if you like to see the field before you read code. Step 1 uses the red-and-blue
+table on [page 2](02-put-steps-together.md#red-and-blue).
 
 The **auto builder** is part of the simulator. You tap the field to add drives, and pick the other steps
 from a list. **Run** drives the plan with **your real code**: your `Robot.java`, your parts and your

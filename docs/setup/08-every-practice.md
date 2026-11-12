@@ -1,6 +1,6 @@
 # Set up 8: every practice: pull, change, commit, push
 
-**Set up, page 8 of 9.** Everyone who changes code does this, every practice.
+Everyone who changes code does this, every practice.
 
 **Why:** git keeps every saved version of the code. You can undo a mistake, share code between
 laptops, and get back the exact code that ran at the last event.

@@ -1,8 +1,6 @@
 # What an auto can do
 
-**Building autos, page 1 of 7.** Every step you can put in an auto, in groups.
-
-**Before this:** your robot runs the smallest auto ([autos/](../five-files/05-autos.md)).
+Every step you can put in an auto, in groups.
 
 An auto is a **list of steps, read top to bottom**. Each step is one line that starts with a dot. The last
 step ends with `;`. Pick the steps your robot needs from the groups below.

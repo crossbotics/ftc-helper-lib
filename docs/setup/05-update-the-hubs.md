@@ -1,6 +1,6 @@
 # Set up 5: update the hubs
 
-**Set up, page 5 of 9.** Do it **once a season**, and again before an event if REV releases an update.
+Do it **once a season**, and again before an event if REV releases an update.
 
 **If you use only the simulator on this laptop,** skip this page: the simulator needs no hubs. Go to [Every practice](08-every-practice.md).
 

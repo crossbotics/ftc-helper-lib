@@ -487,7 +487,7 @@ g2.x.press(() -> robot.lift.goTo("low")).says("lift to low");
 ```
 
 **Why:** `press` runs the job once per press, the moment the button goes down.
-**More:** [Lesson 3: add your own jobs](tutorials/start/03-buttons.md#4-add-your-own-jobs), [The button menu](guides/buttons.md#one-job-on-the-button).
+**More:** [Lesson 3: add your own jobs](tutorials/start/03-buttons.md#4-add-your-own-jobs), [Press types](controls/02-press-types.md#every-press-type).
 
 ### How do I run something only while a button is held?
 
@@ -500,7 +500,7 @@ g1.a.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
 ```
 
 **Why:** the second job stops the intake when you let go. Without it, the intake keeps running.
-**More:** [The button menu](guides/buttons.md#one-job-on-the-button).
+**More:** [Press types](controls/02-press-types.md#every-press-type).
 
 ### How do I switch something on and off with one button?
 
@@ -513,7 +513,7 @@ g1.x.toggle(robot.intake).rumble().says("intake on/off");
 ```
 
 **Why:** `toggle` remembers on or off for you. The buzz tells the driver which one it is, so the driver does not have to look.
-**More:** [The button menu](guides/buttons.md#one-job-on-the-button).
+**More:** [Press types](controls/02-press-types.md#every-press-type).
 
 ### How do I put a tap, a hold and a double-tap on one button?
 
@@ -528,7 +528,7 @@ g2.rb.tap(robot.launcher::fire).says("fire one")
 ```
 
 **Why:** one button can do several jobs, so the drivers need fewer buttons to remember.
-**More:** [The button menu: gestures](guides/buttons.md#several-gestures-on-one-button).
+**More:** [Controls: gestures](controls/02-press-types.md#several-press-types-on-one-button).
 
 ### How do I make a button safe ("hold for 1 second")?
 
@@ -541,7 +541,7 @@ g2.dpadLeft.heldFor(1.0, robot.launcher::stop).says("hold 1 s: flywheel off");
 ```
 
 **Why:** a quick bump of the button does nothing, so nobody starts a big job by accident.
-**More:** [The button menu: gestures](guides/buttons.md#several-gestures-on-one-button).
+**More:** [Controls: gestures](controls/02-press-types.md#several-press-types-on-one-button).
 
 ### How do I use two buttons together (like a shift key)?
 
@@ -554,7 +554,7 @@ g1.rb.with(g1.dpadUp, () -> robot.lift.goTo("high")).says("lift to high");
 ```
 
 **Why:** a pair is a safe place for a big job that you use only once or twice a match, like a climb. D-pad up alone still does its own job.
-**More:** [The button menu: two buttons together](guides/buttons.md#two-buttons-together).
+**More:** [Controls: two buttons together](controls/02-press-types.md#two-buttons-together).
 
 ### How do I make the gamepad buzz?
 
@@ -570,7 +570,7 @@ g2.rumbleWhen(robot.launcher::isReady);
 ```
 
 **Why:** the drivers watch the robot, not the Driver Station. A buzz tells them "ready", so they do not have to look away.
-**More:** [The button menu: feedback](guides/buttons.md#4-feedback).
+**More:** [Controls: feedback](controls/03-see-and-feel.md#feedback-on-a-button).
 
 ### How do I control a part with a stick?
 
@@ -583,7 +583,7 @@ g2.rightStickY.use(robot.lift::manual).says("lift by hand");
 ```
 
 **Why:** a stick gives a number every loop, so the part moves as far as you push the stick. When you let go, the part holds.
-**More:** [The button menu: sticks](guides/buttons.md#sticks).
+**More:** [Controls: sticks](controls/02-press-types.md#every-press-type).
 
 ### How do I move a part's button to another button?
 
@@ -657,7 +657,7 @@ protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
 **Why:** the old button is then free for your own jobs in `buttons(...)`. When two library jobs are on
 one button, INIT stops and names the button. A file has only one `libraryButtons(...)` method, so put
 every `lib.` line in it.
-**More:** [The button menu: moving the library's buttons](guides/buttons.md#moving-the-librarys-buttons).
+**More:** [Controls: move the library's buttons](controls/04-move-library-buttons.md).
 
 ### How do I change the double-tap and hold times?
 
@@ -674,7 +674,7 @@ public static class Buttons {                                   // a fixed name:
 
 **Why:** some drivers tap slower. These times are in the tuning menu too. When you tune a value there,
 copy it back into `Tunables.java`, because the file is the record.
-**More:** [The button menu](guides/buttons.md#several-gestures-on-one-button).
+**More:** [Press types](controls/02-press-types.md#several-press-types-on-one-button).
 
 ### How do I switch the alliance during TeleOp?
 
@@ -699,7 +699,7 @@ protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
 **Why:** the alliance sets the goal that the camera and the turret aim at, and the light's color. With
 the wrong alliance, the robot aims at the other alliance's goal all match. Press START first, then BACK.
 BACK alone is the pause, so BACK first only pauses the robot. The 1.5 s hold means a bump does nothing.
-**More:** [The button menu: moving the library's buttons](guides/buttons.md#moving-the-librarys-buttons).
+**More:** [Controls: move the library's buttons](controls/04-move-library-buttons.md).
 
 ### Buttons that are already built in
 
@@ -2950,7 +2950,7 @@ show("Flywheel ready", () -> robot.launcher.isReady());
 ```
 
 **Why:** you see what the robot "thinks" while you drive. The value must be quick to read, with no waiting.
-**More:** [The button menu: feedback](guides/buttons.md#4-feedback). For debug lines (loop time and more), hold gamepad 1 START, then press BACK. The lines turn on or off when you let go. BACK first only pauses the robot. When the alliance switch is on, let go before 1.5 s: a 1.5 s hold switches the alliance and does not change the debug lines.
+**More:** [Controls: feedback](controls/03-see-and-feel.md#feedback-on-a-button). For debug lines (loop time and more), hold gamepad 1 START, then press BACK. The lines turn on or off when you let go. BACK first only pauses the robot. When the alliance switch is on, let go before 1.5 s: a 1.5 s hold switches the alliance and does not change the debug lines.
 
 ### How do I round a number on the Driver Station?
 
@@ -2963,7 +2963,7 @@ show("Target RPM", () -> String.format(Locale.US, "%.0f", robot.launcher.targetR
 ```
 
 **Why:** `%.0f` means "a number with 0 decimals", and `%.2f` gives 2.
-**More:** [The button menu: feedback](guides/buttons.md#4-feedback).
+**More:** [Controls: feedback](controls/03-see-and-feel.md#feedback-on-a-button).
 
 ### How do I show lines from my own autonomous step?
 

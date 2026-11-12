@@ -8,7 +8,7 @@ minutes: 25
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
-docs: [guides/buttons.md#moving-the-librarys-buttons, tutorials/start/03-buttons.md#7-pause-with-back-and-the-other-library-buttons]
+docs: [controls/04-move-library-buttons.md, tutorials/start/03-buttons.md#7-pause-with-back-and-the-other-library-buttons]
 ---
 
 ## Why
@@ -22,7 +22,7 @@ your own job. INIT must catch two jobs on one button and say which button.
 
 ## Setup
 
-- Your `Controls.java`. Inside its class, just after the closing `}` of the `buttons(...)` method, add `@Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) { }` (the whole method is in the [buttons guide](../../docs/guides/buttons.md#moving-the-librarys-buttons)), and `import com.crossbotics.ftchelper.teleop.LibraryButtons;` at the top of the file.
+- Your `Controls.java`. Inside its class, just after the closing `}` of the `buttons(...)` method, add `@Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) { }` (the whole method is in the [Move the library's buttons](../../docs/controls/04-move-library-buttons.md)), and `import com.crossbotics.ftchelper.teleop.LibraryButtons;` at the top of the file.
 
 ## Steps
 

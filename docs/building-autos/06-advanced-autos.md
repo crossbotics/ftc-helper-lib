@@ -1,10 +1,7 @@
 # Advanced autos
 
-**Building autos, page 6 of 7.** What the auto builder cannot write: waits for a part, choices in INIT,
+What the auto builder cannot write: waits for a part, choices in INIT,
 shared steps in `Routes.java`, a number for RED, and your own steps.
-
-**Before this:** [The auto builder: odometry and Pedro](05-auto-builder-odometry-and-pedro.md), or
-[Having multiple autos](03-multiple-autos.md).
 
 ## What this page is for
 

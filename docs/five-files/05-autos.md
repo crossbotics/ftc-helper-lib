@@ -1,7 +1,5 @@
 # autos/: your autonomous programs
 
-**The five files, page 5 of 5.**
-
 An **autonomous** (auto) is the program the robot runs by itself, in the first 30 seconds of a match.
 `autos/` is a folder. Each file in it is one autonomous, with its own name on the Driver Station.
 

@@ -1,6 +1,6 @@
 # Set up 6: build and install
 
-**Set up, page 6 of 9.** You build the robot project and install it on the Control Hub.
+You build the robot project and install it on the Control Hub.
 
 **If you use only the simulator on this laptop,** skip this page: the simulator needs no hubs. Go to [Every practice](08-every-practice.md).
 

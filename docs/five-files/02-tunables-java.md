@@ -1,7 +1,5 @@
 # Tunables.java: the numbers
 
-**The five files, page 2 of 5.**
-
 `Tunables.java` holds your robot's **numbers**: how fast it drives, how far the lift goes, how fast the
 launcher spins. `Robot.java` says which parts the robot has. `Tunables.java` says their numbers.
 

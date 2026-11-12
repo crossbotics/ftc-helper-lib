@@ -1,8 +1,5 @@
 # Building autos
 
-**Before this:** your robot runs the smallest auto: it drives out of its start spot
-([the five files, page 5: autos/](../five-files/05-autos.md)).
-
 An **auto** (autonomous) is the program the robot runs by itself in the first 30 seconds of a match.
 You write it as a **list of steps**. These pages show every step you can use, how to put steps together,
 how to keep multiple autos, and how to build one on a picture of the field.

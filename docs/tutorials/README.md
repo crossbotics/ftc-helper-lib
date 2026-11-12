@@ -62,7 +62,7 @@ You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-idea-you-
 | | **Advanced** | | |
 | 10 | [Test your robot code](start/10-test-your-robot-code.md) (advanced) | record a test in the simulator, read it line by line, tolerances, goals not details, a few good tests, update a test after a planned change, run them all with one command | lesson 6 done; the simulator |
 
-Then: [the button menu](../guides/buttons.md) (every way a button can work),
+Then: [Controls](../controls/README.md) (every way a button can work),
 [the cookbook](../cookbook.md) (short "how do I...?" answers with code to copy),
 [building autos](../building-autos/README.md) (everything autonomous can do),
 [the finders](../guides/finders.md) (measure your numbers), and the [simulator](../guides/simulator.md).

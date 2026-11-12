@@ -809,8 +809,8 @@
      "anchor": "7-pause-with-back-and-the-other-library-buttons"
     },
     {
-     "path": "docs/guides/buttons.md",
-     "anchor": "moving-the-librarys-buttons"
+     "path": "docs/controls/04-move-library-buttons.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/CTL-01.md",
@@ -1722,8 +1722,8 @@
      "anchor": "7-teleop-starts-where-autonomous-ended"
     },
     {
-     "path": "docs/guides/buttons.md",
-     "anchor": "moving-the-librarys-buttons"
+     "path": "docs/controls/04-move-library-buttons.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/ODO-02.md",
@@ -3880,8 +3880,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/guides/buttons.md",
-     "anchor": "moving-the-librarys-buttons"
+     "path": "docs/controls/04-move-library-buttons.md",
+     "anchor": ""
     },
     {
      "path": "docs/tutorials/start/03-buttons.md",
@@ -3905,7 +3905,7 @@
     "setup": [
      {
       "ul": [
-       "Your `Controls.java`. Inside its class, just after the closing `}` of the `buttons(...)` method, add `@Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) { }` (the whole method is in the [buttons guide](repo:docs/guides/buttons.md#moving-the-librarys-buttons)), and `import com.crossbotics.ftchelper.teleop.LibraryButtons;` at the top of the file."
+       "Your `Controls.java`. Inside its class, just after the closing `}` of the `buttons(...)` method, add `@Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) { }` (the whole method is in the [Move the library's buttons](repo:docs/controls/04-move-library-buttons.md)), and `import com.crossbotics.ftchelper.teleop.LibraryButtons;` at the top of the file."
       ]
      }
     ],
@@ -3959,7 +3959,7 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/guides/buttons.md",
+     "path": "docs/controls/04-move-library-buttons.md",
      "anchor": "switching-the-alliance-in-teleop"
     }
    ],
@@ -4412,8 +4412,8 @@
      "anchor": "6-the-driving-you-get-for-free"
     },
     {
-     "path": "docs/guides/buttons.md",
-     "anchor": "moving-the-librarys-buttons"
+     "path": "docs/controls/04-move-library-buttons.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/DRV-02.md",

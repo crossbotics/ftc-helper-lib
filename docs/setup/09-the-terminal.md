@@ -1,6 +1,6 @@
 # Set up 9: the Terminal
 
-**Set up, page 9 of 9.** Use this page when another page gives you a command to type.
+Use this page when another page gives you a command to type.
 
 ## Which terminal
 

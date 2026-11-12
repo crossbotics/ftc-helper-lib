@@ -1,6 +1,6 @@
 # Set up 1: before you start
 
-**Set up, page 1 of 9.** No Java needed.
+No Java needed.
 
 ## What you need
 

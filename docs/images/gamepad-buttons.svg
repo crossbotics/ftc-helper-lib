@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 540" width="1080" height="540" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <rect width="1080" height="540" fill="#ffffff"/>
+  <text x="20" y="32" font-size="18" font-weight="bold" fill="#222">Gamepad buttons: <tspan font-family="Menlo, Consolas, monospace" fill="#1f4e9c">code name</tspan>  Logitech  /  PlayStation</text>
+
+  <!-- triggers and bumpers -->
+  <rect x="300" y="122" width="100" height="22" rx="8" fill="#d8dde6" stroke="#333" stroke-width="2"/>
+  <rect x="600" y="122" width="100" height="22" rx="8" fill="#d8dde6" stroke="#333" stroke-width="2"/>
+  <rect x="295" y="148" width="110" height="18" rx="6" fill="#c3cad6" stroke="#333" stroke-width="2"/>
+  <rect x="595" y="148" width="110" height="18" rx="6" fill="#c3cad6" stroke="#333" stroke-width="2"/>
+
+  <!-- body -->
+  <path d="M350,170 H650 Q740,170 755,260 L785,400 Q795,450 750,455 Q715,458 690,410 L660,360 H340 L310,410 Q285,458 250,455 Q205,450 215,400 L245,260 Q260,170 350,170 Z" fill="#eef2f8" stroke="#333" stroke-width="2.5"/>
+
+  <!-- d-pad -->
+  <rect x="346" y="215" width="18" height="50" rx="3" fill="#555"/>
+  <rect x="330" y="231" width="50" height="18" rx="3" fill="#555"/>
+
+  <!-- face buttons -->
+  <circle cx="645" cy="212" r="14" fill="#fff" stroke="#333" stroke-width="2"/>
+  <text x="645" y="217" text-anchor="middle" font-weight="bold" fill="#333">Y</text>
+  <circle cx="673" cy="240" r="14" fill="#fff" stroke="#333" stroke-width="2"/>
+  <text x="673" y="245" text-anchor="middle" font-weight="bold" fill="#333">B</text>
+  <circle cx="617" cy="240" r="14" fill="#fff" stroke="#333" stroke-width="2"/>
+  <text x="617" y="245" text-anchor="middle" font-weight="bold" fill="#333">X</text>
+  <circle cx="645" cy="268" r="14" fill="#fff" stroke="#333" stroke-width="2"/>
+  <text x="645" y="273" text-anchor="middle" font-weight="bold" fill="#333">A</text>
+
+  <!-- small buttons -->
+  <rect x="438" y="218" width="26" height="14" rx="7" fill="#555"/>
+  <rect x="536" y="218" width="26" height="14" rx="7" fill="#555"/>
+  <circle cx="500" cy="262" r="12" fill="#555"/>
+
+  <!-- sticks -->
+  <circle cx="430" cy="320" r="32" fill="#c3cad6" stroke="#333" stroke-width="2"/>
+  <circle cx="430" cy="320" r="18" fill="#9aa3b3"/>
+  <circle cx="570" cy="320" r="32" fill="#c3cad6" stroke="#333" stroke-width="2"/>
+  <circle cx="570" cy="320" r="18" fill="#9aa3b3"/>
+
+  <g stroke="#888" stroke-width="1.2" fill="none">
+    <!-- left column -->
+    <polyline points="210,96 300,96 330,122"/>
+    <polyline points="210,148 295,157"/>
+    <polyline points="210,240 330,240"/>
+    <polyline points="210,320 398,320"/>
+    <!-- right column -->
+    <polyline points="785,96 700,96 670,122"/>
+    <polyline points="785,148 705,157"/>
+    <polyline points="785,200 659,210"/>
+    <polyline points="785,232 687,238"/>
+    <polyline points="785,264 600,264 610,250"/>
+    <polyline points="785,296 659,272"/>
+    <polyline points="785,350 600,330"/>
+    <!-- bottom -->
+    <polyline points="320,492 320,420 451,232"/>
+    <polyline points="500,492 500,274"/>
+    <polyline points="680,492 680,420 549,232"/>
+  </g>
+
+  <g fill="#222">
+    <text x="205" y="101" text-anchor="end"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">lt</tspan>  LT / L2</text>
+    <text x="205" y="153" text-anchor="end"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">lb</tspan>  LB / L1</text>
+    <text x="205" y="236" text-anchor="end"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">dpadUp  dpadDown</tspan></text>
+    <text x="205" y="255" text-anchor="end"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">dpadLeft  dpadRight</tspan></text>
+    <text x="205" y="296" text-anchor="end"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">leftStickX</tspan></text>
+    <text x="205" y="314" text-anchor="end"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">leftStickY</tspan></text>
+    <text x="205" y="332" text-anchor="end"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">leftStickButton</tspan></text>
+    <text x="205" y="350" text-anchor="end" font-size="13" fill="#555">press the stick down: L3</text>
+
+    <text x="790" y="101"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">rt</tspan>  RT / R2</text>
+    <text x="790" y="153"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">rb</tspan>  RB / R1</text>
+    <text x="790" y="205"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">y</tspan>  Y / △ triangle</text>
+    <text x="790" y="237"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">b</tspan>  B / ○ circle</text>
+    <text x="790" y="269"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">x</tspan>  X / □ square</text>
+    <text x="790" y="301"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">a</tspan>  A / × cross</text>
+    <text x="790" y="326"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">rightStickX</tspan></text>
+    <text x="790" y="344"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">rightStickY</tspan></text>
+    <text x="790" y="362"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">rightStickButton</tspan></text>
+    <text x="790" y="380" font-size="13" fill="#555">press the stick down: R3</text>
+
+    <text x="320" y="512" text-anchor="middle"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">back</tspan></text>
+    <text x="320" y="530" text-anchor="middle" font-size="13">BACK / SHARE</text>
+    <text x="500" y="512" text-anchor="middle"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">guide</tspan></text>
+    <text x="500" y="530" text-anchor="middle" font-size="13">GUIDE (middle) / PS</text>
+    <text x="680" y="512" text-anchor="middle"><tspan font-family="Menlo, Consolas, monospace" font-weight="bold" fill="#1f4e9c">start</tspan></text>
+    <text x="680" y="530" text-anchor="middle" font-size="13">START / OPTIONS</text>
+  </g>
+</svg>

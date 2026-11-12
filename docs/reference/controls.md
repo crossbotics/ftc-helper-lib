@@ -2,8 +2,7 @@
 
 Every button line, press type and gamepad name; the library's own buttons; one or two drivers.
 `Controls.java` is the TeleOp ([`EasyTeleOp`](../modules/teleop.md) underneath). Learn it step by step:
-[Controls.java](../five-files/03-controls-java.md). [The button menu](../guides/buttons.md) has every option
-as a menu.
+[Controls.java](../five-files/03-controls-java.md), then [Controls](../controls/README.md).
 
 ## ControlMap
 
@@ -59,7 +58,7 @@ Every button line has the same four pieces:
    tap of GUIDE shows it during the match. Without `.says`, the map shows only the press type, like
    `G2 RT: hold`, so the drivers cannot tell what it does.
 
-[The button menu](../guides/buttons.md) has every press type.
+[Controls](../controls/README.md) has every press type.
 
 ## Buttons to add (every part)
 
@@ -136,7 +135,7 @@ Every library job can go on another button, or none (`null`):
 | `allianceInInit(blue, red)` | G1 X = BLUE, G1 B = RED (INIT only) |
 | `swapSticks(true)` | false (the left stick drives, the right stick X turns) |
 
-The whole table, with how to move each: [the button menu](../guides/buttons.md#moving-the-librarys-buttons).
+The whole table, with how to move each: [Move the library's buttons](../controls/04-move-library-buttons.md).
 
 **INIT names freed library jobs:** no pause button (a warning), no slow at all (a warning), no
 field-centric button (a line).

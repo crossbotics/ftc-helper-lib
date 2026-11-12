@@ -1,8 +1,5 @@
 # The five files: your robot's code
 
-**Before this:** [Set up](../setup/README.md) is done, and you have the five files in `TeamCode`
-([Pick your start](../pick-your-start/README.md)).
-
 Your robot's code is five files in the `teamcode` folder. Each file has one job:
 
 | File | What it holds | You change it when |

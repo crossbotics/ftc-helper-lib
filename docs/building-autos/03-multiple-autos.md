@@ -1,8 +1,6 @@
 # Having multiple autos
 
-**Building autos, page 3 of 7.** Keep more than one plan, and pick the right one at the field.
-
-**Before this:** [Put steps together](02-put-steps-together.md).
+Keep more than one plan, and pick the right one at the field.
 
 At an event you play with a new partner in every match. Sometimes you start near the goal, sometimes far.
 Sometimes your partner needs the space you usually drive through. So you need a few plans, with clear

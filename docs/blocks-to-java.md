@@ -230,4 +230,4 @@ after one press of X, check `expect screen has "Count : 1"`. Check a `true`/`fal
   [Lesson 1](tutorials/start/01-robot-in-five-files.md).
 - [Lesson 3: Buttons](tutorials/start/03-buttons.md): every kind of button job.
 - [Lesson 5: Actions](tutorials/start/05-actions.md): steps that wait, safely.
-- [The button menu](guides/buttons.md): every way a button can work.
+- [Controls](controls/README.md): every way a button can work.
