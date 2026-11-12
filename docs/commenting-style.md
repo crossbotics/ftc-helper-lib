@@ -3,12 +3,12 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 The people reading this code are high-school students, many with little or no Java: **assume a
-novice programmer**. Comments are how they learn what each part does and WHY it is written that way.
+novice programmer**. Comments are how they learn what each part does and WHY we wrote it that way.
 Every file follows this guide.
 
 **Write in plain, everyday, non-technical language.** Say "the robot waits here" instead of
-"this blocks the thread". Say "a number that can change" instead of "a mutable field". When a
-technical word cannot be avoided (encoder, PID, servo), explain it in a few everyday words right
+"this blocks the thread". Say "a number that can change" instead of "a mutable field". When you
+cannot avoid a technical word (encoder, PID, servo), explain it in a few everyday words right
 there, or point to the page that explains it.
 
 **Point to other files and docs** when they explain more: "See docs/modules/drive.md",
@@ -17,14 +17,14 @@ there, or point to the page that explains it.
 
 ## The rules
 
-1. **Explain WHY, not just WHAT.** `// clamp the power` says what. `// clamp: a motor only accepts -1..1,
+1. **Explain WHY, not only WHAT.** `// clamp the power` says what. `// clamp: a motor only accepts -1..1,
    and NaN (a bad sensor reading) would make it jump` says why.
 2. **Plain, short, non-technical sentences.** Everyday words. Explain any technical word the first
    time in everyday terms (PID, encoder, tick, lambda, edge...), or link to the doc that explains it.
 3. **One comment per idea**, on the line above the code it explains (or at the end of a short line).
 4. **Units and signs** wherever a number appears: ticks, inches, degrees, seconds, milliseconds;
    "positive = left (counterclockwise)".
-5. **Safety reasons** are always written down: why a motor is stopped, why a limit exists, why we never wait.
+5. **Always write down safety reasons:** why a motor is stopped, why a limit exists, why we never wait.
 6. **Java ideas** that a beginner would not know get a short, everyday-language note the first time
    they appear in a file (for example "`() -> ...` is a small piece of code we hand over to run later"):
    lambda `() -> ...`, method reference `lift::stepUp`, ternary `a ? b : c`, `final`, `static`,
@@ -64,8 +64,8 @@ lift = add(Lift.slide("lift").part("gobilda-5203-435"));   // the lift (1)!
 1. "lift" is the motor's name in the robot configuration. Its numbers: `Tunables.Lift`.
 ````
 
-On crossbotics.com each marker becomes a small (+) button that opens its item; the list itself is hidden
-and the Copy button copies the code without the markers. On GitHub the marker and the list show as text.
+On crossbotics.com each marker becomes a small (+) button that opens its item. The site hides the list
+itself, and the Copy button copies the code without the markers. On GitHub the marker and the list show as text.
 The markers are only in the docs: `tools/check_docs.py` takes them out before it compares a box with its
 Java file, and `--fix-cookbook` keeps them on the lines that did not change.
 

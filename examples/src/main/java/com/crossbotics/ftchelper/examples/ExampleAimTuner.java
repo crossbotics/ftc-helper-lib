@@ -37,7 +37,7 @@ public class ExampleAimTuner extends AimTunerOpMode {
     // For test shots. Without a shot table it shoots at shotRpm() (3000 unless you change it).
     @Override
     protected Launcher createLauncher() {
-        Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel").countsPerRev(28).pidf(10, 3, 0, 12);
+        Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel").countsPerRev(28).maxRpm(6000).startingGains();
         MotorFeeder feeder = MotorFeeder.create(hardwareMap, "feeder").power(1.0).feedTime(0.25);
         return new Launcher(flywheel, feeder).shotInterval(0.3);
     }

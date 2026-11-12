@@ -18,7 +18,7 @@ public class MovingShotTest {
         assertEquals(Math.hypot(60, 10), r.distanceIn, 1e-9);
         assertEquals(0, r.leadDeg, 1e-9);
         assertEquals(0, r.leadIn, 1e-9);
-        // The whole robot (a fixed shooter at the centre): the same.
+        // The whole robot (a fixed shooter at the center): the same.
         MovingShot.Result w = new MovingShot().flightSec(0.8, 0).solve(60, 10, 0, 0, 0, 0.05);
         assertEquals(deg(10, 60), w.aimDeg, 1e-9);
         assertEquals(Math.hypot(60, 10), w.distanceIn, 1e-9);
@@ -72,16 +72,16 @@ public class MovingShotTest {
     }
 
     @Test public void aTurretBehindTheCentreAimsFromItsOwnPlace() {
-        // The turret 6 in behind the centre and 4 in left; the goal 60 in ahead of the centre, 4 in left.
+        // The turret 6 in behind the center and 4 in left; the goal 60 in ahead of the center, 4 in left.
         MovingShot.Result r = new MovingShot().shooterAt(-6, 4).onTurret().solve(60, 4, 0, 0, 0, 0);
         assertEquals("straight ahead from the turret", 0, r.aimDeg, 1e-9);
-        assertEquals("66 in from the turret, not 60 from the centre", 66, r.distanceIn, 1e-9);
+        assertEquals("66 in from the turret, not 60 from the center", 66, r.distanceIn, 1e-9);
     }
 
     @Test public void aFixedShooterToOneSideTurnsTheRobotSoItsLinePassesThroughTheGoal() {
-        // A launcher 5 in LEFT of the centre, fixed facing forward; the goal 50 in straight ahead of the centre.
+        // A launcher 5 in LEFT of the center, fixed facing forward; the goal 50 in straight ahead of the center.
         MovingShot.Result r = new MovingShot().shooterAt(3, 5).solve(50, 0, 0, 0, 0, 0);
-        // Turn RIGHT by asin(5 / 50) so the launcher's line (5 in left of the centre line) meets the goal.
+        // Turn RIGHT by asin(5 / 50) so the launcher's line (5 in left of the center line) meets the goal.
         assertEquals(-Math.toDegrees(Math.asin(0.1)), r.aimDeg, 1e-9);
         assertEquals("along the line, from the launcher", Math.sqrt(2500 - 25) - 3, r.distanceIn, 1e-9);
         // Check: turned by aimDeg, the goal sits on the launcher's line (5 in left, ahead).
@@ -90,19 +90,19 @@ public class MovingShotTest {
     }
 
     @Test public void turningSwingsAnOffCentreShooterSideways() {
-        // A turret 10 in in front of the centre; the robot turns LEFT at 90 deg/s and does not drive:
+        // A turret 10 in in front of the center; the robot turns LEFT at 90 deg/s and does not drive:
         // the turret moves LEFT at 10 x pi/2 = 15.7 in/s, so the shot must lead to the RIGHT.
         MovingShot shot = new MovingShot().shooterAt(10, 0).onTurret().flightSec(0.5, 0).maxLeadIn(0);
         MovingShot.Result r = shot.solve(70, 0, 0, 0, 90, 0);
         assertEquals(10 * Math.PI / 2 * 0.5, r.leadIn, 1e-9);
         assertEquals(deg(-10 * Math.PI / 2 * 0.5, 60), r.aimDeg, 1e-9);
         assertTrue(r.aimDeg < 0);
-        // At the centre, turning alone gives no lead.
+        // At the center, turning alone gives no lead.
         assertEquals(0, new MovingShot().onTurret().flightSec(0.5, 0).solve(70, 0, 0, 0, 90, 0).leadIn, 1e-9);
     }
 
     @Test public void aCameraOnTheTurretOrOnTheBodySeesTheSameGoal() {
-        // The goal at (60, 20) from the centre. A body camera 8 in forward, 2 in right; a turret camera
+        // The goal at (60, 20) from the center. A body camera 8 in forward, 2 in right; a turret camera
         // at the turret's pivot (-4, 0), the turret turned 30 deg left.
         double[] body = MovingShot.seenFrom(deg(22, 52), Math.hypot(52, 22), 8, -2, 0);
         assertEquals(60, body[0], 1e-9);

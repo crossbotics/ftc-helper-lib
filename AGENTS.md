@@ -23,8 +23,8 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   shown in `docs/cookbook.md`; `CookbookTest` in `sim/` INITs and runs every cookbook OpMode).
 - `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new
   module: extend `Module` (or `MotorPositions`/`ServoPositions`), read numbers through `TunableSection`,
-  route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` (its usual buttons: INIT names the ones Controls.java left free) and the same lines in `examples/.../cookbook/UsualButtons.java` and a "buttons to add" in docs/modules/robot.md and
-  `simLines`, a row in docs/modules/robot.md, and its fields in docs/guides/tunables.md and `TunableFields.java`. It must work when `optional()` and missing (built on
+  route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` (its usual buttons: INIT names the ones Controls.java left free) and the same lines in `examples/.../cookbook/UsualButtons.java` and a "Buttons to add" on its reference page and
+  `simLines`, a page in docs/reference/parts/ (with its "In Tunables.java" table) and its fields in `TunableFields.java`. It must work when `optional()` and missing (built on
   `MissingPart`'s stand-in devices, never updated): its "done" questions true, its "busy" ones false
   (`OptionalPartsTest` calls every public method of every module kind that way). `./gradlew :sim:newRobot` (SimNewRobot) guesses modules
   from device names: teach it the new one.
@@ -53,7 +53,7 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
     (points, match times, FLOWER heights, tip time, clean-shot rules), typed from the manual with section
     numbers (SimRules; scoring in SimScore, the clean-shot judge in SimCellJudge, a port of the turret
     simulator's judge() checked by SimCellJudgeTest).
-- `docs/` `setup/` (one page per setup step, in order, each ending with "Done when"), `pick-your-start/` (the three starts: a starter bot, a common setup, a blank slate; each ends with the five files in TeamCode), `five-files/` (one walkthrough
+- `docs/` `setup/` (one page per setup step, in order, each ending with "Done when"), `pick-your-start/` (the three starts: a starter bot, a common setup, a blank slate; each ends with the five files in TeamCode), `reference/` (look-up pages: one per part in `reference/parts/`, each with "In Robot.java", "In Tunables.java", "Commands" and "Buttons to add"; and Robot.java, Tunables.java, Controls.java, steps; `modules/robot.md` and `guides/tunables.md` are "moved" pages), `building-autos/` (seven walkthrough pages after the five files: the steps, putting them together, multiple autos, the auto builder, odometry and Pedro, advanced autos (what the builder cannot write), match day; route numbers stay plain numbers in each auto's steps, not `Tunables.Auto`), `five-files/` (one walkthrough
   page per robot file; each page's code is a compiled program in `examples/.../firstrobot/` or a cookbook recipe,
   shown with a `<!-- recipe: name -->` marker and kept the same by `tools/check_docs.py`), `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
@@ -66,12 +66,15 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   (after changing one: `python3 tools/check_docs.py --fix-cookbook`). A guide may show a recipe too, with the
   same `<!-- recipe: name -->` marker (docs/guides/autos.md does): it is checked and fixed the same way.
 - `tools/check_tunables.py` finds every Tunables field the robot package reads and checks it against
-  `docs/guides/tunables.md` (the reference: one table per part) and the example robots' Tunables files.
+  the part pages in `docs/reference/parts/` (each has a `<!-- tunables: Key -->` table) and the example robots' Tunables files.
   A module that reads a new field (or reads one through a name that is not a string literal: add it to
   the script's DYNAMIC list) needs a row there, and its name in `robot/TunableFields.java` (INIT stops on
   any field a part does not list there; the script checks the lists match the code).
 
 ## Rules: documentation is part of every change
+
+Every doc page follows `docs/writing-style.md` (US English, short active sentences, why before how, no filler,
+no em dashes, no time estimates). Read it before writing or editing a page.
 
 Every change follows the six steps in `docs/contributing.md`. A change is NOT done until all are done:
 
@@ -127,7 +130,7 @@ an API changes, update the cookbook recipes that use it too; a new user-facing f
 ## Before finishing
 
 ```bash
-./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest :sim:testDebugUnitTest
+./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest :sim:testDebugUnitTest :pedro:testDebugUnitTest
 python3 tools/check_docs.py
 python3 tools/parts_page.py --check
 python3 tools/check_blocking.py

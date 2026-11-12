@@ -2,8 +2,8 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**Goal:** add three mechanisms to your robot (the lesson robot is the worked example), give them safe
-numbers, and tune them on the robot.
+**Goal:** add three mechanisms to your robot, give them safe numbers, and tune them on the robot. The
+lesson robot is the worked example.
 
 **You need:**
 
@@ -11,17 +11,15 @@ numbers, and tune them on the robot.
   ([lesson 2](02-drive.md)) and the buttons from [lesson 3](03-buttons.md). The lesson robot is the
   worked example: read its lines, then make the same change in your files.
 - On the robot: an intake motor, a lift motor with an encoder, a touch sensor at the bottom of the
-  lift, and a claw servo. In the robot configuration they are called `intake`, `lift`,
-  `lift_bottom` and `claw`.
+  lift, and a claw servo. The robot configuration calls them `intake`, `lift`, `lift_bottom` and `claw`.
 - **Hard stops** on the lift at the top and the bottom (see step 4).
-- About an hour, most of it for finding and tuning numbers.
 
 The finished files: [`Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Robot.java)
 and [`Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Tunables.java).
 
 ## 1. Three lines in Robot.java
 
-**Did the Quick start?** The intake line (and its field) is there already: add only the lift and the
+**After the Quick start:** the intake line (and its field) is there already. Add only the lift and the
 claw.
 
 ```java
@@ -32,21 +30,21 @@ lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom
 claw = add(Claw.servo("claw").part("gobilda-2000-torque"));                         // Tunables.Claw
 ```
 
-These go in `define()`, after the drive. Each line adds one **module**: a ready-made part class (a
-mechanism the library already knows how to run).
+These lines go in `define()`, after the drive. Each line adds one **module**: a ready-made part class,
+a mechanism the library already knows how to run.
 
 - `Intake.motor("intake")`: a roller on one motor. It runs in or out.
 - `Lift.slide("lift")`: a slide that goes up and down on one motor and holds named heights.
   - `.bottomSwitch("lift_bottom")` is the touch sensor at the bottom (step 3 says why it matters).
 - `Claw.servo("claw")`: a claw on one servo, with an `open` and a `closed` position.
 - `.part(...)` on each line says which motor or servo it is, by its id in the
-  [parts catalog](../../guides/parts-catalog.md) (the number is on the part's label). It is optional
+  [parts catalog](../../guides/parts-catalog.md). The number is on the part's label. It is optional
   but recommended. **Why:** the library then starts from that part's real numbers (the lift's gains,
   the claw's move time), and the simulator moves it like the real one. The ids here are examples: write
   yours.
 
-Also add the fields at the top of the class, so the other files can reach the parts as `robot.lift`,
-and an import for each part class at the top of the file (with the other imports):
+The other files reach the parts as `robot.lift`, so also add the fields at the top of the class. Add an
+import for each part class at the top of the file, with the other imports:
 
 ```java
 import com.crossbotics.ftchelper.robot.Claw;
@@ -60,15 +58,15 @@ public class Robot extends RobotDefinition {
     ...
 ```
 
-A name still red? Alt+Enter (Option+Enter on a Mac) on it adds the import.
+When a name is still red, click it and press Alt+Enter (Option+Enter on a Mac) to add the import.
 
-**Why:** each line says only *what* is on the robot. How the lift holds a height, how the claw
-toggles, which buttons they use: the module already does that.
+**Why:** each line says only *what* is on the robot. The module already knows how the lift holds a
+height, how the claw toggles, and which buttons they use.
 
 ## 2. Their numbers in Tunables.java
 
 Each module reads the section with its device's name in CamelCase (each word starts with a capital,
-no `_`): `"lift"` reads `Tunables.Lift`.
+with no `_`). `"lift"` reads `Tunables.Lift`.
 
 ```java
 public static class Intake {
@@ -94,10 +92,10 @@ public static class Claw {
 }
 ```
 
-One number per line, each with a short comment; the number in brackets is the library's default.
+Each line has one number and a short comment. The number in brackets is the library's default.
 (`MEASURE` and `DEFAULT` come from the line
 `import static com.crossbotics.ftchelper.robot.Starting.*;` under the `package` line of the lesson
-robot's `Tunables.java`: copy it too.)
+robot's `Tunables.java`. Copy it too.)
 
 Which word to write:
 
@@ -113,34 +111,38 @@ Which word to write:
 Tunables.Lift.max = MEASURE: find it on the robot: the top of the safe range, in counts: Motor Finder, B. Write the number in place of MEASURE.
 ```
 
-That is on purpose: a guessed `max` can pull the lift off its rails. Step 5 finds it. (The lesson robot's
-own file already has the measured number, `max = 2600`.)
+INIT stops on purpose, because a guessed `max` can pull the lift off its rails. Step 5 finds it. (The
+lesson robot's own file already has the measured number, `max = 2600`.)
 
 What each number means:
 
-- **Intake:** the power going in and going out, 0 to 1. `DEFAULT`: the library's 1.0 and 0.7.
+- **Intake:** the power going in and going out, 0 to 1. `DEFAULT` gives the library's 1.0 and 0.7.
 - **Lift heights are in encoder counts.** An encoder is a sensor on the motor that counts how far
-  the shaft has turned. 0 is the bottom; bigger numbers are higher.
+  the shaft has turned. 0 is the bottom, and bigger numbers are higher.
   - `min`, `max`: the safe range. The lift never goes outside it. You cannot change these from the
     tuning menu, so tuning can never push the lift past a stop.
-  - `kP`, `kI`, `kD`, `kF`: how hard it pushes to reach and hold a height (step 6). These are the
-    **PID** numbers (P = push harder the further away it is, D = brake as it gets close, I = fix a
-    small error that stays). `kF` is the steady push that keeps the lift from sagging. **For the first
+  - `kP`, `kI`, `kD`, `kF`: how hard the lift pushes to reach and hold a height (step 6). These are the
+    **PID** numbers. P pushes harder the further away the lift is, D brakes as it gets close, and I fixes
+    a small error that stays. `kF` is the steady push that keeps the lift from sagging. **For the first
     run they say `DEFAULT`**: "not set yet, use the library's default". Robot.java names
     the lift's motor (`.part("gobilda-5203-435")`), so the library works them out for that motor from
-    the parts catalog, and INIT says so: `Lift: defaults from the catalog (gobilda-5203-435): kP
+    the parts catalog. INIT says so: `Lift: defaults from the catalog (gobilda-5203-435): kP
     0.0056, kD 0.00028, slowZone 179, tolerance 14. Tune them live in the tuning menu`. Step 6 tunes
-    them; then you write the numbers in their place. (Without `.part(...)` INIT says it uses general
-    defaults, made for a goBILDA 312 RPM motor.) `kI` and `kF` are not worked out from the motor: they
-    start at the library's 0 and 0.05.
+    them, and then you write the numbers in their place. (Without `.part(...)`, INIT says it uses general
+    defaults, made for a goBILDA 312 RPM motor.) The library does not work out `kI` and `kF` from the
+    motor. They start at the library's 0 and 0.05.
   - `down`, `low`, `high`: **named heights**. Every other number in the section is a height, and you
     can pick any names. Your code then says `robot.lift.goTo("high")`.
-- **Claw:** servo positions, 0 to 1. A claw needs both `open` and `closed` (INIT stops without them).
+- **Claw:** servo positions, 0 to 1. A claw needs both `open` and `closed`, and INIT stops without them.
 
-A number you leave out uses the library's default, and INIT tells you which. The lift has a few
-more you can add: `maxPower` (1.0), `slowZone` (where it slows down near an end: about half a motor
-turn, 179 counts on the 435 RPM motor), `slowZonePower` (0.2) and `tolerance` ("close enough" to a
-height: 14 counts on the 435 RPM motor).
+A number you leave out uses the library's default, and INIT tells you which. You can add a few more
+numbers to the lift:
+
+- `maxPower` (1.0).
+- `slowZone`: where the lift slows down near an end. It is about half a motor turn, 179 counts on the
+  435 RPM motor.
+- `slowZonePower` (0.2).
+- `tolerance`: "close enough" to a height, 14 counts on the 435 RPM motor.
 
 ## 3. The buttons they bring
 
@@ -154,8 +156,8 @@ You write no buttons for them. With two drivers, all three are on gamepad 2:
 | Left stick (up and down) | lift by hand; let go and it holds there |
 | B | claw open / close |
 
-INIT shows this map on the Driver Station. A button you give another job in `Controls.java`
-replaces the module's suggestion, and INIT then says which job lost its button (`... no button (G2 A is
+INIT shows this map on the Driver Station. When you give a button another job in `Controls.java`, your
+job replaces the module's suggestion. INIT then says which job lost its button (`... no button (G2 A is
 your "..." in Controls.java)`).
 
 ## 4. Why the bottom switch matters (homing)
@@ -164,26 +166,27 @@ The encoder only counts *changes*. It does not know where the bottom is. So the 
 known 0. **Homing** means finding that 0.
 
 - **With a bottom switch:** pressing the switch sets the count to 0.
-  Until the switch has been pressed once, the lift only goes **down, slowly** (at most 0.3 power),
+  Until the switch is pressed once, the lift only goes **down, slowly** (at most 0.3 power),
   and the height buttons do nothing. The screen says `Lift: push it DOWN to the switch to home it`.
   If the lift starts resting on the switch, it homes on the first loop. Every later press fixes any
-  drift (a slipping belt, a skipped tooth).
+  drift, like a slipping belt or a skipped tooth.
 - **Without a switch:** 0 is wherever the lift is at INIT. Press INIT with the lift all the way down,
-  every time (also for TeleOp after an autonomous that left it up). If it was 300 counts up,
+  every time. That includes TeleOp after an autonomous that left the lift up. If it was 300 counts up,
   every height is 300 counts too high, and so is `max`. INIT reminds you.
 
 **Hard stops vs software limits.** `min` and `max` are *software* limits: the program stops the motor
 there. Software can be wrong: a bad number, a slipped encoder, a bug. Rule R105 says the robot must
 stay inside its size limits *without software*, and inspectors check the maximum mechanical
-extension. So the lift needs **physical blocks** at both ends. Set `min` and `max` just inside them:
-the software stops the lift before the block, and the block holds if the software is wrong.
+extension. So the lift needs **physical blocks** at both ends. Set `min` and `max` just inside them.
+The software stops the lift before the block, and the block holds if the software is wrong.
 
 ## 5. Find the real numbers with the finders
 
-The numbers above are safe guesses, and `max` is still `MEASURE`. Measure the real ones before you drive
-the lift up with code: a wrong `max` can pull the lift off its rails. **INIT stopped on `MEASURE`?** Only
-your TeleOp and your autos stop. The finders still run: they do not read `Tunables.java`. Add the two finders to TeamCode, each in its own file
-next to `Robot.java`. `ServoFinder.java`, the whole file:
+The numbers above are safe guesses, and `max` is still `MEASURE`. A wrong `max` can pull the lift off its
+rails, so measure the real numbers before you drive the lift up with code. **When INIT stops on
+`MEASURE`,** only your TeleOp and your autos stop. The finders still run, because they do not read
+`Tunables.java`. Add the two finders to TeamCode, each in its own file next to `Robot.java`.
+`ServoFinder.java`, the whole file:
 
 ```java
 package org.firstinspires.ftc.teamcode;
@@ -211,31 +214,31 @@ public class MotorFinder extends MotorFinderOpMode {
 
 - **Servo Finder, for the claw:**
   1. Choose `claw` (D-pad, A).
-  2. A servo cannot tell where it is, so choose a start point near where it sits now (D-pad; nothing
-     moves), then press A: it moves there. X and B do nothing before this.
+  2. A servo cannot tell where it is. So choose a start point near where it sits now (D-pad; nothing
+     moves), then press A, and the servo moves there. X and B do nothing before this.
   3. Nudge it with the D-pad to each end, just before it strains. Press X at one end and B at the other.
   4. Press A fully open without straining, and A again fully closed on a game piece.
 
   Details: [Servo Finder](../../guides/finders.md#servo-finder-ends-and-positions).
 
-  **Not enough turn?** On the hub's normal signal a goBILDA 2000 servo turns 270 degrees over 0 to 1,
-  not the 300 its seller lists (the hub sends a narrower pulse than the servo can take). If your claw or
-  wrist needs more, add `.fullRange()` in Robot.java (`Claw.servo("claw").fullRange()`) and press **Y**
-  in the Servo Finder before choosing the servo. Decide this BEFORE you measure: the numbers change with
-  the range. Most claws do not need it. ([Why](../../modules/hardware.md#full-range).)
+  **When the servo does not turn far enough:** on the hub's normal signal, a goBILDA 2000 servo turns
+  270 degrees over 0 to 1, not the 300 its seller lists. The hub sends a narrower pulse than the servo
+  can take. If your claw or wrist needs more, add `.fullRange()` in Robot.java (`Claw.servo("claw").fullRange()`).
+  Then press **Y** in the Servo Finder before choosing the servo. Decide this BEFORE you measure, because
+  the numbers change with the range. Most claws do not need it. ([Why](../../modules/hardware.md#full-range).)
 - **Motor Finder, for the lift:**
   1. On the Driver Station, choose **Motor Finder**, press INIT, then ▶ (start on the Driver Hub).
-  2. Put the lift at the bottom (the count starts at 0 there). Choose `lift` (D-pad, then A).
-  3. Move it slowly with gamepad 1's **right** stick (up and down; the left stick does nothing here).
+  2. Put the lift at the bottom, where the count starts at 0. Choose `lift` (D-pad, then A).
+  3. Move it slowly with gamepad 1's **right** stick, up and down. The left stick does nothing here.
   4. Press **X** just before the bottom block (`min`) and **B** just before the top block (`max`).
   5. Press A at each height you want.
 
-  It shows the numbers (below). Write the `max` number in place of `MEASURE`, build, and INIT the TeleOp
-  again.
+  The finder shows the numbers (below). Write the `max` number in place of `MEASURE`, build, and INIT
+  the TeleOp again.
 
 Each finder shows a line that starts with `Tunables.`. It says which section of `Tunables.java` the
-numbers go in. The numbers below are an example: yours differ on each robot, so use what your finder shows, not these
-and not the ones in `lessonbot/Tunables.java`:
+numbers go in. The numbers below are an example, and yours differ on each robot. Use what your finder
+shows, not these and not the ones in `lessonbot/Tunables.java`:
 
 ```text
 Tunables.Claw: P1 = 0.210, P2 = 0.770
@@ -263,9 +266,10 @@ public static class Lift {
 }
 ```
 
-If the Motor Finder also says `Robot.java: add .reversed() to the "lift" part`, do that: the motor
-counts down as the lift goes up. The other lines (`PositionServo.create(...)`) are for the building-block
-classes of the "under the hood" tutorials, not the five files: skip them. The lines are also saved in `finder-results.txt` on the Control Hub. Steps and
+If the Motor Finder also says `Robot.java: add .reversed() to the "lift" part`, do that. It means the
+motor counts down as the lift goes up. The other lines (`PositionServo.create(...)`) are for the
+building-block classes of the "under the hood" tutorials, not the five files: skip them. The finder also
+saves the lines in `finder-results.txt` on the Control Hub. Steps and
 buttons: [Finding your numbers](../../guides/finders.md#motor-finder-limits-positions-top-speed)
 and [tutorial 21](../21-finders.md).
 
@@ -274,30 +278,30 @@ and [tutorial 21](../21-finders.md).
 `kP` to `kF` and the named heights change **while the robot runs**, so you do not rebuild for each
 try.
 
-1. INIT the TeleOp with the **PRACTICE** profile, then press ▶. (The profile is chosen in any
+1. INIT the TeleOp with the **PRACTICE** profile, then press ▶. (You choose the profile in any
    autonomous's INIT menu, on its last line, and the hub remembers it:
    [lesson 2, section 5](02-drive.md#5-the-numbers-tunablesdrive).)
-2. **Hold GUIDE for 1 second:** the tuning menu opens on gamepad 1 (the wheels hold still).
-3. D-pad up/down chooses a number (`Lift/kP`, `Lift/high`, `Claw/open`...), right/left changes it
-   (hold a bumper for 10 times bigger steps). Use gamepad 2 to send the lift between heights and watch.
+2. **Hold GUIDE for 1 second.** The tuning menu opens on gamepad 1, and the wheels hold still.
+3. D-pad up/down chooses a number (`Lift/kP`, `Lift/high`, `Claw/open`...), and right/left changes it.
+   Hold a bumper for 10 times bigger steps. Use gamepad 2 to send the lift between heights, and watch.
 4. A saves on the Control Hub. **B shows the changed values as code**, like `Lift: kP = 0.005`
    (that is `kP = 0.005` in `Tunables.Lift`).
-5. **Copy them into `Tunables.java`** (`kP = 0.005` in place of `kP = DEFAULT` in `Lift`: a
-   written number replaces the default). The code is the record: a value saved only on the hub is lost
-   with a new Control Hub and invisible to your teammates. Until you copy them, INIT lists them under
+5. **Copy them into `Tunables.java`:** write `kP = 0.005` in place of `kP = DEFAULT` in `Lift`. A
+   written number replaces the default. The code is the record. A value saved only on the hub is lost
+   with a new Control Hub, and your teammates cannot see it. Until you copy them, INIT lists them under
    "Tuned on this robot (copy into Tunables.java)".
 
-The recipe (from [tutorial 07](../07-pid-lift.md#6-the-tuning-recipe)). Change one number, then send
+The recipe comes from [tutorial 07](../07-pid-lift.md#6-the-tuning-recipe). Change one number, then send
 the lift between `down`, `low` and `high`:
 
 1. **P.** Raise `kP` until the lift moves quickly to each height. If it shakes or bounces around the
    height, go back down a step or two.
 2. **D.** If it goes past the height and comes back, raise `kD` a little at a time until it stops
-   doing that. Too much makes it slow or buzzy.
+   doing that. Too much `kD` makes it slow or buzzy.
 3. **F.** If it stops a little low and sags, raise `kF` until it holds still.
 4. **I**, only if a small error stays: a very small `kI`.
 
-Good: it reaches each height in under a second, goes past by very little, and holds still.
+The lift is tuned when it reaches each height in under a second, goes past by very little, and holds still.
 
 ### A lift with two motors
 
@@ -307,17 +311,17 @@ Many slides have a motor on each side. Name the second one on the same line:
 lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"));
 ```
 
-Both motors now get the very same power, in the same loop, every time: buttons, the stick, stop, pause
-and the limits. **Why one line, not your own code?** Two motors on one slide must never fight; code
+Both motors now get the same power, in the same loop, every time: buttons, the stick, stop, pause
+and the limits. **Why one line, not your own code:** two motors on one slide must never fight. Code
 that copies the power every loop misses the moments the library stops the lift (pause, STOP).
 
-- Only `lift_left`'s encoder is read: plug the encoder cable into that motor.
+- The library reads only `lift_left`'s encoder, so plug the encoder cable into that motor.
 - Its numbers are in `Tunables.LiftLeft` (the FIRST motor's name in CamelCase), not `Tunables.Lift`. If
   you write `Tunables.Lift` by mistake, INIT warns: `Tunables.Lift is not read by any part: your lift's
   section is Tunables.LiftLeft`.
-- **Reversed or not?** Motors that face each other (mirror images, the usual way) turn opposite ways
-  for "up": `alsoMotorReversed`. Check with the chain or belt OFF: push the stick up and watch both
-  motors; each must turn the way that lifts. One wrong: use `alsoMotor` instead.
+- **Reversed or not:** motors that face each other (mirror images, the usual way) turn opposite ways
+  for "up", so use `alsoMotorReversed`. Check with the chain or belt OFF. Push the stick up and watch both
+  motors: each must turn the way that lifts. If one turns the wrong way, use `alsoMotor` instead.
 
 ### A claw with two servos
 
@@ -328,49 +332,51 @@ the same line, like the lift's second motor:
 claw = add(Claw.servo("claw_left").part("gobilda-2000-torque").alsoServoReversed("claw_right"));
 ```
 
-Both servos get the same position at the same moment: buttons, actions, pause and stop. **Why one line?**
-The same reason as the lift: code that copies the position can miss a move, and then the fingers fight.
+Both servos get the same position at the same moment: buttons, actions, pause and stop. **Why one line:**
+for the same reason as the lift. Code that copies the position can miss a move, and then the fingers fight.
 
 - The numbers are in `Tunables.ClawLeft` (the FIRST servo's name). Find `open` and `closed` with **Tune and
-  check > Servo Finder** on `claw_left`: `claw_right` moves with it there too, so the fingers never fight.
+  check > Servo Finder** on `claw_left`. `claw_right` moves with it there too, so the fingers never fight.
   ([A new servo part, step by step](../../guides/finders.md#a-new-servo-part-step-by-step): the direction, the
   ends, and how to line the two up again after a new horn.)
-- **Reversed or not?** Servos that face each other (mirror images, the usual way) turn opposite ways for
-  "close": `alsoServoReversed`. Both facing the same way: `alsoServo`. (Which way a bigger number turns a servo
-  has no standard: it depends on the servo, so check it in the Servo Finder,
+- **Reversed or not:** servos that face each other (mirror images, the usual way) turn opposite ways for
+  "close", so use `alsoServoReversed`. When both face the same way, use `alsoServo`. (No standard says
+  which way a bigger number turns a servo. It depends on the servo, so check it in the Servo Finder:
   [Signs and units](../../conventions.md#servos-and-motors-which-way-is-bigger).)
-- **The fingers do not quite meet?** The two servo horns may sit one spline tooth apart. Set
-  `alsoTrim` in the same section: a small raw position (for example 0.02) added for the second servo. A new
-  trim is used at the next move: open and close the claw again to see it.
+- **When the fingers do not quite meet:** the two servo horns may sit one spline tooth apart. Set
+  `alsoTrim` in the same section: a small raw position (for example 0.02) that the library adds for the
+  second servo. The claw uses a new trim at the next move, so open and close the claw again to see it.
 
 ## Try it in the simulator
 
-From the `ftc-helper-lib` folder, write a simulator robot file (the text file that describes the robot
-to the simulator) from the lesson robot's `Robot.java`, then run it:
+First write a simulator robot file (the text file that describes the robot to the simulator) from the
+lesson robot's `Robot.java`, then run it.
+
+**Where:** the Terminal, in the `ftc-helper-lib` folder.
 
 ```bash
 ./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.lessonbot.Robot -Pout=build/lessonbot.properties
 ./gradlew :sim:run -PteamCode=none -Probot=build/lessonbot.properties
 ```
 
-For your own robot: pick **Simulator** in the list next to Android Studio's green Run button and
-click Run (or `./gradlew :sim:run`). Open http://localhost:8780 and pick the TeleOp: for the
-lesson robot "Lesson Bot TeleOp"; for your own robot, your own TeleOp's name (the `name = "..."` in
-`Controls.java`). INIT, read the button map, ▶. The lesson robot's buttons, on gamepad 2: Y lifts,
-A lowers, B opens and closes the claw, hold RT to run the intake (your own robot: the buttons on its
-button map). The Control Hub panel shows the lift motor's count and the
-`lift_bottom` switch: pressed at the bottom, so the lift homes at once. Before the first B the claw's
-line says `Claw : not sent yet`: nothing moves until you ask. The first B opens it (in the simulator
-the claw starts open, so it seems to do nothing); the next B closes it. ([Simulator guide](../../guides/simulator.md).)
+For your own robot, pick **Simulator** in the list next to Android Studio's green Run button and
+click Run (or `./gradlew :sim:run`). Open http://localhost:8780 and pick the TeleOp. For the lesson
+robot it is "Lesson Bot TeleOp". For your own robot, it is your own TeleOp's name (the `name = "..."` in
+`Controls.java`). Press INIT, read the button map, and press ▶. The lesson robot's buttons are on
+gamepad 2: Y lifts, A lowers, B opens and closes the claw, and holding RT runs the intake. Your own
+robot uses the buttons on its button map. The Control Hub panel shows the lift motor's count and the
+`lift_bottom` switch. The switch is pressed at the bottom, so the lift homes at once. Before the first B,
+the claw's line says `Claw : not sent yet`: nothing moves until you ask. The first B opens it. In the
+simulator the claw starts open, so this B seems to do nothing. The next B closes it. ([Simulator guide](../../guides/simulator.md).)
 
 ## Check it on the robot
 
-1. Wheels off the floor, hand near STOP. Lift at the bottom, on its switch.
-2. INIT: no warnings about missing devices. Press ▶.
-3. Gamepad 2 left stick up a little: the lift goes **up**. If it goes down, add `.reversed()` to the lift.
-4. X, then Y, then A: each height is reached and held; the telemetry line shows `OK`.
-5. B a few times: the claw opens and closes without humming (a humming servo is pushing on something).
-6. RT: the intake pulls in. LT: it pushes out.
+1. Lift the wheels off the floor, and keep a hand near STOP. Put the lift at the bottom, on its switch.
+2. Press INIT. Check for no warnings about missing devices. Press ▶.
+3. Push gamepad 2's left stick up a little. The lift must go **up**. If it goes down, add `.reversed()` to the lift.
+4. Press X, then Y, then A. The lift must reach and hold each height, and the telemetry line shows `OK`.
+5. Press B a few times. The claw must open and close without humming (a humming servo is pushing on something).
+6. Hold RT, and the intake pulls in. Hold LT, and it pushes out.
 
 ## If something goes wrong
 
@@ -386,10 +392,10 @@ the claw starts open, so it seems to do nothing); the next B closes it. ([Simula
 
 ## Under the hood
 
-The modules use helpers you can also use on their own: PID control in
+The modules use helpers that you can also use on their own: PID control in
 [tutorial 07](../07-pid-lift.md), limits, homing and the slow zone in [tutorial 08](../08-safe-lift.md),
 and `PositionMotor`, `PositionServo` and `SpinMotor` in [tutorial 14](../14-mechanisms.md).
-Every method of the modules: [the robot module](../../modules/robot.md#lift).
+Every method of the modules: [the robot module](../../reference/parts/lift.md).
 
 ## Next
 

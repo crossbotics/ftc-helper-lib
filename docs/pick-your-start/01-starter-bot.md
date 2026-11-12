@@ -50,7 +50,7 @@ Then come back here.
 ## 4. Check the IMU line
 
 Open `Robot.java`. Find the line with `.imu(`. It says where the Control Hub's **logo** faces, then
-where its **USB ports** face. Look at the hub on your robot. Is it mounted another way? Change the line
+where its **USB ports** face. Look at the hub on your robot. If it is mounted another way, change the line
 ([How your Control Hub is mounted](../five-files/01-robot-java.md#how-your-control-hub-is-mounted)).
 **Why:** the IMU (the sensor in the hub that knows which way the robot faces) must know how the hub sits.
 Turns in autonomous use it.
@@ -75,12 +75,12 @@ Two kit mechanisms are not parts of the library. Their code uses the closest par
 
 ## 6. Build
 
-In Android Studio: **Build > Make Project**.
+In Android Studio, click **Build > Make Project**.
 
 ## You changed your starter bot
 
-A part added, taken off or moved? Another motor or servo? Do steps 1 to 6 first, with the seller's
-code as it is. Then make your changes **one at a time**: change, build, check.
+You may have added, taken off or moved a part, or used another motor or servo. Then do steps 1 to 6
+first, with the seller's code as it is. Then make your changes **one at a time**: change, build, check.
 **Why:** when something breaks, you know which change did it.
 For each kind of change, [You changed your starter bot](../guides/starter-bots.md#you-changed-your-starter-bot)
 says what to change in each file.
@@ -101,6 +101,6 @@ says what to change in each file.
 
 ---
 
-**Next:** [The five files](../five-files/README.md). They explain every line you just copied.
+**Next:** [The five files](../five-files/README.md). They explain every line you copied.
 
 **Look it up:** [the starter bots: names, numbers and notes](../guides/starter-bots.md).

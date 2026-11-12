@@ -1,7 +1,7 @@
 # ftc-helper-lib
 
-> **Work in progress.** This library is new and still changing, and some parts are not yet tested on a
-> real robot. Please try it and [tell us what works and what does not](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose) (a GitHub issue). Every
+> **Work in progress.** This library is new and still changing. Nobody has tested some parts on a
+> real robot yet. Please try it and [tell us what works and what does not](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose) (a GitHub issue). Every
 > report helps.
 
 Shortcuts for programming an FTC robot in Java, made by Indianola Robotics (FTC team 8938).
@@ -13,10 +13,10 @@ intakes with jam back-out, a full shooter kit (flywheel, hood, turret, feeder), 
 webcam, Limelight 3A or HuskyLens, odometry and paths, a piece count, lights for the drivers, rules that keep two
 parts from hitting each other, autonomous modes written as a list of steps, live tuning, practice and
 competition profiles, a hardware check, and a **simulator** that runs your real code on a laptop with
-the field in 3D (see below). It started from our 2025-26 (DECODE) robot code, and is
-built to be extended every season.
+the field in 3D (see below). It started from our 2025-26 (DECODE) robot code. We
+built it to grow every season.
 
-A whole robot is **five files**. Three of them, for a robot with a lift, a claw and an intake
+A whole robot is **five files**. These are three of them, for a robot with a lift, a claw and an intake
 (the [lesson robot](examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)):
 
 ```java
@@ -39,8 +39,8 @@ g2.a.press(() -> robot.lift.goTo("high")).says("lift to high");
 g2.rb.press(Actions.scoreHigh(robot)).says("score high");
 ```
 
-`Actions.java` holds moves that use several parts (`scoreHigh`: lift up, open the claw, lift down),
-and the `autos` folder the autonomous programs, each a list of steps:
+`Actions.java` holds moves that use several parts (`scoreHigh`: lift up, open the claw, lift down).
+The `autos` folder holds the autonomous programs. Each one is a list of steps:
 
 ```java
 s.start("Against our wall, facing the field", 0)
@@ -50,16 +50,16 @@ s.start("Against our wall, facing the field", 0)
  .right("Park", 20, 0.7);
 ```
 
-New to Java? Do not worry if this looks strange. The [lessons](docs/tutorials/README.md) explain each
-line, one at a time. (Want only some pieces in your own OpMode, without the five files? That works
-too: [Use only what you need](docs/guides/use-only-what-you-need.md).)
+If you are new to Java, do not worry if this looks strange. The [lessons](docs/tutorials/README.md) explain each
+line, one at a time. You can also use only some pieces in your own OpMode, without the five files:
+[Use only what you need](docs/guides/use-only-what-you-need.md).
 
 ## Try your robot without a robot: the simulator
 
 ![The simulator: Driver Hub, the BIOBUZZ field in 3D, gamepads and the Control Hub](docs/images/simulator.png)
 
 Your **real OpMode code** runs on a laptop against a pretend Control Hub and Driver Hub, in a browser.
-No robot, no field, no phone needed:
+You need no robot, no field and no phone:
 
 - **The real field in 3D** (BIOBUZZ 2026-27, from the official field CAD), with physics: the robot
   drives, bumps into field parts and pushes game pieces; intakes take them in, launchers shoot them,
@@ -69,12 +69,14 @@ No robot, no field, no phone needed:
 - **Drive it** with the keyboard, a real gamepad (USB or Bluetooth) or a phone as a gamepad.
 - **See inside**: motors, servos, switches and cameras (with the AprilTags they see), telemetry on the
   Driver Hub, the button map on GUIDE.
-- **Place the robot** by dragging it on the map or in 3D; the spot is shown as an autonomous start spot.
-- **Scripted tests** (scenario files) that press buttons and check results, to catch mistakes before a
+- **Place the robot:** drag it on the map or in 3D. The simulator shows the spot as an autonomous start spot.
+- **Scripted tests** (scenario files): they press buttons and check results, so you catch mistakes before a
   meeting.
 
 In Android Studio, pick **Simulator** in the list next to the green Run button and click Run
-([the buttons](docs/setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing)). Or, in the `ftc-helper-lib` folder:
+([the buttons](docs/setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing)). Or type the command:
+
+**Where:** a terminal, in the `ftc-helper-lib` folder. ([Which folder](docs/setup/09-the-terminal.md#which-folder))
 
 ```bash
 ./gradlew :sim:run
@@ -85,30 +87,31 @@ the [four BIOBUZZ starter bots](docs/guides/starter-bots.md) to try.
 
 ## How it is made: experience plus AI
 
-We believe AI can be an amazing tool, and this library is built to show it. It combines what we have
-learned in nearly 30 years of hands-on coding with the power of agentic coding and testing:
+We believe AI can be an amazing tool, and we built this library to show it. It combines what we have
+learned in nearly 30 years of hands-on coding with the power of agentic coding and testing (AI agents
+that write, run and check code):
 
 - **People set the direction.** An experienced mentor decides what the library must do and how it should
   feel to a student, checks every design, and tries it on real robots with the team.
-- **AI agents write and test.** Most of the code, the docs and the tests are written by Claude (Anthropic)
-  in Claude Code, working in small, checked steps.
+- **AI agents write and test.** Claude (Anthropic) writes most of the code, the docs and the tests in
+  Claude Code, in small, checked steps.
 - **Cross-model checking.** Before each release, other models review the work: OpenAI's Codex and a second
-  Claude model look for the mistakes the first one missed. Their findings are fixed and listed in the
+  Claude model look for the mistakes the first one missed. We fix what they find and list it in the
   [changelog](CHANGELOG.md).
 - **Checks on every change:** unit tests, simulator test scripts, a docs check (every public class is
   on a docs page, every link works) and a check that nothing stops the robot's loop.
 
-What this means for you: the code is checked, but it is new, and people and AI both make mistakes. Test it
+For you, this means: the code is checked, but it is new. People and AI both make mistakes. Test it
 on your robot, read the code you rely on, and [tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose) when something is wrong or unclear. For
 students: use AI the same way, as a strong helper whose work you check and understand, not as a
 replacement for learning.
 
 ## Start here
 
-**New to the library?** Read in this order:
+**New to the library:** read in this order:
 
 1. [Set up](docs/setup/README.md): install Android Studio, get the robot project, add the library and
-   make the robot configuration. New to Java? Then [Read Java and make your first edit](docs/start-from-zero.md).
+   make the robot configuration. If you are new to Java, read [Read Java and make your first edit](docs/start-from-zero.md) next.
    Skip them if your robot project already builds and installs.
 2. [From Blocks to Java](docs/blocks-to-java.md) (used Scratch or Blocks before): where each block you
    know went, and why you never write the loop.
@@ -117,8 +120,8 @@ replacement for learning.
 5. Lessons 2 to 6 of the [main track](docs/tutorials/README.md#start-here-the-main-track): drive,
    buttons, mechanisms, actions, autonomous. Then the lessons your robot needs: odometry, paths, a shooter.
 
-**Have a question like "how do I add a lift?"** The [Cookbook](docs/cookbook.md) has more than 100
-short answers, each with code to copy (the code is built and tested with every change).
+**For a question like "how do I add a lift?":** the [Cookbook](docs/cookbook.md) has more than 100
+short answers, each with code to copy. The build tests that code with every change.
 
 Everything else, by what you want to do:
 
@@ -129,24 +132,24 @@ Everything else, by what you want to do:
 | Know Scratch or Blocks: see where each block went in Java | [From Blocks to Java](docs/blocks-to-java.md) |
 | **Get a robot driving, then a first autonomous** (a starter bot, a robot like an example, or your own design) | [Pick your start](docs/pick-your-start/README.md), then [the five files](docs/five-files/README.md) |
 | Add the library to our robot project | [Add the library](docs/setup/04-add-the-library.md) |
-| **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/start/01-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
+| **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/start/01-robot-in-five-files.md), [robot module](docs/reference/robot-java.md) |
 | **Start from code for a robot like ours** (kit bots, example robots, or made from our configuration) | [Pick your template](docs/templates.md) |
 | **Learn it step by step** (a 9-lesson main track: 6 for every robot, 3 for the robots that need them; plus 21 "under the hood" tutorials) | [Tutorials](docs/tutorials/README.md) |
 | **Every way a button can work: tap, hold, double-tap, tap then hold, pairs, buzzes** | [The button menu](docs/guides/buttons.md) |
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
-| **Write autonomous modes with the builder (every feature, with a tested example)** | [The autonomous builder](docs/guides/autonomous-builder.md) |
-| **Several autos, and choosing one at the field (INIT menu, names, match-day checklist)** | [Several autonomous modes](docs/guides/autos.md) |
+| **Write autonomous modes with the builder (every feature, with a tested example)** | [Building autos](docs/building-autos/README.md) |
+| **Several autos, and choosing one at the field (one file per plan, names, INIT menu choices)** | [Having multiple autos](docs/building-autos/03-multiple-autos.md), [Advanced autos](docs/building-autos/06-advanced-autos.md) |
 | **Know where the robot is on the field** (odometry: goBILDA Pinpoint, SparkFun OTOS, dead wheels) and drive to field points | [Lesson 7](docs/tutorials/start/07-odometry.md), [odometry module](docs/modules/odometry.md) |
 | **Smooth paths with Pedro Pathing support**, in the same field numbers (mecanum drives) | [Lesson 8](docs/tutorials/start/08-paths-with-pedro.md), [pedro module](docs/modules/pedro.md) |
 | Make autonomous modes the older way (EasyAuto) | [Easy autonomous modes](docs/guides/easy-autos.md) |
 | The older six-file starter kit (EasyTeleOp, EasyAuto) | [Starter kit](docs/starter-kit.md) |
-| Look up any class or method (searchable) | [Reference](docs/reference.md) |
+| Look up any class or method (searchable) | [Search every class](docs/reference/javadoc.md) |
 | Drive + slow mode + intake, ready to copy | [Example: drive and intake](docs/guides/example-drive-intake.md) |
 | Keep the loop fast: what blocks and what never does | [Non-blocking code](docs/guides/non-blocking.md) |
 | Exactly what runs every loop: order, hub reads and writes, files, statics | [What runs every loop](docs/guides/every-loop.md) |
-| Use just the parts you want in your own LinearOpMode (no framework) | [Use only what you need](docs/guides/use-only-what-you-need.md) |
+| Use only the parts you want in your own LinearOpMode (no framework) | [Use only what you need](docs/guides/use-only-what-you-need.md) |
 | Practice vs competition behavior | [Profiles](docs/guides/profiles.md) |
-| Every number in Tunables.java, part by part (units, defaults, tuning menu, which finder) | [Tunables reference](docs/guides/tunables.md) |
+| Every number in Tunables.java, part by part (units, defaults, tuning menu, which finder) | [Tunables reference](docs/reference/tunables.md) |
 | Change numbers while the robot runs | [Tuning](docs/guides/tuning.md) |
 | **Set up any turret: motor, servo or CR servo; home switch or not; +/-90 to a slip ring; hood; camera** | [Setting up a turret](docs/guides/turret-setup.md) |
 | **Set up a Limelight's pipelines for bright, normal and dim light (the lighting test at INIT)** | [Setting up Limelight lighting pipelines](docs/guides/limelight-lighting.md) |
@@ -167,7 +170,7 @@ Everything else, by what you want to do:
 
 ## What is inside
 
-Every class and every function is explained in the module pages. A **package** is a folder of Java
+The module pages explain every class and every function. A **package** is a folder of Java
 classes; its name is how your code finds them (in an `import` line). A **module** here is one part of
 the library, with its own docs page. (In the lessons, a module is also a ready-made robot part, like
 `Intake` or `Lift`, that you add in `Robot.java`. Neither is a Gradle module.)
@@ -182,7 +185,7 @@ the library, with its own docs page. (In the lessons, a module is also a ready-m
 | Mechanism | `com.crossbotics.ftchelper.mechanism` | Lifts/arms to named positions, intakes with jam back-out, servos with positions or degrees, continuous servos. | [mechanism.md](docs/modules/mechanism.md) |
 | Launcher | `com.crossbotics.ftchelper.launcher` | Flywheel in RPM, shot table, feeders, turret with safe limits, and a Launcher that only feeds when ready. | [launcher.md](docs/modules/launcher.md) |
 | Vision | `com.crossbotics.ftchelper.vision` | AprilTags with a webcam (SDK 12 clusters too), a Limelight 3A or a HuskyLens (colors too), one interface, safe aiming. | [vision.md](docs/modules/vision.md) |
-| Robot | `com.crossbotics.ftchelper.robot` | The robot in five files: Robot.java (what is on it), Tunables.java (its numbers), Controls.java (the buttons and the TeleOp), Actions.java (moves that use several parts) and autos. Ready-made modules: drive, intake, lift (one or two motors), arm, claw, wrist, positioner (any servo with named positions), turret, launcher with a hood and a feeder (indexer), camera, aim (whole-robot aim, the odometry backup, shooting on the move), pieces (a piece count from color sensors), lights; interlock rules that keep two parts apart; the odometry and Pedro lines; parts not on the robot yet (`.optional()`). | [robot.md](docs/modules/robot.md) |
+| Robot | `com.crossbotics.ftchelper.robot` | The robot in five files: Robot.java (what is on it), Tunables.java (its numbers), Controls.java (the buttons and the TeleOp), Actions.java (moves that use several parts) and autos. Ready-made modules: drive, intake, lift (one or two motors), arm, claw, wrist, positioner (any servo with named positions), turret, launcher with a hood and a feeder (indexer), camera, aim (whole-robot aim, the odometry backup, shooting on the move), pieces (a piece count from color sensors), lights; interlock rules that keep two parts apart; the odometry and Pedro lines; parts not on the robot yet (`.optional()`). | [robot.md](docs/reference/robot-java.md) |
 | TeleOp | `com.crossbotics.ftchelper.teleop` | EasyTeleOp: a whole TeleOp where you add only your mechanisms and buttons; driving, timer, tuning menu and safety come with it. | [teleop.md](docs/modules/teleop.md) |
 | Auto | `com.crossbotics.ftchelper.auto` | Autonomous as a list of named steps; EasyAuto does menu, timer, mirroring, park time, report. | [auto.md](docs/modules/auto.md) |
 | Match | `com.crossbotics.ftchelper.match` | Alliance and mirroring, match timer with buzz cues, INIT menu, auto-to-TeleOp memory. | [match.md](docs/modules/match.md) |
@@ -200,7 +203,7 @@ Example OpModes you can copy (including the [starter kit](docs/starter-kit.md)) 
 
 ## Works with
 
-- FTC SDK **12.0** (the 2026-27 BIOBUZZ release; built and tested). Older SDKs are not tested, and the
+- FTC SDK **12.0** (the 2026-27 BIOBUZZ release; built and tested). Nobody has tested older SDKs, and the
   vision classes need 12.0. See [A new FTC SDK version](docs/02-keep-up-to-date.md#a-new-ftc-sdk-version).
 - Android Studio Narwhal 3 Feature Drop or newer (needed by SDK 12.0). OnBot Java and Blocks cannot use a
   library like this.
@@ -208,8 +211,10 @@ Example OpModes you can copy (including the [starter kit](docs/starter-kit.md)) 
 
 ## Build and test the library by itself
 
-You only need this if you change the library. From this folder, run every check (the automatic build
-on GitHub, `.github/workflows/build.yml`, runs them on every change too):
+You need this only when you change the library. Run every check. The automatic build on GitHub
+(`.github/workflows/build.yml`) also runs them on every change, except the `:pedro` tests.
+
+**Where:** a terminal, in the `ftc-helper-lib` folder.
 
 ```bash
 ./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
@@ -219,15 +224,16 @@ python3 tools/parts_page.py --check   # the parts page matches sim/parts/parts.j
 python3 tools/check_blocking.py       # nothing in the loop waits
 python3 tools/check_tunables.py       # every Tunables field the code reads is documented
 node tools/check_builder.mjs          # the simulator's auto builder page code
+python3 tools/check_tests.py          # the community test list and testing/catalogue.json
 ```
 
-You need JDK 17 or newer and the Android SDK (Android Studio installs both), and Node.js for the last
-line. Details: [Contributing](docs/contributing.md).
+You need JDK 17 or newer and the Android SDK (Android Studio installs both), and Node.js for the
+`check_builder.mjs` line. Details: [Contributing](docs/contributing.md).
 
 ## Rules check (2026-27 BIOBUZZ manual, TU01)
 
-- **R304:** custom software can be reused year to year, and robot software made before Kickoff
-  is allowed. So using this library is fine.
+- **R304:** a team can reuse custom software year to year, and can use robot software made before
+  Kickoff. So you can use this library.
 - **R105 B:** the robot must stay inside its size limits **without software**. The soft limits in
   `SafeMotor` help, but every moving part also needs a physical hard stop. Inspectors check the
   maximum mechanical extension.

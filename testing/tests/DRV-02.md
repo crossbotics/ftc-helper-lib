@@ -19,7 +19,7 @@ way. We want to know it works on robots built differently from ours.
 
 ## Safety
 
-- Clear floor, about 6 x 6 ft. Low power (`practiceMaxPower` 0.4, PRACTICE profile).
+- Clear floor, about 6 x 6 ft. Low power (`maxPower` 0.4).
 - A hand near STOP.
 
 ## Setup

@@ -147,7 +147,7 @@ public class SimPiecesTest {
         assertEquals("it is in the FLOWER now, on top of the 4 staged POLLEN", 17, r.pieces.inStacks());
         assertEquals(5, r.pieces.flowers().get("FLOWER (red wall, audience half)").size());
         assertEquals("still on the field (drawn in the FLOWER)", 31, r.pieces.drawn().size());
-        // dropped 2.5 in off the centre: it lands on the rim and rolls in (it counts)
+        // dropped 2.5 in off the center: it lands on the rim and rolls in (it counts)
         SimRobot o = robot("");
         o.pieces.place("POLLEN", 23.57 + 2.5, -68.04, 30);
         run(o, 1.5);
@@ -194,7 +194,7 @@ public class SimPiecesTest {
         assertEquals(31, r.pieces.drawn().size());
     }
 
-    // The red-wall FLOWER (opening centre 23.39, -68.04; its POLLEN 2.4 in in from the front face): an intake
+    // The red-wall FLOWER (opening center 23.39, -68.04; its POLLEN 2.4 in in from the front face): an intake
     // against the front takes the bottom POLLEN, and the next one drops into its place.
     // A turning roller drags a piece with its surface: a spinner standing up (axis up) at the robot's left
     // turns counterclockwise seen from above with + power, so its outer side moves backward.
@@ -277,7 +277,7 @@ public class SimPiecesTest {
         Object[] ball = null;
         for (Object[] d : r.pieces.drawn()) if (Math.abs((Double) d[2] + 40) < 8 && (Double) d[3] > 2.5) ball = d;
         assertEquals(before + 1, r.pieces.drawn().size());
-        assertTrue("it left from the table's exit point (3 in forward and 2 up of the flywheel's centre)", ball != null);
+        assertTrue("it left from the table's exit point (3 in forward and 2 up of the flywheel's center)", ball != null);
         // its speed: blended between the rows by the wheel's speed (or grown past the last row)
         SimShotTable t = new SimShotTable(table.toPath(), "test", 1);
         double want = t.pick("POLLEN", rpm).speedIn;
@@ -484,7 +484,7 @@ public class SimPiecesTest {
         for (double[] pl : h.plates(1)) {
             double[] c = {pl[0], pl[1], pl[2]};
             double[] out = SimPieces.pushOut(pl, c, 1.4);
-            assertTrue("a ball at a plate's centre overlaps it", out != null);
+            assertTrue("a ball at a plate's center overlaps it", out != null);
             double moved = Math.sqrt(Math.pow(out[0] - c[0], 2) + Math.pow(out[1] - c[1], 2) + Math.pow(out[2] - c[2], 2));
             assertEquals("out by the plate's half thickness and the ball's radius", pl[14] / 2 + 1.4 + 0.05, moved, 1e-6);
             assertTrue("and then clear of it", SimPieces.pushOut(pl, out, 1.4) == null);

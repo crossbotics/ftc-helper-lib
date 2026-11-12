@@ -27,7 +27,7 @@ public class ExampleShotTuner extends ShotTunerOpMode {
     // The launcher, as in tutorial 17. Use the flywheel numbers from the Flywheel Finder.
     @Override
     protected Launcher createLauncher() {
-        Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel").countsPerRev(28).pidf(10, 3, 0, 12);
+        Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel").countsPerRev(28).maxRpm(6000).startingGains();
         PositionServo hood = PositionServo.create(hardwareMap, "hood").degrees(0.10, 0, 0.90, 25).travelTime(0.4);
         MotorFeeder feeder = MotorFeeder.create(hardwareMap, "feeder").power(1.0).feedTime(0.25);
         return new Launcher(flywheel, feeder).hood(hood).shotInterval(0.3);

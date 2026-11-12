@@ -19,7 +19,7 @@ import java.util.Locale;
 
 /**
  * Cookbook: odometry and driveTo (docs/cookbook.md#odometry-and-driveto). Odometry tells the robot
- * where it is on the field. Field numbers: x inches right of the centre line, y inches away from your
+ * where it is on the field. Field numbers: x inches right of the center line, y inches away from your
  * wall (negative = your half), heading 0 = facing away from you, counterclockwise +.
  *
  * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
@@ -36,9 +36,9 @@ public class OdometryRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
                     .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
             // recipe: odometry-pinpoint
-            // After drive(...). Offsets, mm: how far LEFT the forward pod is, how far FORWARD the sideways pod is.
-            // Not sure? Write offsetsMm(0, 0): the Odometry Tuner measures them.
-            odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
+            // After drive(...). The robot's length and width, then where each pod's wheel is, mm:
+            // the forward pod from the LEFT edge, the sideways pod from the FRONT edge.
+            odometry(Odometry.pinpoint("pinpoint").robotSizeMm(430, 400).podsFromEdgesMm(284, 383));
             // end recipe
             intake = add(Intake.motor("intake"));
         }
@@ -50,8 +50,8 @@ public class OdometryRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: odometry-otos
-            // Where the OTOS sits: inches forward and left of the robot's centre, and its turn in degrees.
-            odometry(Odometry.otos("otos").mountIn(3.5, 0, 0));
+            // The robot's length and width, then the OTOS's middle from the FRONT and LEFT edges (mm), and its turn.
+            odometry(Odometry.otos("otos").robotSizeMm(430, 400).mountFromEdgesMm(126, 200, 0));
             // end recipe
         }
     }
@@ -63,7 +63,7 @@ public class OdometryRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: odometry-dead-wheels
             // The configuration names of the motor ports the pods plug into: left, right, sideways pod.
-            // trackWidthIn: left pod to right pod. perpForwardIn: the sideways pod, 6 in BEHIND the centre.
+            // trackWidthIn: left pod to right pod. perpForwardIn: the sideways pod, 6 in BEHIND the center.
             odometry(Odometry.threeWheels("par_left", "par_right", "perp")
                     .trackWidthIn(13.2).perpForwardIn(-6));
             // end recipe
@@ -84,10 +84,10 @@ public class OdometryRecipes {
             // recipe: drive-to
             // The start spot (x, y, heading) must be where the robot really stands: the pose starts there.
             s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
-             .driveTo("To the goal", Tunables.Auto.goalX, Tunables.Auto.goalY, Tunables.Auto.goalHeading, 0.6)
+             .driveTo("To the goal", -30, -30, 45, 0.6)
              .parkWithSeconds(4)
              // The last number: "close enough", in inches (default 1).
-             .driveTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.7, 2.0);
+             .driveTo("Park", -56, -36, 0, 0.7, 2.0);
             // end recipe
         }
     }
@@ -104,7 +104,7 @@ public class OdometryRecipes {
             show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in, heading %.0f",
                     robot.pose().x, robot.pose().y, robot.pose().headingDeg));
             // end recipe
-            g2.y.press(Actions.intakeOnOurHalf(robot)).says("intake on until the centre line");
+            g2.y.press(Actions.intakeOnOurHalf(robot)).says("intake on until the center line");
 
             // recipe: reset-pose-button
             // A second spot of your own: hold D-pad down 1 s with the robot in the right corner tile.
@@ -145,9 +145,9 @@ public class OdometryRecipes {
         protected void steps(Steps s, RouteRobot robot) {
             // recipe: route-to-park
             s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
-             .driveTo("To the goal", Tunables.Auto.goalX, Tunables.Auto.goalY, Tunables.Auto.goalHeading, 0.6)
+             .driveTo("To the goal", -30, -30, 45, 0.6)
              .parkWithSeconds(6)    // the route slows at each corner: give it more time than a straight line
-             .routeTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+             .routeTo("Park", -56, -36, 0, 0.8);
             // end recipe
         }
     }
@@ -162,7 +162,7 @@ public class OdometryRecipes {
         protected void buttons(RouteRobot robot, Pad g1, Pad g2) {
             // recipe: route-button
             // route(...) makes the job. It starts when the button or the time says so.
-            Runnable park = route("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+            Runnable park = route("Park", -56, -36, 0, 0.8);
             g1.dpadLeft.tap(park).says("drive to the park spot (a drive stick stops it)");
             atSecondsLeft(10, park);
             // end recipe
@@ -176,7 +176,7 @@ public class OdometryRecipes {
         public static Action intakeOnOurHalf(Robot r) {
             return Action.named("Intake on our half")
                     .then(r.intake::in)
-                    .waitUntil("past the centre line", () -> r.pose().y > 0, 10.0)
+                    .waitUntil("past the center line", () -> r.pose().y > 0, 10.0)
                     .then(r.intake::stop);
         }
         // end recipe

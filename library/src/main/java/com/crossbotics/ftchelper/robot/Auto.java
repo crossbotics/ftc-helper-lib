@@ -32,7 +32,7 @@ import java.util.List;
  * <p>Checked before the match: autonomous refuses to run until {@code Tunables.Drive.calibrated} is
  * true (after the Drive Tuner), and a step that names a part not on the robot stops in INIT.
  *
- * Docs: docs/modules/robot.md (section "Autos")
+ * Docs: docs/reference/robot-java.md (section "Autos")
  */
 public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
     private R robot;

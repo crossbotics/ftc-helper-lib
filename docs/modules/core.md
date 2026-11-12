@@ -6,11 +6,11 @@ Package: `com.crossbotics.ftchelper.core`
 
 Learn it hands-on: [12 Organize a whole robot](../tutorials/12-robot-structure.md), [14 Mechanisms](../tutorials/14-mechanisms.md), [15 Telemetry, profiles and tuning](../tutorials/15-telemetry-profiles-tuning.md).
 
-The small pieces every other part of the library is built on. You meet them when you write your
-own mechanism class (`Subsystem`), switch between practice and competition settings (`Profile`), or
-describe your drivetrain once for every program (`RobotConfig`). With the
-[robot in five files](robot.md) you rarely use them by name. To see how they fit together, start
-with tutorial 12.
+The small pieces that every other part of the library uses. You meet them when you write your own
+mechanism class (`Subsystem`), or switch between practice and competition settings (`Profile`). You also
+meet them when you describe your drivetrain once for every program (`RobotConfig`). With the
+[robot in five files](../reference/robot-java.md), you use them by name only for a special case. To see how
+they fit together, start with tutorial 12.
 
 | Class | Use it to |
 | --- | --- |
@@ -31,14 +31,13 @@ An **interface**: a promise that a class has these methods. Every mechanism help
 
 | Method | Required? | What it is for |
 | --- | --- | --- |
-| `update()` | yes | called once every loop; the one place that talks to the hardware |
-| `stop()` | no (default: nothing) | stop all motion; called at the end of every OpMode |
+| `update()` | yes | the loop calls it once every loop. It is the one place that talks to the hardware |
+| `stop()` | no (default: nothing) | stop all motion. The OpMode calls it at the end |
 | `addTelemetry(RobotTelemetry t)` | no | add this part's lines (standard and debug) |
 | `name()` | no (default: class name) | shown in telemetry |
 
-**Why one shape for everything?** Because then ONE line updates the whole robot, autonomous can
-keep every mechanism working during a drive move, and next season's new mechanism plugs in
-without changing anything else.
+**Why one shape for everything:** ONE line updates the whole robot. Autonomous can keep every mechanism
+working during a drive move. And next season's new mechanism plugs in without changes anywhere else.
 
 Your own mechanism:
 
@@ -62,9 +61,9 @@ public class Bucket implements Subsystem {
 }
 ```
 
-The pattern: **commands** change a little state and are quick (safe from a button); **`update()`**
-turns that state into hardware actions. (A servo command may move the servo at once; never command
-anything in INIT unless moving then is safe.)
+The pattern: **commands** change a little state and are quick, so a button can call them safely.
+**`update()`** turns that state into hardware actions. A servo command may move the servo at once. So
+command a part in INIT only when a move then is safe.
 
 ## Subsystems
 
@@ -79,16 +78,16 @@ robot.stop();                 // stops each, even if one throws an error
 
 | Method | What it does |
 | --- | --- |
-| `add(parts...)` | adds parts (null is skipped, for optional hardware) |
-| `update()`, `stop()`, `addTelemetry(t)` | does it for every part, in order. `update()` times each part: a part slower than 25 ms (it waits or sleeps) shows a warning |
-| `getSlowUpdateWarning()` | "" or the last slow part (shown for 5 s after the last slow update) |
+| `add(parts...)` | adds parts. It skips null, for optional hardware |
+| `update()`, `stop()`, `addTelemetry(t)` | does it for every part, in order. `update()` times each part. When a part takes more than 25 ms (it waits or sleeps), the group shows a warning |
+| `getSlowUpdateWarning()` | "" or the last slow part. It stays for 5 s after the last slow update |
 | `all()` | the list of parts |
 
-`Subsystems` is itself a `Subsystem`, so groups can contain groups.
+`Subsystems` is itself a `Subsystem`, so a group can contain groups.
 
 ## Profile
 
-`PRACTICE` or `COMPETITION`. Saved on the Control Hub, so it stays until someone changes it.
+`PRACTICE` or `COMPETITION`. The Control Hub saves it, so it stays until someone changes it.
 **Default: COMPETITION** (the safe one).
 
 | | PRACTICE | COMPETITION |
@@ -101,8 +100,8 @@ robot.stop();                 // stops each, even if one throws an error
 | --- | --- |
 | `Profile.current()` | the active profile |
 | `Profile.set(p)` | changes and saves it (or use `InitMenu.profile()`) |
-| `Profile.pick(practiceValue, competitionValue)` | one value or the other; works with numbers, true/false, anything |
-| `profile.isPractice()` | true for PRACTICE |
+| `Profile.pick(practiceValue, competitionValue)` | one value or the other. It works with numbers, true/false, anything |
+| `profile.isPractice()` | whether the profile is PRACTICE |
 
 ```java
 // Profile.pick(value in PRACTICE, value in COMPETITION)
@@ -115,7 +114,8 @@ Full guide: [Profiles](../guides/profiles.md).
 ## SettingsFile
 
 A tiny file on the Control Hub that keeps settings as name = value pairs:
-`/sdcard/FIRST/ftc-helper/settings.properties`. `Profile` and `Tunable` use it; you rarely need it yourself.
+`/sdcard/FIRST/ftc-helper/settings.properties`. `Profile` and `Tunable` use it. You need it yourself only for
+a special case.
 
 | Method | What it does |
 | --- | --- |
@@ -123,17 +123,17 @@ A tiny file on the Control Hub that keeps settings as name = value pairs:
 | `SettingsFile.folder()` | the helper's folder: `/sdcard/FIRST/ftc-helper` on the robot, the simulator's data folder on a laptop (the `ftchelper.dataDir` setting) |
 | `get(key, fallback)`, `getDouble(key, fallback)`, `has(key)` | read |
 | `put(key, value)`, `remove(key)` | change in memory |
-| `save()` | write the file; returns false if it could not (the robot keeps working). It waits until the file is written: use it in INIT or tests |
-| `saveInBackground()`, `saveInBackground(ok -> ...)` | write the file without waiting (on a background thread) and return at once. Use this while the robot runs. |
+| `save()` | write the file. It gives false when it could not, and the robot keeps working. It waits until the file is written, so use it in INIT or tests |
+| `saveInBackground()`, `saveInBackground(ok -> ...)` | write the file on a background thread, and return at once. Use this while the robot runs |
 | `SettingsFile.useForTests(file)` | tests only: use another file |
 
-A damaged or missing file simply means "nothing saved": the values in the code are used.
+A damaged or missing file means "nothing saved". Then the library uses the values in the code.
 
 ## RobotConfig
 
-The drivetrain described ONCE: motor names and directions, autonomous tuning, and how the Control
-Hub is mounted. [`EasyTeleOp`](teleop.md) and [`EasyAuto`](auto.md) both read it from their
-`robotConfig()`, so TeleOp and every autonomous always match. Change a motor name here and every
+The drivetrain, described ONCE: motor names and directions, autonomous tuning, and how the Control Hub
+is mounted. [`EasyTeleOp`](teleop.md) and [`EasyAuto`](auto.md) both read it from their
+`robotConfig()`. So TeleOp and every autonomous always match. When you change a motor name here, every
 program gets it.
 
 ```java
@@ -157,50 +157,52 @@ public class RobotSettings extends RobotConfig {
 
 | Method | Required? | What you return |
 | --- | --- | --- |
-| `drive()` | yes | the [`DriveConfig`](drive.md#driveconfig). May be called more than once: make a fresh one each time. |
-| `auto()` | no | the [`AutoDriveConfig`](drive.md#autodriveconfig). Default: untuned (autonomous refuses to run until you tune it) |
-| `imu(hardwareMap)` | yes | the IMU, usually one [`ImuSetup.get`](hardware.md) line. Every Control Hub has one. (Null = no IMU: TeleOp is robot-centric only, and autonomous refuses to start.) |
+| `drive()` | yes | the [`DriveConfig`](drive.md#driveconfig). The library may call it more than once, so make a fresh one each time |
+| `auto()` | no | the [`AutoDriveConfig`](drive.md#autodriveconfig). Default: untuned, and autonomous refuses to run until you tune it |
+| `imu(hardwareMap)` | yes | the IMU, usually one [`ImuSetup.get`](hardware.md) line. Every Control Hub has one. Null = no IMU: TeleOp is robot-centric only, and autonomous refuses to start |
 
-The mechanisms are not in here: they go in your own `Robot` class, so your programs can reach them
-by name (`robot.lift`). See the [starter kit](../starter-kit.md).
+The mechanisms go in your own `Robot` class, not here. Then your programs can reach them by name
+(`robot.lift`). See the [starter kit](../starter-kit.md).
 
 ## InitStop
 
-A mistake found at INIT (a wrong name in Robot.java, a missing number in Tunables.java), shown as plain
-lines on the Driver Station instead of the FTC app's red line:
+It shows a mistake found at INIT (a wrong name in Robot.java, a missing number in Tunables.java) as plain
+lines on the Driver Station, in place of the FTC app's red line:
 
 <samp>INIT STOPPED: the robot did not start.</samp><br>
 <samp>Tunables.Lift has no max: write max (...)</samp><br>
 <samp>Fix it, then press INIT again. Press STOP now.</samp>
 
-Then it waits for STOP; nothing moves. The library's OpModes (EasyTeleOp, EasyAuto, the finders, the
-Hardware Check, Tune and check) and `robot.init(this)` use it already. A mistake after ▶ (start on the Driver Hub) is not
-caught: the FTC app shows it as before. The robot log keeps the full error.
+Then it waits for STOP, and nothing moves. The library's OpModes (EasyTeleOp, EasyAuto, the finders, the
+Hardware Check, Tune and check) and `robot.init(this)` use it already. InitStop does not catch a mistake
+after ▶ (start on the Driver Hub): the FTC app shows it as before. The robot log keeps the full error.
 
 | Method | What it does |
 | --- | --- |
-| `InitStop.run(this, () -> { ... })` | in your own `LinearOpMode`: runs the code; a mistake before ▶ is shown and waits for STOP |
+| `InitStop.run(this, () -> { ... })` | in your own `LinearOpMode`: runs the code. It shows a mistake before ▶ and waits for STOP |
 | `InitStop.showAndWait(this, e)` | show one error now and wait for STOP (false in the simulator) |
-| `InitStop.words(e)` | the plain words for an error: a library message as it is; another error with where it happened, e.g. "NullPointerException in Robot.java line 42" |
+| `InitStop.words(e)` | the plain words for an error. It gives a library message as it is, and another error with where it happened, for example "NullPointerException in Robot.java line 42" |
 
-**Why:** the red line starts with Java words, and the real message after them is easy to miss. In the
+**Why:** the red line starts with Java words, and you can miss the real message after them. In the
 simulator, INIT errors still show in its own error panel.
 
 ## Time
 
-The library's clock: `Time.nanos()` is the time now, in nanoseconds (only differences mean anything). On the
-robot it is the real clock, `System.nanoTime()`. Most of the robot's parts (the five-files modules, the
-launcher, the mechanisms, the match timer, the PID and slew controllers) read it each time they need the time.
+The library's clock. A JUnit test can swap in a pretend clock and move the time forward by hand. Then a
+test of timing is quick, and it gives the same result on a slow computer. Use the testkit's
+[`PretendClock`](testkit.md#pretendclock).
 
-**Why:** a JUnit test can swap in a pretend clock and move the time forward by hand. Then a test of timing is
-quick and gives the same result on a slow computer. Use the testkit's [`PretendClock`](testkit.md#pretendclock).
+`Time.nanos()` is the time now, in nanoseconds. Only the difference between two times means anything. On
+the robot it is the real clock, `System.nanoTime()`. Most of the robot's parts read it each time they need
+the time: the five-files modules, the launcher, the mechanisms, the match timer, the PID and slew
+controllers.
 
 | Method | What it does |
 | --- | --- |
-| `Time.nanos()` | the time now, nanoseconds; never waits |
-| `Time.useForTests(clock)` | JUnit tests only: use this clock (nanoseconds); null = the real clock again |
+| `Time.nanos()` | the time now, in nanoseconds. It never waits |
+| `Time.useForTests(clock)` | JUnit tests only: use this clock (nanoseconds). Null = the real clock again |
 
-A new part that needs the time reads `Time::nanos` (not `System::nanoTime`), so tests can move it. The code that
-measures how long the loop itself takes (the slow-loop warning) keeps the real clock. So does the camera aim:
-the camera stamps its pictures with the real clock, so a picture's age is measured on it too.
+A new part that needs the time reads `Time::nanos`, not `System::nanoTime`, so tests can move it. Two parts
+keep the real clock. The slow-loop warning measures how long the loop itself takes. The camera aim uses the
+real clock because the camera stamps its pictures with it, so the aim measures a picture's age on it too.
 

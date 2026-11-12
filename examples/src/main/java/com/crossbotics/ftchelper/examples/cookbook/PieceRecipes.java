@@ -17,7 +17,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
  * Cookbook: game pieces (docs/cookbook.md#game-pieces). Which piece is in the robot, how many it holds,
- * and which one fires next, from a colour sensor, a distance sensor or a second camera.
+ * and which one fires next, from a color sensor, a distance sensor or a second camera.
  * The Piece Tuner is its own file: PieceTuner.java.
  *
  * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
@@ -25,7 +25,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  */
 public class PieceRecipes {
 
-    /** A robot that counts its pieces: an intake, a launcher, two colour sensors, a light. */
+    /** A robot that counts its pieces: an intake, a launcher, two color sensors, a light. */
     public static class Robot extends RobotDefinition {
         public Intake intake;
         public Launcher launcher;
@@ -72,8 +72,8 @@ public class PieceRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: pieces-other-sensors
-            // A REV 2m Distance Sensor across the intake tells the sizes apart (not the colours).
-            // A second webcam on the ready slot: colours.
+            // A REV 2m Distance Sensor across the intake tells the sizes apart (not the colors).
+            // A second webcam on the ready slot: colors.
             pieces = add(Pieces.kinds("POLLEN", "NECTAR")
                     .comingIn(PieceSensor.distance("intake_distance"))
                     .readyToFire(PieceSensor.camera("Webcam 2"))
@@ -119,7 +119,7 @@ public class PieceRecipes {
                     .speedFromDistance(camera)
                     .startTable("pollen")                                 // before a piece is known
                     .tableFrom(pieces.nextKind())                         // the next piece picks the table
-                    .tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR"));    // both NECTAR colours use "nectar"
+                    .tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR"));    // both NECTAR colors use "nectar"
             // end recipe
         }
     }

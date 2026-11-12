@@ -27,7 +27,7 @@ import java.util.List;
  * With {@link #stopsWhen}: holding RT for 1 s runs it in anyway (the count was wrong), and the Driver
  * Station warns when it has been held back for more than 2 s.
  *
- * Docs: docs/modules/robot.md (section "Intake")
+ * Docs: docs/reference/robot-java.md (section "Intake")
  */
 public final class Intake extends Module<Intake> implements Toggleable {
     private final boolean servos;

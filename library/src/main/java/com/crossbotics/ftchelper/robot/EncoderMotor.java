@@ -12,7 +12,7 @@ import java.util.List;
  * <p>Why the direction: the check pushes each motor set up as Robot.java sets it up, toward the side where the
  * part has room ({@link #pushSign()}: a lift up from its bottom stop), and its count must move that way too.
  *
- * Docs: docs/modules/robot.md. Guide: docs/guides/finders.md, "Encoder Check"
+ * Docs: docs/reference/robot-java.md. Guide: docs/guides/finders.md, "Encoder Check"
  */
 public final class EncoderMotor {
     /** The motor's configuration name, e.g. "lift_left". Its encoder cable must be in this motor's port. */

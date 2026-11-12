@@ -70,12 +70,12 @@ A new kind of part (say, a "wrist") needs three changes together, or the check f
 
 1. `vocabulary.json`: the word, its label, and the form field and option it matches.
 2. `.github/ISSUE_TEMPLATE/test-report.yml`: the option in that field (usually the `robot_has` checkboxes).
-3. The website's picker reads vocabulary.json from the catalogue: nothing to change there.
+3. The website's picker reads vocabulary.json from the catalog: nothing to change there.
 
 ## At a release
 
 `python3 tools/release.py prepare v0.17.0` runs `python3 tools/check_tests.py --set-since v0.17.0`. That
-changes every `since: unreleased` to the new version and writes the catalogue. The website takes the catalogue from the newest release tag, like the docs.
+changes every `since: unreleased` to the new version and writes the catalog. The website takes the catalog from the newest release tag, like the docs.
 
 ## Triage and labels
 

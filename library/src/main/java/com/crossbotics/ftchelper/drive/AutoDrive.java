@@ -472,7 +472,7 @@ public class AutoDrive {
             double headingTol = Math.max(cfg.turnToleranceDeg, 2.0);
             double minTurn = cfg.turnMinPower > 0 ? cfg.turnMinPower : DRIVE_TO_MIN_TURN;
             // The smallest powers near the point are WHEEL powers: mix() scales every power by the drive's
-            // power limit (Tunables.Drive.practiceMaxPower 0.4 in the practice profile), and 0.12 x 0.4 is
+            // power limit (Tunables.Drive.maxPower, for example 0.4 for first runs), and 0.12 x 0.4 is
             // too weak to move a robot, so it would end STALLED a little short of the point. Asked for
             // before that scaling, they are divided by the limit (at most 1).
             double limit = Math.max(powerLimit, 1e-6);

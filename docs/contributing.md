@@ -9,10 +9,11 @@ follows the same six steps, so nothing breaks and the docs and tutorials stay tr
 
 1. **Code** in `library/src/main/java/com/crossbotics/ftchelper/<module>/`, commented for novice
    programmers: plain everyday words, the WHY, and pointers to the docs ([Commenting style](commenting-style.md)).
+   Doc pages follow the [Writing style](writing-style.md).
 2. **Javadoc** on every public class and method: what it does, each parameter (with its unit and
    range), what it returns, and a short example. Plain words.
 3. **Test** in `library/src/test/java/...` for any logic (math, timing, button edges, limits).
-   Hardware calls cannot be unit-tested; put the logic in a plain class (like `SoftLimits` for
+   A unit test cannot call hardware. So put the logic in a plain class (like `SoftLimits` for
    `SafeMotor`) and test that.
 4. **Docs:** update the module page in `docs/modules/` (the method table and an example), and
    `docs/troubleshooting.md` if it fixes a common problem.
@@ -23,7 +24,7 @@ follows the same six steps, so nothing breaks and the docs and tutorials stay tr
    covers it (`docs/guides/`), and any diagram that shows it (Mermaid blocks in the pages, SVGs in
    `docs/images/`). A new module gets a row in the README table and a page in `docs/modules/`.
 6. **CHANGELOG.md:** add a line under "Unreleased": Added / Changed / Fixed. Start each entry with one plain sentence
-   (what it does for a team), then the details; the release's "What's new" is built from those sentences.
+   (what it does for a team), then the details. The release's "What's new" comes from those sentences.
 
 A change is not done until all six are done.
 
@@ -34,18 +35,18 @@ A change is not done until all six are done.
 - Tutorial 13's tests (`examples/src/test/...`) run with the build too.
 - `tools/check_docs.py` fails if a link or heading link is broken, if a public library class is
   missing from the module pages, or if a tutorial program is not mentioned in a tutorial page.
-- The [cookbook](cookbook.md) is the exception: every java block in it is copied from a marked region
-  (`// recipe: name` ... `// end recipe`) in `examples/.../cookbook/`, and `tools/check_docs.py` fails
+- The [cookbook](cookbook.md) is the exception: every java block in it is a copy of a marked region
+  (`// recipe: name` ... `// end recipe`) in `examples/.../cookbook/`. `tools/check_docs.py` fails
   if they differ. Change the Java file, then run `python3 tools/check_docs.py --fix-cookbook` to copy
   the regions into the page. The simulator test `CookbookTest` INITs and runs every cookbook OpMode.
 - `tools/check_tunables.py` reads every `Tunables.java` field the robot package reads (`t.number`,
-  `t.flag`, `t.tunable`, ...) and fails if [the Tunables reference](guides/tunables.md) misses one, names
-  one the code no longer reads, or has a wrong default, Live or REQUIRED cell. It also checks that the
+  `t.flag`, `t.tunable`, ...) and fails if [the Tunables reference](reference/tunables.md) misses one, names
+  one the code no longer reads, or has a wrong default, "In tuning menu" or REQUIRED cell. It also checks that the
   example robots' `Tunables.java` files (and the one `:sim:newRobot` writes) use only fields their parts
   read, and that `TunableFields.java` (the lists INIT uses to stop on a misspelled field) lists exactly
   the fields each part reads. A new number in a module: add its row to the reference and its name to
   `TunableFields.java`.
-- Code snippets IN the tutorial pages are not compiled. When you change a program, search its
+- The build does not compile code snippets IN the tutorial pages. When you change a program, search its
   tutorial page for the same lines and update them.
 - Before a release, read the changed tutorials once from top to bottom as a student would.
 
@@ -63,7 +64,7 @@ A change is not done until all six are done.
   be in the library as season definitions, kept apart and updated each season. A team's own start spots,
   routes, positions and tuned numbers belong in TeamCode.
 - In the docs, text the robot or a tool SHOWS (a Driver Station message, a warning, a Gradle or git
-  error) is written `<samp>...</samp>`; text you TYPE (code, names, commands) stays in backticks. The
+  error) goes in `<samp>...</samp>`. Text you TYPE (code, names, commands) stays in backticks. The
   site shows the two differently, so a student can tell "what you see" from "what you write".
   Inside `<samp>`, write `&lt;` and `&amp;` for `<` and `&`.
 - Classes that use time take a clock in a second constructor (`LongSupplier clockNanos`) so tests
@@ -73,21 +74,26 @@ A change is not done until all six are done.
 
 ## Build and test
 
-You need JDK 17 or newer and the Android SDK. Android Studio installs both. From the library folder:
+You need JDK 17 or newer and the Android SDK. Android Studio installs both. You also need Node.js for the
+`check_builder.mjs` line.
+
+**Where:** a terminal, in the `ftc-helper-lib` folder.
 
 ```bash
-./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest :sim:testDebugUnitTest
-python3 tools/check_docs.py
-python3 tools/check_blocking.py
-python3 tools/parts_page.py --check
-python3 tools/check_tunables.py
-python3 tools/check_tests.py
+./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
+./gradlew :sim:testDebugUnitTest :pedro:testDebugUnitTest
+python3 tools/check_docs.py           # links, docs for every class, the Cookbook's code
+python3 tools/parts_page.py --check   # the parts page matches sim/parts/parts.json
+python3 tools/check_blocking.py       # nothing in the loop waits
+python3 tools/check_tunables.py       # every Tunables field the code reads is documented
+node tools/check_builder.mjs          # the simulator's auto builder page code
+python3 tools/check_tests.py          # the community test list and testing/catalogue.json
 ```
 
-This runs every test (the library's, the examples' and the simulator's), builds the examples and every
-tutorial program, and checks the docs and the parts page.
-All must pass before you push. GitHub
-also runs this on every push (`.github/workflows/build.yml`).
+This runs every test (the library's, the examples', the simulator's and the Pedro module's), builds the
+examples and every tutorial program, and checks the docs, the parts page, the auto builder page and the
+community test list. All must pass before you push. GitHub runs the same checks on every push
+(`.github/workflows/build.yml`), except the `:pedro` tests.
 
 If Gradle cannot find the Android SDK, make a file `local.properties` in this folder with the line
 `sdk.dir=/path/to/Android/sdk` (Android Studio shows the path in **Settings > Languages & Frameworks > Android SDK**).
@@ -95,7 +101,9 @@ If Gradle cannot find the Android SDK, make a file `local.properties` in this fo
 ## Working from inside a robot project
 
 The library is a submodule, so you can edit it from the robot project in Android Studio and test it
-on the robot right away. To save the change:
+on the robot right away. To save the change, type these lines.
+
+**Where:** Android Studio's **Terminal** tab, in the **project folder** (a new Terminal tab starts there). ([Which folder](setup/09-the-terminal.md#which-folder))
 
 ```bash
 cd ftc-helper-lib
@@ -106,11 +114,11 @@ git push -u origin my-change
 ```
 
 Then open a pull request on GitHub for the library, and ask the programming lead to review it.
-After it is merged, update the robot project to the new version ([Keep it up to date](02-keep-up-to-date.md)).
+After someone merges it, update the robot project to the new version ([Keep it up to date](02-keep-up-to-date.md)).
 
 ## Help us test, and add a test
 
-Not changing code? Testing helps as much. The test list is in [`testing/`](../testing/README.md): small
+If you are not changing code, testing helps as much. The test list is in [`testing/`](../testing/README.md): small
 tests with steps, a pass rule and what to write down. Teams pick the ones that fit their robot on
 https://crossbotics.com/ftc-helper/testing/ and send the result with the "Test report" form. To add a
 test: copy a file in `testing/tests/`, change it, and run `python3 tools/check_tests.py --fix`
@@ -133,7 +141,9 @@ A fix to the docs of something already released (a typo, a clearer step, a wrong
 a release. The site builds its docs from the `docs-live` branch: the last release plus these fixes.
 
 1. Make the fix on `main` as usual, in a commit that changes only `docs/` (and `README.md`).
-2. Put the same commit on `docs-live`, check it, and push it:
+2. Put the same commit on `docs-live`, check it, and push it.
+
+**Where:** a terminal, in the `ftc-helper-lib` folder.
 
 ```bash
 git checkout docs-live
@@ -145,25 +155,27 @@ git checkout main
 
    The check matters: a box fixed on `main` can use code that is not released yet. Then the check fails
    on `docs-live` (`git reset --hard origin/docs-live` drops the pick), and the fix waits for the release.
-   If the cherry-pick stops with a conflict, the page changed on `main` since the release:
+   If the cherry-pick stops with a conflict, the page changed on `main` since the release. Run
    `git cherry-pick --abort`, then make the fix again by hand on `docs-live` (and keep the `main` one).
 3. Deploy the site (crossbotics `./scripts/deploy.sh --go`): the pages update, and no email goes out.
 
 On GitHub, a push to `docs-live` runs only the docs checks (`tools/check_docs.py`, `tools/check_tests.py`),
 not the Gradle build: its code already passed as the release. That is the `docs` job in
-`.github/workflows/build.yml`, and GitHub uses the workflow file of the branch it runs on: a change to it
-reaches `docs-live` with the next release, or sooner by cherry-picking that commit (only the workflow file).
+`.github/workflows/build.yml`. GitHub uses the workflow file of the branch it runs on. So a change to that
+file reaches `docs-live` with the next release, or sooner when you cherry-pick that commit (only the workflow file).
 
 Docs for a feature that is not released yet stay on `main` only: teams must not read about something
 their version does not have. A release moves `docs-live` to the new tag (step 4 of [Releasing a version](#releasing-a-version)).
 
 ## Releasing a version
 
-The programming lead does this after merging changes. `vX.Y.Z` is the new version, e.g. `v0.19.0`.
+The programming lead does this after merging changes. `vX.Y.Z` is the new version, for example `v0.19.0`.
 `tools/release.py` does the steps and stops at the first problem, so a step cannot be forgotten.
 
-1. Get the changelog and the test list ready. This renames "Unreleased" in `CHANGELOG.md` to the new version and
-   today's date, and sets `since:` on the tests that said `since: unreleased`:
+1. Get the changelog and the test list ready. The script renames "Unreleased" in `CHANGELOG.md` to the new version and
+   today's date, and sets `since:` on the tests that said `since: unreleased`.
+
+**Where:** a terminal, in the `ftc-helper-lib` folder.
 
 ```bash
 python3 tools/release.py prepare vX.Y.Z
@@ -187,14 +199,16 @@ python3 tools/release.py prepare vX.Y.Z
 
 4. Publish. It runs the checks that need no Gradle (the Gradle tests are step 2), tags, pushes `main` and the tag together, makes the GitHub release, moves
    `docs-live` to the release, and checks that `docs-live` holds the same files as the tag. `--dry-run` gets the
-   latest from GitHub and runs only the checks. It pushes nothing:
+   latest from GitHub and runs only the checks. It pushes nothing.
+
+**Where:** a terminal, in the `ftc-helper-lib` folder.
 
 ```bash
 python3 tools/release.py publish vX.Y.Z notes.md
 ```
 
    GitHub checks the tag too: the build fails if the tag has no changelog heading or a test still says
-   `since: unreleased`. `docs-live` moves by a merge commit that holds exactly the tag's files, not a force push.
+   `since: unreleased`. The script moves `docs-live` with a merge commit that holds exactly the tag's files. It does not force-push.
    If publish stops part way, fix the problem and run the same command: it goes on with the steps not done yet.
 
 **Why:** a tag alone sends no message. Teams that click **Watch > Custom > Releases** on GitHub get an

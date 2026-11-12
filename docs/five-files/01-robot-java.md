@@ -3,8 +3,7 @@
 **The five files, page 1 of 5.**
 
 `Robot.java` lists what is on your robot: the drive, and each part, with the names from the robot
-configuration. It does not say what the buttons do (that is `Controls.java`) or how fast things go
-(that is `Tunables.java`).
+configuration. The buttons are in `Controls.java`, and the speeds are in `Tunables.java`.
 
 ## The smallest Robot.java
 
@@ -29,13 +28,13 @@ public class Robot extends RobotDefinition { // (1)!
 }
 ```
 
-1. `extends RobotDefinition`: your robot is built from the library's robot. That gives it the drive,
-   the safety checks, the screen lines and the simulator.
+1. `extends RobotDefinition`: your robot builds on the library's robot. The library's robot gives it the
+   drive, the safety checks, the screen lines and the simulator.
 2. `define()` runs once at INIT. Each line in it adds one thing to the robot.
 3. The drive, and its four motor names **in this order**: front left, front right, back left, back right.
    Each name must be exactly the name in the robot configuration (capitals and `_` count).
 4. Which motor drives the wheels, and which wheels: their ids in the [parts catalog](../guides/parts-catalog.md).
-   The library takes the motor's speed and the wheel's size from there, for speeds and distances.
+   The library reads the motor's speed and the wheel's size there, to work out speeds and distances.
 5. The Control Hub's own IMU (the sensor that knows which way the robot faces), and which way the hub is
    mounted: where its **logo** faces, then where its **USB ports** face.
 
@@ -49,15 +48,15 @@ package org.firstinspires.ftc.teamcode;
 
 ### The drive, attribute by attribute
 
-Every attribute you can put on the drive line. **Needed?** says which you must write: **yes** = the
-line does not work without it; recommended = it works without it, but less well; optional = only when
+You can put these attributes on the drive line. **Needed?** says which ones you must write. **yes** = the
+line does not work without it. recommended = it works without it, but less well. optional = only when
 your robot needs it.
 
 | Attribute | Needed? | What it sets | If you leave it out |
 | --- | --- | --- | --- |
-| `Drive.mecanum(fl, fr, bl, br)` | **yes**, one of the three | a mecanum drive (it can slide sideways) and its four motor names, in this order | — |
-| `Drive.tank(left, right)` | **yes**, one of the three | a tank drive, one motor per side | — |
-| `Drive.tank(fl, fr, bl, br)` | **yes**, one of the three | a tank drive, two motors per side | — |
+| `Drive.mecanum(fl, fr, bl, br)` | **yes**, one of the three | a mecanum drive (it can slide sideways) and its four motor names, in this order | - |
+| `Drive.tank(left, right)` | **yes**, one of the three | a tank drive, one motor per side | - |
+| `Drive.tank(fl, fr, bl, br)` | **yes**, one of the three | a tank drive, two motors per side | - |
 | `.motor(id)` | recommended | the drive motor, by its [parts catalog](../guides/parts-catalog.md#motors) id: speeds and distances come from it | Defaults to `gobilda-5203-312` |
 | `.wheel(id)` | recommended | the wheel, by its [parts catalog](../guides/parts-catalog.md#wheels-and-rollers) id: its size comes from the catalog | Defaults to a 96 mm wheel |
 | `.wheelMm(mm)` | optional | the wheel's diameter in mm, for a wheel that is not in the catalog (in place of `.wheel`) | Defaults to 96 |
@@ -68,9 +67,7 @@ your robot needs it.
 | `.noImu()` | optional | no IMU: TeleOp drives robot-centric only, and autonomous will not start | Defaults to the hub's IMU |
 
 The drive's numbers (speeds, slow mode, auto turns) are in `Tunables.Drive`:
-[every drive number](../guides/tunables.md#drive).
-
-Each box below is one common change.
+[every drive number](../reference/parts/drive.md#in-tunablesjava).
 
 ### Your motor names
 
@@ -97,8 +94,8 @@ Find your drive motor and your wheels in the parts catalog, and copy their ids:
 - [Wheels and rollers](../guides/parts-catalog.md#wheels-and-rollers), for example `gobilda-gripforce-mecanum-104`,
   `gobilda-mecanum-96`, `rev-mecanum-75` or `gobilda-hogback-96`.
 
-Your wheel is not in the catalog? Measure it across in millimetres and write `.wheelMm(mm)` in place of
-`.wheel(id)`.
+When your wheel is not in the catalog, measure it across in millimeters. Then write `.wheelMm(mm)` in
+place of `.wheel(id)`.
 
 ### How your Control Hub is mounted
 
@@ -117,8 +114,8 @@ field-centric driving go the wrong way.
 
 ### A wheel turns the wrong way
 
-Leave this until the first drive test. Without a `.reversed(...)` line, the left side runs reversed. If
-your robot is built the other way, list **every** reversed drive motor:
+Leave this until the first drive test. Without a `.reversed(...)` line, the library reverses the left side.
+When your robot is built the other way, list **every** reversed drive motor:
 
 <!-- recipe: drive-reversed -->
 ```java title="Robot.java"
@@ -137,8 +134,8 @@ The Motor Direction Check tells you which ones ([Tune and check](../guides/finde
 
 **Done when:** the build finishes with no red errors.
 
-The robot cannot drive yet: the buttons are in `Controls.java`, the next file. Red errors? Read only the
-first one: it names the file, the line and the problem.
+The robot cannot drive yet, because the buttons are in `Controls.java`, the next file. When the build shows
+red errors, read only the first one. It names the file, the line and the problem.
 
 ## Add a part
 
@@ -157,12 +154,12 @@ Every part has these attributes:
 | `.looks(shapes...)` | optional | how it looks and where it sits, for the simulator | the simulator draws a guess |
 | `.tunables("Name")` | optional | read its numbers from another `Tunables.java` section | Defaults to the section named after the part |
 
-Below: the two common parts, each with its usual line and its own attributes. The other parts are in a
-list at the end of the page.
+The two common parts come first, each with its usual line and its own attributes. The list at the end of
+the page has the other parts.
 
 ### Intake
 
-Rollers or wheels that take pieces in. On one motor:
+An intake is rollers or wheels that take pieces in. On one motor:
 
 <!-- recipe: intake-motor -->
 ```java title="Robot.java"
@@ -185,21 +182,21 @@ intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-s
 
 | Attribute | Needed? | What it sets | If you leave it out |
 | --- | --- | --- | --- |
-| `Intake.motor(name)` | **yes**, one of the two | an intake on one motor | — |
-| `Intake.crServos(names...)` | **yes**, one of the two | an intake on CR servos that run together | — |
+| `Intake.motor(name)` | **yes**, one of the two | an intake on one motor | - |
+| `Intake.crServos(names...)` | **yes**, one of the two | an intake on CR servos that run together | - |
 | `.holds(n)` | recommended | how many pieces it carries: count them by hand | Defaults to 4 (the simulator's guess) |
-| `.withCrServos(names...)` | optional | CR servos that run with the motor, like side wheels next to a roller | — |
-| `.reversed(names...)` | optional | these devices run the other way, like the second of two facing servos | — |
-| `.holds(n, "KIND")` | optional | how many of one kind it carries; 0 = it cannot take that kind | every kind counts the same |
-| `.onAtStart()` | optional | runs in from ▶ until stopped | Defaults to off: a button starts it |
-| `.stopsWhen(test)` | optional | never runs in while the test is true, like "the robot is full" ([Pieces](../modules/robot.md#pieces-and-piecesensor)) | it runs whenever asked |
+| `.withCrServos(names...)` | optional | CR servos that run with the motor, like side wheels next to a roller | - |
+| `.reversed(names...)` | optional | these devices run the other way, like the second of two facing servos | - |
+| `.holds(n, "KIND")` | optional | how many of one kind it carries. 0 = it cannot take that kind | every kind counts the same |
+| `.onAtStart()` | optional | runs in from ▶ until your code stops it | Defaults to off: a button starts it |
+| `.stopsWhen(test)` | optional | never runs in while the test is true, like "the robot is full" ([Pieces](../reference/parts/pieces.md)) | it runs whenever asked |
 
-Its numbers: `inPower`, `outPower` ([Tunables: Intake](../guides/tunables.md#intake)).
-Every option and command: [Intake](../modules/robot.md#intake).
+Its numbers: `inPower`, `outPower` ([Tunables: Intake](../reference/parts/intake.md#in-tunablesjava)).
+Every option and command: [Intake](../reference/parts/intake.md).
 
 ### Launcher
 
-A flywheel that shoots pieces, and the part that feeds it one piece at a time.
+A launcher is a flywheel that shoots pieces, and the part that feeds it one piece at a time.
 
 <!-- recipe: launcher -->
 ```java title="Robot.java"
@@ -212,37 +209,37 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 
 | Attribute | Needed? | What it sets | If you leave it out |
 | --- | --- | --- | --- |
-| `Launcher.flywheel(motor, id)` | **yes** | a flywheel on this motor; the id is needed for its speed in RPM | — |
+| `Launcher.flywheel(motor, id)` | **yes** | a flywheel on this motor. The library needs the id for its speed in RPM | - |
 | `.feeder(Indexer.servo(name))` | recommended, one of the three | a servo arm pushes each piece in | nothing feeds the wheel |
 | `.feeder(Indexer.crServo(name))` | recommended, one of the three | a CR servo wheel feeds the pieces, like goBILDA's "windmill" | nothing feeds the wheel |
 | `.feeder(Indexer.motor(name))` | recommended, one of the three | a motor feeds the pieces | nothing feeds the wheel |
-| `.reversed()` | optional | the flywheel turns the other way | — |
+| `.reversed()` | optional | the flywheel turns the other way | - |
 | `.spinAtStart()` | optional | spins up at ▶, so the first shot goes at once | Defaults to off: it spins up when asked |
-| `.hood(...)`, `.feedStop(...)`, `.feedWheel(...)` | optional | a hood, a feed stop, a feed wheel ([Launcher](../modules/robot.md#launcher)) | — |
+| `.hood(...)`, `.feedStop(...)`, `.feedWheel(...)` | optional | a hood, a feed stop, a feed wheel ([Launcher](../reference/parts/launcher.md)) | - |
 | `.speedFromDistance(camera)` | optional | the speed follows the camera's distance to the goal | Defaults to one speed, `speedRpm` |
 
 Its numbers: `speedRpm`, `readyBandRpm` and the speed control (`kP`, `kF`, ...)
-([Tunables: Launcher](../guides/tunables.md#launcher)); the feeder's in its own section
-([Indexer](../guides/tunables.md#indexer)). Every option and command: [Launcher](../modules/robot.md#launcher).
+([Tunables: Launcher](../reference/parts/launcher.md#in-tunablesjava)). The feeder's numbers are in its own
+section ([Indexer](../reference/parts/indexer.md#in-tunablesjava)). Every option and command: [Launcher](../reference/parts/launcher.md).
 
 ### The other parts
 
 | Part | For | Look it up |
 | --- | --- | --- |
-| `Lift` | a slide that goes up and down | [Lift](../modules/robot.md#lift) |
-| `Arm` | a part that swings on a hinge | [Arm](../modules/robot.md#arm) |
-| `Claw` | a servo that opens and closes | [Claw](../modules/robot.md#claw) |
-| `Wrist` | a servo that tilts a claw | [Wrist](../modules/robot.md#wrist) |
-| `Positioner` | any servo or motor that goes to set positions, like a fold-out | [Positioner](../modules/robot.md#positioner) |
-| `Turret` | a part that turns to aim | [Turret](../modules/robot.md#turret) |
-| `Camera` | a webcam or Limelight | [Camera](../modules/robot.md#camera) |
-| `Lights` | a light strip or Blinkin | [Lights](../modules/robot.md#lights) |
+| `Lift` | a slide that goes up and down | [Lift](../reference/parts/lift.md) |
+| `Arm` | a part that swings on a hinge | [Arm](../reference/parts/arm.md) |
+| `Claw` | a servo that opens and closes | [Claw](../reference/parts/claw.md) |
+| `Wrist` | a servo that tilts a claw | [Wrist](../reference/parts/wrist.md) |
+| `Positioner` | any servo or motor that goes to set positions, like a fold-out | [Positioner](../reference/parts/positioner.md) |
+| `Turret` | a part that turns to aim | [Turret](../reference/parts/turret.md) |
+| `Camera` | a webcam or Limelight | [Camera](../reference/parts/camera.md) |
+| `Lights` | a light strip or Blinkin | [Lights](../reference/parts/lights.md) |
 
-Each part also gets its numbers in `Tunables.java` and its buttons in `Controls.java` (a part has no
-buttons until you write its lines there). The next pages show how.
+Each part also gets its numbers in `Tunables.java` and its buttons in `Controls.java`. A part has no
+buttons until you write its lines there. The next pages show how.
 
 ---
 
 **Next:** [Tunables.java](02-tunables-java.md).
-**Look it up:** [RobotDefinition and every part](../modules/robot.md). **Go deeper:**
+**Look it up:** [RobotDefinition and every part](../reference/robot-java.md). **Go deeper:**
 [how the library fits together](../guides/architecture.md).

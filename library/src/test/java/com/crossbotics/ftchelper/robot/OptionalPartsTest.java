@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 /**
- * Parts marked optional() in Robot.java (docs/modules/robot.md, "Parts not on the robot yet"): a part
+ * Parts marked optional() in Robot.java (docs/reference/robot-java.md, "Parts not on the robot yet"): a part
  * whose device is not in the configuration is off instead of stopping INIT, and everything that uses
  * it copes (actions, buttons, interlock rules, the Tunables, the aim).
  */

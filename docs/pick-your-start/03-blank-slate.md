@@ -35,7 +35,7 @@ The library reads your configuration and writes the five files for you, with a l
    It never writes over your work: if one of the files is already there, it writes nothing and stops.
 3. **Check each `TODO` line in `Robot.java`.** A `TODO` is a guess the file maker was not sure of, for
    example which part a motor drives.
-4. **Build:** **Build > Make Project**.
+4. **Build:** click **Build > Make Project**.
 
 In `Tunables.java`, each number is `DEFAULT` (the library's starting value) or `MEASURE` (a number
 only your robot can give). Leave them for now. The [Tunables.java page](../five-files/02-tunables-java.md)
@@ -53,8 +53,8 @@ They are a mecanum drive and nothing else. They are the same files the five file
 2. **Change the drive line** in `Robot.java`: your four motor names, your motor and wheels, and the
    IMU ([the drive line](../five-files/01-robot-java.md#the-drive-attribute-by-attribute),
    [how your Control Hub is mounted](../five-files/01-robot-java.md#how-your-control-hub-is-mounted)).
-   A tank drive? See [A tank drive instead](../five-files/01-robot-java.md#a-tank-drive-instead).
-3. **Build:** **Build > Make Project**.
+   For a tank drive, read [A tank drive instead](../five-files/01-robot-java.md#a-tank-drive-instead).
+3. **Build:** click **Build > Make Project**.
 
 Your other parts come later, one at a time, on the [Robot.java page](../five-files/01-robot-java.md#add-a-part).
 
@@ -75,3 +75,5 @@ Your other parts come later, one at a time, on the [Robot.java page](../five-fil
 ---
 
 **Next:** [The five files](../five-files/README.md). They explain every line, and you make the robot drive.
+
+**Look it up:** [Robot.java](../reference/robot-java.md), [Tunables.java](../reference/tunables.md) and [Drive](../reference/parts/drive.md).

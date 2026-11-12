@@ -193,7 +193,7 @@ final class SimField {
             return new double[] {dot(r, ax[0]), dot(r, ax[1]), dot(r, ax[2]) - floor};
         }
 
-        /** True when a point (a piece's centre) is inside the CELL on side s. */
+        /** True when a point (a piece's center) is inside the CELL on side s. */
         boolean inside(int s, double[] p) {
             double[] q = inCell(s, p);
             if (q[0] <= aIn || q[0] >= aOut) return false;
@@ -207,7 +207,7 @@ final class SimField {
 
         /**
          * The CELL on side s as thin plates (for the physics and the picture): one along each edge of the opening
-         * pentagon, the length of the CELL, and one closing its back. Each: centre x y z, then its own three
+         * pentagon, the length of the CELL, and one closing its back. Each: center x y z, then its own three
          * directions (length, width, thickness: 9 numbers), then its sizes (inches).
          */
         List<double[]> plates(int s) {
@@ -259,7 +259,7 @@ final class SimField {
         }
     }
 
-    /** A kind of game piece: a ball this size, mass and colour. */
+    /** A kind of game piece: a ball this size, mass and color. */
     static final class PieceType {
         final String name, color;
         final double diameterIn, massG, bounce;

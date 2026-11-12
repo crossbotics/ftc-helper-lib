@@ -35,7 +35,7 @@ public class OdometryTest {
         for (int i = 0; i < 90; i++) {   // in small steps, as the loop would see it
             l.position -= arc / 90 * TPI;
             r.position += arc / 90 * TPI;
-            p.position += (-6) * (Math.PI / 2 / 90) * TPI;    // the pod 6 in behind the centre swings right while turning left
+            p.position += (-6) * (Math.PI / 2 / 90) * TPI;    // the pod 6 in behind the center swings right while turning left
             o.update();
         }
         assertEquals(90, o.pose().headingDeg, 0.5);

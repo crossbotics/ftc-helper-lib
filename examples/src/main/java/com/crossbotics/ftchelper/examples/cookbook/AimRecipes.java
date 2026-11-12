@@ -40,8 +40,8 @@ public class AimRecipes {
         /** Aiming (every line is optional; leave out what you do not use). */
         public static class Aim {                                       // a fixed name: always Aim
             // The goal on the field, in inches, seen from your drivers' wall (the same numbers as driveTo).
-            public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
-            public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
+            public static double goalX = 13;                            // inches right of center (BIOBUZZ)
+            public static double goalY = -13;                           // inches from center, - = our half (BIOBUZZ)
             public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
             public static double turnKp = DEFAULT;                      // whole-robot aim: push per degree off (0.02)
             public static double turnKd = DEFAULT;                      // brake near the goal (0.002)
@@ -84,11 +84,11 @@ public class AimRecipes {
             public static double flightSec = MEASURE;                   // seconds in the air (slow-motion video)
             public static double flightSecPerIn = DEFAULT;              // longer shots fly longer: per inch (0)
             public static double maxLeadIn = DEFAULT;                   // never lead more than this, inches (24)
-            // Where the shooter (a turret's pivot) and a camera on the body are from the robot's centre.
-            public static double shooterForwardIn = MEASURE;            // inches forward of the centre (a tape)
-            public static double shooterLeftIn = MEASURE;               // inches left of the centre (a tape)
-            public static double cameraForwardIn = MEASURE;             // inches forward of the centre (a tape)
-            public static double cameraLeftIn = MEASURE;                // inches left of the centre (a tape)
+            // Where the shooter (a turret's pivot) and a camera on the body are from the robot's center.
+            public static double shooterForwardIn = MEASURE;            // inches forward of the center (a tape)
+            public static double shooterLeftIn = MEASURE;               // inches left of the center (a tape)
+            public static double cameraForwardIn = MEASURE;             // inches forward of the center (a tape)
+            public static double cameraLeftIn = MEASURE;                // inches left of the center (a tape)
             // end recipe
         }
     }

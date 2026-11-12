@@ -6,15 +6,15 @@ Package: `com.crossbotics.ftchelper.match`
 
 Learn it hands-on: [15 Telemetry, profiles and tuning](../tutorials/15-telemetry-profiles-tuning.md), [16 Easy autonomous](../tutorials/16-easy-autos.md).
 
-Things about the MATCH, not the robot: red or blue, the clock, choices made in INIT, and what
+These classes know about the MATCH, not the robot: red or blue, the clock, the choices made in INIT, and what
 autonomous tells TeleOp. [`EasyAuto`](auto.md), [`EasyTeleOp`](teleop.md) and the
-[robot in five files](robot.md) use these for you. Use this page when you write your own OpMode,
+[robot in five files](../reference/robot-java.md) use them for you. Use this page when you write your own OpMode,
 or to add a timer cue or an INIT choice.
 
 | Class | Use it to |
 | --- | --- |
 | [`Alliance`](#alliance) | red/blue, and mirror a route written for blue |
-| [`MatchTimer`](#matchtimer) | count down a period and buzz at set times |
+| [`MatchTimer`](#matchtimer) | count down a period and buzz the gamepads at set times |
 | [`InitMenu`](#initmenu) | choose alliance, delay, route... with the gamepad in INIT |
 | [`MatchMemory`](#matchmemory) | pass the alliance (and pose: where the robot is and which way it faces) from autonomous to TeleOp |
 
@@ -26,14 +26,14 @@ or to add a timer cue or an INIT choice.
 
 | Method | What it does | Example |
 | --- | --- | --- |
-| `mirror(blueValue)` | same for blue, negated for red | `RED.mirror(90)` = -90 |
-| `pick(blue, red)` | one value per alliance | `alliance.pick(20, 24)` (tag ids) |
-| `other()` | the other alliance | |
-| `sign()` | +1 blue, -1 red | |
+| `mirror(blueValue)` | gives the value as it is for blue, and with the sign flipped for red | `RED.mirror(90)` = -90 |
+| `pick(blue, red)` | gives the value for this alliance | `alliance.pick(20, 24)` (tag ids) |
+| `other()` | gives the other alliance | - |
+| `sign()` | gives +1 for blue, -1 for red | - |
 
 **Write routes for BLUE.** `AutoRoutine.mirrorFor(alliance)` flips every turn, heading and
-sideways direction for RED. Check each season's field. If the red half is ROTATED (turned around)
-instead of mirrored, forward and back flip as well, and you need your own rule for that (see [New season](../guides/new-season.md)).
+sideways direction for RED. Check each season's field. On some fields the red half is ROTATED (turned around)
+instead of mirrored. Then forward and back flip as well, and you need your own rule for that ([New season](../guides/new-season.md)).
 
 ```mermaid
 flowchart LR
@@ -58,16 +58,16 @@ while (opModeIsActive()) {
 
 | Method | What it does |
 | --- | --- |
-| `MatchTimer.autonomous()`, `MatchTimer.teleOp()`, `new MatchTimer(seconds)` | make one |
-| `cueAt(secondsLeft, action)` | run code once at that time |
-| `rumbleAt(secondsLeft, gamepads...)` | buzz the gamepads 3 times at that time |
-| `start()` | start counting (right after `waitForStart()`) |
-| `update()` | runs the cues; call every loop |
-| `secondsLeft()`, `elapsedSec()`, `isOver()`, `isRunning()` | read |
-| `format()` | "m:ss" like the field clock |
+| `MatchTimer.autonomous()`, `MatchTimer.teleOp()`, `new MatchTimer(seconds)` | makes a timer |
+| `cueAt(secondsLeft, action)` | runs code once at that time |
+| `rumbleAt(secondsLeft, gamepads...)` | buzzes the gamepads 3 times at that time |
+| `start()` | starts counting. Call it right after `waitForStart()` |
+| `update()` | runs the cues. Call it every loop |
+| `secondsLeft()`, `elapsedSec()`, `isOver()`, `isRunning()` | read the timer |
+| `format()` | gives the time left as "m:ss", like the field clock |
 
-2026-27 BIOBUZZ cues worth adding: **1:00** (FLOWER ownership unlocks) and **0:20** (final 20 seconds).
-The field clock is the official one; this timer starts with your OpMode and can be a second off.
+Good cues to add for 2026-27 BIOBUZZ: **1:00** (FLOWER ownership unlocks) and **0:20** (final 20 seconds).
+The field clock is the official one. This timer starts with your OpMode, so it can be a second off.
 
 ## InitMenu
 
@@ -87,15 +87,15 @@ while (opModeInInit()) {                 // repeats until ▶ is pressed (instea
 
 | Method | What it does |
 | --- | --- |
-| `alliance()` | adds the alliance line (starts at the one remembered from earlier, else BLUE) |
-| `delay(maxSeconds)` | adds a start delay, 1 s steps |
-| `choice(label, options...)` | adds a list; the first option is the default |
+| `alliance()` | adds the alliance line. It starts at the alliance remembered from earlier, or BLUE when there is none |
+| `delay(maxSeconds)` | adds a start delay, in 1 s steps |
+| `choice(label, options...)` | adds a list. The first option is the default |
 | `yesNo(label, startYes)` | adds a YES/NO line |
-| `profile()` | adds PRACTICE/COMPETITION (saved when changed) |
-| `update()`, `addTelemetry(t)` | every INIT loop |
+| `profile()` | adds PRACTICE/COMPETITION. The menu saves it when the drivers change it |
+| `update()`, `addTelemetry(t)` | call them every INIT loop |
 | `getAlliance()`, `getDelaySec()`, `get(label)`, `isYes(label)` | read the choices |
 
-Controls: D-pad up/down = choose a line, left/right = change it. X/B are alliance shortcuts.
+The buttons: D-pad up/down chooses a line, and left/right changes it. X and B are alliance shortcuts.
 `EasyAuto` builds this menu for you.
 
 ## MatchMemory
@@ -119,6 +119,6 @@ MatchMemory.changeAlliance(Alliance.RED);            // TeleOp's "switch allianc
                                                      //   chosen() and autonomous's remembered one (if from this match) become RED
 ```
 
-Lets ONE TeleOp serve both alliances. The memory lasts until the app restarts and is ignored
-after 5 minutes (`MAX_AGE_SEC`), so an old match never leaks into a new one. The pose goes to
+`MatchMemory` lets ONE TeleOp serve both alliances. The memory lasts until the app restarts. After 5 minutes
+(`MAX_AGE_SEC`) the library ignores it, so an old match never leaks into a new one. The pose goes to
 `PoseStore` ([util](util.md#posestore)).

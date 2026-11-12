@@ -16,7 +16,7 @@ public class FollowStepTest {
 
     static final class StillTracker extends PoseTracker {
         boolean ready = true;
-        double x = 0;   // where it sits, inches right of the centre line
+        double x = 0;   // where it sits, inches right of the center line
         StillTracker() { super("odo"); }
         @Override public boolean isReady() { return ready; }
         @Override public String status() { return ready ? "ready" : "lost"; }

@@ -122,7 +122,7 @@ public class ActionRecipes {
         @Override
         protected void buttons(Robot robot, Pad g1, Pad g2) {
             // recipe: action-button
-            // Press Y: the action starts. Press Y again while it runs: it is cancelled, safely.
+            // Press Y: the action starts. Press Y again while it runs: it is canceled, safely.
             g2.y.press(Actions.scoreHigh(robot)).says("score high");
             g2.x.press(Actions.grabAndLift(robot)).says("grab and lift");
             // end recipe

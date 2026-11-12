@@ -20,7 +20,7 @@ public class NearCycle extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        s.start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0);
+        s.start("NEAR: against our wall, 2nd tile left of center, facing the field", -36, -61, 0);
         Routes.scorePreload(s, robot);
         Routes.cycle(s, robot);
         Routes.park(s);

@@ -55,7 +55,7 @@ the Driver Station's own battery number).
 
 Any robot works: the point is that the check finds every kind of device. Unusual devices are the most
 useful to report: a second Limelight, an I2C sensor the library does not know (I2C: the small 4-pin
-ports on the hub, used by colour and distance sensors), or an Expansion Hub (a second hub, joined to
+ports on the hub, used by color and distance sensors), or an Expansion Hub (a second hub, joined to
 the Control Hub by a cable, for more motors and servos). A part marked `optional()` in `Robot.java` that
 is not in the configuration should show as `optional, so the part is off (fine)`: say if it did not.
 If a device type is missing from the list, say its type exactly as the configuration names it.

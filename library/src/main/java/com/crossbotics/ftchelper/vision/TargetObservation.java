@@ -40,7 +40,7 @@ public final class TargetObservation {
     /**
      * The id of a target worked out from the ODOMETRY (where the robot is and where the goal is on the
      * field), not seen by a camera. The five-files robot uses it when the camera loses the goal
-     * (see docs/modules/robot.md, section "Aim").
+     * (see docs/reference/robot-java.md, section "Aim").
      */
     public static final int ODOMETRY = -2;
 

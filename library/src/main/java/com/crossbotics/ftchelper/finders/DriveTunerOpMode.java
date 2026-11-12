@@ -327,7 +327,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         }
     }
 
-    // The wheel size, for RobotSettings and for the robot in five files (Robot.java takes millimetres).
+    // The wheel size, for RobotSettings and for the robot in five files (Robot.java takes millimeters).
     private void setDiameterResult(double inches) {
         results.set("drive:diameter", "c.wheelDiameterIn = " + FinderResults.num(inches, 3) + ";   // RobotSettings.auto()");
         results.set("drive:diameter5", "Robot.java: .wheelMm(" + FinderResults.num(inches * 25.4, 1) + ")   // in the drive(...) line");

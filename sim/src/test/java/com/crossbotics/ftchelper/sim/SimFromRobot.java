@@ -273,11 +273,11 @@ public final class SimFromRobot {
     // The size and start lines a new file gets when the code does not give them: guesses. A later run
     // replaces a guess (the exact same text, unmarked) when the code gives that number (chassisMm, heightMm).
     private static final String[][] GUESSES = {
-        {"# TODO measure: the robot's size in inches, and a legal start (inches from the field centre).", null},
+        {"# TODO measure: the robot's size in inches, and a legal start (inches from the field center).", null},
         {"robot.lengthIn = 18", "robot.lengthIn"}, {"robot.widthIn = 18", "robot.widthIn"},
         {"robot.heightIn = 18", "robot.heightIn"}, {"robot.chassisHeightIn = 4", "robot.chassisHeightIn"},
         {"start.x = -56", null}, {"start.y = -61.55", null}, {"start.heading = 0", null},
-        {"# TODO measure: wheel centres side to side, and front to back.", "drive.trackWidthIn"},
+        {"# TODO measure: wheel centers side to side, and front to back.", "drive.trackWidthIn"},
         {"drive.trackWidthIn = 15", "drive.trackWidthIn"}, {"drive.wheelBaseIn = 13", "drive.wheelBaseIn"}};
 
     // True for an unmarked line that is still exactly a guess a new file got, now given by the code.

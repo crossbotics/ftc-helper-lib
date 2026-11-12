@@ -23,7 +23,7 @@ import java.util.Map;
  * <p>A bottom switch makes the bottom always right: pressing it sets the height to 0. Until it has
  * been pressed once, the lift only goes down, slowly.
  *
- * Docs: docs/modules/robot.md (section "Lift")
+ * Docs: docs/reference/robot-java.md (section "Lift")
  */
 public final class Lift extends MotorPositions<Lift> {
 

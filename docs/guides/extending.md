@@ -5,11 +5,11 @@
 **For:** students and mentors who add something new to the library. **You need:** comfort with Java
 classes, and the library building on your laptop ([Contributing](../contributing.md#build-and-test)).
 
-The library is meant to grow every season. This page shows the four places new things plug in,
-with a complete example for each, and the rules that keep it easy for the next team.
+The library grows every season. New things plug in at four places. Each has a complete example below,
+and the rules at the end keep the library easy for the next team.
 
-Each place is an interface: a short list of methods a class promises to have. A class that
-`implements` it writes those methods (each marked `@Override`), and then it plugs in anywhere the
+Each place is an interface: a short list of methods that a class promises to have. A class that
+`implements` it writes those methods (each marked `@Override`). Then it plugs in anywhere the
 library expects one.
 
 ## Where does my new code go?
@@ -56,7 +56,7 @@ public class DualGripper implements Subsystem {
 }
 ```
 
-It now works in `Subsystems`, in `EasyAuto`, with buttons, and shows telemetry like every other part.
+It now works in `Subsystems`, in `EasyAuto` and with buttons. It shows telemetry like every other part.
 
 ## 2. A new autonomous action: implement `AutoStep`
 
@@ -75,8 +75,8 @@ AutoStep alignWithWall = ctx -> {
 routine.step("Back into the wall", alignWithWall);
 ```
 
-Rules: check `ctx.isActive()` in every loop, call `ctx.loop()` (or `waitFor`/`waitUntil`) while
-waiting, have a way out (a time limit), and stop the motors you started.
+Rules: check `ctx.isActive()` in every loop. Call `ctx.loop()` (or `waitFor`/`waitUntil`) while
+it waits. Give it a way out (a time limit). Stop the motors that it started.
 
 ## 3. A new way to feed the launcher: implement `Feeder`
 
@@ -97,32 +97,32 @@ public class GateFeeder implements Feeder {
 ```
 
 `new Launcher(flywheel, new GateFeeder(hardwareMap))`: everything else (ready checks, timing,
-steps, telemetry) is unchanged.
+steps, telemetry) stays the same.
 
 ## 4. A new camera or target type: implement `TargetSource`
 
 Return `TargetObservation`s with **bearing positive to the LEFT**, distance in inches (or NaN),
 and the picture time in `System.nanoTime()`. Then `AimController`, `Turret.aimBy` and
-`Launcher.setDistance` all work with it. Look at `LimelightTags` as the model.
+`Launcher.setDistance` all work with it. Use `LimelightTags` as the model.
 
 ## The rules (so the next team can use it)
 
 1. **One sign convention**: forward +, strafe right +, turn clockwise + for drive commands;
    headings, turret angles and bearings counterclockwise + ([Signs and units](../conventions.md)).
-2. **Nothing blocks TeleOp**: commands are quick; work happens in `update()`. Only autonomous steps wait.
+2. **Nothing blocks TeleOp**: commands are quick, and the work happens in `update()`. Only autonomous steps wait.
 3. **Hardware setup leaves motors at 0 power.** Nothing moves before ▶ (start on the Driver Hub).
 4. **Safety stays on in every profile.** Limits, timeouts, jam checks.
-5. **Testable**: put the logic in a part with no hardware, or take a clock (`LongSupplier`, a method
-   that returns the time) and devices in the constructor (the code that makes the object), so tests can
-   use pretend ones (see `library/src/test`). A part's default clock is `Time::nanos` (core), not
-   `System::nanoTime`: then a test's [`PretendClock`](../modules/testkit.md#pretendclock) moves it too.
+5. **Testable**: tests need pretend devices and a pretend clock (see `library/src/test`). So put the logic in a part
+   with no hardware, or take a clock (`LongSupplier`, a method that returns the time) and devices in the
+   constructor (the code that makes the object). A part's default clock is `Time::nanos` (core). With it, a test's
+   [`PretendClock`](../modules/testkit.md#pretendclock) moves the part's clock too, and with `System::nanoTime` it does not.
 6. **The six steps**: code, Javadoc, test, module page, tutorial, CHANGELOG ([Contributing](../contributing.md)).
 7. **Parts stay general** (any team, any season). Season knowledge goes in the season definitions (the field, the
-   rules); a team's own numbers and spots stay in TeamCode.
+   rules). A team's own numbers and spots stay in TeamCode.
 
 ## Versions
 
-Adding something new = a new middle number (0.4.0 -> 0.5.0). Changing how something old works =
+Something new gets a new middle number (0.4.0 -> 0.5.0). A change to how something old works gets
 a new first number, and a "Changed" note in the CHANGELOG that says what teams must change. Before
-1.0, a change that breaks old code also only moves the middle number (v0.11.0 renamed the package), with
-the steps for teams in the CHANGELOG.
+1.0, a change that breaks old code also moves only the middle number (v0.11.0 renamed the package). The
+CHANGELOG then lists the steps for teams.

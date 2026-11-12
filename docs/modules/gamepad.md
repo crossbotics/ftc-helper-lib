@@ -8,15 +8,15 @@ Learn it hands-on: [03 Buttons](../tutorials/03-buttons.md), [11 Driver assists]
 
 Turns gamepad buttons, sticks and triggers into robot actions, and gives the driver feedback
 by rumble (vibration). Use it in a TeleOp you write yourself, or in [`EasyTeleOp`](teleop.md)'s
-`bindButtons`. With the [robot in five files](robot.md#controlmap), `Controls.java` does this job
-in a shorter way. New to buttons? Start with tutorial 03.
+`bindButtons`. With the [robot in five files](../reference/controls.md#controlmap), `Controls.java` does this job
+in a shorter way. If you are new to buttons, start with tutorial 03.
 
 | Class | Use it to |
 | --- | --- |
 | [`ControllerBindings`](#controllerbindings) | say what each button does, in one place |
 | [`StickShaping`](#stickshaping) | make sticks feel smooth: ignore tiny stick moves, add a curve, slow down with a trigger |
 | [`ToggleRumble`](#togglerumble) | buzz to confirm a toggle (2 buzzes = ON, 1 = OFF). In `Controls.java`: `.rumble()` ([the button menu](../guides/buttons.md)) |
-| [`AimRumble`](#aimrumble) | buzz when an error is small, e.g. "aimed at the target" |
+| [`AimRumble`](#aimrumble) | buzz when an error is small, for example "aimed at the target" |
 | [`ButtonNames`](#buttonnames) | write the button names printed on each driver's controller (A or ×) on the screen |
 
 ---
@@ -25,7 +25,8 @@ in a shorter way. New to buttons? Start with tutorial 03.
 
 ### Why
 
-Without it, every button needs code like this, to run once per press and not 50 times per second:
+A button action must run once per press, not 50 times per second. Without `ControllerBindings`, every
+button needs code like this:
 
 ```java
 boolean aWasDown = false;   // was A down last loop?
@@ -34,7 +35,7 @@ if (gamepad2.a && !aWasDown) claw.setPosition(OPEN);   // down now, up before = 
 aWasDown = gamepad2.a;                                 // remember for the next loop
 ```
 
-With it, you write each button's job once, at the top, and the class does the rest:
+With `ControllerBindings`, you write each button's job once, at the top, and the class does the rest:
 
 ```java
 // in INIT, once: gamepad 2's A opens the claw, once per press
@@ -44,8 +45,8 @@ ControllerBindings controls = new ControllerBindings()
 controls.update(gamepad1, gamepad2);   // every loop
 ```
 
-All of a robot's buttons are in one list, so it is easy to see what each button does
-and to spot two jobs on one button.
+All of a robot's buttons are in one list. So you can see what each button does,
+and you can spot two jobs on one button.
 
 ### Names
 
@@ -66,7 +67,7 @@ import com.crossbotics.ftchelper.gamepad.ControllerBindings.Trigger;
 
 ### The `() -> ...` part
 
-`() -> claw.setPosition(OPEN)` is a **lambda**: a small piece of code you hand over to run later.
+`() -> claw.setPosition(OPEN)` is a **lambda**: a small piece of code that you hand over to run later.
 For more than one line, use braces:
 
 ```java
@@ -76,49 +77,49 @@ For more than one line, use braces:
 })
 ```
 
-To change a variable inside a lambda, make it a field of your OpMode class (not a local variable
-inside `runOpMode`).
+To change a variable inside a lambda, make it a field of your OpMode class. A local variable
+inside `runOpMode` does not work.
 
 ### Methods
 
-All `bind...` methods return the same `ControllerBindings`, so you can chain them.
+Every `bind...` method gives back the same `ControllerBindings`, so you can chain them.
 
 | Method | Runs the action... |
 | --- | --- |
 | `bindPress(pad, btn, action)` | once, when the button goes down |
 | `bindRelease(pad, btn, action)` | once, when the button comes up |
 | `bindHold(pad, btn, action)` | every loop while the button is down |
-| `bindToggle(pad, btn, onAction, offAction)` | each press flips ON/OFF. Starts OFF. Either action may be `null`. |
-| `bindTriggerPress(pad, trigger, action)` | once, when the trigger goes past the threshold (how far it must be pulled, default half way) |
+| `bindToggle(pad, btn, onAction, offAction)` | each press flips ON/OFF. It starts OFF. Either action may be `null`. |
+| `bindTriggerPress(pad, trigger, action)` | once, when the trigger goes past the threshold (how far you must pull it, default halfway) |
 | `bindTriggerHold(pad, trigger, action)` | every loop while the trigger is past the threshold |
-| `bindTriggerRelease(pad, trigger, action)` | once when the trigger comes back under the threshold |
+| `bindTriggerRelease(pad, trigger, action)` | once, when the trigger comes back under the threshold |
 | `bindTriggerToggle(pad, trigger, onEnable, onDisable)` | each pull flips on / off |
-| `bindTriggerAxis(pad, trigger, use)` | every loop, with the trigger's value 0 to 1. Example: `v -> intake.setPower(v)` |
-| `setTriggerThreshold(value)` | how far a trigger must be pulled to count as pressed. Default 0.5. |
-| `registerExtraButton(pad, btn, reader)` | for controllers with extra paddles. `btn` must be `M1` or `M2`; `reader` tells how to read it. |
+| `bindTriggerAxis(pad, trigger, use)` | every loop, with the trigger's value 0 to 1. For example: `v -> intake.setPower(v)` |
+| `setTriggerThreshold(value)` | how far you must pull a trigger for it to count as pressed. Default 0.5. |
+| `registerExtraButton(pad, btn, reader)` | for controllers with extra paddles. `btn` must be `M1` or `M2`. `reader` tells the class how to read the paddle. |
 
 | Method | What it does |
 | --- | --- |
 | `update(gamepad1, gamepad2)` | **Call once every loop.** Reads the gamepads and runs the actions. |
-| `ignoreHeldButtons(gamepad1, gamepad2)` | Call once right after `waitForStart()`. A button or trigger held down through ▶ (start on the Driver Hub) does NOTHING (press, release, hold or toggle) until it is let go once. This stops surprises. `bindTriggerAxis` still works. |
-| `releaseAll()` | Acts as if every button and trigger were let go: "release" actions run for held buttons, and `bindTriggerAxis` code gets 0. Call it before you stop calling `update()` for a while (e.g. while a menu uses the gamepad). Call `ignoreHeldButtons` when you start again. |
-| `isDown(pad, btn)` | True if the button was down at the last `update`. |
-| `getSlowActionWarning()` | "" or a note that a button job took more than 20 ms (it waited or slept), like `G2:A button job took 40 ms: the whole robot stopped that long. ...`. It goes away 5 s after the last slow action. Show it with `t.warn(...)`. See [Non-blocking code](../guides/non-blocking.md). |
+| `ignoreHeldButtons(gamepad1, gamepad2)` | Call it once, right after `waitForStart()`. It stops surprises at the start: a button or trigger held down through ▶ (start on the Driver Hub) does NOTHING (press, release, hold or toggle) until the driver lets go of it once. `bindTriggerAxis` still works. |
+| `releaseAll()` | Acts as if the driver let go of every button and trigger. "Release" actions run for held buttons, and `bindTriggerAxis` code gets 0. Call it before you stop calling `update()` for a while (for example, while a menu uses the gamepad). Call `ignoreHeldButtons` when you start again. |
+| `isDown(pad, btn)` | Whether the button was down at the last `update`. |
+| `getSlowActionWarning()` | "", or a note that a button job took more than 20 ms because it waited or slept, like `G2:A button job took 40 ms: the whole robot stopped that long. ...`. It goes away 5 s after the last slow action. Show it with `t.warn(...)`. See [Non-blocking code](../guides/non-blocking.md). |
 | `clear()` | Removes all bindings. |
 
 ### Rules
 
 - **Several actions can share a button.** They run in the order you added them.
   Example: `bindPress` and `bindHold` on the same button both work.
-- **Actions must be quick.** Never use `sleep()` or a waiting loop inside an action:
-  the whole robot freezes while it waits. Set a variable or a target instead, and let your loop do the work.
+- **Actions must be quick.** The whole robot freezes while an action waits. So never use `sleep()` or a
+  waiting loop inside an action. Set a variable or a target instead, and let your loop do the work.
 - A trigger and the bumper above it are separate. `bindTriggerPress(G1, RT, ...)` does not fire on `RB`.
 
 ### Tip: the SDK also has edge checks
 
-FTC SDK 11 added `gamepad1.aWasPressed()`, `aWasReleased()` and so on. They are fine for one or two
+FTC SDK 11 added `gamepad1.aWasPressed()`, `aWasReleased()` and so on. They work well for one or two
 buttons. `ControllerBindings` is better when you have many buttons, toggles, or two actions on one
-button, and it keeps the whole button map in one place.
+button. It also keeps the whole button map in one place.
 
 ---
 
@@ -126,8 +127,8 @@ button, and it keeps the whole button map in one place.
 
 ### `StickShaping.shape(value, deadband, exponent)`
 
-The usual one-line stick setup. First a **deadband**: a stick that is only a tiny bit off the
-middle counts as 0, then power starts smoothly from there. Then a curve, for fine control at low speed.
+The usual one-line stick setup. First it applies a **deadband**: a stick that is only a tiny bit off the
+middle counts as 0, and power starts smoothly from there. Then it applies a curve, for fine control at low speed.
 
 ```java
 double forward = StickShaping.shape(-gamepad1.left_stick_y, 0.05, 2);   // minus: stick UP is negative
@@ -136,12 +137,12 @@ double forward = StickShaping.shape(-gamepad1.left_stick_y, 0.05, 2);   // minus
 | Parameter | Meaning |
 | --- | --- |
 | `value` | the stick, -1 to 1 |
-| `deadband` | values smaller than this become 0, so a stick that rests at 0.02 does not creep. 0.05 is usual. |
+| `deadband` | values smaller than this become 0, so the robot does not creep when a stick rests at 0.02. 0.05 is usual. |
 | `exponent` | 1 = straight (no curve). 2 = "squared": half stick gives quarter power, for fine control. 3 = softer still. |
 
 ### `StickShaping.curve(value, exponent)`
 
-Only the curve part. The sign is kept: -0.5 squared gives -0.25.
+Only the curve part. It keeps the sign: -0.5 squared gives -0.25.
 
 ### `StickShaping.slowScale(trigger, slowest)`
 
@@ -152,14 +153,14 @@ double speed = StickShaping.slowScale(gamepad1.left_trigger, 0.25);   // 1.0 dow
 drive.drive(forward, strafe, turn, speed);   // every wheel power is multiplied by speed
 ```
 
-Not pressed gives 1.0 (full speed). Fully pressed gives `slowest` (0.25 = quarter speed).
-Half pressed is in between (0.625).
+A trigger not pressed gives 1.0 (full speed). Fully pressed, it gives `slowest` (0.25 = quarter speed).
+Half pressed, it gives a number in between (0.625).
 
 ---
 
 ## ToggleRumble
 
-Two quick buzzes mean ON, one means OFF, so the driver knows a mode changed without looking.
+Two quick buzzes mean ON, and one means OFF. So the driver knows a mode changed without looking.
 
 ```java
 ToggleRumble confirm = new ToggleRumble(gamepad1);
@@ -173,15 +174,15 @@ controls.bindToggle(Pad.G1, Btn.Y,
 | --- | --- |
 | `new ToggleRumble(gamepad)` | the gamepad to buzz |
 | `setPattern(strength, stepMs, gapMs)` | the feel. Defaults: 0.8, 120 ms buzz, 80 ms gap. |
-| `play(on)` | `true` = two buzzes, `false` = one buzz. A new one replaces one still playing. |
-| `isPlaying()` | true while it still buzzes. Use it to hold back other rumble (see below). |
+| `play(on)` | `true` = two buzzes, `false` = one buzz. A new buzz replaces one that is still playing. |
+| `isPlaying()` | whether it still buzzes. Use it to hold back other rumble (see below). |
 
 ---
 
 ## AimRumble
 
-Buzzes when an error is inside a threshold. Closer to zero = stronger and longer buzzes.
-Last season this told the driver "you are aimed at the goal". (It was called `RumbleNotifier`.)
+Buzzes when an error is inside a threshold. The closer the error is to zero, the stronger and longer the buzzes.
+Last season it told the driver "you are aimed at the goal". Its old name was `RumbleNotifier`.
 
 ```java
 AimRumble aimFeel = new AimRumble(gamepad1).setThreshold(2.5);
@@ -194,34 +195,34 @@ if (!confirm.isPlaying()) aimFeel.update(headingErrorDeg);
 | --- | --- |
 | `new AimRumble(gamepad)` | the gamepad to buzz |
 | `setThreshold(value)` | buzzing starts when the error is this small. Default 2.5. |
-| `setFeel(minStrength, maxStrength, minPulseMs, maxPulseMs, minCooldownMs, maxCooldownMs)` | "min" values are used at the edge of the threshold, "max" values at zero error. Defaults: 0.10, 0.65, 120, 200, 120, 350. The cooldown is the time from the start of one buzz to the start of the next, so at the edge (120 ms buzz, 120 ms cooldown) the buzzes run together. |
+| `setFeel(minStrength, maxStrength, minPulseMs, maxPulseMs, minCooldownMs, maxCooldownMs)` | It uses the "min" values at the edge of the threshold, and the "max" values at zero error. Defaults: 0.10, 0.65, 120, 200, 120, 350. The cooldown is the time from the start of one buzz to the start of the next. So at the edge (120 ms buzz, 120 ms cooldown), the buzzes run together. |
 | `setEnabled(on)` / `isEnabled()` | turn buzzing on or off (for a driver who does not want it) |
-| `update(error)` | call every loop. Returns true if it started a buzz. `NaN` (no target) does nothing. |
+| `update(error)` | call it every loop. It gives true when it started a buzz. `NaN` (no target) does nothing. |
 
-In the robot in five files it is one line in `Controls.java`: `g2.rumbleWhenAimed();` (the error is
-the turret's or the whole robot's aim, or, on a robot with no turret and the aim off, the camera's bearing
-to the goal while the driver turns by hand; see [Aim](robot.md#aim)).
+In the robot in five files, it is one line in `Controls.java`: `g2.rumbleWhenAimed();`. The error is
+the turret's aim or the whole robot's aim. On a robot with no turret and the aim off, it is the camera's
+bearing to the goal while the driver turns by hand. See [Aim](../reference/parts/aim.md).
 
 ---
 
 ## ButtonNames
 
-A student with a PlayStation controller has no button called "A", and "START" on a screen could mean
+A student with a PlayStation controller has no button called "A". And "START" on a screen could mean
 the Driver Hub's ▶ or the small START button on the gamepad. So the library's screens (the finders,
 Tune and check, the Hardware Check, the TeleOp button map, the tuning menu) write each button as a
-short mark, and `ButtonNames` turns it into the name printed on the controller in use, just before the
-screen is sent. The FTC SDK says which kind each controller is (`gamepad.type`) once it is linked.
+short mark. Just before the library sends the screen, `ButtonNames` turns each mark into the name printed
+on the controller in use. Once a controller is linked, the FTC SDK says which kind it is (`gamepad.type`).
 
 | Mark | Logitech / Xbox (and before a controller is linked) | PlayStation (PS4, PS5, Etpark) |
 | --- | --- | --- |
 | `{A}` `{B}` `{X}` `{Y}` | A B X Y | × ○ □ △ |
 | `{LB}` `{RB}` `{LT}` `{RT}` | LB RB LT RT | L1 R1 L2 R2 |
 | `{BACK}` `{START}` `{GUIDE}` | BACK START GUIDE | SHARE OPTIONS PS |
-| `{2:A}` (any button) | gamepad 2's button, by gamepad 2's own kind | |
+| `{2:A}` (any button) | gamepad 2's button, by gamepad 2's own kind | - |
 | `{PLAY}` | ▶, the Driver Hub's start button (never a gamepad button) | ▶ |
 
-A generated line such as `G2 RT: intake in` needs no marks: "G1 " or "G2 " before a button name is
-changed too (`G2 R2: intake in`).
+A generated line such as `G2 RT: intake in` needs no marks. `ButtonNames` also changes a button name
+after "G1 " or "G2 " (`G2 R2: intake in`).
 
 ```java
 // In your own OpMode (the library's OpModes do this by themselves):
@@ -233,16 +234,16 @@ t.update();                               // RobotTelemetry turns the marks into
 
 | Method | What it does |
 | --- | --- |
-| `watch(gamepad1, gamepad2)` | use these gamepads' kinds from now on. Every library OpMode calls it at INIT |
+| `watch(gamepad1, gamepad2)` | uses these gamepads' kinds from now on. Every library OpMode calls it at INIT |
 | `say(text)` | the text with its marks (and "G1 A" names) turned into the controllers' names. `RobotTelemetry` calls it on every line |
 | `name(pad, button)` | one name: `name(1, "A")` is "A" or "×" |
 | `mark(pad, button)` | one mark for a line built in code: `mark(2, "RT")` is `"{2:RT}"`; a D-pad or stick name comes back as it is |
 | `style(pad)`, `styleOf(gamepad)` | `LETTERS` or `PLAYSTATION` |
-| `force(pad, style)` | for tests: names as if that gamepad were this kind (`null` = ask the gamepad) |
+| `force(pad, style)` | for tests: gives names as if that gamepad were this kind (`null` = ask the gamepad) |
 
-Plain `telemetry.addLine(...)` does not change marks: write your own lines with real names, or send
+Plain `telemetry.addLine(...)` does not change marks. Write your own lines with real names, or send
 them through `RobotTelemetry` (or `ButtonNames.say`). In the simulator, a scenario line
-`set gamepad 1 ps` makes gamepad 1 a PS controller; on the page, a Sony PS controller plugged into the
-laptop is seen by itself (an Etpark is not: use the scenario line). The test recorder does not write
-`set gamepad` lines: add one by hand to a recorded test that checks PS names.
+`set gamepad 1 ps` makes gamepad 1 a PS controller. On the simulator page, the library sees a Sony PS
+controller plugged into the laptop by itself. It does not see an Etpark that way, so use the scenario line.
+The test recorder does not write `set gamepad` lines. Add one by hand to a recorded test that checks PS names.
 

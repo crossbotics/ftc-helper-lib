@@ -35,7 +35,7 @@ import java.util.Properties;
  *                                                          claw that closes toward 1), and lets it go when it opens
  *
  * The robot starts holding the field file's preload (BIOBUZZ: 4 POLLEN) when it can collect or shoot. A
- * piece whose centre comes into a goal (a FLOWER top) scores. With the season's rules file (SimRules) it drops
+ * piece whose center comes into a goal (a FLOWER top) scores. With the season's rules file (SimRules) it drops
  * onto that FLOWER's stack and stays there (where SimScore counts it); without one it is taken off the field.
  * With the rules, a HIVE takes tipSeconds to tip (its CELLs carry their pieces as they turn), and each launched
  * shot gets a verdict from SimCellJudge (clean into an up CELL, or why not); hitRate() rates the robot's spot.
@@ -373,7 +373,7 @@ final class SimPieces {
     }
 
     // Preload pieces that do not start inside the robot: in a row on the tiles touching its back (manual 10.3.1),
-    // side by side by their own sizes, centred. Behind the robot is outside the field (its back to a wall):
+    // side by side by their own sizes, centered. Behind the robot is outside the field (its back to a wall):
     // the same row at its front instead.
     private void placeBeside(List<SimField.PieceType> pieces) {
         if (pieces.isEmpty()) return;
@@ -426,7 +426,7 @@ final class SimPieces {
         }
     }
 
-    // A ball (centre p, radius r) that overlaps a plate (centre, three directions, sizes; see SimField.Hive.plates):
+    // A ball (center p, radius r) that overlaps a plate (center, three directions, sizes; see SimField.Hive.plates):
     // where it must go to just touch the plate's face on its own side; null if it does not overlap.
     static double[] pushOut(double[] pl, double[] p, double r) {
         double[] d = {p[0] - pl[0], p[1] - pl[1], p[2] - pl[2]};
@@ -439,7 +439,7 @@ final class SimPieces {
             if (over > 0) out2 += over * over;
         }
         if (out2 >= r * r) return null;
-        // out through the thin side (the third direction), to the side the centre is on
+        // out through the thin side (the third direction), to the side the center is on
         double side = q[2] >= 0 ? 1 : -1, move = side * (pl[14] / 2 + r + 0.05) - q[2];
         return new double[] {p[0] + move * pl[9], p[1] + move * pl[10], p[2] + move * pl[11]};
     }
@@ -688,7 +688,7 @@ final class SimPieces {
                 double[] p = world.ballPos(b);
                 for (int gi = 0; gi < robot.field.goals.size(); gi++) {
                     SimField.Goal goal = robot.field.goals.get(gi);
-                    // In the opening: its centre over the opening, and low enough to be sitting in it or on
+                    // In the opening: its center over the opening, and low enough to be sitting in it or on
                     // its rim (the simulator's FLOWER is a solid block whose backstop stands 1.3 in above the
                     // opening; a piece there would drop in), not going up.
                     // A piece resting on the block with its edge over the opening would roll in: it counts.
@@ -891,7 +891,7 @@ final class SimPieces {
     }
 
     /**
-     * A FLOWER stack now, lowest first: {type, centre height (inches), real?}. The real piece in the lowest slot
+     * A FLOWER stack now, lowest first: {type, center height (inches), real?}. The real piece in the lowest slot
      * where it is; the others each resting on the one below (or, the lowest, in or on the lower ring).
      */
     private List<Object[]> column(int i) {
@@ -946,7 +946,7 @@ final class SimPieces {
     }
 
     /**
-     * Each FLOWER now (with the rules): its name and the pieces in it, lowest first: {type name, centre height
+     * Each FLOWER now (with the rules): its name and the pieces in it, lowest first: {type name, center height
      * (inches), in the scoring volume?}. Empty without the rules.
      */
     Map<String, List<Object[]>> flowers() {
@@ -1080,7 +1080,7 @@ final class SimPieces {
             }
             verdictCounts[best]++;
             ShotVerdict v = new ShotVerdict(t.id, t.t0, e.getKey().type.name, SimCellJudge.WORDS[best], hive);
-            v.ball = e.getKey().id;          // the piece's key on the page (SimView.frame): its trail takes the verdict's colour
+            v.ball = e.getKey().id;          // the piece's key on the page (SimView.frame): its trail takes the verdict's color
             verdicts.addLast(v);
             while (verdicts.size() > VERDICTS_KEPT) verdicts.removeFirst();
             it.remove();
@@ -1202,7 +1202,7 @@ final class SimPieces {
     volatile MatchClock clock = FREE_PLAY;
 
 
-    // True if a piece (centre at p, field inches; radius r) is within reach of one of the shape's boxes.
+    // True if a piece (center at p, field inches; radius r) is within reach of one of the shape's boxes.
     // Takes a stack's lowest piece: the real one in its slot, or the first staged one.
     private SimField.PieceType takeFromStack(int i, SimWorld.Ball inSlot) {
         if (inSlot == null) return stackNow.get(i).remove(0);
@@ -1306,7 +1306,7 @@ final class SimPieces {
         return null;
     }
 
-    // Robot frame (f, l, u inches from the robot's centre on the tiles) to the field.
+    // Robot frame (f, l, u inches from the robot's center on the tiles) to the field.
     private double[] toField(double[] r) {
         double h, x, y;
         synchronized (robot) {
@@ -1373,6 +1373,15 @@ final class SimPieces {
             for (Collect c : collects) n = Math.max(n, c.holds);
             if (n == 0 && !shoots.isEmpty()) for (Map.Entry<String, Integer> e : robot.field.preload.entrySet()) n += e.getValue();
             return n + grabs.size();
+        }
+    }
+
+    /** Puts {@code count} pieces of a type in the robot, as if it took them in (for tests). */
+    void load(String type, int count) {
+        synchronized (robot) {
+            SimField.PieceType t = robot.field.pieceTypes.get(type);
+            if (t == null) throw new IllegalArgumentException("no piece type " + type);
+            for (int i = 0; i < count; i++) stored.add(t);
         }
     }
 

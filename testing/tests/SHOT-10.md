@@ -8,7 +8,7 @@ minutes: 15
 needs: [flywheel]
 kit_bots: [gobilda-strafer]
 since: v0.34.0
-docs: [modules/robot.md#firing-shot-modes-feed-stop-piece-path, guides/tunables.md#launcher]
+docs: [reference/parts/launcher.md#firing-shot-modes-feed-stop-piece-path, reference/parts/launcher.md#in-tunablesjava]
 ---
 
 ## Why

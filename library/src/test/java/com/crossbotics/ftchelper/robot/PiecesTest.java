@@ -43,7 +43,7 @@ public class PiecesTest {
         TuningReset.clear();
     }
 
-    /** A pretend colour+distance sensor (like a REV Color Sensor V3): set rgb and mm. */
+    /** A pretend color+distance sensor (like a REV Color Sensor V3): set rgb and mm. */
     static final class FakeColor {
         float r, g, b;
         double mm = 120;
@@ -80,7 +80,7 @@ public class PiecesTest {
         return null;
     }
 
-    /** The test kit's motors and servos, plus pretend colour and distance sensors (no webcams). */
+    /** The test kit's motors and servos, plus pretend color and distance sensors (no webcams). */
     static final class Kit implements Devices {
         final RobotTestKit kit = new RobotTestKit();
         final Map<String, FakeColor> colors = new HashMap<>();
@@ -488,7 +488,7 @@ public class PiecesTest {
         RobotDefinition r = sizeRobot();
         r.setup(kit);
         String notes = b.notes() + " " + r.notes();
-        assertTrue(notes, notes.contains("intake_color: not found: no colour sensor called \"intake_color\""));
+        assertTrue(notes, notes.contains("intake_color: not found: no color sensor called \"intake_color\""));
         assertTrue(notes, notes.contains("size_sensor: not found: no distance sensor called \"size_sensor\""));
         run(b, 100);
         assertEquals(Pieces.NONE, b.pieces.atIntake());
@@ -653,7 +653,7 @@ public class PiecesTest {
         in.red(); run(b, 60);                         // a red one, then a blue one touching it:
         in.mm = 27; run(b, 30);
         in.mm = 15; run(b, 30);                       // the dip counts it (it still reads red)
-        in.blue(); run(b, 60);                        // its colour: the same piece, kind written down
+        in.blue(); run(b, 60);                        // its color: the same piece, kind written down
         assertEquals("[POLLEN, POLLEN, POLLEN, RED_NECTAR, BLUE_NECTAR]", b.pieces.held().toString());
     }
 

@@ -129,7 +129,7 @@ final class SimLimelight extends Limelight3A {
             f.put("typ", s.cy);
             f.put("ta", area);
             f.put("skew", 0);
-            // Target in camera space: metres, x right, y down, z out of the lens; then roll, pitch, yaw (the
+            // Target in camera space: meters, x right, y down, z out of the lens; then roll, pitch, yaw (the
             // order the FTC SDK reads: LLResult.createPose3DRobot).
             f.put("t6t_cs", new JSONArray(new double[] {s.cam[0] * 0.0254, s.cam[1] * 0.0254, s.cam[2] * 0.0254, roll, pitch, yaw}));
             fiducials.put(f);

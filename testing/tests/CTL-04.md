@@ -32,7 +32,7 @@ drivers must be able to choose the alliance and the PRACTICE / COMPETITION profi
 2. Press gamepad 1 D-pad right. The alliance must change to RED ("Alliance : RED (chosen here)").
 3. Press D-pad down, then D-pad left. The profile must change (COMPETITION to PRACTICE, or back).
    In PRACTICE, the screen must say "PRACTICE profile".
-4. Press ▶ on the Driver Hub and drive. In PRACTICE the top speed must be lower (`Tunables.Drive.practiceMaxPower`).
+4. Press ▶ on the Driver Hub and drive. With no `practiceMaxPower` in `Tunables.Drive`, the top speed must be the same in both profiles. With `practiceMaxPower = 0.5`, it must be lower in PRACTICE.
 5. STOP, INIT again: the profile you chose must still be there.
 6. Set the profile back to what it was.
 

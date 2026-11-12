@@ -33,7 +33,7 @@ import java.util.function.BooleanSupplier;
  * <p>Optional: {@code <part>Margin}, the extra safety distance, and {@code <part>StopSec}, how long a
  * motor part takes to stop (see {@link Interlock}).
  *
- * Docs: docs/modules/robot.md (section "Interlock")
+ * Docs: docs/reference/robot-java.md (section "Interlock")
  */
 public final class Zone {
     enum Kind { BETWEEN, ABOVE, BELOW, WHEN }

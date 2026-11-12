@@ -8,16 +8,16 @@ it in TeleOp, and the same action is a step in an autonomous.
 
 ## Do you need it yet?
 
-Maybe not. A job for one part is a button line in `Controls.java`, with no action. And some parts come
-with **ready-made actions**: you use them with no line in `Actions.java`.
+Maybe not. A job for one part is a button line in `Controls.java`, with no action. Some parts also come
+with **ready-made actions**, which need no line in `Actions.java`.
 
 | Ready-made action | What it does | Use it |
 | --- | --- | --- |
-| Fire 1, Fire 2 ... | fires that many pieces; done when the last one has left | `robot.launcher.fireAction(2)` |
+| Fire 1, Fire 2 ... | fires that many pieces. It is done when the last one has left | `robot.launcher.fireAction(2)` |
 | Fire all | fires every piece the robot holds | `robot.launcher.fireAllAction()` |
 | Fire at a speed | the same, at this flywheel speed (RPM), then back to the usual speed | `robot.launcher.fireAction(2, 2250)` |
-| Ready to launch | spins up; done when the flywheel is at speed | `robot.launcher.readyAction(3)` (3 = at most 3 s) |
-| Eject | one piece out at a low speed, like a wrong-colour piece | `robot.launcher.ejectAction()` |
+| Ready to launch | spins up. It is done when the flywheel is at speed | `robot.launcher.readyAction(3)` (3 = at most 3 s) |
+| Eject | one piece out at a low speed, like a wrong-color piece | `robot.launcher.ejectAction()` |
 
 **You need `Actions.java`** when one button or one autonomous step must do several things in order,
 or must wait for one part before the next part moves.
@@ -67,14 +67,14 @@ public static Action fireWithIntake(Robot r) { // (1)!
 1. `public static Action`: a method that makes the action. `r` is your robot, so the steps can use
    `r.intake` and `r.launcher`. You start it with the class name: `Actions.fireWithIntake(robot)`.
 2. `Action.named(...)` starts a new action. The Driver Hub shows the name while it runs.
-3. `.then(...)` does these now, in the same loop, then goes to the next step. Two commands, so the
+3. `.then(...)` does these now, in the same loop, then goes to the next step. It has two commands, so the
    intake and the launcher start together.
    - `r.intake::in` is a **method reference**: "run `r.intake.in()` when the action gets here".
    - `() -> r.launcher.fire(3)` is a **lambda**: the same, for a command with inputs.
 4. `.waitUntil(...)` waits until the test is true: the launcher is not shooting any more.
    - `"the shots"`: the words on the Driver Hub while it waits.
    - `9.0`: the **time limit**, in seconds. If the shots are not done in 9 s, the action stops and the
-     Driver Hub says why. A wait never goes on for ever.
+     Driver Hub says why. A wait never goes on forever.
 5. The last step: the intake stops. Then the action is done.
 
 ## The steps
@@ -86,7 +86,7 @@ Every action is built from four steps:
 | `.then(command)` | does it now, then goes to the next step | `.then(r.claw::open)` |
 | `.then(command, command, ...)` | does them all now, in the same loop: the parts move together | `.then(r.intake::in, r.claw::close)` |
 | `.waitSeconds(s)` | waits this many seconds. The robot keeps running: this is `sleep`, done safely | `.waitSeconds(0.5)` |
-| `.waitUntil("words", test, s)` | waits until the test is true, at most `s` seconds. Too long: the action stops | `.waitUntil("lift up", r.lift::isAtTarget, 2.0)` |
+| `.waitUntil("words", test, s)` | waits until the test is true, at most `s` seconds. When it waits too long, the action stops | `.waitUntil("lift up", r.lift::isAtTarget, 2.0)` |
 
 **What you can wait for:** each part answers yes / no questions.
 
@@ -95,15 +95,15 @@ Every action is built from four steps:
 | Launcher | `isReady()` (at speed), `isShooting()`, `isSpinning()`, `isEjecting()` |
 | Intake | `isRunning()`, `isPushingOut()` |
 | Lift, Arm (a motor) | `isAtTarget()`, `isAt("high")` |
-| Claw, Wrist, Positioner (a servo) | `isDone()`, `isAt("open")`. A servo cannot say where it is: `isDone()` turns true after its travel time, `travelSec` ([Tunables](../guides/tunables.md#claw-wrist-and-positioner)) |
+| Claw, Wrist, Positioner (a servo) | `isDone()`, `isAt("open")`. A servo cannot say where it is: `isDone()` turns true after its travel time, `travelSec` ([Tunables](../reference/parts/claw.md#in-tunablesjava)) |
 | Turret | `isAimed()`, `isHomed()` |
 | Pieces | `isFull()`, `isEmpty()` |
 
-Not the answer you want? Put a `!` in front: `() -> !r.launcher.isShooting()` = "not shooting".
+To wait for the opposite, put a `!` in front: `() -> !r.launcher.isShooting()` = "not shooting".
 
 ## Start it from a button
 
-In `Controls.java`, inside `buttons(...)`. Use the button's line, in place of its `free()` line:
+Write the button's line in `Controls.java`, inside `buttons(...)`, in place of its `free()` line:
 
 <!-- recipe: action-fire-button -->
 ```java title="Controls.java"
@@ -111,13 +111,14 @@ g2.y.press(Actions.fireWithIntake(robot)).says("fire 3 with the intake");
 g2.x.press(robot.launcher.fireAllAction()).says("fire all");   // a ready-made action
 ```
 
-- `press(action)` starts the action. **Press again while it runs, and it stops** (cancelled, safely).
+- `press(action)` starts the action. **Press again while it runs, and it stops** (canceled, safely).
 - The other press types start an action too: `tap`, `doubleTap`, `heldFor`, `with`
   ([the press types](03-controls-java.md#2-how-it-starts-the-press-types)).
 
 ## Use it in an autonomous
 
-The same action is a step. The next page explains autonomous files: here is only the action's line.
+In an autonomous, the same action is a step. The next page explains autonomous files. This page shows only
+the action's line.
 
 <!-- recipe: action-fire-in-auto -->
 ```java title="autos/YourAuto.java"
@@ -130,7 +131,7 @@ s.start("Against our wall, facing the field", 0)
 
 | Step | What it does |
 | --- | --- |
-| `.action(action, s)` | starts the action and waits until it is done, at most `s` seconds (10 if you leave it out). Too long: it is cancelled, the report says so, and the autonomous goes on |
+| `.action(action, s)` | starts the action and waits until it is done, at most `s` seconds (10 if you leave it out). When it takes too long, the autonomous cancels it, the report says so, and the autonomous goes on |
 | `.alongside(action)` | starts the action and goes on at once: it runs during the next steps |
 
 **Why write it once:** fix the action in `Actions.java`, and TeleOp and every autonomous get the fix.
@@ -143,14 +144,14 @@ The simulator's **auto builder** lists your `Actions.java` actions too, next to 
 - **It never makes the robot wait.** An action does a little every loop. The robot keeps driving and
   every other button works while it runs. **Why:** a `sleep()` or a `while` loop in a button job freezes
   the whole robot until it ends. Put the wait in an action: `.waitSeconds(...)`, `.waitUntil(...)`.
-- **The driver always wins.** The driver moves a part the action uses: the action stops.
-- **One part, one action.** A second action commands the same part: the first action stops.
+- **The driver always wins.** When the driver moves a part the action uses, the action stops.
+- **One part, one action.** When a second action commands the same part, the first action stops.
 - **A wait that runs out of time stops the action.** The Driver Hub says why, for example
   `timed out waiting for the shots`.
-- **A stopped action leaves its parts safe.** An intake stops, a lift holds its height, shots still
-  waiting are dropped. A finished action keeps its last commands.
-- **A part that is not on the robot yet** (`.optional()` in Robot.java) is skipped. The action goes on with
-  the other parts.
+- **A stopped action leaves its parts safe.** An intake stops, a lift holds its height, and the launcher
+  drops the shots still waiting. A finished action keeps its last commands.
+- **A part that is not on the robot yet** (`.optional()` in Robot.java): the action skips it and goes on
+  with the other parts.
 
 ## Check it
 
@@ -162,7 +163,7 @@ click **Run**. Pick your TeleOp, INIT, ▶. Press the action's button.
 1. Put pieces in the robot. Stand clear of the launcher. Keep a hand near STOP.
 2. INIT, ▶. Press the action's button.
 3. Watch the Driver Hub: `Fire with intake: step 2 of 3 (the shots)`. After it ends: `done`.
-4. Press the button, then press it again: the Driver Hub says `cancelled`, and the intake stops.
+4. Press the button, then press it again: the Driver Hub says `canceled`, and the intake stops.
 
 **Done when:** one button runs every step in order, and a second press stops it.
 
@@ -172,12 +173,12 @@ click **Run**. Pick your TeleOp, INIT, ▶. Press the action's button.
 | --- | --- |
 | `timed out waiting for ...` | The part needs more time than the limit, or it never got there. Tune the part, or give the wait more seconds. |
 | The action stops at once | Something else commands the same part: the driver's stick or button, or another action. |
-| Nothing happens on the button | Another line uses the same button (INIT stops and names it), or this press cancelled the action. |
+| Nothing happens on the button | Another line uses the same button (INIT stops and names it), or this press canceled the action. |
 | The robot freezes while a button job runs | The job has a `sleep()` or a `while` loop. Make it an action with `.waitSeconds(...)`. |
 | `cannot find symbol: Actions` | The file is not in the `teamcode` folder, or its first line is not `package org.firstinspires.ftc.teamcode;`. |
 
 ---
 
 **Next:** [autos/](05-autos.md).
-**Look it up:** [Action: every step](../modules/robot.md#action). **Go deeper:**
+**Look it up:** [Action: every step](../reference/steps.md#action). **Go deeper:**
 [lesson 5, actions](../tutorials/start/05-actions.md) and [the cookbook's action recipes](../cookbook.md#actions).

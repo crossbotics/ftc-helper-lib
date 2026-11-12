@@ -8,12 +8,12 @@ minutes: 30
 needs: [color-sensor|distance-sensor]
 kit_bots: []
 since: v0.17.0
-docs: [guides/finders.md#piece-tuner-what-each-sensor-sees, modules/robot.md#pieces-and-piecesensor]
+docs: [guides/finders.md#piece-tuner-what-each-sensor-sees, reference/parts/pieces.md]
 ---
 
 ## Why
 
-A colour sensor (or a distance sensor) tells the robot which piece it holds: POLLEN or NECTAR, red or
+A color sensor (or a distance sensor) tells the robot which piece it holds: POLLEN or NECTAR, red or
 blue. How well it works depends on where the sensor is mounted and the light. We want readings from
 many mounts.
 
@@ -49,5 +49,5 @@ Each kind is named right at least 9 of 10 times, and EMPTY reads NONE at least 9
 
 ## If your robot is different
 
-A distance sensor tells sizes apart, not colours: test POLLEN against NECTAR only. Different light
-(a gym, a window) changes colour readings: if you can, test in two places and say where.
+A distance sensor tells sizes apart, not colors: test POLLEN against NECTAR only. Different light
+(a gym, a window) changes color readings: if you can, test in two places and say where.

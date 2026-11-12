@@ -18,7 +18,7 @@ numbers and your odometry. We want real numbers from many robots, not only ours.
 
 ## Safety
 
-- PRACTICE profile and `Tunables.Drive.practiceMaxPower` 0.4 for the first runs.
+- PRACTICE profile and `Tunables.Drive.maxPower` 0.4 for the first runs.
 - The robot drives by itself: a clear path, everyone out of it, a hand on STOP.
 
 ## Setup
@@ -31,7 +31,7 @@ numbers and your odometry. We want real numbers from many robots, not only ours.
 
 1. Put the robot exactly on the start spot. INIT the autonomous, check for the odometry "ready" line.
 2. START. Let it drive to the point and stop.
-3. Measure the robot's centre against the target point (x and y error), and its heading error.
+3. Measure the robot's center against the target point (x and y error), and its heading error.
 4. Do it 3 times. Write each.
 5. Run it once more and gently push the robot sideways during the drive: it should come back on course.
 6. Read the report at the end of autonomous.

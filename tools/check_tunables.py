@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keeps the Tunables reference (docs/guides/tunables.md) complete and right. Run from the repo root:
+"""Keeps the Tunables reference (the part pages in docs/reference/) complete and right. Run from the repo root:
 
     python3 tools/check_tunables.py          # check (exit 1 on a problem)
     python3 tools/check_tunables.py --list   # print every field the library reads, by part
@@ -11,7 +11,7 @@ t.tables("speedByDistance"), t.require("min", ...), t.has("goalX"), t.others(KNO
 This script reads the Java source of the robot package, finds every one of those calls, and builds the
 list of fields per part. It then fails (exit 1) when:
   1. a field the code reads is not in the reference, or the reference has a field the code no longer reads;
-  2. a field read through tunable(...) (in the tuning menu) is not marked "yes" in the Live column, or
+  2. a field read through tunable(...) (in the tuning menu) is not marked "yes" in the "In tuning menu" column, or
      the other way round;
   3. a field the code requires (t.require: INIT stops without it) does not say REQUIRED in Default;
   4. a default written as a plain number in the code is not the number in the Default column;
@@ -32,7 +32,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 ROBOT = ROOT / "library/src/main/java/com/crossbotics/ftchelper/robot"
-REFERENCE = ROOT / "docs/guides/tunables.md"
+REFERENCE = ROOT / "docs/reference"   # every .md page in it, the part pages in parts/
 EXAMPLES = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples"
 SIM_NEW_ROBOT = ROOT / "sim/src/test/java/com/crossbotics/ftchelper/sim/SimNewRobot.java"
 
@@ -253,13 +253,20 @@ def read_reference():
     if not REFERENCE.exists():
         problems.append("%s is missing" % REFERENCE.relative_to(ROOT))
         return out
+    for page in sorted(REFERENCE.rglob("*.md")):
+        read_page(page, out)
+    return out
+
+
+def read_page(page, out):
+    where = str(page.relative_to(ROOT / "docs"))
     key, header = None, None
-    for n, line in enumerate(REFERENCE.read_text().splitlines(), 1):
+    for n, line in enumerate(page.read_text().splitlines(), 1):
         m = re.match(r"\s*<!-- tunables: (\w+) -->", line)
         if m:
             key, header = m.group(1), None
             if key in out:
-                problems.append("tunables.md:%d: <!-- tunables: %s --> is written twice" % (n, key))
+                problems.append("%s:%d: <!-- tunables: %s --> is written twice" % (where, n, key))
             out.setdefault(key, {})
             continue
         if line.startswith("## ") or line.startswith("# "):
@@ -279,13 +286,12 @@ def read_reference():
             continue
         names = re.findall(r"`([^`]+)`", c[header.index("Field")])
         for name in names:
-            row = {"line": n,
+            row = {"line": n, "page": where,
                    "default": c[header.index("Default")] if "Default" in header else "",
-                   "live": c[header.index("Live")] if "Live" in header else ""}
+                   "live": c[header.index("In tuning menu")] if "In tuning menu" in header else ""}
             if name in out[key]:
-                problems.append("tunables.md:%d: `%s` is in the %s tables twice" % (n, name, key))
+                problems.append("%s:%d: `%s` is in the %s tables twice" % (where, n, name, key))
             out[key][name] = row
-    return out
 
 
 def numbers_in(text):
@@ -295,25 +301,25 @@ def numbers_in(text):
 def check_reference(code, ref):
     for key in sorted(set(code) | set(ref)):
         if key not in ref:
-            problems.append("tunables.md has no <!-- tunables: %s --> section (the code reads %s)"
+            problems.append("docs/reference/ has no <!-- tunables: %s --> section (the code reads %s)"
                             % (key, ", ".join(sorted(code[key]))))
             continue
         if key not in code:
-            problems.append("tunables.md: section %s is not read by any code" % key)
+            problems.append("docs/reference/: section %s is not read by any code" % key)
             continue
         for name in sorted(set(code[key]) - set(ref[key])):
-            problems.append("tunables.md (%s): `%s` is read by the code but not in the reference" % (key, name))
+            problems.append("docs/reference/ (%s): `%s` is read by the code but not in the reference" % (key, name))
         for name in sorted(set(ref[key]) - set(code[key])):
-            problems.append("tunables.md:%d (%s): `%s` is not read by the code (an old name?)"
-                            % (ref[key][name]["line"], key, name))
+            problems.append("%s:%d (%s): `%s` is not read by the code (an old name?)"
+                            % (ref[key][name]["page"], ref[key][name]["line"], key, name))
         for name in sorted(set(code[key]) & set(ref[key])):
             f, r = code[key][name], ref[key][name]
-            where = "tunables.md:%d (%s) `%s`" % (r["line"], key, name)
+            where = "%s:%d (%s) `%s`" % (r["page"], r["line"], key, name)
             live = r["live"].lower()
             if f["live"] and not live.startswith("yes"):
-                problems.append(where + ": it is in the tuning menu: its Live cell must start with \"yes\"")
+                problems.append(where + ": it is in the tuning menu: its 'In tuning menu' cell must start with \"yes\"")
             if not f["live"] and not live.startswith("no"):
-                problems.append(where + ": it is NOT in the tuning menu: its Live cell must start with \"no\"")
+                problems.append(where + ": it is NOT in the tuning menu: its 'In tuning menu' cell must start with \"no\"")
             if f["required"] and not r["default"].startswith("REQUIRED"):
                 problems.append(where + ": INIT stops without it: its Default cell must start with REQUIRED")
             if not f["required"]:

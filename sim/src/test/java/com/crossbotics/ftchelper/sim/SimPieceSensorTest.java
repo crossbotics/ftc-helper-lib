@@ -51,7 +51,7 @@ public class SimPieceSensorTest {
     }
 
     /**
-     * Tunables with the simulator's colours (the field file's screen colours, as hues). steadyMs = 0: this
+     * Tunables with the simulator's colors (the field file's screen colors, as hues). steadyMs = 0: this
      * test runs faster than real time, and the sensors wait on the real clock.
      */
     public static class Numbers {

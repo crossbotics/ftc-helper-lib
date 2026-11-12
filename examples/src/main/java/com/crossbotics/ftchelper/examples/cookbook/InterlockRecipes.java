@@ -186,8 +186,8 @@ public class InterlockRecipes {
         public static class Aim {                                       // a fixed name: always Aim
             // Where the goal is, seen from YOUR drivers' wall (inches; the same numbers as driveTo).
             // BIOBUZZ: your HIVE's CELL that is up at the start.
-            public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
-            public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
+            public static double goalX = 13;                            // inches right of center (BIOBUZZ)
+            public static double goalY = -13;                           // inches from center, - = our half (BIOBUZZ)
             public static boolean mirrorForRed = false;                 // BIOBUZZ's field is turned, not mirrored
         }
         // end recipe

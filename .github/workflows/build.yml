@@ -18,8 +18,8 @@ jobs:
           java-version: '21'
       - name: Tests, examples and tutorial programs
         run: ./gradlew --no-daemon :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
-      - name: Simulator tests (whole OpModes with pretend hardware)
-        run: ./gradlew --no-daemon :sim:testDebugUnitTest
+      - name: Simulator and Pedro tests (whole OpModes with pretend hardware)
+        run: ./gradlew --no-daemon :sim:testDebugUnitTest :pedro:testDebugUnitTest
       - name: Docs and tutorials check
         run: python3 tools/check_docs.py
       - name: Parts page up to date

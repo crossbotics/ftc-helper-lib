@@ -21,7 +21,7 @@ import java.util.Map;
  * .looks(Shape.arm().atMm(...).sizeMm(...).angle("stowed", 95).angle("deployed", -10))}. Parts that
  * ride on it ({@code Shape.on(intakeDeploy)}) fold with it.
  *
- * Docs: docs/modules/robot.md (section "Positioner")
+ * Docs: docs/reference/robot-java.md (section "Positioner")
  */
 public final class Positioner extends ServoPositions<Positioner> {
 

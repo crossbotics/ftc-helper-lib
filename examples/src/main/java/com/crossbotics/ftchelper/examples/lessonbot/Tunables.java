@@ -6,13 +6,13 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASU
  * The lesson robot, file 2 of 5: every number, one per line. Section name = the device's name in
  * CamelCase ("lift" reads Lift). DEFAULT = the library's default (in brackets). Tune live, then
  * copy the numbers back here: the code is the record.
- * more: https://crossbotics.com/ftc-helper/docs/guides/tunables/
+ * more: https://crossbotics.com/ftc-helper/docs/reference/tunables/
  */
 public class Tunables {
     /** Lesson 2. calibrated: set true after the Drive Tuner (lesson 6); until then no autonomous runs. */
     public static class Drive {
         public static double maxPower = DEFAULT;                    // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         public static double strafeCorrection = DEFAULT;            // sideways moves: Drive Tuner (1.15)
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -43,11 +43,5 @@ public class Tunables {
     public static class Claw {
         public static double open = 0.20;                           // servo position, open (Servo Finder)
         public static double closed = 0.75;                         // servo position, closed (Servo Finder)
-    }
-
-    /** Lesson 6: the autonomous's distances. Also in the tuning menu: tune, then copy them back here. */
-    public static class Auto {
-        public static double toGoalInches = 24;                     // drive to the goal
-        public static double parkInches = 20;                       // drive into the park zone
     }
 }

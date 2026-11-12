@@ -54,8 +54,12 @@ final class SimRules {
         }
     }
 
+    /** G407: the most pieces a robot may control at a time (0 = no limit), and how long "momentary" is (s). */
+    final int controlMax;
+    final double momentarySec;
+
     final CleanEntry cleanEntry;
-    /** A GARDEN piece's centre must be lower than this (inches). */
+    /** A GARDEN piece's center must be lower than this (inches). */
     final double gardenMaxZ;
 
     SimRules(String text, String what) {
@@ -91,6 +95,9 @@ final class SimRules {
         retrievalHeight = SimJsonReader.number(fl, "retrievalHeightIn", Double.POSITIVE_INFINITY);
         gap = SimJsonReader.number(fl, "gapIn", 0);
         nectarLastSec = SimJsonReader.number(fl, "nectarLastSec", Double.NaN);
+        Map<String, Object> ctl = obj(root, "control");
+        controlMax = (int) SimJsonReader.number(ctl, "maxPieces", 0);
+        momentarySec = SimJsonReader.number(ctl, "momentarySec", 3);
         tipSeconds = Math.max(0, SimJsonReader.number(obj(root, "hives"), "tipSeconds", 0));
         cleanEntry = new CleanEntry(obj(root, "cleanEntry"));
         gardenMaxZ = SimJsonReader.number(obj(root, "garden"), "maxZIn", 6);

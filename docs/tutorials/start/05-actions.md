@@ -2,16 +2,15 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**Goal:** write a move that uses the lift and the claw together (in your own `Actions.java`; the lesson
-robot's is the worked example), start it from one button, and use
-the same move in an autonomous.
+**Goal:** write a move that uses the lift and the claw together, start it from one button, and use
+the same move in an autonomous. You write it in your own `Actions.java`, and the lesson robot's file is
+the worked example.
 
 **You need:**
 
 - **Your own robot** with the mechanisms you added in [lesson 4](04-lift-and-claw.md), tuned so they
   reach their positions. The lesson robot (intake, lift and claw) is the worked example: read its
   lines, then write the same kind of action for your parts.
-- About 30 minutes.
 
 The finished files: [`Actions.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Actions.java)
 and [`Controls.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Controls.java).
@@ -19,8 +18,8 @@ and [`Controls.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/
 ## 1. What an action is
 
 Scoring takes several steps: lift up, wait until it is at the top, open the claw, wait for the piece
-to drop, lift down. The operator could press four buttons in the right order every time. An
-**action** is that list of steps, written once in `Actions.java`, started by one button.
+to drop, lift down. Without an action, the operator must press four buttons in the right order every
+time. An **action** is that list of steps. You write it once in `Actions.java`, and one button starts it.
 
 ## 2. scoreHigh, line by line
 
@@ -40,22 +39,22 @@ public static Action scoreHigh(Robot r) {
 }
 ```
 
-`Actions.java` needs one import at the top: `import com.crossbotics.ftchelper.robot.Action;` (your own
-from the Quick start has it already).
+`Actions.java` needs one import at the top: `import com.crossbotics.ftchelper.robot.Action;`. Your own
+file from the Quick start has it already.
 
 - `Action.named("Score high")` starts a new action. The name shows on the Driver Station.
 - `.then(() -> r.lift.goTo("high"))` does something now, then goes to the next step.
-  `() -> ...` is a **lambda**: a small piece of code the action runs later, when it gets to this step.
+  `() -> ...` is a **lambda**: a small piece of code that the action runs later, when it gets to this step.
 - `.waitUntil("lift at the top", r.lift::isAtTarget, 2.0)` waits until the lift says it is at its
   target. `r.lift::isAtTarget` is a **method reference**: the same as a lambda, for a method with no
   inputs. The words are for the Driver Station.
   - **The 2.0 is a time limit, in seconds.** If the lift is not at the top in 2 s, the action
-    **stops**. Why: a lift that never got to the top (stuck, or not homed yet) must not open the
+    **stops**. **Why:** a lift that never got to the top (stuck, or not homed yet) must not open the
     claw and drop the piece in the wrong place.
-  - `isAtTarget` is "is the lift at the height it was sent to?" (within `tolerance`).
+  - `isAtTarget` tells you whether the lift is at the height it was sent to (within `tolerance`).
 - `.then(r.claw::open)` opens the claw.
 - `.waitSeconds(0.3)` gives the piece time to fall out.
-- `.then(() -> r.lift.goTo("down"))` sends the lift down. That is the last step: the action is done.
+- `.then(() -> r.lift.goTo("down"))` sends the lift down. That is the last step, so the action is done.
 
 ## 3. grabAndLift
 
@@ -69,17 +68,19 @@ public static Action grabAndLift(Robot r) {
 }
 ```
 
-A servo cannot report where it is. `isDone()` is a guess: it turns true after `travelSec` (default
-0.3 s, set it in `Tunables.Claw`): the time for a full 0-to-1 move, scaled by how far this move goes
-([how to time it](../../guides/tunables.md#claw-wrist-and-positioner)). So the lift only rises once the claw has had time to close.
+A servo cannot report where it is, so `isDone()` is a guess. It turns true after `travelSec` (default
+0.3 s, set in `Tunables.Claw`). `travelSec` is the time for a full 0-to-1 move, and the claw scales it by
+how far this move goes ([how to time it](../../reference/parts/claw.md#in-tunablesjava)). So the lift
+rises only after the claw has had time to close.
 
 To move two parts **at the same time**, give `then` several commands:
 `.then(() -> r.lift.goTo("low"), r.claw::open)`.
 
 ## 4. Start it from a button
 
-In `Controls.java`, inside `buttons(...)`. This is the lesson robot's whole method. **In yours, add
-only the lines for your own actions** (one line each, like the RB line), next to the lines you have:
+The button line goes in `Controls.java`, inside `buttons(...)`. The code below is the lesson robot's
+whole method. **In yours, add only the lines for your own actions** (one line each, like the RB line),
+next to the lines you have:
 
 ```java
 @Override
@@ -94,17 +95,17 @@ protected void buttons(Robot robot, Pad g1, Pad g2) {
 - `press(action)` starts the action. **Pressing again while it runs cancels it.** The same goes for a
   gesture: `tap(action)` starts it, another tap cancels it.
 - `.says(...)` is the words on the button map.
-- RB and LB on gamepad 2 are free on this robot, so nothing is replaced. (A launcher, in lesson 9,
-  wants them: then INIT says the launcher has `no button`, and you move these two jobs.)
+- RB and LB on gamepad 2 are free on this robot, so these lines replace nothing. (A launcher, in
+  lesson 9, wants them. Then INIT says the launcher has `no button`, and you move these two jobs.)
 
 ## 5. The rules every action follows
 
-These come from the `Action` class itself:
+The `Action` class itself makes every action follow these rules:
 
 - **It never waits.** An action does a little every loop, then lets the loop go on. The robot keeps
   driving and every other button keeps working while it runs.
-  **This is why you need actions:** a button job must never wait. `sleep(500)` or a `while` loop in a
-  job compiles, but it freezes the whole robot (no driving, no other button) until it ends. The Driver
+  **This is why you need actions:** a button job must never wait. A job with `sleep(500)` or a `while`
+  loop compiles, but it freezes the whole robot (no driving, no other button) until it ends. The Driver
   Station then warns: `... took 512 ms: the whole robot stopped that long. No sleep() or while loop in a
   button job: use an Action with waitSeconds (lesson 5)`. Put the wait in an action
   (`.waitSeconds(0.5)`, `.waitUntil(...)`) instead.
@@ -114,11 +115,12 @@ These come from the `Action` class itself:
   the action stops. Example: during "Score high", pressing A stops it and the lift goes down.
 - **A wait that times out stops the action**, and the Driver Station says why:
   `timed out waiting for lift at the top`.
-- **A stopped action leaves its parts safe.** Cancelled, taken over or timed out: a lift holds its
-  height, an intake stops. An action that finishes keeps its last commands (here: the lift goes down).
+- **A stopped action leaves its parts safe.** When an action is canceled, taken over or timed out, a
+  lift holds its height and an intake stops. An action that finishes keeps its last commands (here, the
+  lift goes down).
 
 While it runs, the Driver Station shows a line like `Score high: step 2 of 5 (lift at the top)`.
-After it ends, the result shows for 3 seconds: `done`, `cancelled`, or the reason it stopped.
+After the action ends, the result shows for 3 seconds: `done`, `canceled`, or the reason it stopped.
 
 ## 6. The same action in an autonomous
 
@@ -129,47 +131,52 @@ The autonomous (lesson 6) uses the same method as a step:
 ```
 
 `s.action(...)` starts the action and waits until it ends. The 5 is the most seconds it may take
-(10 if you leave it out). If it runs out of time, it is cancelled and the end-of-match report says so;
-a timed-out wait also shows in the report. Then the autonomous goes on to its next step.
-`s.alongside(action)` starts one and goes on at once, so it runs during the next steps (for example,
-lift up while driving).
+(10 if you leave it out). If it runs out of time, the autonomous cancels it, and the end-of-match report
+says so. A timed-out wait also shows in the report. Then the autonomous goes on to its next step.
+`s.alongside(action)` starts an action and goes on at once, so the action runs during the next steps
+(for example, lift up while driving).
 
 **Why write it once:** fix the scoring in `Actions.java`, and TeleOp and autonomous both get the fix.
 
 ## 7. An action when the OpMode starts
 
-An action can also run once, right after ▶ (start on the Driver Hub), in autonomous and TeleOp. Add it in `Robot.java`'s
-`define()`. The [flywheel robot](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java)
+An action can also run once, right after ▶ (start on the Driver Hub), in autonomous and TeleOp. Add it
+in `Robot.java`'s `define()`. The [flywheel robot](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java)
 uses this to fold its intake down:
 
 ```java
 atStart(() -> Actions.deployIntake(this));
 ```
 
-Never in INIT: the library never moves anything before ▶. That is the library's safety choice
-(people are still next to the robot in INIT), not a game rule: BIOBUZZ allows an OpMode to pre-position
-servos and motors in INIT (R103.B), as long as the robot is still once INIT is done (G304.H).
+It never runs in INIT, because the library never moves anything before ▶. People are still next to the
+robot in INIT, so this is the library's safety choice. It is not a game rule. BIOBUZZ allows an OpMode
+to pre-position servos and motors in INIT (R103.B), as long as the robot is still once INIT is done (G304.H).
 
 ## Try it in the simulator
 
-From the `ftc-helper-lib` folder (the first line once, as in lesson 4):
+Run the first line once, as in lesson 4.
+
+**Where:** the Terminal, in the `ftc-helper-lib` folder.
 
 ```bash
 ./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.lessonbot.Robot -Pout=build/lessonbot.properties
 ./gradlew :sim:run -PteamCode=none -Probot=build/lessonbot.properties
 ```
 
-Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, ▶. Then try each rule:
+Open http://localhost:8780, pick "Lesson Bot TeleOp", press INIT, then ▶. Then try each rule:
 
-1. Gamepad 2 RB: the lift rises, the claw opens at the top, the lift comes down. Watch the
+1. Press gamepad 2 RB. The lift rises, the claw opens at the top, and the lift comes down. Watch the
    `Score high: step ...` line.
-2. RB, then RB again while it rises: `cancelled`, and the lift holds where it was.
-3. RB, then A while it rises: `stopped: Lift moved by hand`.
+2. Press RB, then RB again while the lift rises. The screen says `canceled`, and the lift holds where it was.
+3. Press RB, then A while the lift rises. The screen says `stopped: Lift moved by hand`.
 
 If the claw does not open at the top and the screen says `timed out waiting for lift at the top`, the
 lift is too slow for the 2 s limit (see the table below).
 
-**Your own robot:** pick **Simulator** in the list next to Android Studio's green Run button, and click Run. Or, from the `ftc-helper-lib` folder:
+**Your own robot:** pick **Simulator** in the list next to Android Studio's green Run button, and click
+Run. Or use the Terminal.
+
+**Where:** the Terminal, in the `ftc-helper-lib` folder.
 
 ```bash
 ./gradlew :sim:run
@@ -177,16 +184,16 @@ lift is too slow for the 2 s limit (see the table below).
 
 Then try your own action's button, as in steps 1 to 3 above.
 
-**Later: make it a test.** Once your robot works, the simulator can record you pressing the button and
-check the result every time you change the code. That is an advanced topic:
+**Later: make it a test.** When your robot works, the simulator can record you pressing the button. It
+then checks the result every time you change the code. That is an advanced topic:
 [lesson 10, Test your robot code](10-test-your-robot-code.md).
 
 ## Check it on the robot
 
-1. Lift down, a piece in the claw, hand near STOP. INIT, ▶.
-2. RB: the lift goes up, the claw opens only at the top, the lift comes down.
-3. RB, then move the lift stick: the action stops and the lift holds.
-4. LB with the claw over a piece: it closes, then lifts to `low`.
+1. Put the lift down and a piece in the claw, and keep a hand near STOP. Press INIT, then ▶.
+2. Press RB. The lift goes up, the claw opens only at the top, and the lift comes down.
+3. Press RB, then move the lift stick. The action stops, and the lift holds.
+4. Press LB with the claw over a piece. The claw closes, then the lift goes to `low`.
 
 ## If something goes wrong
 
@@ -194,7 +201,7 @@ check the result every time you change the code. That is an advanced topic:
 | --- | --- |
 | `timed out waiting for lift at the top`, the claw stays shut | The lift needs more than 2 s, or it is not homed. Tune it faster (lesson 4), home it, or give the wait more time. |
 | The action stops as soon as it starts | Something else commands the same part: the operator is touching the lift stick, or another action uses the lift. |
-| Nothing happens on RB | Another job is on G2 RB in `Controls.java` (INIT stops and names it), or the action is already running and this press cancelled it. |
+| Nothing happens on RB | Another job is on G2 RB in `Controls.java` (INIT stops and names it), or the action is already running and this press canceled it. |
 | The lift rises before the claw is closed | Raise `travelSec` in `Tunables.Claw`. |
 | The claw opens and the piece misses | Tune the `high` height (lesson 4), or wait longer before opening. |
 
@@ -202,7 +209,7 @@ check the result every time you change the code. That is an advanced topic:
 
 How the steps run without waiting: [Why commands never wait](../../guides/non-blocking.md). The same
 idea built by hand: [tutorial 10](../10-auto-with-mechanisms.md) and [tutorial 16](../16-easy-autos.md).
-Every method: [Action](../../modules/robot.md#action).
+Every method: [Action](../../reference/steps.md#action).
 
 ## Next
 

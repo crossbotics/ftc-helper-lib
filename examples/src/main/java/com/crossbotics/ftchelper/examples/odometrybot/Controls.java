@@ -30,7 +30,7 @@ public class Controls extends ControlMap<Robot> {
         // Ours.
         show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in", robot.pose().x, robot.pose().y));
         // Drives to the park spot by itself, around the HIVE frames. Any drive stick stops it.
-        Runnable park = route("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+        Runnable park = route("Park", -56, -36, 0, 0.8);
         g1.dpadLeft.tap(park).says("drive to the park spot (a drive stick stops it)");
         atSecondsLeft(10, park);
     }

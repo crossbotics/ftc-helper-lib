@@ -2,7 +2,6 @@ package com.crossbotics.ftchelper.examples.lessonbot.autos;
 
 import com.crossbotics.ftchelper.examples.lessonbot.Actions;
 import com.crossbotics.ftchelper.examples.lessonbot.Robot;
-import com.crossbotics.ftchelper.examples.lessonbot.Tunables;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -11,7 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 /**
  * The lesson robot, file 5 of 5: an autonomous. Hold the piece, drive to the goal, score, and
  * always park in the last 3 seconds.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/06-first-autonomous/
+ * more: https://crossbotics.com/ftc-helper/docs/building-autos/02-put-steps-together/
  */
 @Autonomous(name = "Lesson Bot Score and Park", group = "Examples", preselectTeleOp = "Lesson Bot TeleOp")
 @Disabled
@@ -26,9 +25,9 @@ public class ScoreAndPark extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         s.start("Against our wall, facing the field", 0)
          .run("Hold the piece", robot.claw::close)
-         .forward("To the goal", Tunables.Auto.toGoalInches, 0.6)
+         .forward("To the goal", 24, 0.6)
          .action(Actions.scoreHigh(robot), 5)
          .parkWithSeconds(3)
-         .right("Park", Tunables.Auto.parkInches, 0.7);
+         .right("Park", 20, 0.7);
     }
 }

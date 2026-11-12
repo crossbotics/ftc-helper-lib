@@ -36,7 +36,8 @@ public class Tut17Launcher extends LinearOpMode {
         // 28 = bare motor encoder, flywheel on the motor shaft (no gears).
         Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
                 .countsPerRev(28)       // encoder counts per ONE flywheel turn
-                .pidf(10, 3, 0, 12)     // the hub's speed control
+                .maxRpm(6000)           // the motor's top speed
+                .startingGains()        // the hub's speed control (a start)
                 .tolerance(75)          // "at speed" = within 75 rpm...
                 .settleTime(0.15);      // ...for 0.15 s
         // travelTime: about 0.4 s for a full move (a servo cannot report where it is).

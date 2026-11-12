@@ -15,10 +15,10 @@ Pick **one** start:
 | A robot **like one of our example robots**: for example mecanum + intake, tank + flywheel, a turret, odometry | [A common setup](02-common-setup.md) | That example's code. You delete what your robot does not have. |
 | **Your own design** | [A blank slate](03-blank-slate.md) | The smallest code that drives. Then you add your parts one at a time. |
 
-**A starter bot with your own changes** (a part added, taken off or moved)? Start from
+**For a starter bot with your own changes** (a part added, taken off or moved): start from
 [a starter bot](01-starter-bot.md). Then make your changes one at a time: the page says how.
 
-**Not sure?** Pick the start that is most like your robot. You delete less and type less. You can
+**If you are not sure,** pick the start that is most like your robot. You delete less and type less. You can
 copy single lines from the other starts later.
 
 All three starts end in the same place: **the five files in `TeamCode`, and the project builds.**

@@ -22,3 +22,5 @@
 Android Studio opens and shows its **Welcome** window.
 
 **Next:** [GitHub and the robot project](03-github-and-the-project.md).
+
+**Look it up:** [The simulator](../guides/simulator.md) and [Troubleshooting: build problems](../troubleshooting.md#build-problems).

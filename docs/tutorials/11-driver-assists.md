@@ -4,12 +4,12 @@
 
 **You will build:** a mecanum TeleOp where a D-pad press turns the robot to face an exact direction, the gamepad buzzes when it is lined up, and starts are smooth.
 
-**You will learn:** how to make the robot turn to an exact heading with one button (PID on the
-IMU), how to let the driver FEEL when it is pointed right (`AimRumble`), and how to smooth out
-sudden starts (`SlewRateLimiter`).
+**You will learn:** how to make the robot turn to an exact heading with one button (PID on the IMU), how
+to let the driver FEEL when the robot points the right way (`AimRumble`), and how to smooth out sudden
+starts (`SlewRateLimiter`).
 
-**You need:** a mecanum robot with the IMU, `RobotSettings` from Tutorial 09. Tutorials 04 and 07.
-(A standard drive works the same way with `TankDrive.arcade`.)
+**You need:** a mecanum robot with the IMU, and `RobotSettings` from Tutorial 09. Do Tutorials 04 and 07
+first. A standard drive works the same way with `TankDrive.arcade`.
 
 **Full program:** [`Tut11HeadingHold.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut11HeadingHold.java)
 **Reference:** [control.md](../modules/control.md), [gamepad.md: AimRumble](../modules/gamepad.md#aimrumble)
@@ -18,8 +18,8 @@ sudden starts (`SlewRateLimiter`).
 
 ## 1. Snap to a heading
 
-Lining up square to a wall or a goal by hand takes time. Instead: press a D-pad direction and
-the robot turns to face exactly that way, while the driver keeps driving with the left stick.
+To line up square to a wall or a goal by hand takes time. With a snap, the driver presses a D-pad
+direction, and the robot turns to face exactly that way. The driver keeps driving with the left stick.
 
 This is PID again (Tutorial 07), but the "position" is the heading:
 
@@ -30,16 +30,16 @@ PidController headingPid = new PidController(0.015, 0, 0.002)
         .setTolerance(2);
 ```
 
-`setAngleMode(true)` is important: headings wrap around at 180. From 170 to -170 is a 20 degree
-turn, not 340. In angle mode the controller always takes the short way.
+`setAngleMode(true)` is important, because headings wrap around at 180. From 170 to -170 is a 20 degree
+turn, not 340. In angle mode, the controller always takes the short way.
 
-The gains: kP 0.015 is the turn power per degree of error, no I, and kD 0.002 slows the turn near
-the target so it does not swing past. `setOutputLimits(-0.6, 0.6)` keeps a snap from being violent.
-Within 2 degrees counts as "pointed right".
+The gains: kP 0.015 is the turn power per degree of error. There is no I. kD 0.002 slows the turn near
+the target, so the robot does not swing past. `setOutputLimits(-0.6, 0.6)` stops a snap from being
+violent. Within 2 degrees counts as "pointed right".
 
-The D-pad headings are field headings: 0 is the way the robot faced when the heading was last
-zeroed, and positive is left (counterclockwise). So D-pad LEFT = 90 = face left. BACK resets the
-heading to 0: press it when the robot faces straight away from you.
+The D-pad headings are field headings. 0 is the way the robot faced when the heading was last zeroed,
+and positive is left (counterclockwise). So D-pad LEFT = 90 = face left. BACK resets the heading to 0:
+press it when the robot faces straight away from you.
 
 ## 2. Hand control back to the driver
 
@@ -57,20 +57,21 @@ if (targetHeading != null) {
 drive.driveFieldCentric(forward, strafe, turn, heading);
 ```
 
-The same pattern as the lift in Tutorial 08: a button sets a target, touching the stick cancels it.
-`targetHeading` is a `Double` (capital D), not a `double`, so it can be `null`.
+This is the same pattern as the lift in Tutorial 08: a button sets a target, and a touch on the stick
+cancels it. `targetHeading` is a `Double` (capital D), not a `double`, so it can be `null`.
 
 ### Why the minus sign?
 
-The IMU and the PID think in **counterclockwise** (left = positive). The drive's turn is
-**clockwise** (right = positive), so it matches the stick. To go from one to the other, flip the sign.
-See [Signs and units](../conventions.md). Forget the minus and the robot turns AWAY from the target, faster and faster.
+The IMU and the PID count **counterclockwise** (left = positive). The drive's turn is **clockwise**
+(right = positive), so it matches the stick. To go from one to the other, flip the sign.
+See [Signs and units](../conventions.md). Without the minus, the robot turns AWAY from the target,
+faster and faster.
 
 The D-pad directions are field directions: 90 = facing left (counterclockwise from the start).
 
 ## 3. Feel it
 
-The driver's eyes are on the robot, not the screen. A buzz says "you are pointed right":
+The driver watches the robot, not the screen. A buzz says "you are pointed right":
 
 ```java
 AimRumble aimFeel = new AimRumble(gamepad1).setThreshold(3);
@@ -78,17 +79,19 @@ AimRumble aimFeel = new AimRumble(gamepad1).setThreshold(3);
 aimFeel.update(Angles.shortestDiff(targetHeading, heading));
 ```
 
-Inside 3 degrees it buzzes; the closer, the stronger. `Angles.shortestDiff` gives the error the
-short way around. (Use it for any "how far off am I" with headings.)
+Inside 3 degrees, the gamepad buzzes, and it buzzes stronger as the robot gets closer.
+`Angles.shortestDiff` gives the error the short way around. Use it every time you need the error
+between two headings.
 
-**In the robot in five files:** `g2.rumbleWhenAimed();` in `Controls.java` does this for a turret or
-for whole-robot aim (`g1.rb.toggle(robot.aimMode())`, which turns the robot to face the goal while the
-driver drives). On a robot with no turret it also buzzes when the driver turns to the goal by hand. See [Lesson 9, sections 10 and 11](start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot).
+**In the robot in five files:** `g2.rumbleWhenAimed();` in `Controls.java` does this for a turret or for
+whole-robot aim. Whole-robot aim (`g1.rb.toggle(robot.aimMode())`) turns the robot to face the goal while
+the driver drives. On a robot with no turret, the gamepad also buzzes when the driver turns to the goal by
+hand. See [Lesson 9, sections 10 and 11](start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot).
 
 ## 4. Smooth starts
 
-A tall robot that goes from 0 to full speed in one loop can tip, and wheels slip. A
-`SlewRateLimiter` lets a value change only so fast ("slew rate" means "how fast it may change"):
+A tall robot that goes from 0 to full speed in one loop can tip, and its wheels slip. The "slew rate" is
+how fast a value may change. A `SlewRateLimiter` lets a value change only that fast:
 
 ```java
 SlewRateLimiter forwardRamp = new SlewRateLimiter(2.5, 6.0);   // speed up 2.5/s, slow down 6/s
@@ -96,17 +99,17 @@ SlewRateLimiter forwardRamp = new SlewRateLimiter(2.5, 6.0);   // speed up 2.5/s
 double forward = forwardRamp.calculate(StickShaping.shape(-gamepad1.left_stick_y, 0.05, 2));
 ```
 
-2.5 per second means 0 to full in 0.4 s. Slowing down is allowed to be faster (6 per second),
-so the robot still stops quickly. Use one limiter per value (forward and strafe here). Turning is
-usually left without one, so aiming stays quick.
+2.5 per second means 0 to full in 0.4 s. The limiter lets the robot slow down faster (6 per second), so
+the robot still stops quickly. Use one limiter per value (forward and strafe here). Turning usually has
+no limiter, so aiming stays quick.
 
 ## Run it
 
-1. Press ▶ (start on the Driver Hub) with the robot facing away from you (or press BACK to reset "forward").
-2. Turn the robot by hand, then press D-pad up: it turns back to face forward and stops.
-3. Hold the left stick forward while pressing D-pad left: it drives AND turns to face left.
-4. Push the right stick during a snap: the snap stops, you turn by hand.
-5. When the snap finishes: a buzz.
+1. Point the robot away from you, or press BACK to reset "forward". Press ▶ (start on the Driver Hub).
+2. Turn the robot by hand, then press D-pad up: the robot turns back to face forward and stops.
+3. Hold the left stick forward and press D-pad left: the robot drives AND turns to face left.
+4. Push the right stick during a snap: the snap stops, and you turn by hand.
+5. When the snap finishes, the gamepad buzzes.
 6. Slam the left stick forward: the robot speeds up smoothly. Let go: it stops quickly.
 
 ## If something goes wrong
@@ -114,15 +117,15 @@ usually left without one, so aiming stays quick.
 | Problem | Fix |
 | --- | --- |
 | Turns away from the target, faster and faster | The minus sign in section 2 is missing. |
-| Shakes around the target | `kP` too big or `kD` too big; lower them. |
-| Stops a few degrees short | Raise `kP` a little, or a bigger tolerance if it is good enough. |
+| Shakes around the target | `kP` is too big, or `kD` is too big. Lower them. |
+| Stops a few degrees short | Raise `kP` a little. When that small error is good enough, use a bigger tolerance. |
 | Goes the long way around | `setAngleMode(true)` is missing. |
-| No buzz | Gamepad has no rumble motors, or the error never gets inside the threshold. |
+| No buzz | The gamepad has no rumble motors, or the error never gets inside the threshold. |
 
 ## Try this
 
 1. Add the right bumper as "snap to the nearest 45 degrees". (Hint: `Math.round(heading / 45) * 45`.)
-2. Make the ramp gentler only while the lift is up (a tall robot tips more easily).
+2. Make the ramp gentler only while the lift is up, because a tall robot tips more easily.
 3. Use `PidController.atTarget()` to show a big "LOCKED" line at the top of telemetry.
 
 ## Next

@@ -385,9 +385,9 @@ public class BuiltAuto extends Auto<RobotDefinition> {
     }
 
     /**
-     * The Robot class that fits the simulator's robot best: the one whose device names (from its
-     * simLines(), the same lines :sim:fromRobot writes) are most often in the robot file, fewest missing.
-     * A team project has one Robot class, so that one.
+     * The Robot class that fits the simulator's robot best: the fewest devices the robot file does not have
+     * (each one would stop INIT: "No ... named ..."), then the most it has. Its device names come from its
+     * simLines(), the same lines :sim:fromRobot writes. A team project has one Robot class, so that one.
      */
     static Class<? extends RobotDefinition> guess(Collection<Class<? extends RobotDefinition>> classes, SimRobot sim) {
         Class<? extends RobotDefinition> best = null;
@@ -402,18 +402,20 @@ public class BuiltAuto extends Auto<RobotDefinition> {
         return best;
     }
 
-    /** How well a Robot class fits the robot file: +2 per device name in it, -1 per one missing. */
+    /**
+     * How well a Robot class fits the robot file: -1000 per device it needs that the file does not have,
+     * +1 per device that is there. So one missing device (the robot cannot INIT) counts more than any
+     * number of matching ones.
+     */
     static int score(Class<? extends RobotDefinition> c, SimRobot sim) {
-        Set<String> have = new LinkedHashSet<>();
-        have.addAll(sim.motors.keySet());
-        have.addAll(sim.servos.keySet());
-        have.addAll(sim.crServos.keySet());
+        Set<String> have = sim.deviceNames();
         int score = 0;
-        for (String name : deviceNames(c)) score += have.contains(name) ? 2 : -1;
+        for (String name : deviceNames(c)) score += have.contains(name) ? 1 : -1000;
         return score;
     }
 
-    // The motor and servo names a Robot class uses (from its simulator lines; empty if it cannot be made).
+    // The device names a Robot class uses (from its simulator lines; empty if it cannot be made): the drive
+    // motors, motors, servos, sensors, lights, the IMU, the odometry device and the cameras.
     static Set<String> deviceNames(Class<? extends RobotDefinition> c) {
         Set<String> out = new LinkedHashSet<>();
         try {
@@ -424,7 +426,16 @@ public class BuiltAuto extends Auto<RobotDefinition> {
                 String value = line.substring(eq + 1).split("#")[0].trim();
                 if (key.equals("drive.motors")) {
                     for (String n : value.split(",")) out.add(n.trim());
-                } else if (key.matches("(motor|servo|crservo)\\..+")) {
+                } else if (key.equals("imu")) {
+                    if (!value.isEmpty()) out.add(value);
+                } else if (key.equals("odometry")) {
+                    // "pinpoint name", "otos name", or "threeWheels a, b, c" (dead wheels: encoder names)
+                    int sp = value.indexOf(' ');
+                    if (sp > 0) for (String n : value.substring(sp + 1).split(",")) if (!n.trim().isEmpty()) out.add(n.trim());
+                } else if (key.matches("(camera|limelight|huskylens)\\..+")) {
+                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("name=([^,]+)").matcher(value);
+                    if (m.find()) out.add(m.group(1).trim());
+                } else if (key.matches("(motor|servo|crservo|light|touch|analog|color|distance)\\..+")) {
                     out.add(key.substring(key.indexOf('.') + 1));
                 }
             }

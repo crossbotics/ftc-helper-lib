@@ -1,7 +1,7 @@
 package com.crossbotics.ftchelper.examples.quickstart;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/reference/tunables.md)
 
 /**
  * Quick start, file 2 of 5: every number, one section per part, one number per line. A section's name
@@ -11,9 +11,9 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASU
  */
 public class Tunables {
     public static class Drive {
-        // STEP 6: keep the robot slow for the first drives (both 0.4), raise them when it all works.
+        // STEP 6: keep the robot slow for the first drives (0.4), raise it when it all works.
         public static double maxPower = 0.4;                        // top wheel power: slow for the first drives (1.0)
-        public static double practiceMaxPower = 0.4;                // top wheel power in PRACTICE (0.6)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         // The library's defaults until you tune them (strafeCorrection: the Drive Tuner, lesson 6).
         public static double strafeCorrection = DEFAULT;            // not used: a tank drive cannot strafe (1.15)
@@ -27,10 +27,5 @@ public class Tunables {
     public static class Intake {
         public static double inPower = DEFAULT;                     // power taking pieces in, 0 to 1 (1.0)
         public static double outPower = DEFAULT;                    // power pushing pieces out (0.7)
-    }
-
-    /** The autonomous's distance (STEP 8). In the tuning menu too: copy a good value back here. */
-    public static class Auto {
-        public static double leaveInches = 12;                      // drive off the start line
     }
 }

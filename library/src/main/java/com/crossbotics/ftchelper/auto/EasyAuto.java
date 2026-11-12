@@ -151,8 +151,8 @@ public abstract class EasyAuto extends LinearOpMode {
     }
 
     /**
-     * True when both alliances' drivers stand at the same wall (a mirrored field like DECODE 2025-26);
-     * false (default) when BLUE's drivers face RED's from the far wall (BIOBUZZ 2026-27). Only the
+     * True when both alliances' drivers stand at the same wall; false (default) when each alliance's
+     * drivers stand at their own wall (BIOBUZZ 2026-27 and DECODE 2025-26). Only the
      * simulator's start spot ({@link #startSpotIn()}) uses it. Check each season's field drawing.
      */
     protected boolean alliancesOnOneWall() {
@@ -171,8 +171,8 @@ public abstract class EasyAuto extends LinearOpMode {
 
     /**
      * Where to place the robot, as seen from the BLUE drivers' wall (for RED: mirrored like the routes
-     * when {@link #mirrorForRed()}, else the same numbers from the red wall): {x, y} in inches, x to the right of the field's centre line, y from
-     * the centre toward the far wall (negative = your half). Null (default) = not given. The heading is
+     * when {@link #mirrorForRed()}, else the same numbers from the red wall): {x, y} in inches, x to the right of the field's center line, y from
+     * the center toward the far wall (negative = your half). Null (default) = not given. The heading is
      * {@link #startHeadingDeg()}. The simulator puts the robot there in INIT.
      */
     protected double[] startSpotIn() {

@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** a team that starts its robot code. **You need:** the library in your robot project
-([Add the library](setup/04-add-the-library.md)). New to the library? Start at
+([Add the library](setup/04-add-the-library.md)). If you are new to the library, start at
 [Pick your start](pick-your-start/README.md): short pages for the same choice, one per start.
 
 A **template** is robot code you copy and then change. Start from the one that looks most like your
@@ -19,7 +19,7 @@ numbers (`pedrobot/PedroConstants.java`). Copy them with the rest.
 
 | Your robot looks like... | Start from | What it has |
 | --- | --- | --- |
-| **anything, and its configuration is on the Driver Station** | `./gradlew :sim:newRobot` ([Quick start, way A](quick-start.md#a-from-your-robot-configuration-best-if-it-is-already-set-up)) | five files made for you from your configuration, with each part's line and TODO marks, and every setting in `Tunables.java` as `DEFAULT` or `MEASURE` ([the two words](guides/tunables.md#default-and-measure)) |
+| **anything, and its configuration is on the Driver Station** | `./gradlew :sim:newRobot` ([Quick start, way A](quick-start.md#a-from-your-robot-configuration-best-if-it-is-already-set-up)) | five files made for you from your configuration, with each part's line and TODO marks, and every setting in `Tunables.java` as `DEFAULT` or `MEASURE` ([the two words](reference/tunables.md#default-and-measure)) |
 | a mecanum drive and an intake, no configuration yet | [`quickstart`](../examples/src/main/java/com/crossbotics/ftchelper/examples/quickstart) ([Quick start, way B](quick-start.md#b-copy-the-template-no-configuration-yet-or-you-want-to-see-every-line)) | the smallest robot, with STEP marks on every line to change |
 | a mecanum drive, an intake, a lift and a claw | [`lessonbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot) | the lesson robot of lessons 2 to 6, and its Drive Tuner |
 | **goBILDA's FTC StarterBot** (BIOBUZZ) | [`gobildabot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot) | tank drive, intake with two corner wheels, flywheel and "windmill" feeder; goBILDA's own names |
@@ -34,7 +34,7 @@ numbers (`pedrobot/PedroConstants.java`). Copy them with the rest.
 | a mecanum drive with odometry and Pedro Pathing | [`pedrobot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot) | `odometrybot` plus paths ([lesson 8](tutorials/start/08-paths-with-pedro.md)); add Pedro to the project first ([lesson 8, section 3](tutorials/start/08-paths-with-pedro.md#3-add-pedro-to-your-project)) |
 | you already use the older six-file starter kit | [`starter`](../examples/src/main/java/com/crossbotics/ftchelper/examples/starter) ([Starter kit](starter-kit.md)) | `EasyTeleOp` and `EasyAuto`; kept for teams that use it. New teams: use a row above |
 
-Not sure? Use `:sim:newRobot` if your configuration is ready, and `quickstart` if it is not. You can
+**If you are not sure:** use `:sim:newRobot` if your configuration is ready, and `quickstart` if it is not. You can
 copy single lines from the other templates later (for example the launcher line from `flywheelbot`).
 
 **The kit bots** use the same configuration names as each seller's own code, so the files run on that
@@ -50,34 +50,42 @@ in `Robot.java`:
 - **Studica's flywheel:** the launcher cannot take the 2:1 gear between the motor and the wheels. The
   flywheel speed in `Tunables.java` is the motor's (the wheels turn at half of it). Tune it by watching
   shots. The Maverick motors and the servo are not in the parts catalog: `Robot.java` describes them
-  with Studica's numbers ([Parts not in the catalog](modules/robot.md#parts-not-in-the-catalog)).
+  with Studica's numbers ([Parts not in the catalog](reference/robot-java.md#parts-not-in-the-catalog)).
 
 ## Copy a template into TeamCode
 
-`:sim:newRobot` writes the files into TeamCode for you: skip this part. For every other template,
+If you used `:sim:newRobot`, skip this part: it writes the files into TeamCode for you. For every other template,
 follow [Copy example files into TeamCode](pick-your-start/04-copy-into-teamcode.md): the `package` lines,
 the imports, the `@Disabled` lines and the OpMode names.
 
-Then build, and check the motor directions with the wheels off the ground
-([Lesson 2](tutorials/start/02-drive.md)), and every part with the Hardware Check:
+Then build. Check the motor directions with the wheels off the ground
+([Lesson 2](tutorials/start/02-drive.md)). Check every part with the Hardware Check:
 [Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md).
 
 **Numbers:** every number in `Tunables.java` is a starting value. Find the real ones with the
-[finders](guides/finders.md). If you change a number live on the robot (the tuning menu), copy the new
-value back into `Tunables.java`: INIT lists the values that differ. If you do not, the hub keeps using its saved value, even after you edit that number in `Tunables.java`, and another hub does not have it.
+[finders](guides/finders.md). The hub saves a number you change live on the robot (in the tuning menu).
+It keeps using that saved value, even after you edit the number in `Tunables.java`, and another hub does
+not have it. So copy each new value back into `Tunables.java`. INIT lists the values that differ.
 
-**Try it first in the simulator.** The kit bots have robot files: for example
-`./gradlew :sim:run -Probot=sim/robots/starter-bot-rev.properties -PteamCode=none`, then pick
+**Try it first in the simulator.** The kit bots have robot files. Run one, then pick
 "REV Bot TeleOp" ([Simulator guide](guides/simulator.md)). `-PteamCode=none` runs the **library's**
 example, not your copy.
 
-**Your copy in the simulator.** Run your TeamCode with the kit's measured robot file:
-`./gradlew :sim:run -Probot=sim/robots/starter-bot-rev.properties -PteamCode=../TeamCode` (or copy
-that file to `simulator/robot.properties` in your robot project, and then `-Probot` is not needed).
-Use the kit's file, not one from `:sim:fromRobot`: that one guesses an 18 x 18 in robot, and the
-REV, AndyMark and Studica bots then start "overlapping the field wall" on BLUE.
+**Where:** Android Studio's **Terminal** tab, in the **`ftc-helper-lib` folder** (type `cd ftc-helper-lib` first). ([Which folder](setup/09-the-terminal.md#which-folder))
 
-**What the simulator cannot show yet** (so you know it is not your copy):
+`./gradlew :sim:run -Probot=sim/robots/starter-bot-rev.properties -PteamCode=none`
+
+**Your copy in the simulator.** Run your TeamCode with the kit's measured robot file:
+
+**Where:** Android Studio's **Terminal** tab, in the **`ftc-helper-lib` folder** (type `cd ftc-helper-lib` first). ([Which folder](setup/09-the-terminal.md#which-folder))
+
+`./gradlew :sim:run -Probot=sim/robots/starter-bot-rev.properties -PteamCode=../TeamCode`
+
+You can also copy that file to `simulator/robot.properties` in your robot project. Then you do not need
+`-Probot`. Use the kit's file. A file from `:sim:fromRobot` guesses an 18 x 18 in robot, and then the
+REV, AndyMark and Studica bots start "overlapping the field wall" on BLUE.
+
+**What the simulator cannot show yet** (so you know the problem is not in your copy):
 
 - The REV, AndyMark and Studica bots do not shoot in the simulator: their robot files have no shot
   line. Their flywheels may also never say `READY`, because the example speeds are higher than the

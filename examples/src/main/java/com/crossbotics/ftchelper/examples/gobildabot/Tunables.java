@@ -10,7 +10,7 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT
 public class Tunables {
     public static class Drive {
         public static double maxPower = DEFAULT;                    // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         public static double strafeCorrection = DEFAULT;            // not used: a tank drive cannot strafe (1.15)
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -43,12 +43,5 @@ public class Tunables {
     public static class Windmill {
         public static double power = DEFAULT;                       // feeder power, 0 to 1 (1.0)
         public static double feedSec = 0.3;                         // seconds per piece: a starting guess
-    }
-
-    public static class Auto {
-        public static double backInches = 4.7;                      // goBILDA's auto: 120 mm off the wall
-        public static double backPower = 0.4;                       // power for that move: goBILDA's auto
-        public static double collectInches = 24;                    // AutoCookbook: drive to the pieces (and back)
-        public static double leaveInches = 20;                      // AutoCookbook: leave the launch zone
     }
 }

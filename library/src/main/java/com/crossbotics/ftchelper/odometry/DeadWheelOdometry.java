@@ -19,8 +19,8 @@ public final class DeadWheelOdometry extends PoseTracker {
     private final DoubleSupplier imuHeadingDeg;   // two wheels: the heading source; null for three
     private final double ticksPerIn;
     private final double trackWidthIn;   // three wheels: distance between the left and right pods
-    private final double parallelLeftIn; // two wheels: the forward pod's distance LEFT of the centre
-    private final double perpForwardIn;  // the sideways pod's distance FORWARD of the centre
+    private final double parallelLeftIn; // two wheels: the forward pod's distance LEFT of the center
+    private final double perpForwardIn;  // the sideways pod's distance FORWARD of the center
     private final int dirL, dirR, dirP;
     private int lastL, lastR, lastP;
     private double lastImu;
@@ -36,7 +36,7 @@ public final class DeadWheelOdometry extends PoseTracker {
                 leftReversed, rightReversed, perpReversed);
     }
 
-    /** Two wheels and the IMU. {@code parallelLeftIn}: the forward pod's distance left of the centre. */
+    /** Two wheels and the IMU. {@code parallelLeftIn}: the forward pod's distance left of the center. */
     public static DeadWheelOdometry twoWheels(String name, DcMotorEx parallel, DcMotorEx perp, DoubleSupplier imuHeadingDeg,
                                               double ticksPerIn, double parallelLeftIn, double perpForwardIn,
                                               boolean parallelReversed, boolean perpReversed) {
@@ -88,11 +88,11 @@ public final class DeadWheelOdometry extends PoseTracker {
             forward = (dL + dR) / 2;
         } else {
             dThetaRad = Math.toRadians(com.crossbotics.ftchelper.util.Angles.shortestDiff(imu, lastImu));
-            // A pod left of the centre moves back by (its distance x turn) when the robot turns left.
+            // A pod left of the center moves back by (its distance x turn) when the robot turns left.
             forward = dL + parallelLeftIn * dThetaRad;
         }
         lastImu = imu;
-        // A pod forward of the centre moves left by (its distance x turn) when the robot turns left.
+        // A pod forward of the center moves left by (its distance x turn) when the robot turns left.
         double sideways = dP - perpForwardIn * dThetaRad;
         // Turn the robot's move into the field frame, using the heading halfway through the turn.
         double mid = Math.toRadians(h) + dThetaRad / 2;

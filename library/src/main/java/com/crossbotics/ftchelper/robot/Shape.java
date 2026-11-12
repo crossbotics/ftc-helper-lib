@@ -30,7 +30,7 @@ import java.util.Map;
  * an arm motor swings its arm, a turret turns its turret, a hood servo or motor swings its arm.
  * A {@link #box} does not move ({@code fixed(...)} in Robot.java, or any part's {@code looks}).
  *
- * Docs: docs/modules/robot.md (section "Shapes"); the shape types: docs/guides/simulator.md#robot-shapes
+ * Docs: docs/reference/robot-java.md (section "Shapes"); the shape types: docs/guides/simulator.md#robot-shapes
  */
 public final class Shape {
     private static final List<String> AXES = Arrays.asList("up", "down", "forward", "back", "left", "right");
@@ -302,7 +302,7 @@ public final class Shape {
         return this;
     }
 
-    /** Its colour in the 3D view, e.g. "#2fa84f". */
+    /** Its color in the 3D view, e.g. "#2fa84f". */
     public Shape color(String color) {
         this.color = color;
         return this;

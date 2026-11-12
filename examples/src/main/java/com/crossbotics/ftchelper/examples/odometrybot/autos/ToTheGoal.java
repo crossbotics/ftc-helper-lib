@@ -1,7 +1,6 @@
 package com.crossbotics.ftchelper.examples.odometrybot.autos;
 
 import com.crossbotics.ftchelper.examples.odometrybot.Robot;
-import com.crossbotics.ftchelper.examples.odometrybot.Tunables;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -24,9 +23,9 @@ public class ToTheGoal extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
          .run("Intake on", robot.intake::in)
-         .driveTo("To the goal", Tunables.Auto.goalX, Tunables.Auto.goalY, Tunables.Auto.goalHeading, 0.6)
+         .driveTo("To the goal", -30, -30, 45, 0.6)
          .run("Intake off", robot.intake::stop)
          .parkWithSeconds(4)
-         .driveTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.7);
+         .driveTo("Park", -56, -36, 0, 0.7);
     }
 }

@@ -2,14 +2,13 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-This page takes your team from nothing to a robot that drives and runs its mechanisms. Then it takes
-you to the simulator and a first autonomous. First pick your road (below). Each road says which
-sections of this page to do, in order. **Why roads:** a starter bot's code is already written, so its
+Start here to take your team from nothing to a robot that drives and runs its mechanisms. Then go on
+to the simulator and a first autonomous. First pick your road (below). Each road lists the sections of
+this page to do, in order. **Why roads:** a starter bot's code is already written, so its
 team skips the steps that write code. A team with its own robot does them.
 
 **You need:** a laptop, a Control Hub and Driver Station, gamepad 1, the robot, and a block to put the
-robot on (wheels off the ground). **Time:** about 30 minutes to drive. The numbers and the first
-autonomous take one or two more sessions.
+robot on (wheels off the ground).
 
 ## Pick your road
 
@@ -21,13 +20,13 @@ The same choice as short pages, one per start: [Pick your start](pick-your-start
 | One of those starter bots **with your own changes**: a part added, taken off or moved, another motor or servo | [Road 2: a changed starter bot](#road-2-a-changed-starter-bot) |
 | **Your own design**, or a kit robot that is not one of those | [Road 3: your own robot](#road-3-your-own-robot) |
 
-Not sure? Only new buttons, or new numbers? That is still road 1: buttons are in `Controls.java` and
-numbers in `Tunables.java`. One part added, taken off or changed makes it road 2.
+**If you are not sure:** new buttons or new numbers only is still road 1. Buttons are in `Controls.java`
+and numbers in `Tunables.java`. One part added, taken off or changed makes it road 2.
 
 **Before every road:** do [Set up](setup/README.md), pages 1 to 7. It installs Android Studio, gets
-the robot project, adds the library and makes the robot configuration. Already done? Each page's
-"Done when" tells you. New to Java? Read [Read Java and make your first edit](start-from-zero.md) too. Used Scratch or Blocks before? Read
-[From Blocks to Java](blocks-to-java.md) too. Wrote Java with this library last season? See
+the robot project, adds the library and makes the robot configuration. Each page's "Done when"
+tells you whether you already did it. If you are new to Java, read [Read Java and make your first edit](start-from-zero.md) too. If you used Scratch or Blocks before, read
+[From Blocks to Java](blocks-to-java.md) too. If you wrote Java with this library last season, read
 [Coming from last season's code](from-last-season.md).
 
 ### Road 1: an unchanged starter bot
@@ -77,11 +76,11 @@ new launcher mount ([its pages](https://crossbotics.com/teams/8938-octobots/)).
 You make the five files for your robot, from its configuration or from a short template.
 
 1. [Add the library](#1-add-the-library).
-2. [Make the robot configuration](#2-make-the-robot-configuration). (Is the robot not wired yet? Do
+2. [Make the robot configuration](#2-make-the-robot-configuration). (If the robot is not wired yet, do
    this after step 4, with the names you wrote in `Robot.java`.)
 3. [Get the five files](#3-get-the-five-files): [way A](#a-from-your-robot-configuration-best-if-it-is-already-set-up)
    from the configuration (best), or [way B](#b-copy-the-template-no-configuration-yet-or-you-want-to-see-every-line),
-   the template. Is your robot like one of the example robots (a turret, odometry, a flywheel)?
+   the template. If your robot is like one of the example robots (a turret, odometry, a flywheel),
    [Pick your template](templates.md) has one to start from.
 4. [Change the STEP lines](#4-change-the-step-lines): all of them.
 5. [Build and check the hardware](#5-build-and-check-the-hardware).
@@ -96,12 +95,12 @@ Words used on this page:
 - **Configuration:** the list of motors, servos and sensors you set up on the Driver Station, each
   with a name. Your code finds each part by that name.
 - **INIT** and **▶ (start):** the two buttons on the Driver Station. INIT gets the program ready (nothing
-  may move yet); ▶ begins the match part. (The gamepad's small START button is a different button.)
+  may move yet). ▶ begins the match part. (The gamepad's small START button is a different button.)
 - **TeleOp:** the program the drivers drive with. **Autonomous:** the program that runs on its own.
 - **Field-centric:** stick up drives the robot away from the driver, whichever way the robot faces.
   (Robot-centric, the start: stick up drives the way the robot faces.)
-- **Profile:** a set of limits for the whole robot. **PRACTICE** is gentle (for the shop),
-  **COMPETITION** is full power (for matches).
+- **Profile:** a mode for the whole robot. **PRACTICE** is for the shop (debug lines, the tuning menu),
+  **COMPETITION** is for matches. The drive power is the same in both.
 - **Action:** a list of steps that one button starts, for example "push out, wait 0.5 s, stop"
   (`spitOut` in `Actions.java`). Lesson 5 shows how to write them.
 - **Finder:** a small program that measures a number on the real robot (a servo's positions, a
@@ -111,13 +110,13 @@ Words used on this page:
 
 ## 1. Add the library
 
-Done in [Set up 4: add the library](setup/04-add-the-library.md). **Done when:** an `ftc-helper-lib`
-folder with files in it is next to `TeamCode`. Empty folder? [Set up 3, problems](setup/03-github-and-the-project.md#problems).
+You did this in [Set up 4: add the library](setup/04-add-the-library.md). **Done when:** an `ftc-helper-lib`
+folder with files in it is next to `TeamCode`. If the folder is empty, read [Set up 3, problems](setup/03-github-and-the-project.md#problems).
 
 ## 2. Make the robot configuration
 
-Done in [Set up 7: make the robot configuration](setup/07-robot-configuration.md). Road 1 and 2 use the
-seller's names; road 3 uses your own.
+You did this in [Set up 7: make the robot configuration](setup/07-robot-configuration.md). Road 1 and 2
+use the seller's names. Road 3 uses your own.
 
 ## 3. Get the five files
 
@@ -130,31 +129,32 @@ Pick **one** way:
 ### A. From your robot configuration (best if it is already set up)
 
 The library writes the five files for you, with each part already in them, from the configuration you
-made on the Driver Station. **Why:** the names are copied for you, so they cannot have typos.
+made on the Driver Station. **Why:** the library copies the names for you, so they cannot have typos.
 
 1. Copy the configuration file off the Control Hub: it is `/sdcard/FIRST/<name>.xml`. (**`<name>`**
    is a placeholder: put your configuration's name there, without the `< >`. For a configuration
    called `MyRobot` it is `MyRobot.xml`. **XML** is a kind of text file that stores a list in
-   labelled `<tags>`; you do not edit it.) Use the REV Hardware Client, or Android Studio's **Device Explorer** (View > Tool
-   Windows > Device Explorer) with the hub connected. Save it in your robot project, e.g.
+   labeled `<tags>`. You do not edit it.) Use the REV Hardware Client, or Android Studio's **Device Explorer** (View > Tool
+   Windows > Device Explorer) with the hub connected. Save it in your robot project, for example
    `MyRobot.xml` next to `TeamCode`.
-2. From the `ftc-helper-lib` folder (it runs on the laptop: do the [laptop setup](#laptop-setup-once)
-   first), run this **Gradle task** (one job that Gradle, the build tool, can run; `:sim:` says it is
-   in the library's `sim` part):
+2. Run this **Gradle task** (one job that Gradle, the build tool, can run; `:sim:` says it is in the
+   library's `sim` part). It runs on the laptop, so do the [laptop setup](#laptop-setup-once) first.
+
+   **Where:** Android Studio's **Terminal** tab, in the **`ftc-helper-lib` folder** (type `cd ftc-helper-lib` first). ([Which folder](setup/09-the-terminal.md#which-folder))
 
    ```bash
    ./gradlew :sim:newRobot -Pconfig=../MyRobot.xml -PteamCode=../TeamCode
    ```
 
    It writes `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and `autos/LeaveStart.java`
-   into TeamCode. It also adds the **Simulator** and **Simulator tests** run buttons to Android Studio
-   (the first time, close the project and open it again to see them). It never overwrites your work: if any of the five files is already there, it
-   writes nothing and stops with `... is already there: nothing written (move it away first)`. Every guess it is not sure of is a
-   `TODO` line in `Robot.java` (a comment that marks something still to do): **check each TODO** like
-   the STEP lines below. In `Tunables.java` every setting is there: `DEFAULT` (the library's
+   into TeamCode. It also adds the **Simulator** and **Simulator tests** run buttons to Android Studio.
+   The first time, close the project and open it again to see them. It never overwrites your work: if any of the five files is already there, it
+   writes nothing and stops with `... is already there: nothing written (move it away first)`. It marks every guess it is not sure of with a
+   `TODO` line in `Robot.java` (a comment that marks something still to do). **Check each TODO** like
+   the STEP lines below. `Tunables.java` lists every setting, as `DEFAULT` (the library's
    default, worked out from the part where it can) or `MEASURE` (a number to find with a finder: INIT
    stops on it and names the finder). Find each `MEASURE` number (the finders run in the simulator too)
-   and write it in its place ([the two words](guides/tunables.md#default-and-measure)).
+   and write it in its place ([the two words](reference/tunables.md#default-and-measure)).
 
 ### B. Copy the template (no configuration yet, or you want to see every line)
 
@@ -182,9 +182,9 @@ The template is in the library, in this folder (inside your `ftc-helper-lib` fol
    // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode;
    ```
 
-   (You may delete the comment line once it is done.) **Why:** the `package` line must match the
+   (You can delete the comment line after the change.) **Why:** the `package` line must match the
    folder the file is in, or it does not build.
-4. In `autos/FirstAuto.java`, change the first line and the two imports of `Robot` and `Tunables`.
+4. In `autos/FirstAuto.java`, change the first line and the import of `Robot`.
 
    Before:
 
@@ -192,7 +192,6 @@ The template is in the library, in this folder (inside your `ftc-helper-lib` fol
    package com.crossbotics.ftchelper.examples.quickstart.autos;
    ...
    import com.crossbotics.ftchelper.examples.quickstart.Robot;
-   import com.crossbotics.ftchelper.examples.quickstart.Tunables;
    ```
 
    After:
@@ -201,11 +200,9 @@ The template is in the library, in this folder (inside your `ftc-helper-lib` fol
    package org.firstinspires.ftc.teamcode.autos;
    ...
    import org.firstinspires.ftc.teamcode.Robot;
-   import org.firstinspires.ftc.teamcode.Tunables;
    ```
 
-   **Why:** this file is in the `autos` folder, and it must find `Robot` and `Tunables` in the folder
-   above it.
+   **Why:** this file is in the `autos` folder, and it must find `Robot` in the folder above it.
 5. In `Controls.java` and `autos/FirstAuto.java`, delete these two lines:
 
    ```java
@@ -245,7 +242,7 @@ Open each file and change only the lines marked `// STEP`, in order. **Road 1:**
 files have no STEP marks. Change only the `.imu(...)` line (STEP 3 below) to how your Control Hub is
 mounted, then go to section 5. **Road 2:** the same, plus STEP 4 and STEP 5 for what you changed.
 
-Used Scratch or Blocks before? [From Blocks to Java](blocks-to-java.md) shows where each block you know
+If you used Scratch or Blocks before, [From Blocks to Java](blocks-to-java.md) shows where each block you know
 went (the loop, "when pressed", "wait") in these files.
 
 **Java you will see in the files** (more in [lesson 1](tutorials/start/01-robot-in-five-files.md#java-you-will-meet)):
@@ -259,21 +256,21 @@ went (the loop, "when pressed", "wait") in these files.
 
 
 1. **`Robot.java`:** `Drive.mecanum(...)` or `Drive.tank(...)`, and the motor names **exactly** as in the configuration, in the order front left, front right, back left, back right (a two-motor tank: left, right).
-   **Why:** The library works out each wheel's power from its place; a typo stops at INIT with the list of real names.
+   **Why:** The library works out each wheel's power from its place. With a typo, INIT stops and lists the real names.
 2. **`Robot.java`:** `.motor("gobilda-5203-312")` and `.wheelMm(96)`: your drive motor ([its catalog id](guides/parts-catalog.md)) and wheel size.
    **Why:** Autonomous turns inches into encoder counts with them (an encoder counts how far the motor shaft turned).
 3. **`Robot.java`:** `.imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD)`: which way the Control Hub's logo and USB ports face.
-   **Why:** The IMU (a sensor in the hub) measures the heading, the way the robot faces; field-centric driving and autonomous turns use it.
+   **Why:** The IMU (a sensor in the hub) measures the heading, the way the robot faces. Field-centric driving and autonomous turns use it.
 4. **`Robot.java`:** only if a wheel turns the wrong way (you find out in section 7, step 4, below): add `.reversed(...)` listing **every** reversed drive motor, on its own line **before** `.imu(...)` (the STEP 4 comment marks the place).
-   **Why:** The list replaces the default (the left side reversed); `.imu(...)` ends the drive line with `));`, so a `.reversed(...)` after it does not build.
-5. **`Robot.java`:** your mechanisms: keep, delete or add `add(...)` lines (and a field for each). On each line, `.part("gobilda-5203-1150")`: your motor's or servo's id (on its label; optional but recommended). No intake? Also delete the `g2.dpadLeft` line in `Controls.java` and `spitOut` in `Actions.java`.
-   **Why:** Each part brings its numbers (its buttons are lines in `Controls.java`); with `.part(...)` its starting values are that part's real numbers, and the simulator moves it like the real one.
-6. **`Tunables.java`:** leave `maxPower` and `practiceMaxPower` at 0.4 for now.
+   **Why:** The list replaces the default (the left side reversed). `.imu(...)` ends the drive line with `));`, so a `.reversed(...)` after it does not build.
+5. **`Robot.java`:** your mechanisms: keep, delete or add `add(...)` lines (and a field for each). On each line, `.part("gobilda-5203-1150")`: your motor's or servo's id (on its label). It is optional but recommended. With no intake, also delete the `g2.dpadLeft` line in `Controls.java` and `spitOut` in `Actions.java`.
+   **Why:** Each part brings its numbers (its buttons are lines in `Controls.java`). With `.part(...)`, its starting values are that part's real numbers, and the simulator moves it like the real one.
+6. **`Tunables.java`:** leave `maxPower` at 0.4 for now.
    **Why:** A slow first drive is a safe first drive.
-7. **`Controls.java`:** the TeleOp's name (renamed it? Change `preselectTeleOp` in `autos/FirstAuto.java` to the same name); `group = "Examples"` to your own group name (or delete it); `oneDriver = true` if one person drives and runs the mechanisms.
-   **Why:** The name is what you pick on the Driver Station, and `preselectTeleOp` picks the TeleOp for you after the autonomous; one driver puts every button on gamepad 1.
+7. **`Controls.java`:** the TeleOp's name. If you rename it, change `preselectTeleOp` in `autos/FirstAuto.java` to the same name. Change `group = "Examples"` to your own group name (or delete it). Set `oneDriver = true` if one person drives and runs the mechanisms.
+   **Why:** You pick the TeleOp by its name on the Driver Station. `preselectTeleOp` picks the TeleOp for you after the autonomous. One driver puts every button on gamepad 1.
 8. **`autos/FirstAuto.java`:** the autonomous's name and `group`, where the drive team puts the robot, and how far it drives.
-   **Why:** It only drives after the Drive Tuner ([lesson 6](tutorials/start/06-first-autonomous.md)).
+   **Why:** It drives only after the Drive Tuner ([lesson 6](tutorials/start/06-first-autonomous.md)).
 
 **STEP 5, more mechanisms:** add a line for each part in `define()`, a field for each at the top of
 the class, an import for each part class, and its numbers in `Tunables.java` (a section named after the
@@ -299,9 +296,9 @@ In `Controls.java` and `autos/FirstAuto.java`, also delete the `@Disabled` line 
 1. Build (**Build > Make Project**), then Run to install it on the Control Hub ([the buttons](setup/06-build-and-install.md#the-buttons)).
    **Why:** the robot runs the app that is on the hub, not the code on your laptop.
 2. Add the small **Hardware Check** OpMode from [Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md#1-the-3-line-opmode)
-   (it is not one of the five files), build and install again.
+   (it is not one of the five files). Build and install again.
 3. **Robot on a block, wheels off the ground.** Run the Hardware Check. Every device must be found.
-   No limits are set yet, so on a lift or an arm use short, gentle taps, know where its hard stop is (the end of its
+   Nothing sets limits yet. So on a lift or an arm, use short, gentle taps, know where its hard stop is (the end of its
    travel), and keep hands clear. Each motor must turn, and its encoder must count up at positive power
    ([how to use it](tutorials/19-testing-procedures.md#2-use-it)).
    **Why:** it tests each part alone, before your code moves them together. A part that is not found,
@@ -330,45 +327,46 @@ How:
 2. Robot on a block. Run them in this order ([why this order](guides/finders.md#the-order)):
    - **Servo Finder** for each servo: its safe ends and named positions (`open`, `closed`, `up`...).
    - **Motor Finder** for each lift, arm or turret: `min`, `max` and the named positions.
-   - **Flywheel Finder** for each flywheel: `kP` to `kF`. Eye protection on, nobody in front of it.
+   - **Flywheel Finder** for each flywheel: `kP` to `kF`. Wear eye protection, and nobody stands in front of it.
 3. Each finder shows lines such as `Tunables.Lift: min = 0, max = 2580`. Write each number in that
    section of `Tunables.java`, in place of `MEASURE` or the guess
-   ([how to read a finder's lines](guides/tunables.md#how-to-read-a-finders-lines)).
+   ([how to read a finder's lines](reference/tunables.md#how-to-read-a-finders-lines)).
 4. Build and install again. INIT no longer stops: every `MEASURE` has its number.
 5. **Count how many pieces fit**, robot off. Load pieces by hand, through the intake as in a match,
    until no more fit: first POLLEN only, then NECTAR only, then a mix. Write it on the intake's line in
    `Robot.java`: `.holds(4)`, and for a kind that fits less, `.holds(1, "NECTAR")` (`0` = it cannot take
-   one; goBILDA's starter bot has `.holds(4).holds(0, "NECTAR")`). **Why:** the simulator then takes in
+   one. goBILDA's starter bot has `.holds(4).holds(0, "NECTAR")`). **Why:** the simulator then takes in
    only what your robot can, and the piece count says "full" at the right number. More than 4 is against
-   the rules (no more than 4 at a time): INIT warns.
+   the rules (no more than 4 at a time), and INIT warns about it.
 
 ## 7. Drive, then each mechanism
 
-1. **Start slow.** In `Tunables.java`, section `Drive`, set `maxPower` and `practiceMaxPower` to
+1. **Start slow.** In `Tunables.java`, section `Drive`, set `maxPower` to
    `0.4`. (The `quickstart` template has 0.4 already. The starter bots have `DEFAULT`, which is full
    power.) Build and install. **Why:** a slow first drive is a safe first drive.
-2. **Pick the PRACTICE profile** (the gentle limits): INIT any autonomous, choose **Profile** with the
+2. **Pick the PRACTICE profile** (debug lines and the tuning menu): INIT any autonomous, choose **Profile** with the
    D-pad (the last line), choose PRACTICE, then STOP. Do not press ▶. The hub remembers the profile.
    ([Profiles](guides/profiles.md).)
-3. **Robot on a block, wheels off the ground.** INIT your TeleOp, ▶. **Why:** a wrong motor
+3. **Robot on a block, wheels off the ground.** INIT your TeleOp, then press ▶. **Why:** a wrong motor
    direction can make the robot spin or drive off the table.
-4. Left stick up: every wheel must roll the way that moves the robot forward. A wheel rolls backward?
-   Fix STEP 4 ([how to check each wheel](tutorials/start/02-drive.md#7-check-the-motor-directions)).
+4. Left stick up: every wheel must roll the way that moves the robot forward. If a wheel rolls backward,
+   fix STEP 4 ([how to check each wheel](tutorials/start/02-drive.md#7-check-the-motor-directions)).
 5. On the floor, with space around the robot and one person's hand on STOP: left stick drives (and
    strafes on mecanum), right stick turns, LT slows down.
-6. Tap BACK: everything stops (PAUSED); tap again to go on. Tap GUIDE to see every button.
+6. Tap BACK: everything stops (PAUSED). Tap again to go on. Tap GUIDE to see every button.
 7. **Each mechanism, one at a time**, on the floor, hand on STOP: tap GUIDE for its buttons, then try
    each one.
-   A flywheel: eye protection, nobody in front of it. Something moves the wrong way? Add or take away
+   For a flywheel, wear eye protection, and nobody stands in front of it. If something moves the wrong way, add or take away
    `.reversed()` on its line in `Robot.java`.
 
-It drives? Raise `maxPower` and `practiceMaxPower` in `Tunables.java` (1.0 and 0.6 are common, or write
-`DEFAULT` again). `practiceMaxPower` is used in the PRACTICE profile (the gentle mode for the shop),
-`maxPower` in COMPETITION. A hub that was never set uses COMPETITION.
+When it drives well, raise `maxPower` in `Tunables.java` (write `DEFAULT` again for full power). PRACTICE and
+COMPETITION use the same top power, so the drivers practice at match speed. A hub with no profile set
+uses COMPETITION.
 
-**Changed a number live?** The tuning menu (hold GUIDE 1 s after ▶, in the PRACTICE profile) changes a
-number on the hub only. **Copy each new value back into `Tunables.java`**: INIT lists the values that
-differ. If you do not, the hub keeps using its saved value, even after you edit that number in `Tunables.java`, and another hub does not have it. ([The tuning menu](guides/tunables.md#the-live-column-the-tuning-menu).)
+**When you change a number live:** the tuning menu (hold GUIDE 1 s after ▶, in the PRACTICE profile)
+changes a number on the hub only. The hub keeps using that saved value, even after you edit the number
+in `Tunables.java`, and another hub does not have it. So **copy each new value back into `Tunables.java`**.
+INIT lists the values that differ. ([The tuning menu](reference/tunables.md#the-in-tuning-menu-column).)
 
 ## 8. The simulator
 
@@ -376,12 +374,14 @@ The simulator runs your code on a laptop with a 3D field. You can use it any tim
 with no robot nearby: try buttons, actions and autonomous routes there first.
 
 **In Android Studio:** pick **Simulator** in the list next to the green Run button, and click Run.
-The page opens in your browser when the simulator is ready. (No browser opened? The address in the Run
-window is a blue link: click it.)
-(No **Simulator** in the list? Close the project and open it again: [Set up 4](setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing).)
+The page opens in your browser when the simulator is ready. If no browser opens, click the address in the Run
+window (a blue link). If **Simulator** is not in the list, close the project and open it again
+([Set up 4](setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing)).
 The red **Stop** button stops it.
 
-**Or in the Terminal** (do the laptop setup below once), in the `ftc-helper-lib` folder (`cd ftc-helper-lib`):
+**Or in the Terminal.** Do the [laptop setup](#laptop-setup-once) below once.
+
+**Where:** Android Studio's **Terminal** tab, in the **`ftc-helper-lib` folder** (type `cd ftc-helper-lib` first). ([Which folder](setup/09-the-terminal.md#which-folder))
 
 ```bash
 ./gradlew :sim:run
@@ -398,23 +398,23 @@ the library's `sim` part.)
 **What `simulator/robot.properties` is:** each time the simulator starts, it writes this file in your
 robot project (next to `TeamCode`) from `Robot.java`, and prints `Robot file made from Robot.java:
 simulator/robot.properties`. It is the simulator's description of your robot: its size, its motors and
-servos, and how they look. The names and the drive come from `Robot.java`; the sizes are guesses, marked `TODO`.
+servos, and how they look. The names and the drive come from `Robot.java`. The sizes are guesses, marked `TODO`.
 
 - **Commit it** with your code. **Why:** everyone on the team then gets the same simulator robot.
 - **When you measure the robot,** edit the `TODO` lines with the real numbers. The numbers you write stay.
 - **Why it is safe to make it again at each start:** it refreshes only its own lines (marked
-  `# from Robot.java`) and keeps the lines you wrote. (`./gradlew :sim:fromRobot` does the same step alone;
+  `# from Robot.java`) and keeps the lines you wrote. (`./gradlew :sim:fromRobot` does the same step alone.
   `-PnoFromRobot` starts the simulator with the file as it is.)
-- **Changed your code?** Stop the simulator and start it again. **Why:** it builds your code when it
+- **After you change your code,** stop the simulator and start it again. **Why:** it builds your code when it
   starts. To stop it in the Terminal: click in the Terminal and press **Ctrl+C**.
 - **Road 1 and 2: use your starter bot's measured robot file.** Before the first start, copy
   `ftc-helper-lib/sim/robots/starter-bot-gobilda.properties` (or `-gobilda-strafer`, `-rev`, `-andymark`, `-studica`) to
   `simulator/robot.properties` in your robot project. **Why:** it has the starter bot's real size and
-  shapes; a file made from `Robot.java` guesses an 18 x 18 in robot. A copied file has no "made from"
+  shapes. A file made from `Robot.java` guesses an 18 x 18 in robot. A copied file has no "made from"
   line at the top, so the simulator does not change it when it starts. **Road 2:** after each change,
-  run `./gradlew :sim:fromRobot`: it adds the lines for your new parts to the file
-  ([a robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava)). It stops and says
-  why if a line in the file and your code disagree: then fix that line by hand.
+  run `./gradlew :sim:fromRobot` in the `ftc-helper-lib` folder. It adds the lines for your new parts to the file
+  ([a robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava)). When a line in the
+  file and your code disagree, it stops and says why. Then fix that line by hand.
 - **`MEASURE` numbers:** the simulator uses a stand-in for each one, so it runs before you measure. The
   real robot still stops at INIT ([MEASURE in the simulator](guides/simulator.md#measure-in-the-simulator)).
 - **Simulator tests**, the second button, runs your saved tests. That comes later:
@@ -430,19 +430,19 @@ An autonomous drives by counting wheel turns. So the library has a safety rule: 
 the robot until you say the drive is tuned.** Until then, INIT shows
 `AUTONOMOUS IS OFF: the drive is not tuned yet`.
 
-1. **Try it in the simulator first.** Start the Simulator, pick your autonomous, INIT, ▶. It runs
-   there before the drive is tuned, with the line `Drive not tuned: runs in the simulator only`.
+1. **Try it in the simulator first.** Start the Simulator, pick your autonomous, INIT, then ▶. It runs
+   there before you tune the drive, with the line `Drive not tuned: runs in the simulator only`.
    Your autonomous is in `autos/`: `LeaveStart.java` (way A), `FirstAuto.java` (way B), or your starter
    bot's file (way C, [where it starts](guides/starter-bots.md)).
 2. **The Drive Tuner.** Add `DriveTuner.java` next to `Robot.java` (the whole file is in
-   [lesson 6, section 1](tutorials/start/06-first-autonomous.md#1-tune-the-drive-first)). Put 48 in of
+   [tune the drive first](five-files/05-autos.md#tune-the-drive-first)). Put 48 in of
    tape on the floor. Run its Push test, then its Drive test until the robot drives 48 in (and its
    Strafe test on a mecanum drive).
 3. **Copy its lines:** `.wheelMm(...)` into the drive line of `Robot.java`, `strafeCorrection` into
    `Tunables.Drive`. Then set `Tunables.Drive.calibrated = true`. Build and install.
 4. **Where the robot starts:** INIT shows where to put it (`Place robot : ...`). Change the start and
-   the distances in `Tunables.Auto`, not in the steps
-   ([route numbers](tutorials/start/06-first-autonomous.md#3-route-numbers-live-in-tunablesauto)).
+   the distances in the steps
+   ([the numbers are in the step](five-files/05-autos.md#the-numbers-are-in-the-step)).
 5. **The first real run:** the PRACTICE profile, space around the robot, and one person with a hand on
    STOP. Read the report on the Driver Station at the end. The autonomous then picks your TeleOp for
    you (`preselectTeleOp`).
@@ -454,14 +454,14 @@ to add steps.
 
 | Problem | Fix |
 | --- | --- |
-| The build cannot find `com.crossbotics.ftchelper` | step 1 is not finished: [Add the library](setup/04-add-the-library.md) |
+| The build cannot find `com.crossbotics.ftchelper` | you have not finished step 1: [Add the library](setup/04-add-the-library.md) |
 | A `package` error | the `package` line of a copied file still says `com.crossbotics.ftchelper.examples...` |
 | `class, interface, or enum expected` | the file has two `package` lines, or its first line is broken (a typo, a missing `;`): it must be exactly one `package ...;` line at the top |
-| `cannot find symbol` ... `Robot` or `Tunables` in `FirstAuto.java` | its two imports still say `com.crossbotics.ftchelper.examples.quickstart`: section 3, way B, step 4 |
-| The TeleOp is not on the Driver Station | the `@Disabled` line is still there, or the app was not reinstalled |
+| `cannot find symbol` ... `Robot` in `FirstAuto.java` | its import still says `com.crossbotics.ftchelper.examples.quickstart`: section 3, way B, step 4 |
+| The TeleOp is not on the Driver Station | the `@Disabled` line is still there, or nobody installed the app again |
 | INIT stops with a list of names | a name in `Robot.java` does not match the configuration (capitals count) |
 | It spins when it should drive straight | a wheel direction is wrong: STEP 4 |
-| INIT stops on `MEASURE` and names a finder | that number is not measured yet: [section 6](#6-measure-the-numbers) |
+| INIT stops on `MEASURE` and names a finder | nobody has measured that number yet: [section 6](#6-measure-the-numbers) |
 | The autonomous says `AUTONOMOUS IS OFF: the drive is not tuned yet` | the Drive Tuner, then `calibrated = true`: [section 9](#9-a-first-autonomous) |
 | You changed a number in `Tunables.java` and nothing changed on the robot | a value tuned on the hub wins. INIT lists it: copy it back into `Tunables.java`, or in the tuning menu press X then A (or Y to reset all) ([section 7](#7-drive-then-each-mechanism)) |
 | Nothing moves | it is paused (tap BACK) |
@@ -474,8 +474,8 @@ to add steps.
 [Lesson 1: the robot in five files](tutorials/start/01-robot-in-five-files.md) explains what each of the five
 files is for. Then lessons 2 to 6 of the [main track](tutorials/README.md#start-here-the-main-track)
 add the drive in detail, buttons, mechanisms, actions and the autonomous. After that, do only the
-lessons your robot needs (7 odometry, 8 paths, 9 a shooter). A quick question
-("how do I add a claw?")? The [cookbook](cookbook.md) has short answers with code to copy.
+lessons your robot needs (7 odometry, 8 paths, 9 a shooter). For a quick question
+("how do I add a claw?"), the [cookbook](cookbook.md) has short answers with code to copy.
 
 Road 1 and 2: your starter bot's page says what its code does differently, and what the simulator
 cannot show yet: [The BIOBUZZ starter bots](guides/starter-bots.md).

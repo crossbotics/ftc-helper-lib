@@ -1,6 +1,6 @@
 package com.crossbotics.ftchelper.examples.andymarkbot;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT (docs/reference/tunables.md)
 
 /**
  * AndyMark starter bot, file 2 of 5: the numbers, one per line. DEFAULT = the library's
@@ -11,7 +11,7 @@ public class Tunables {
     /** calibrated: set true after the Drive Tuner (autonomous refuses to run before). */
     public static class Drive {
         public static double maxPower = DEFAULT;                    // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         public static double strafeCorrection = DEFAULT;            // not used: a tank drive cannot strafe (1.15)
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -30,11 +30,5 @@ public class Tunables {
     public static class Catapult {
         public static double power = 0.65;                          // motor power: AndyMark's code
         public static double feedSec = 0.8;                         // seconds per press: a starting guess
-    }
-
-    public static class Auto {
-        public static double leaveInches = 20;                      // drive off the start line
-        public static double leavePower = 0.5;                      // power for that move
-        public static double secondsBetweenThrows = 0.5;            // wait between two throws
     }
 }

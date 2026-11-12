@@ -5,15 +5,15 @@
 **You will build:** a settings file, a tuner that measures your drivetrain, and an autonomous that drives a square.
 The main track does this with less code: [Your first autonomous](start/06-first-autonomous.md).
 
-**You will learn:** how to keep all robot settings in one place, how to tune the drivetrain so
+**You will learn:** how to keep all robot settings in one place, how to tune the drivetrain so that
 "24 inches" really is 24 inches, and how to write an autonomous with `AutoDrive`.
 
-**You need:** a drivetrain that drives correctly in TeleOp (Tutorial 04 or 05), the IMU,
-a tape measure and tape. About an hour for tuning.
+**You need:** a drivetrain that drives correctly in TeleOp (Tutorial 04 or 05), the IMU, a tape measure
+and tape.
 
 **Full programs:** [`RobotSettings.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/RobotSettings.java),
 [`Tut09DriveTuner.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut09DriveTuner.java)
-(the library's **Drive Tuner** finder does the same with a push test and the numbers to copy: [tutorial 21](21-finders.md)),
+(the library's **Drive Tuner** finder does the same job with a push test, and gives the numbers to copy: [tutorial 21](21-finders.md)),
 [`Tut09FirstAuto.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut09FirstAuto.java)
 **Reference:** [drive.md: AutoDrive](../modules/drive.md#autodrive)
 
@@ -21,8 +21,8 @@ a tape measure and tape. About an hour for tuning.
 
 ## 1. One place for the settings
 
-TeleOp and autonomous must use the same motor names, directions and IMU setup. If they are
-written twice, one day someone changes only one. So make one class that everything uses:
+TeleOp and autonomous must use the same motor names, directions and IMU setup. When you write them
+twice, one day someone changes only one copy. So make one class that every program uses:
 
 ```java
 public final class RobotSettings {
@@ -48,21 +48,22 @@ public final class RobotSettings {
 ```
 
 `static` means you call the method on the class itself (`RobotSettings.drive()`), without making a
-`RobotSettings` object first. `final` on the class means no other class can extend it. The real
-file also has a `private` constructor, so nobody can make a `RobotSettings` object by mistake.
-It is not an OpMode (no `@TeleOp`), so it never shows on the Driver Station.
+`RobotSettings` object first. `final` on the class means no other class can extend it. The real file
+also has a `private` constructor, so nobody can make a `RobotSettings` object by mistake. The class is
+not an OpMode (no `@TeleOp`), so it never shows on the Driver Station.
 
 Each call makes a fresh set of settings, so one program cannot change another's by mistake.
-`strafeCorrection` is there because mecanum wheels slip sideways: the robot moves less sideways
-than the wheels turn, and this number makes up for it. `calibrationConfirmed` is a safety switch:
-autonomous refuses to run while it is false, so an untuned robot does not charge across the field.
-The IMU directions must match YOUR hub (Tutorial 04, section 7): wrong ones give wrong turns.
+Mecanum wheels slip sideways: the robot moves less sideways than the wheels turn. `strafeCorrection`
+makes up for that. `calibrationConfirmed` is a safety switch: autonomous refuses to run while it is
+false. Then an untuned robot does not charge across the field. The IMU directions must match YOUR hub
+(Tutorial 04, section 7). Wrong directions give wrong turns.
 
-Now `new MecanumDrive(hardwareMap, RobotSettings.drive())` in TeleOp and
-`RobotSettings.drive()` in autonomous always match. Use this class in your TeleOp from now on too.
+Now `new MecanumDrive(hardwareMap, RobotSettings.drive())` in TeleOp and `RobotSettings.drive()` in
+autonomous always match. From now on, use this class in your TeleOp too.
 
-`ticksPerRev` is how many encoder ticks make one turn of the motor's output shaft. It comes from your motor's product page ("encoder resolution at the output shaft"):
-goBILDA 312 RPM = 537.7, 435 RPM = 384.5. Check yours.
+`ticksPerRev` is how many encoder ticks make one turn of the motor's output shaft. Find it on your
+motor's product page ("encoder resolution at the output shaft"): goBILDA 312 RPM = 537.7,
+435 RPM = 384.5. Check yours.
 
 ## 2. How AutoDrive works
 
@@ -75,16 +76,16 @@ auto.move(24, 0, 0.6);     // 24 inches, direction 0 (forward), up to 60% power
 auto.turn(-90, 0.5);       // turn 90 degrees to the RIGHT (negative = right)
 ```
 
-Each call **waits until the move is done**, then the next line runs. That is fine in autonomous
-(and only there). Each move also stops by itself if it takes too long (10 s) or the robot is stuck.
+Each call **waits until the move is done**, then the next line runs. That is fine in autonomous, and
+only there. A move also stops by itself when it takes too long (10 s), or when the robot is stuck.
 
-Directions for `move` count counterclockwise, like a heading: 0 forward, 90 left, 180 back, -90 right (mecanum; a standard drive only
-does 0 and 180). Turns: positive = left, like the IMU.
+Directions for `move` count counterclockwise, like a heading: 0 forward, 90 left, 180 back, -90 right.
+That is for mecanum: a standard drive only does 0 and 180. For turns, positive = left, like the IMU.
 
 ## 3. Tune it
 
-`AutoDrive` will not run until `calibrationConfirmed = true`. That is on purpose: untuned, it
-drives the wrong distances. Use the tuner program:
+An untuned `AutoDrive` drives the wrong distances. So it does not run until
+`calibrationConfirmed = true`. Use the tuner program:
 
 ```java
 while (opModeInInit()) {
@@ -94,30 +95,32 @@ while (opModeInInit()) {
 }
 ```
 
-It is an **Autonomous**, so you choose the test with the gamepad during INIT (the robot does not
-move in INIT), press ▶ (start on the Driver Hub), it runs that one test and shows the result.
+The tuner is an **Autonomous**. You choose the test with the gamepad during INIT (the robot does not
+move in INIT). Then you press ▶ (start on the Driver Hub). The tuner runs that one test and shows the
+result.
 
-- The tuner sets `calibrationConfirmed = true` for itself only: it is how you check the calibration.
-- Every test runs at half power (0.5): steady, so the measurements repeat well.
-- "ticks per inch" is worked out from `ticksPerRev` and `wheelDiameterIn`.
+- The tuner sets `calibrationConfirmed = true` for itself only, because you use it to check the
+  calibration.
+- Every test runs at half power (0.5). The power is steady, so the measurements repeat well.
+- The tuner works out "ticks per inch" from `ticksPerRev` and `wheelDiameterIn`.
 - "Result" says how the move ended: reached the target, stuck, out of time, or stopped.
 - "Wheel ticks" are the four encoder counts (front-left, front-right, back-left, back-right).
-  Very different counts can point to a slipping wheel or a wrong motor setting.
+  When the counts are very different, look for a slipping wheel or a wrong motor setting.
 
 **Distance (all robots):**
 
 1. Mark the floor at the front wheel. Choose A (forward 48), then press ▶.
-2. Measure how far it really went.
+2. Measure how far the robot really went.
 3. New `wheelDiameterIn` = old x (real distance / 48).
-   Example: it went 50 in with 3.78 -> 3.78 x 50/48 = 3.94.
-4. Repeat until it is within half an inch.
+   Example: the robot went 50 in with 3.78 -> 3.78 x 50/48 = 3.94.
+4. Repeat until the distance is right within half an inch.
 
-**Strafe (mecanum only):** B (right 48). New `strafeCorrection` = old x (48 / real distance).
+**Strafe (mecanum only):** choose B (right 48). New `strafeCorrection` = old x (48 / real distance).
 
-**Turns:** X and Y (90 left and right). `turnKp` and `turnKd` are the P and D gains of the turn
+**Turns:** choose X and Y (90 left and right). `turnKp` and `turnKd` are the P and D gains of the turn
 (Tutorial 07 explains gains). Use a corner of a field tile to check the angle.
-Overshoots: raise `turnKd` (try +0.001) or lower `turnKp`. Stops short: raise `turnKp` a little
-(+0.002), or set `turnMinPower = 0.06`.
+**When the turn overshoots:** raise `turnKd` (try +0.001) or lower `turnKp`. **When it stops short:**
+raise `turnKp` a little (+0.002), or set `turnMinPower = 0.06`.
 
 Write every final number in `RobotSettings` and in your engineering notebook.
 
@@ -136,39 +139,39 @@ auto.move(24, 0, 0.6);
 auto.turnTo(0, 0.5);       // face exactly where we started
 ```
 
-A square. It is a great test: if the tuning is good, the robot ends where it started.
+The robot drives a square. It is a good test: with good tuning, the robot ends where it started.
 
 `turn` is "turn BY this much". `turnTo` is "turn TO this heading" (0 = the direction at the start).
 `turnTo` fixes small errors that build up from many turns.
 
 Power 0.6 for driving and 0.5 for turning is quick enough, but slow enough to stop where you want.
-At the end, the program waits with `while (opModeIsActive()) idle();` so the heading stays on the
-screen. `idle()` lets the robot app do its own work. No motor stop is needed: every `AutoDrive`
+At the end, the program waits with `while (opModeIsActive()) idle();`, so the heading stays on the
+screen. `idle()` lets the robot app do its own work. The program needs no motor stop: every `AutoDrive`
 move stops the wheels when it ends.
 
 ## Run it
 
-1. Robot on a field tile corner, facing along a seam.
-2. INIT, ▶. It drives the square.
-3. Measure how far from the start it ends. Under 2 inches is good.
+1. Put the robot on a field tile corner, facing along a seam.
+2. Press INIT, then ▶. The robot drives the square.
+3. Measure how far from the start the robot ends. Under 2 inches is good.
 
 ## If something goes wrong
 
 | Problem | Fix |
 | --- | --- |
-| "calibrationConfirmed is false" | On purpose. Tune, then set it to true in `RobotSettings.auto()`. |
+| "calibrationConfirmed is false" | This stop is on purpose. Tune, then set it to true in `RobotSettings.auto()`. |
 | Goes the wrong distance | Tune `wheelDiameterIn` (section 3). |
-| Turns the wrong way or spins forever | IMU directions do not match the hub (Tutorial 04, section 7), or a motor direction is wrong. |
-| Stops early: "robot stuck" | It was blocked, or `moveMinPower` is too low to move the robot. Raise it a little. |
-| Drifts sideways on long moves | Normal a little. Use `turnTo` between moves to fix the heading. |
-| Ends far from the start | Tune turns first, then distance. Check that the wheels do not slip (slow down). |
+| Turns the wrong way or spins forever | The IMU directions do not match the hub (Tutorial 04, section 7), or a motor direction is wrong. |
+| Stops early: "robot stuck" | Something blocked the robot, or `moveMinPower` is too low to move it. Raise it a little. |
+| Drifts sideways on long moves | A little drift is normal. Use `turnTo` between moves to fix the heading. |
+| Ends far from the start | Tune turns first, then distance. Check that the wheels do not slip (slow down if they do). |
 
 ## Try this
 
 1. Drive a triangle (turns of 120 degrees).
-2. Mecanum: drive a square WITHOUT turning, using directions 0, 90, 180, -90.
-3. Print the `AutoDrive.Result` of each move on telemetry. Push the robot against a wall in one
-   move and see `STALLED`.
+2. With mecanum, drive a square WITHOUT turning: use directions 0, 90, 180, -90.
+3. Print the `AutoDrive.Result` of each move on telemetry. Push the robot against a wall in one move,
+   and look for `STALLED`.
 
 ## Next
 

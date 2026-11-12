@@ -27,7 +27,7 @@ for (let tries = 0; tries < 400000 && Object.values(byWhy).some(l => l.length < 
   const ball = rnd() < 0.5 ? "Pollen" : "Nectar", state = rnd() < 0.5 ? "down" : "up";
   const elev = 45 + rnd() * 43, speed = 4.5 + rnd() * 7.5;
   const spinRpm = rnd() < 0.3 ? Math.round(rnd() * 900) : 0;
-  const yaw = (rnd() - 0.5) * 30 * Math.PI / 180;             // aimed up to 15 deg off the opening's centre
+  const yaw = (rnd() - 0.5) * 30 * Math.PI / 180;             // aimed up to 15 deg off the opening's center
   const d = S.aimDir(xu), dir = [d[0] * Math.cos(yaw) - d[1] * Math.sin(yaw), d[0] * Math.sin(yaw) + d[1] * Math.cos(yaw)];
   const L = S.launchDir(xu, elev, speed, dir, 0.2 + rnd() * 0.4);
   const why = S.judge(L.p0, L.v0, ball, state, 1e-3, 2.0, spinRpm);

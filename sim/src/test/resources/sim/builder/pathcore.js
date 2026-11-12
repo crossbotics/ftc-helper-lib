@@ -2,8 +2,8 @@
 // footprint along the path, hits on field parts, the other alliance's path, Java out and Java in.
 // The page (app.js) and the test (scripts/test-path-builder.mjs) both use it.
 //
-// Frame (FTC-Helper-Lib's): seen from your drivers' wall, x inches right of the centre line, y inches
-// away from the centre toward the far wall, heading degrees, 0 = facing away, counterclockwise +.
+// Frame (FTC-Helper-Lib's): seen from your drivers' wall, x inches right of the center line, y inches
+// away from the center toward the far wall, heading degrees, 0 = facing away, counterclockwise +.
 //
 // A path: { start: [x, y], parts: [part...], holdSec: 0 }. Each part starts where the one before ends.
 // A part: { ctrl: [[x, y]...] (0 = a line, 1 or more = a curve), end: [x, y],
@@ -391,7 +391,7 @@ export function project(m, x, y) {
  * Where an action starts along the path, as the library decides it:
  * { in, x, y, part, when: 'on' | 'start' (at once) | 'never' }.
  * inchesDone v: inches done >= v. inchesLeft v: inches left <= v. fraction f: done / total >= f.
- * part(n): where part n starts (part 1 = at once). near: the first place the robot's centre is
+ * part(n): where part n starts (part 1 = at once). near: the first place the robot's center is
  * within the distance of the point (the robot drives the path exactly; really it may pass a few inches off).
  */
 export function actionPlace(a, m) {

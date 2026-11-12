@@ -2,47 +2,49 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-Hands-on lessons that teach the library by building real robot programs, one idea at a time. There are
-two tracks: the **main track** (start here) and **under the hood**.
-Each tutorial has a **complete program** you can copy into TeamCode and run. Those programs are
-built and checked every time the library changes, so the code in these lessons always works
-with the current version.
+These lessons teach the library: you build real robot programs, one idea at a time. There are two
+tracks: the **main track** (start here) and **under the hood**.
+Each tutorial has a **complete program** you can copy into TeamCode and run. A test builds and checks
+those programs every time the library changes. So the code in these lessons always works with the
+current version.
 
 The [module pages](../modules/) are the reference: every function, every parameter.
-The tutorials are the "how and why": what to write, in what order, and what to check on the robot.
+The tutorials give the "how and why": what to write, in what order, and what to check on the robot.
 
 ## Start here: the main track
 
-Never used Android Studio? Start with [Set up](../setup/README.md) (45 to 60 minutes). Used
-Scratch or Blocks before? Read [From Blocks to Java](../blocks-to-java.md) next, before the Quick start:
-it shows where each block you know went.
+**New to Android Studio:** start with [Set up](../setup/README.md). **Used Scratch or Blocks before:**
+read [From Blocks to Java](../blocks-to-java.md) next, before the Quick start. It shows where each block
+you know went.
 
-Want a driving robot first, with no explanations? Do the [Quick start](../quick-start.md): it has a road
-for a starter bot as it is, a changed starter bot, and your own robot. Then come back here. Not sure which robot code to start from? [Pick your template](../templates.md).
+**For a driving robot first, with no explanations:** do the [Quick start](../quick-start.md). It has a
+road for a starter bot as it is, a changed starter bot, and your own robot. Then come back here.
+**To choose the robot code to start from:** read [Pick your template](../templates.md).
 
 The shortest way to a whole robot program. **Lessons 1 to 6 are for every robot:** do them in order.
 **Lessons 7 to 9 are for some robots:** do only the ones your robot needs (odometry, paths, a shooter).
-**Lesson 10 is advanced:** automatic tests of your code, when your robot works.
+**Lesson 10 is advanced:** automatic tests of your code, for when your robot works.
 
 **Which robot you build:** your own. You change **your robot's five files** (the ones the Quick start
 put in your TeamCode), a few lines per lesson. Each lesson explains with a worked example, the
 **lesson robot** ([`examples/.../lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)):
-a mecanum drive, an intake, a lift and a claw, in five short files. Read the lesson robot's lines, then
-make the same change in your own TeamCode; the lesson robot's files are also the answer key. (Lesson 1
-explains with goBILDA's starter bot, lesson 7 with an odometry robot, and lesson 9 with two shooter robots, the same way.) Every part
-brings its own numbers, and its buttons are a few lines to copy, so each lesson adds only a few lines. A simulator test runs the
-finished lesson robot, so the code here always works.
+a mecanum drive, an intake, a lift and a claw, in five short files. Read the lesson robot's lines. Then
+make the same change in your own TeamCode. The lesson robot's files are also the answer key. Lesson 1
+explains with goBILDA's starter bot in the same way. Lesson 7 uses an odometry robot, and lesson 9 uses
+two shooter robots. Every part brings its own numbers, and its buttons are a few lines to copy. So each
+lesson adds only a few lines. A simulator test runs the finished lesson robot, so the code here always
+works.
 
-**The simulator commands:** each lesson shows two sets. The lesson robot's use `-PteamCode=none` (the
-library's examples). Your own robot's use `-PteamCode=../TeamCode`:
+**The simulator commands:** each lesson shows two sets. The commands for the lesson robot use
+`-PteamCode=none` (the library's examples). The commands for your own robot use `-PteamCode=../TeamCode`:
 `./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then `./gradlew :sim:run -PteamCode=../TeamCode`.
 Run them from the `ftc-helper-lib` folder ([the Terminal tab](../setup/09-the-terminal.md)).
-Simulator tests (lesson 10) for your own robot go in your robot project's
-`simulator/scenarios/` folder, so they are saved with your code.
+Put the simulator tests (lesson 10) for your own robot in your robot project's `simulator/scenarios/`
+folder. Then they stay with your code.
 
-**"Every loop":** the lessons often say a job runs "every loop". The **loop** is the library's loop: it
-runs many times a second, and each time round it reads the gamepads, runs the jobs and updates every
-part. You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-idea-you-never-write-the-loop)).
+**"Every loop":** the lessons often say a job runs "every loop". The **loop** is the library's loop. It
+runs many times a second. Each time round, it reads the gamepads, runs the jobs and updates every part.
+You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-idea-you-never-write-the-loop)).
 
 | # | Lesson | You learn | Robot needed |
 | --- | --- | --- | --- |
@@ -62,16 +64,16 @@ part. You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-ide
 
 Then: [the button menu](../guides/buttons.md) (every way a button can work),
 [the cookbook](../cookbook.md) (short "how do I...?" answers with code to copy),
-[the autonomous builder](../guides/autonomous-builder.md) (everything autonomous can do),
+[building autos](../building-autos/README.md) (everything autonomous can do),
 [the finders](../guides/finders.md) (measure your numbers), and the [simulator](../guides/simulator.md).
 
 ## Under the hood: how it works
 
 **These tutorials are optional: you can skip them all.** The main track is enough to build and run a
-robot. They build the same things by hand, with the library's building blocks. Do them to learn
-how a robot program works inside (what a PID is, what a bulk read is, why software limits do not
-replace hard stops), or when you need a part that has no five-files module. Each has a complete
-program.
+robot. These tutorials build the same things by hand, with the library's building blocks. Do them to
+learn how a robot program works inside: what a PID is, what a bulk read is, why software limits do not
+replace hard stops. Also do them when you need a part that has no five-files module. Each one has a
+complete program.
 
 | # | Tutorial | You learn | Robot needed |
 | --- | --- | --- | --- |
@@ -97,14 +99,15 @@ program.
 | 20 | [Easy TeleOp](20-easy-teleop.md) | `EasyTeleOp`, the layer under `Controls.java` (also used by the [starter kit](../starter-kit.md)) | drivetrain + lift + claw |
 | 21 | [Find your numbers](21-finders.md) | the finders: servo ends, lift limits, flywheel gains, wheel size, camera offset, shot table | the parts to measure |
 
-Time: about 30-60 minutes each, more for 07, 09 and 12 (tuning takes time). New to Java? Do 01 first:
-it explains imports, fields and lambdas (`() -> ...`), which every lesson uses.
+Tutorials 07, 09 and 12 take longer than the others, because tuning takes time. **New to Java:** do 01
+first. It explains imports, fields and lambdas (`() -> ...`), and every lesson uses them.
 
 ## Before you start
 
 1. The library is in your robot project: [Add the library](../setup/04-add-the-library.md).
-2. Read [Signs and units](../conventions.md) once. It saves hours of "why does it turn the wrong way".
-3. Have the robot configuration on the Driver Station (the list of devices and their names) match
+2. Read [Signs and units](../conventions.md) once. It saves you hours of fixing a robot that turns the wrong
+   way.
+3. The robot configuration on the Driver Station is the list of devices and their names. Make it match
    the names in the tutorial, or change the names in the code. Each tutorial lists the names it uses.
 
 ## How to use a tutorial program
@@ -113,19 +116,19 @@ The programs are in the library at
 [`examples/.../examples/tutorials/`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials).
 
 1. Copy the file into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/`.
-2. Change its first line to `package org.firstinspires.ftc.teamcode;` (the `package` line must
-   match the folder the file is in)
-   (tutorial 12's files go in a folder `robot` there, with `package org.firstinspires.ftc.teamcode.robot;`,
-   and also need `RobotSettings`).
-3. Delete the `@Disabled` line, so it shows on the Driver Station.
+2. The `package` line must match the folder the file is in. So change the first line to
+   `package org.firstinspires.ftc.teamcode;`.
+   Tutorial 12's files go in a folder `robot` there, with `package org.firstinspires.ftc.teamcode.robot;`.
+   They also need `RobotSettings`.
+3. Delete the `@Disabled` line, so the program shows on the Driver Station.
 4. Build, then run it from the Driver Station.
 
-**Better: type it yourself.** Each tutorial builds the program step by step. Typing it (and making
-the mistakes) teaches far more than copying. Use the full file to check your work.
+**Better: type it yourself.** Each tutorial builds the program step by step. When you type it, you make
+mistakes and fix them, and you learn more than from a copy. Use the full file to check your work.
 
 ## Safety for every tutorial
 
-- Start with low power (`powerLimit = 0.4`, or a small multiplier). Raise it after it works.
-- Wheels off the ground the first time a drivetrain runs.
+- Start with low power (`powerLimit = 0.4`, or a small multiplier). Raise it after the program works.
+- Lift the wheels off the ground the first time a drivetrain runs.
 - Keep a hand near the Driver Station STOP button.
-- Lifts and arms: know where the hard stops are before you run anything.
+- For lifts and arms, find the hard stops before you run anything.

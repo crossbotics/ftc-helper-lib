@@ -5,7 +5,7 @@
 // The page (steps.js) and the test (scripts/test-path-builder.mjs) both use it.
 //
 // Frame (FTC-Helper-Lib's, as in pathcore.js): seen from your drivers' wall, x inches right of the
-// centre line, y inches toward the far wall, heading degrees, 0 = facing away, counterclockwise +.
+// center line, y inches toward the far wall, heading degrees, 0 = facing away, counterclockwise +.
 // Steps are robot-relative, like the library's. INSIDE a plan, a move's `dir` is degrees CLOCKWISE from
 // forward (0 forward, 90 right, 180 back, 270 left): kept that way so saved plans still load. Everything
 // people see or type, and the Java, count COUNTERCLOCKWISE like the library (90 = left): dirToCcw() and
@@ -531,7 +531,7 @@ export function startChecks(start, robot, field, obs, half) {
 
 /**
  * Ready-made start spots against your wall, facing the field, for this robot size: the corners, the
- * centre and right of your FLOWER, each moved to the nearest spot that passes startChecks.
+ * center and right of your FLOWER, each moved to the nearest spot that passes startChecks.
  */
 export function startPresets(robot, field, obs, half) {
 	const [L, W] = robot;
@@ -545,7 +545,7 @@ export function startPresets(robot, field, obs, half) {
 		return null;
 	};
 	const list = [['Left corner', -56, 'Against our wall, in the left corner tile, facing the field'],
-		['Centre', 0, 'Against our wall, in the middle, facing the field'],
+		['Center', 0, 'Against our wall, in the middle, facing the field'],
 		['Right of the FLOWER', 40, 'Against our wall, right of our FLOWER, facing the field'],
 		['Right corner', 56, 'Against our wall, in the right corner tile, facing the field']];
 	const out = [];
@@ -564,7 +564,7 @@ export function wallName(x, y) {
 
 /**
  * A dragged start spot made easy to copy at the field: the robot kept inside the walls, pushed back against a
- * wall that is near (3 in), and its centre or a side lined up with a tile middle or seam that is near (1.5 in).
+ * wall that is near (3 in), and its center or a side lined up with a tile middle or seam that is near (1.5 in).
  * Returns { x, y }. Snapping off: only kept inside.
  */
 // The tiles' interlocking teeth reach about 0.4 in (10 mm) past each seam: the official field CAD's am-2499
@@ -581,7 +581,7 @@ export function snapStart(start, robot, half, on = true) {
 	};
 	const GAP = 0.5;   // like the presets: 0.5 in off the wall counts as touching it (G304)
 	if (on) {
-		// x: the centre on a tile middle or a seam, or a side on a seam
+		// x: the center on a tile middle or a seam, or a side on a seam
 		const [x0, x1] = box(), cands = [];
 		for (let j = 1; j < 12; j++) cands.push([-half + j * tile / 2, x]);
 		for (let j = 1; j < 6; j++) {
@@ -638,12 +638,12 @@ export function startInches(start, robot, half) {
 		+ (side ? tileWords(+start.y, y0, y1, half, ['Near', 'Far'], 'out from our wall') : tileWords(+start.x, x0, x1, half));
 }
 
-// Where the robot sits on the tiles, counted from the left as the drivers see them: " Centred on tile 3."
+// Where the robot sits on the tiles, counted from the left as the drivers see them: " Centered on tile 3."
 function tileWords(x, x0, x1, half, sides = ['Left', 'Right'], from = 'from the left') {
 	const tile = 2 * half / 6, out = [];
 	const k = (x + half) / tile;   // in tiles from the left wall
-	if (Math.abs(k - Math.floor(k) - 0.5) < 0.02) out.push(`Centred on tile ${Math.floor(k) + 1} ${from}`);
-	else if (Math.abs(k - Math.round(k)) < 0.02 && Math.round(k) > 0 && Math.round(k) < 6) out.push(`Centred on the seam between tiles ${Math.round(k)} and ${Math.round(k) + 1}`);
+	if (Math.abs(k - Math.floor(k) - 0.5) < 0.02) out.push(`Centered on tile ${Math.floor(k) + 1} ${from}`);
+	else if (Math.abs(k - Math.round(k)) < 0.02 && Math.round(k) > 0 && Math.round(k) < 6) out.push(`Centered on the seam between tiles ${Math.round(k)} and ${Math.round(k) + 1}`);
 	for (const [v, side] of [[x0, sides[0]], [x1, sides[1]]]) {
 		for (let j = 1; j < 6; j++) {
 			const sm = -half + j * tile;
@@ -694,7 +694,7 @@ export function autoNote(start, robot = [18, 18], half = 70.585) {
 	if (near(half - maxX)) walls.push('the right wall');
 	const col = Math.max(0, Math.min(5, Math.floor((+start.x + half) / tile)));
 	const row = Math.max(0, Math.min(5, Math.floor((+start.y + half) / tile)));
-	// The robot's centre on a seam (within 1 in) reads better than half of one tile.
+	// The robot's center on a seam (within 1 in) reads better than half of one tile.
 	const k = Math.round((+start.x + half) / tile);
 	const onSeam = k > 0 && k < 6 && Math.abs(+start.x + half - k * tile) <= 1;
 	let where;
@@ -706,7 +706,7 @@ export function autoNote(start, robot = [18, 18], half = 70.585) {
 		const sideWall = (col === 0 && walls.includes('the left wall')) || (col === 5 && walls.includes('the right wall'));
 		where = sideWall && !onSeam ? `${ORD[row]} tile out` : `${where}, ${ORD[row]} tile out`;
 	}
-	// Where in the tile, along the wall it is against (along our wall, or up a side wall): centred, an edge on
+	// Where in the tile, along the wall it is against (along our wall, or up a side wall): centered, an edge on
 	// the seam, or an edge at the teeth's edge. What the drive team lines up by eye.
 	const maxY = Math.max(...fp.map((p) => p[1]));
 	const alongSide = !walls.includes('our wall') && (walls.includes('the left wall') || walls.includes('the right wall'));
@@ -714,7 +714,7 @@ export function autoNote(start, robot = [18, 18], half = 70.585) {
 	const off = (v) => { const j = Math.round((v + half) / tile); return j > 0 && j < 6 ? Math.abs(v + half - j * tile) : 99; };
 	const mid = Math.abs((c + half) / tile - Math.floor((c + half) / tile) - 0.5) * tile;
 	const centreOnSeam = alongSide ? off(c) <= 1 : onSeam;
-	const edge = centreOnSeam ? '' : mid <= 0.5 ? 'centred'
+	const edge = centreOnSeam ? '' : mid <= 0.5 ? 'centered'
 		: off(lo) <= 0.25 ? `${loName} edge on seam` : off(hi) <= 0.25 ? `${hiName} edge on seam`
 		: Math.abs(off(lo) - TEETH_IN) <= 0.25 ? `${loName} edge at teeth` : Math.abs(off(hi) - TEETH_IN) <= 0.25 ? `${hiName} edge at teeth` : '';
 	const wallText = walls.length ? `Against ${walls.join(' and ')}` : `${num(Math.round(minY + half))} in off our wall`;

@@ -18,22 +18,22 @@ import java.util.Locale;
  *       too (the piece flies that far relative to the robot).</li>
  * </ol>
  *
- * <p><b>Where the shooter is.</b> The shooter need not be at the robot's centre: {@link #shooterAt}
+ * <p><b>Where the shooter is.</b> The shooter need not be at the robot's center: {@link #shooterAt}
  * says where it is (a turret's pivot, or a fixed launcher's exit). That changes three things: the
  * distance is from the shooter, a turning robot swings an off-centre shooter sideways (more speed for
- * the piece), and a fixed shooter to one side of the centre must turn the whole robot a little MORE
+ * the piece), and a fixed shooter to one side of the center must turn the whole robot a little MORE
  * than "face the goal" so that its own line passes through the goal. {@link #onTurret()} says a turret
  * aims the shot (the answer is a turret angle); without it the whole robot turns (the answer is how far
  * to turn the robot).
  *
- * <p>One frame for everything, the robot's: x forward, y to the LEFT, from the robot's centre, angles
+ * <p>One frame for everything, the robot's: x forward, y to the LEFT, from the robot's center, angles
  * counterclockwise + (positive = to the left), the same as a {@link TargetObservation}. The five-files
- * robot does all this for you (docs/modules/robot.md, section "Aim", {@code Tunables.Aim.shootOnMove});
+ * robot does all this for you (docs/reference/robot-java.md, section "Aim", {@code Tunables.Aim.shootOnMove});
  * this class is the plain math, for your own code and tests.
  *
  * <pre>{@code
  * MovingShot shot = new MovingShot().shooterAt(-4, 0).onTurret().flightSec(0.7, 0).maxLeadIn(24);
- * // The goal 60 in ahead of the robot's centre; the robot strafes RIGHT at 30 in/s (left speed -30),
+ * // The goal 60 in ahead of the robot's center; the robot strafes RIGHT at 30 in/s (left speed -30),
  * // no turn; the picture is 40 ms old.
  * MovingShot.Result r = shot.solve(60, 0, 0, -30, 0, 0.040);
  * // r.aimDeg: the turret angle (left of straight ahead: it leads); r.distanceIn: for the launcher's speed
@@ -45,17 +45,17 @@ import java.util.Locale;
  * Docs: docs/modules/vision.md (section "MovingShot"), docs/tutorials/start/09-shooter-and-camera.md
  */
 public final class MovingShot {
-    // Where the shooter is from the robot's centre (inches, forward and left), and whether a turret aims.
+    // Where the shooter is from the robot's center (inches, forward and left), and whether a turret aims.
     private double shooterForward = 0, shooterLeft = 0;
     private boolean turret = false;
     private double flightSec = 0, flightSecPerIn = 0, maxLeadIn = 24;
 
     /**
-     * Where the shooter is from the robot's centre: a turret's pivot, or where a fixed launcher's
-     * piece leaves. Inches. Default 0, 0 (the centre).
+     * Where the shooter is from the robot's center: a turret's pivot, or where a fixed launcher's
+     * piece leaves. Inches. Default 0, 0 (the center).
      *
-     * @param forwardIn inches in front of the centre (negative = behind)
-     * @param leftIn    inches left of the centre (negative = right)
+     * @param forwardIn inches in front of the center (negative = behind)
+     * @param leftIn    inches left of the center (negative = right)
      */
     public MovingShot shooterAt(double forwardIn, double leftIn) {
         shooterForward = forwardIn;
@@ -123,8 +123,8 @@ public final class MovingShot {
      * Brings a goal seen in an old picture forward to now, leads it for the flight time, and says
      * where to aim the shooter.
      *
-     * @param goalForwardIn   the goal in front of the robot's centre when the picture was taken, inches
-     * @param goalLeftIn      the goal left of the robot's centre then, inches (see {@link #seenFrom})
+     * @param goalForwardIn   the goal in front of the robot's center when the picture was taken, inches
+     * @param goalLeftIn      the goal left of the robot's center then, inches (see {@link #seenFrom})
      * @param forwardInPerSec the robot's speed forward, inches per second (see {@link #toRobotFrame})
      * @param leftInPerSec    the robot's speed to the left, inches per second
      * @param turnDegPerSec   how fast the robot turns, degrees per second, counterclockwise +
@@ -179,7 +179,7 @@ public final class MovingShot {
         return new Result(aimDeg, dist, 0, leadIn, t);
     }
 
-    // From the shooter to a goal at (x, y) from the centre, inches: a turret's straight line; a fixed
+    // From the shooter to a goal at (x, y) from the center, inches: a turret's straight line; a fixed
     // shooter's distance along its own line once the robot has turned to it.
     private double distanceFrom(double x, double y) {
         if (turret) return Math.hypot(x - shooterForward, y - shooterLeft);
@@ -188,12 +188,12 @@ public final class MovingShot {
     }
 
     /**
-     * Where a goal is from the robot's centre, from what a camera sees: {forward, left} inches.
+     * Where a goal is from the robot's center, from what a camera sees: {forward, left} inches.
      *
      * @param bearingDeg  the camera's bearing to it, degrees, counterclockwise + (left)
      * @param distanceIn  the camera's distance to it, inches
-     * @param camForwardIn where the camera is: inches in front of the centre
-     * @param camLeftIn   inches left of the centre
+     * @param camForwardIn where the camera is: inches in front of the center
+     * @param camLeftIn   inches left of the center
      * @param camYawDeg   which way the camera faces from the robot's front (a turret's angle for a camera on it)
      */
     public static double[] seenFrom(double bearingDeg, double distanceIn, double camForwardIn, double camLeftIn,

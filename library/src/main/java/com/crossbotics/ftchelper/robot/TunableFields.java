@@ -14,7 +14,7 @@ import java.util.function.Predicate;
  * {@code inPower}) instead of quietly using the library's default. A misspelled safety number, a
  * lift's max for example, would otherwise be ignored without a word.
  *
- * <p>One list per part, the same parts as the Tunables reference (docs/guides/tunables.md).
+ * <p>One list per part, the same parts as the Tunables reference (docs/reference/tunables.md).
  * tools/check_tunables.py checks that each list has exactly the fields the code reads, so a new
  * field the code reads must be added here too (CI fails otherwise).
  *
@@ -171,7 +171,7 @@ final class TunableFields {
                     + (a.interlock ? ". An interlock field starts with the part's section name, from its device name in"
                             + " camelCase (\"lift_left\" -> liftLeftAbove)" : "")
                     + ". A number for your own code belongs in your own section (e.g. Tunables.Auto)"
-                    + " (docs/guides/tunables.md)");
+                    + " (docs/reference/tunables.md)");
         }
     }
 

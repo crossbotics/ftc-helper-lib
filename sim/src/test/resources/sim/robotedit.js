@@ -252,7 +252,7 @@
       t.position.copy(from).addScaledVector(dir, 11).add(new THREE.Vector3(0, 0, 1.5));
       labels.add(t);
     }
-    // a word over each part that does not fit (red is also some parts' own colour)
+    // a word over each part that does not fit (red is also some parts' own color)
     for (const name of c.red) {
       const pcs = view.pieces.filter((p) => p.name === name);
       let top = null;
@@ -621,7 +621,7 @@
     const s = shape(g.name);
     if (tool === "move") setEditValue(g.name, "atMm", g.at0.map((v, k) => Math.round(v + dp[k])));
     else if (s.spins) {
-      // a roller grows along its axle, both ends at once (it is centred on its place)
+      // a roller grows along its axle, both ends at once (it is centered on its place)
       const a = AXIS[now(s).axis] || AXIS.left, along = dp[0] * a[0] + dp[1] * a[1] + dp[2] * a[2];
       const end = g.sign[0] * a[0] + g.sign[1] * a[1] + g.sign[2] * a[2] >= 0 ? 1 : -1;
       setEditValue(g.name, "lengthMm", Math.max(1, Math.round(g.len0 + 2 * along * end)));

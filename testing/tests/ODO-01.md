@@ -47,10 +47,12 @@ within 1 in and 2 degrees of the mark.
 - odometry kind (Pinpoint, OTOS, 2 or 3 dead wheels) and the pod type
 - Forward test: the % off it showed, before and after fixes
 - the offsets (or track width) it gave
+- Pinpoint with `.podsFromEdgesMm(...)`: the offsets the library worked out from your edge numbers, and
+  how far they were from the tuner's
 - Loop test: the distance and angle error it showed, and how many tries it took
 
 ## If your robot is different
 
 A tank robot cannot strafe: push it sideways by hand for the Left test. An OTOS has no offsets to
-measure (measure `mountIn` with a tape). Dead wheels with the IMU need `.imu(...)` in the drive line.
-Say which of these you did. Pods in odd places (far off centre, angled) are very useful to report.
+measure (measure it from the robot's edges with a tape: `.robotSizeMm(...).mountFromEdgesMm(...)`). Dead wheels with the IMU need `.imu(...)` in the drive line.
+Say which of these you did. Pods in odd places (far off center, angled) are very useful to report.

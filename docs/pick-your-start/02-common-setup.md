@@ -86,12 +86,12 @@ The part's section in `Tunables.java` (for example `public static class Claw`) c
 no harm. Delete it when you tidy up. Keep the other numbers as they are for now. You measure them on the
 [Tunables.java page](../five-files/02-tunables-java.md).
 
-A part your robot has but the example does not? Add it later, one at a time, on the
+When your robot has a part that the example does not have, add it later, one at a time, on the
 [Robot.java page](../five-files/01-robot-java.md#add-a-part).
 
 ## 4. Build
 
-In Android Studio: **Build > Make Project**.
+In Android Studio, click **Build > Make Project**.
 
 ## Done when
 
@@ -109,6 +109,6 @@ In Android Studio: **Build > Make Project**.
 
 ---
 
-**Next:** [The five files](../five-files/README.md). They explain every line you just copied.
+**Next:** [The five files](../five-files/README.md). They explain every line you copied.
 
 **Look it up:** [Pick your template](../templates.md): more about each example robot.

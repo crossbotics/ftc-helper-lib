@@ -194,11 +194,13 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
                 PinpointOdometry pp = (PinpointOdometry) odo;
                 double dx = (pp.device().getEncoderX() - podsAtStart[0]) / perMm * (spec.isReversed("x") ? -1 : 1);
                 double dy = (pp.device().getEncoderY() - podsAtStart[1]) / perMm * (spec.isReversed("y") ? -1 : 1);
-                // A pod LEFT of the centre rolls backward when the robot turns left; one FORWARD of it rolls left.
+                // A pod LEFT of the center rolls backward when the robot turns left; one FORWARD of it rolls left.
                 double xLeft = -dx / turnRad, yForward = dy / turnRad;
                 // Only the numbers to change: the rest of the line (pods, .reversed) stays as it is.
+                // Written from the edges: the measured center numbers replace podsFromEdgesMm (they are exact).
                 results.set("odo:offsets", "Robot.java: in the odometry(...) line, .offsetsMm("
-                        + FinderResults.num(xLeft, 1) + ", " + FinderResults.num(yForward, 1) + ")");
+                        + FinderResults.num(xLeft, 1) + ", " + FinderResults.num(yForward, 1) + ")"
+                        + (spec.podsFromEdges() ? " in place of .podsFromEdgesMm(...)" : ""));
                 lastResult = "Offsets measured: X pod " + FinderResults.num(xLeft, 1) + " mm left, Y pod "
                         + FinderResults.num(yForward, 1) + " mm forward. Change those two numbers in Robot.java, rebuild, then the Loop test.";
                 break;

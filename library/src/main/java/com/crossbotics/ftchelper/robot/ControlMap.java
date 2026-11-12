@@ -20,7 +20,7 @@ import java.util.Set;
 /**
  * The team's TeleOp and button map in one file, {@code Controls.java}. The library's own buttons
  * (driving, pause, menus) are always there; every other button is a line in {@code buttons(...)}, a
- * part's too (each part's "buttons to add" in docs/modules/robot.md).
+ * part's too (each part's "buttons to add" in docs/reference/robot-java.md).
  *
  * <pre>{@code
  * @TeleOp(name = "TeleOp")
@@ -51,7 +51,7 @@ import java.util.Set;
  *
  * <p>Everything else is {@link EasyTeleOp}: match timer, buzzes, everything stopped at the end.
  *
- * Docs: docs/modules/robot.md (section "Controls")
+ * Docs: docs/reference/robot-java.md (section "Controls")
  */
 public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     // The button notes went to the robot log once (they are not all on the screen).
@@ -101,7 +101,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      * True: each part adds its usual buttons by itself (the way before v0.39.0), and a line of yours on one
      * of those buttons replaces it. Default false: a part has no buttons until Controls.java writes its lines,
      * so every button is a line you can read. INIT names each part's usual button that is still free
-     * ("Intake: usual buttons not in Controls.java: G2 RT (in (hold)), ..."). The usual lines: docs/modules/robot.md, each part's
+     * ("Intake: usual buttons not in Controls.java: G2 RT (in (hold)), ..."). The usual lines: docs/reference/robot-java.md, each part's
      * "Buttons to add".
      */
     protected boolean useStandardButtons() {
@@ -224,7 +224,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         return Math.abs(x) > STILL || Math.abs(y) > STILL || Math.abs(turn) > STILL;
     }
 
-    // How far a drive stick may be off centre and still count as "let go" (0 to 1).
+    // How far a drive stick may be off center and still count as "let go" (0 to 1).
     private static final double STILL = 0.1;
 
     // The alliance was switched in TeleOp (Camera.goal and the aim read robot.alliance(): they follow).
@@ -410,8 +410,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      * "Keep-out boxes and routes".
      *
      * @param label      a name for the Driver Station
-     * @param xIn        inches right of the centre line, written for BLUE like {@code driveTo}
-     * @param yIn        inches from the centre toward the far wall
+     * @param xIn        inches right of the center line, written for BLUE like {@code driveTo}
+     * @param yIn        inches from the center toward the far wall
      * @param headingDeg the heading to turn to (counterclockwise +; 0 = facing away)
      * @param maxPower   0.1 to 1
      * @return the job: it starts the route, and returns at once

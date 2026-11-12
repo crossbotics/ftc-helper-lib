@@ -6,10 +6,10 @@ Package: `com.crossbotics.ftchelper.auto`
 
 Learn it hands-on: [16 Easy autonomous](../tutorials/16-easy-autos.md). Full guide: [Easy autonomous modes](../guides/easy-autos.md).
 
-Write an autonomous (the 30 seconds when the robot drives itself) as a list of named steps. The
-library runs the steps in order, keeps your mechanisms working, flips the route for the RED alliance,
-and keeps time to park. Using the [robot in five files](robot.md#auto)? Its `Auto` class is built on
-this one, so start there. Use this page when you write an autonomous without five files.
+With this module you write an autonomous (the 30 seconds when the robot drives itself) as a list of named
+steps. The library runs the steps in order, keeps your mechanisms working, flips the route for the RED alliance,
+and keeps time to park. The [robot in five files](../reference/steps.md#auto) has an `Auto` class built on
+this one. With five files, start there. Use this page when you write an autonomous without five files.
 
 | Class | Use it to |
 | --- | --- |
@@ -42,74 +42,74 @@ sequenceDiagram
 
 ## EasyAuto
 
-Extend it and fill in:
+Extend it and fill in these methods:
 
 | Method | Required? | What you return / do |
 | --- | --- | --- |
 | `robotConfig()` | yes* | `new RobotSettings()`: the [`RobotConfig`](core.md#robotconfig) shared with TeleOp |
-| `buildRoutine(r)` | yes | add the steps; runs AFTER INIT, so choices are known |
-| `createSubsystems()` | no | your mechanisms (kept working during every step). Make new objects here: it runs again if the profile is changed in INIT. |
+| `buildRoutine(r)` | yes | add the steps. It runs AFTER INIT, so the choices are known |
+| `createSubsystems()` | no | your mechanisms. The routine keeps them working during every step. Make new objects here: it runs again when the drivers change the profile in INIT. |
 | `addChoices(menu)` | no | extra INIT choices: `menu.choice("Route", "Near", "Far")` |
 | `addInitTelemetry(t)` | no | extra screen lines during INIT |
-| `startPosition()` | no | where to place the robot, shown in INIT |
-| `startHeadingDeg()` | no | which way the robot faces at the start, in degrees from "facing away from your driver" (default 0). Write it for BLUE: it is mirrored for RED, unless `mirrorForRed()` returns false. TeleOp's field-centric "forward" uses it. |
-| `parkReserveSec()` | no | seconds kept for the steps after `thenPark()` |
-| `maxStartDelaySec()` | no | longest start delay in the menu (default 10) |
-| `mirrorForRed()` | no | true (default): routes written for BLUE are mirrored for RED. Return false on a ROTATED field |
-| `alliancesOnOneWall()` | no | false (default): BLUE's drivers stand at the far wall (BIOBUZZ). Return true when both alliances' drivers stand at one wall (DECODE). The simulator's start spot uses it |
+| `startPosition()` | no | where to place the robot. INIT shows it |
+| `startHeadingDeg()` | no | which way the robot faces at the start, in degrees from "facing away from your driver" (default 0). Write it for BLUE. EasyAuto mirrors it for RED, unless `mirrorForRed()` gives false. TeleOp's field-centric "forward" uses it. |
+| `parkReserveSec()` | no | the seconds the routine keeps for the steps after `thenPark()` |
+| `maxStartDelaySec()` | no | the longest start delay in the menu (default 10) |
+| `mirrorForRed()` | no | true (default): EasyAuto mirrors routes written for BLUE for RED. Return false on a ROTATED field |
+| `alliancesOnOneWall()` | no | false (default): each alliance's drivers stand at their own wall (BIOBUZZ, DECODE). Return true when both alliances' drivers stand at one wall. The simulator's start spot uses it |
 
-\* Or, without a `RobotConfig`: override `driveConfig()`, `autoDriveConfig()` and `createImu()`.
+\* Without a `RobotConfig`, override `driveConfig()`, `autoDriveConfig()` and `createImu()` instead.
 
 Inside your steps you can use `alliance()`, `choice(label)` and `autoDrive()`.
 
-Add `preselectTeleOp = "Main TeleOp"` to the `@Autonomous` line so the Driver Station picks
-your TeleOp after autonomous.
+To have the Driver Station pick your TeleOp after autonomous, add `preselectTeleOp = "Main TeleOp"` to the
+`@Autonomous` line.
 
 ## AutoRoutine
 
 | Step | What it does |
 | --- | --- |
-| `forward`, `back`, `left`, `right` `(label, inches, power)` | drive that way (no angle; `left`/`right` mecanum only) |
+| `forward`, `back`, `left`, `right` `(label, inches, power)` | drive that way (no angle). `left`/`right` work on mecanum only |
 | `move(label, inches, direction, power)` | drive at an angle (counterclockwise: 0 forward, 90 left, 180 back, -90 right) |
 | `turnLeft`, `turnRight` `(label, degrees, power)` | turn that way (no sign) |
-| `turn(label, degrees, power)` | turn by (positive = left) |
+| `turn(label, degrees, power)` | turn by this many degrees (positive = left) |
 | `turnTo(label, heading, power)` | turn to a heading (0 = start direction) |
-| `turnToward(label, bearingDeg, toleranceDeg, maxPower, timeoutSec)` | turn toward something the robot measures (`bearingDeg` gives degrees to turn, + left, NaN = not seen): up to 4 turns, a fresh reading after each, all inside `timeoutSec`. Not mirrored. `Steps.aimAtGoal` uses it |
+| `turnToward(label, bearingDeg, toleranceDeg, maxPower, timeoutSec)` | turn toward something the robot measures (`bearingDeg` gives the degrees to turn, + left, NaN = not seen). It makes up to 4 turns, with a fresh reading after each, all inside `timeoutSec`. The routine does not mirror it. `Steps.aimAtGoal` uses it |
 | `moveWithTurn(label, inches, fieldDir, heading, power, turnPower)` | drive and turn together (mecanum) |
-| `driveTo(label, pose, ready, x, y, heading, power, tolerance)` | drive to a field point with odometry (mecanum); the five-files `Steps.driveTo` fills in the pose for you ([odometry](odometry.md#driveto)) |
-| `followPath(label, pathJob, timeoutSec[, events])` | follow a path another library drives, e.g. Pedro; `PathJob` is its small plug (start, busy, ready, distance left, cancel; optional: `totalIn()`, `partNow()`). `events`: a list of `PathEvent`s, each fired once when the robot gets to its place; the report lists those that did not fire (`STALLED, not fired: Spin up`). The five-files `Steps.follow` makes both for you ([pedro](pedro.md#do-things-along-the-path)) |
-| `driveTo(label, pose, ready, x, y, heading, power, tolerance, events)` | `driveTo` with `PathEvent`s on the way: the "path" is the straight line from where the step starts |
-| `driveRoute(label, pose, ready, poseKnown, map, x, y, heading, power, tolerance)` | drive to a field point around the boxes of a [`FieldMap`](drive.md#fieldmap); the five-files `Steps.routeTo` fills in the rest. The route starts from where the robot is when the step starts |
+| `driveTo(label, pose, ready, x, y, heading, power, tolerance)` | drive to a field point with odometry (mecanum). The five-files `Steps.driveTo` fills in the pose for you ([odometry](odometry.md#driveto)) |
+| `followPath(label, pathJob, timeoutSec[, events])` | follow a path that another library drives, for example Pedro. `PathJob` is the small plug (an interface) that connects it: start, busy, ready, distance left, cancel; optional: `totalIn()`, `partNow()`. `events` is a list of `PathEvent`s. Each one fires once, when the robot gets to its place. The report lists the ones that did not fire (`STALLED, not fired: Spin up`). The five-files `Steps.follow` makes both for you ([pedro](pedro.md#do-things-along-the-path)) |
+| `driveTo(label, pose, ready, x, y, heading, power, tolerance, events)` | `driveTo` with `PathEvent`s on the way. The "path" is the straight line from where the step starts |
+| `driveRoute(label, pose, ready, poseKnown, map, x, y, heading, power, tolerance)` | drive to a field point around the boxes of a [`FieldMap`](drive.md#fieldmap). The five-files `Steps.routeTo` fills in the rest. The route starts from where the robot is when the step starts |
 | `rememberHeading(label)` / `returnToHeading(label, power)` | come back to a saved heading |
-| `turnTowardWithSweep(label, bearingDeg, toleranceDeg, maxPower, timeoutSec, sweepDeg, stepDeg, sweepPower)` | `turnToward` with a sweep: nothing seen at the start, it turns in `stepDeg` steps up to `sweepDeg` left, then right, looking after each; never seen: back to the start (that turn gets up to `timeoutSec` again), "not seen (swept)". `Steps.aimAtGoal(label, sec, sweepDeg)` uses it |
-| `run(label, code)` | run code at once, continue (e.g. `claw::open`) |
+| `turnTowardWithSweep(label, bearingDeg, toleranceDeg, maxPower, timeoutSec, sweepDeg, stepDeg, sweepPower)` | `turnToward` with a sweep. When the robot sees nothing at the start, it turns in `stepDeg` steps up to `sweepDeg` left, then right, and looks after each step. When it never sees the target, it turns back to the start (that turn gets up to `timeoutSec` again), and the report says "not seen (swept)". `Steps.aimAtGoal(label, sec, sweepDeg)` uses it |
+| `run(label, code)` | run code at once, then go on (for example `claw::open`) |
 | `waitFor(label, seconds)` | wait; mechanisms keep working |
 | `waitUntil(label, condition, timeout)` | wait for something, with a time limit |
-| `step(label, autoStep)` | a mechanism's step (`lift.goToStep("HIGH")`) or your own |
-| `thenPark()` | the steps after this always get their time |
+| `step(label, autoStep)` | run a mechanism's step (`lift.goToStep("HIGH")`) or your own |
+| `thenPark()` | the steps after this one always get their time |
 
 | Setup / running | What it does |
 | --- | --- |
 | `new AutoRoutine(this)` | for your OpMode (or `new AutoRoutine(isActive, idle, telemetry)` in tests) |
-| `.drive(autoDrive)`, `.subsystems(group)`, `.telemetry(t)`, `.timer(timer)` | what it uses |
-| `.mirrorFor(alliance)` | flip turns, headings and sideways moves for RED (null = no mirroring, e.g. a rotated field) |
-| `.reserveForPark(seconds)` | main steps stop when this much time is left |
-| `.beforeDriving(code)` | code to run when a driving step starts (each call adds one); the robot layer ends a path's hold with it |
+| `.drive(autoDrive)`, `.subsystems(group)`, `.telemetry(t)`, `.timer(timer)` | what the routine uses |
+| `.mirrorFor(alliance)` | flip turns, headings and sideways moves for RED (null = no mirroring, for example on a rotated field) |
+| `.reserveForPark(seconds)` | the main steps stop when this much time is left |
+| `.beforeDriving(code)` | code to run when a driving step starts. Each call adds one. The robot layer uses it to end a path's hold |
 | `runAll()` | run every step (after `waitForStart()`) |
 | `getReport()` | what happened to each step |
-| `size()` | number of steps |
+| `size()` | the number of steps |
 
 On `AutoRoutine`, `waitFor("label", s)` only ADDS a wait step to the list. A wait that happens
-right now (`ctx.waitFor(s)`) only exists inside a step, on the `ctx` the step gets. So you cannot
-mix the two up. If a step throws an error, the drive stops before the error goes on.
+right now (`ctx.waitFor(s)`) exists only inside a step, on the `ctx` the step gets. So you cannot
+mix the two up. When a step throws an error, the routine stops the drive before the error goes on.
 
-Every move's result goes in the report: `"Drive to basket: STALLED"`, `"Lift up: timed out"`,
+The report gives the result of every move: `"Drive to basket: STALLED"`, `"Lift up: timed out"`,
 `"Wait for lift: cut short (time for park)"`, `"Score: skipped (time for park)"`. Read it after every
 practice run.
 
 ## AutoStep
 
-An **interface** (a promise that a class has certain methods) with one method,
+`AutoStep` is an **interface** (a promise that a class has certain methods) with one method,
 `run(AutoContext ctx)`. Write your own as a lambda:
 
 ```java
@@ -136,10 +136,10 @@ Three rules for your own step:
 
 | Method | What it does |
 | --- | --- |
-| `isActive()` | false when the OpMode stops or the main time is up |
+| `isActive()` | whether the step may go on: false when the OpMode stops or the main time is up |
 | `loop()` | one loop: update mechanisms, telemetry, idle |
-| `waitUntil(condition, timeout)` | returns true if the condition came true |
-| `waitFor(seconds)` | wait, mechanisms keep working |
+| `waitUntil(condition, timeout)` | waits, and gives true when the condition came true |
+| `waitFor(seconds)` | waits while the mechanisms keep working |
 | `secondsLeft()` | seconds left in autonomous |
-| `telemetry()` | add your own lines |
-| `note(text)` | put a note on this step's report line instead of "done" (e.g. "timed out") |
+| `telemetry()` | the telemetry, to add your own lines |
+| `note(text)` | puts a note on this step's report line instead of "done" (for example "timed out") |

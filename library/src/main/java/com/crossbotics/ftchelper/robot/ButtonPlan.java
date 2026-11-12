@@ -267,7 +267,7 @@ final class ButtonPlan {
         List<String> out = new ArrayList<>();
         for (Map.Entry<String, StringBuilder> b : byPart.entrySet()) {
             out.add(b.getKey() + ": usual buttons not in Controls.java: " + b.getValue()
-                    + ". The lines: docs/modules/robot.md, \"Buttons to add\"");
+                    + ". The lines: docs/reference/robot-java.md, \"Buttons to add\"");
         }
         return out;
     }

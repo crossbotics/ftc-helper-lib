@@ -63,7 +63,7 @@ public class SimCadTest {
     }
 
     // An arm on a hinge 10 in up, 0..120 degrees. Its CAD is a 14 in bar (the box says 10), drawn level and
-    // forward, in mm, with CAD y forward and x to the right, and the robot's centre at (100, 200, 0) mm.
+    // forward, in mm, with CAD y forward and x to the right, and the robot's center at (100, 200, 0) mm.
     private static final String CAD = "cad.units = mm\ncad.axes = y,-x,z\ncad.origin = 100,200,0\n";
     private static final String HDR = "cad.units = mm\ncad.axes = x,y,z\n";
     private static final String ARM = "shape.arm = arm, at=0,0,10, size=10x1x1, motor=arm, ticksPerDeg=10, start=0, model=arm.stl\n";
@@ -87,7 +87,7 @@ public class SimCadTest {
         assertTrue("the boxes stay for physics: corners still 10 in long",
                 Math.abs(arm.corners().stream().mapToDouble(c -> c[0]).max().getAsDouble() - 10) < 1e-6);
         atLeast("the full-reach check uses the mesh", 24, r.shapes.most.top);
-        assertEquals("CAD in mm; the robot's forward is CAD y, left -x, up z; its centre on the floor is CAD 100,200,0", r.shapes.cadReport().get(0));
+        assertEquals("CAD in mm; the robot's forward is CAD y, left -x, up z; its center on the floor is CAD 100,200,0", r.shapes.cadReport().get(0));
         String report = r.shapes.cadReport().get(1);
         assertTrue(report, report.contains("CAD 14.0 x 1.0 x 1.0 in, its middle 2.0 in from the box's; box 10.0 x 1.0 x 1.0 in") && !report.contains("FAR"));
     }
@@ -164,7 +164,7 @@ public class SimCadTest {
         SimRobot r = robot("cad.units = in\ncad.axes = x,y,z\nshape.intake = roller, at=8,0,1.5, size=2x14x2, motor=intake, model=paddle.stl\n");
         // (a 16-sided cylinder round the real circle: up to 2% more, plus the margin)
         double top = r.shapes.now().top, reach = 1.5 + Math.hypot(3, 0.5);
-        assertTrue("3 in above the roller's centre, whichever way it is turned: " + top, top >= reach && top < reach + 0.2);
+        assertTrue("3 in above the roller's center, whichever way it is turned: " + top, top >= reach && top < reach + 0.2);
         assertTrue("and 3 in below it: below the tiles", r.shapes.now().bottom < -1);
     }
 

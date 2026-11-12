@@ -38,7 +38,7 @@ import java.util.Map;
  * }
  * }</pre>
  *
- * Docs: docs/modules/finders.md. Guide: docs/modules/robot.md (section "Pieces and PieceSensor")
+ * Docs: docs/modules/finders.md. Guide: docs/reference/robot-java.md (section "Pieces and PieceSensor")
  */
 public abstract class PieceTunerOpMode extends FinderOpMode {
     /** How many readings one measurement averages. */
@@ -73,7 +73,7 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
         // Sensors of parts that are not on the robot yet (optional in Robot.java) are left out.
         for (PieceSensor s : sensorsOf(robot)) if (s.isPresent()) sensors.add(s);
         if (sensors.isEmpty()) {
-            throw new IllegalStateException(sensorsOf(robot).isEmpty() ? "Robot.java has no Pieces or PieceSensor line (docs/modules/robot.md)"
+            throw new IllegalStateException(sensorsOf(robot).isEmpty() ? "Robot.java has no Pieces or PieceSensor line (docs/reference/robot-java.md)"
                     : "Every piece sensor in Robot.java is optional and not in the robot configuration yet: add one to the configuration");
         }
         for (PieceSensor s : sensors) measured.put(s, new LinkedHashMap<>());
@@ -127,7 +127,7 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
         if (s.readings() == lastReading) return;     // no new reading since the last sample
         lastReading = s.readings();
         double v = s.measured();
-        if (Double.isNaN(v) && !samplingWhat.equals(EMPTY)) return;   // no colour yet (black, or the camera is starting)
+        if (Double.isNaN(v) && !samplingWhat.equals(EMPTY)) return;   // no color yet (black, or the camera is starting)
         sampling.add(new double[] {v, s.saturation(), s.distanceMm()});
         if (sampling.size() < SAMPLES) return;
         measured.get(s).put(samplingWhat, average(sampling, !s.measuresSize()));
@@ -136,7 +136,7 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
         writeLines(s);
     }
 
-    // The mean of each column; the first column is a hue (averaged round the colour wheel) when hue is true.
+    // The mean of each column; the first column is a hue (averaged round the color wheel) when hue is true.
     static double[] average(List<double[]> rows, boolean hue) {
         double[] out = new double[3];
         for (int col = 0; col < 3; col++) {
@@ -171,7 +171,7 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
             double[] v = e.getValue();
             values.add(v[0]);
             results.set(key + e.getKey(), section + ": " + e.getKey() + " = " + FinderResults.num(v[0], 0)
-                    + (s.measuresSize() ? "   // mm with it in front" : "   // its colour (hue, degrees)"));
+                    + (s.measuresSize() ? "   // mm with it in front" : "   // its color (hue, degrees)"));
             if (!Double.isNaN(v[2])) farthestPiece = Double.isNaN(farthestPiece) ? v[2] : Math.max(farthestPiece, v[2]);
             if (!Double.isNaN(v[1])) leastSat = Double.isNaN(leastSat) ? v[1] : Math.min(leastSat, v[1]);
         }
@@ -183,7 +183,7 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
                 if (gap < 10) lastNote = "Two kinds read only " + FinderResults.num(gap, 0) + " mm apart: they may be mixed up. Move the sensor?";
             } else {
                 results.set(key + "tol", section + ": hueTolerance = " + FinderResults.num(Math.min(40, Math.max(5, gap / 2)), 0));
-                if (gap < 15) lastNote = "Two kinds' colours are only " + FinderResults.num(gap, 0) + " deg apart: they may be mixed up.";
+                if (gap < 15) lastNote = "Two kinds' colors are only " + FinderResults.num(gap, 0) + " deg apart: they may be mixed up.";
             }
         }
         double[] empty = m.get(EMPTY);
@@ -197,7 +197,7 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
             }
         }
         if (empty != null && !s.hasDistance() && !Double.isNaN(leastSat) && !Double.isNaN(empty[1])) {
-            if (empty[1] >= leastSat - 0.05) lastNote = "EMPTY looks as colourful as a piece: put a grey or black background behind the spot.";
+            if (empty[1] >= leastSat - 0.05) lastNote = "EMPTY looks as colorful as a piece: put a gray or black background behind the spot.";
             else results.set(key + "sat", section + ": minSaturation = " + FinderResults.num((empty[1] + leastSat) / 2, 2));
         }
     }
@@ -226,7 +226,7 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
         t.section("Sensor " + (sensorIndex + 1) + "/" + sensors.size() + ": " + s.deviceName() + " (" + s.sensorType() + ")");
         if (!s.problem().isEmpty()) t.warn(s.problem());
         if (s.hasDistance()) t.line("Distance", FinderResults.num(s.distanceMm(), 0) + " mm");
-        if (!s.measuresSize()) t.line("Colour", "hue " + FinderResults.num(s.hueDeg(), 0) + " deg, saturation " + FinderResults.num(s.saturation(), 2));
+        if (!s.measuresSize()) t.line("Color", "hue " + FinderResults.num(s.hueDeg(), 0) + " deg, saturation " + FinderResults.num(s.saturation(), 2));
         t.line("It sees", s.kind() + (s.rawKind().equals(s.kind()) ? "" : " (now " + s.rawKind() + ")"));
         t.section("In front of it: < " + choices().get(kindIndex) + " >   (D-pad left/right)");
         if (sampling != null) t.text("Measuring " + samplingWhat + ": " + sampling.size() + "/" + SAMPLES + " (hold still)");

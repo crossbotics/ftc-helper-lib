@@ -23,7 +23,7 @@ import java.util.Locale;
  * <p>{@code <M extends Module<M>>} lets each setting below hand back the module's own type, so
  * {@code Lift.slide("lift").tunables("Slide")} is still a Lift.
  *
- * Docs: docs/modules/robot.md
+ * Docs: docs/reference/robot-java.md
  */
 public abstract class Module<M extends Module<M>> implements Subsystem {
     /** The main device's configuration name, e.g. "lift". */

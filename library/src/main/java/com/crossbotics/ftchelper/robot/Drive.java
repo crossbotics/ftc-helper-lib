@@ -24,7 +24,7 @@ import java.util.List;
  * }</pre>
  *
  * <p>Its numbers are in {@code Tunables.Drive}: {@code maxPower}, {@code practiceMaxPower} (the
- * PRACTICE profile's limit), {@code slowSpeed} (the slow trigger), and the autonomous ones
+ * PRACTICE profile's limit; if not written, the same as maxPower, so drivers practice at match speed), {@code slowSpeed} (the slow trigger), and the autonomous ones
  * ({@code strafeCorrection}, {@code strafeCorrectionLeft} if left slips differently, {@code turnKp}, {@code turnKd}, {@code moveMinPower}, {@code slowDownIn}) with
  * {@code calibrated = true} once the Drive Tuner is done (autonomous refuses to run before).
  *
@@ -32,7 +32,7 @@ import java.util.List;
  * pushing the stick forward drives backward or spins the robot, name the reversed motors with
  * {@link #reversed(String...)}.
  *
- * Docs: docs/modules/robot.md (section "Drive")
+ * Docs: docs/reference/robot-java.md (section "Drive")
  */
 public final class Drive {
     final DriveConfig.DriveType type;
@@ -82,7 +82,7 @@ public final class Drive {
         return this;
     }
 
-    /** The wheel diameter in millimetres (goBILDA mecanum: 96 or 104). Default 96. */
+    /** The wheel diameter in millimeters (goBILDA mecanum: 96 or 104). Default 96. */
     public Drive wheelMm(double mm) {
         wheelMm = mm;
         return this;
@@ -100,7 +100,7 @@ public final class Drive {
     }
 
     /**
-     * Where the wheels sit, for the simulator's turning: wheel centres side to side (track) and front
+     * Where the wheels sit, for the simulator's turning: wheel centers side to side (track) and front
      * to back (wheel base), in mm.
      */
     public Drive wheelsAtMm(double trackMm, double wheelBaseMm) {
@@ -170,7 +170,8 @@ public final class Drive {
         // Read once here (not live): the drive is made in INIT. Each is still a Tunable, so the
         // tuning menu can change it and the next INIT uses the new value.
         final double maxPower = t.tunable("maxPower", 1.0, 0.05).range(0.1, 1).get();
-        final double practiceMax = t.tunable("practiceMaxPower", 0.6, 0.05).range(0.1, 1).get();
+        // PRACTICE: the same top power as COMPETITION unless written, so drivers practice at match speed.
+        final double practiceMax = t.tunable("practiceMaxPower", maxPower, 0.05).range(0.1, 1).get();
         final double strafe = t.tunable("strafeCorrection", 1.15, 0.01).range(0.5, 2).get();
         // Strafing left: its own number only when written (else the same as right).
         final double strafeLeft = t.has("strafeCorrectionLeft")

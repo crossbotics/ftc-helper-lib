@@ -59,7 +59,7 @@ public final class RouteDriver {
 
     /** Says if a straight line on the field is clear. {@link FieldMap#lineIsClear} is one. */
     public interface LineCheck {
-        /** True if the robot's centre may drive straight from (x1, y1) to (x2, y2), inches. */
+        /** True if the robot's center may drive straight from (x1, y1) to (x2, y2), inches. */
         boolean isClear(double x1, double y1, double x2, double y2);
     }
 

@@ -17,7 +17,7 @@ import java.util.function.LongSupplier;
 
 /**
  * A DFRobot HuskyLens: a small camera with its own screen, plugged into an I2C sensor port of a hub. It
- * finds AprilTags, colours or objects by itself. You teach it with its buttons, on the camera.
+ * finds AprilTags, colors or objects by itself. You teach it with its buttons, on the camera.
  *
  * <pre>{@code
  * HuskyLensCamera camera = HuskyLensCamera.create(hardwareMap, "huskylens")
@@ -33,7 +33,7 @@ import java.util.function.LongSupplier;
  * <li><b>It does not say the AprilTag's real number.</b> It says the number it was TAUGHT: the first tag
  * you teach is 1, the next is 2. An untaught tag is 0. So tell this class what each taught number means
  * with {@link #tag}.</li>
- * <li><b>It gives only a box in the picture</b> (centre, width, height, in pixels of a 320 x 240 picture). The
+ * <li><b>It gives only a box in the picture</b> (center, width, height, in pixels of a 320 x 240 picture). The
  * bearing comes from the box's place and {@link #hfovDeg} (the camera's view angle, which you measure).
  * The distance is a rough estimate from the box's size and {@link #sizeIn} (NaN without it).</li>
  * <li><b>A single tag has no "right side up"</b> ({@link TargetObservation#rollDeg} is NaN). A tag group
@@ -51,7 +51,7 @@ public class HuskyLensCamera implements TargetSource {
     public enum Mode {
         /** AprilTags (TAG_RECOGNITION). Teach them with "Learn Multiple" on. The default. */
         TAGS(HuskyLens.Algorithm.TAG_RECOGNITION),
-        /** Colours you teach (COLOR_RECOGNITION). Changes in the light can change what it finds. */
+        /** Colors you teach (COLOR_RECOGNITION). Changes in the light can change what it finds. */
         COLORS(HuskyLens.Algorithm.COLOR_RECOGNITION),
         /** ONE object you teach (OBJECT_TRACKING): the HuskyLens can track only one. */
         OBJECTS(HuskyLens.Algorithm.OBJECT_TRACKING);
@@ -164,7 +164,7 @@ public class HuskyLensCamera implements TargetSource {
     }
 
     /**
-     * Gives a taught number a name, for {@code target(name)}. Useful for colours and objects.
+     * Gives a taught number a name, for {@code target(name)}. Useful for colors and objects.
      *
      * @param taughtNumber the number on the camera's screen
      * @param targetName   the name, e.g. "POLLEN"
@@ -350,7 +350,7 @@ public class HuskyLensCamera implements TargetSource {
         return (PICTURE_WIDTH / 2.0) / Math.tan(Math.toRadians(hfovDeg) / 2);
     }
 
-    // Degrees to turn to face a box centred at pixel x. Pixel x grows to the RIGHT and bearing is
+    // Degrees to turn to face a box centered at pixel x. Pixel x grows to the RIGHT and bearing is
     // positive to the LEFT, so left of the middle is positive.
     private static double bearingDeg(double x, double focal) {
         return Math.toDegrees(Math.atan2(PICTURE_WIDTH / 2.0 - x, focal));

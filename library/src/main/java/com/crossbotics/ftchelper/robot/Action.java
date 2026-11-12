@@ -29,7 +29,7 @@ import java.util.function.BooleanSupplier;
  *       (the driver always wins).</li>
  *   <li><b>A wait that times out stops the action</b> (a lift that never reached the top must not
  *       open the claw). The Driver Station says why.</li>
- *   <li>A stopped action (cancelled, taken over, timed out) stops what it started, safely: a lift or
+ *   <li>A stopped action (canceled, taken over, timed out) stops what it started, safely: a lift or
  *       arm holds its height, a turret its angle, waiting shots are dropped, an intake stops. An
  *       action that finishes keeps its last commands.</li>
  *   <li><b>A part that is not on the robot yet</b> ({@code optional()} in Robot.java, not in the
@@ -41,7 +41,7 @@ import java.util.function.BooleanSupplier;
  * <p>{@code () -> r.lift.goTo("high")} is a small piece of code (a "lambda") that the action runs
  * later, when it reaches that step. {@code r.claw::open} is the same for a method with no inputs.
  *
- * Docs: docs/modules/robot.md (section "Actions")
+ * Docs: docs/reference/robot-java.md (section "Actions")
  */
 public final class Action {
 
@@ -139,7 +139,7 @@ public final class Action {
         return index >= 0;
     }
 
-    /** How the last run ended: "done", "cancelled", "stopped: Lift moved by hand"... ("" before the first). */
+    /** How the last run ended: "done", "canceled", "stopped: Lift moved by hand"... ("" before the first). */
     public String result() {
         return result;
     }

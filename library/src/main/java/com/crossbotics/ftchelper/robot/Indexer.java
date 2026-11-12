@@ -40,7 +40,7 @@ import java.util.function.LongSupplier;
  * {@code alwaysOn} (false: it runs only while firing), {@code stageSec} (it runs this long before the
  * push, 0.2) and {@code stopSec} (it stops this long after the push starts, 0.3; below 0 = before the push).
  *
- * Docs: docs/modules/robot.md (section "Indexer")
+ * Docs: docs/reference/robot-java.md (section "Indexer")
  */
 public final class Indexer extends Module<Indexer> implements Feeder {
     private enum Kind { SERVO, CR_SERVO, MOTOR }

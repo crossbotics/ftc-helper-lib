@@ -18,7 +18,7 @@ import java.util.function.LongSupplier;
  *   <li>Only a quick job, not part of a pair: it runs the moment the button is pressed.</li>
  *   <li>A quick job and a long job: the quick one runs when it is let go before the hold time; the
  *       long one runs once at the hold time.</li>
- *   <li>A pair (two buttons together): when both are down, each button's own job is cancelled for
+ *   <li>A pair (two buttons together): when both are down, each button's own job is canceled for
  *       that press (it waits until let go). A pair's quick job runs when the buttons are let go
  *       (always, so it works the same with or without a long job on the pair).</li>
  *   <li>A pair with the pause button in it (START + BACK: debug lines, the alliance switch) only
@@ -26,7 +26,7 @@ import java.util.function.LongSupplier;
  *       BACK. BACK pressed first is always a plain pause (its hold still resets "forward"); the other
  *       button joining later does nothing that press. So a pair never un-does a pause (a robot that
  *       paused and went on again for 0.1-0.3 s was a surprise).</li>
- *   <li>START held: cancelled while A or B is down on the same gamepad (START + A/B pairs a gamepad on
+ *   <li>START held: canceled while A or B is down on the same gamepad (START + A/B pairs a gamepad on
  *       the Driver Station).</li>
  *   <li>Pause (when {@link #pauseAtPress} is given): a press of the pause button stops the robot AT
  *       ONCE, even when the button also has a long job or is in a pair (a panicking driver holding it
@@ -51,7 +51,7 @@ final class LibraryKeys {
         private long downAt = 0;
         // The long job ran (or the quick one at the press): nothing more until let go.
         private boolean done = false;
-        // Cancelled for this press (a pair took it, the menu opened, held through START): wait for let go.
+        // Canceled for this press (a pair took it, the menu opened, held through START): wait for let go.
         private boolean blocked = false;
         // This press paused the robot at once (see pauseAtPress): nothing more on the release.
         private boolean pausedHere = false;

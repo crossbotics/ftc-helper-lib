@@ -3,12 +3,12 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **Goal:** your robot knows where it is on the field. Its autonomous drives to field points ("go to
-x -30, y -30, facing 45 degrees") instead of distances, and keeps correcting on the way. TeleOp starts
+x -30, y -30, facing 45 degrees") instead of distances, and it keeps correcting on the way. TeleOp starts
 where autonomous ended.
 
 **You need:** lessons 1 to 6 (the last one: [Your first autonomous](06-first-autonomous.md), with the
-Drive Tuner done). A **mecanum** drive (`driveTo` drives sideways). An odometry device (section 2). A
-tape measure, some tape, and about 5 ft of clear floor. About an hour and a half, most of it mounting.
+Drive Tuner done). A **mecanum** drive, because `driveTo` drives sideways. An odometry device (section 2).
+A tape measure, some tape, and about 5 ft of clear floor.
 
 **The code:** the odometry robot, [`examples/.../odometrybot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot):
 [`Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/Robot.java),
@@ -25,20 +25,20 @@ It is the lesson robot's drive and intake, plus one odometry line.
 ## 1. Why odometry
 
 Your lesson 6 autonomous says "drive 24 inches forward". The robot only knows how far its **drive
-wheels** turned. But drive wheels slip: they spin when another robot pushes you, and skid when the
+wheels** turned. But drive wheels slip: they spin when another robot pushes you, and they skid when the
 robot speeds up. After a bump, every later step is off, and the robot does not know it.
 
-**Odometry** measures where the robot really went. Small unpowered wheels, called **pods**, are
-pressed lightly onto the tiles. They carry no weight and drive nothing, so they do not slip: they just
+**Odometry** measures where the robot really went. Springs press small unpowered wheels, called
+**pods**, lightly onto the tiles. They carry no weight and drive nothing, so they do not slip: they only
 roll and count. One pod counts forward and back, one counts sideways, and a turn sensor (an **IMU**)
-counts turning. Add up every small move, many times a second, and the robot knows its **pose**: where
-it is (x and y, in inches) and which way it faces (the heading, in degrees).
+counts turning. The robot adds up every small move, many times a second. Then it knows its **pose**:
+where it is (x and y, in inches) and which way it faces (the heading, in degrees).
 
-**Why not AprilTags this season?** In BIOBUZZ the tags are on the HIVE cells, and the cells move. A
+**Why not AprilTags this season:** in BIOBUZZ the tags are on the HIVE cells, and the cells move. A
 tag tells you where you are compared with the tag, not with the field. So this season, odometry tells
-you where you are; the camera is for aiming.
+you where you are, and the camera is for aiming.
 
-**The frame** (which way the numbers go). This is new: in lesson 6, `s.start("...", 0)` gave only a
+**The frame** (which way the numbers go). This is new. In lesson 6, `s.start("...", 0)` gave only a
 heading. Now the robot also needs a **place** on the field, as two numbers, x and y. Stand at your
 drivers' wall and look at the field:
 
@@ -54,31 +54,31 @@ drivers' wall and look at the field:
            your drivers' wall (you)
 ```
 
-x is inches to the right, y is inches away from you. Heading 0 = facing away from you, and
+x is inches to the right, and y is inches away from you. Heading 0 = facing away from you, and
 counterclockwise is + (90 = facing left).
 
-Here is the BIOBUZZ field from above, with this lesson's three points:
+The BIOBUZZ field from above, with this lesson's three points:
 
 ![The BIOBUZZ field from above, seen from the red drivers' wall: tiles every 24 in from -72 to 72, the two HIVEs in the middle, the FLOWERs, the red loading zone, and lesson 7's start, goal and park points with heading arrows](../../images/biobuzz-field-map.svg)
 
 How to read it:
 
 - **The field** is about 144 in (12 ft) square. (0, 0) is the middle. x and y both go from -72 to 72.
-  A tile is 24 in, so the grey lines are every 24 in.
-- **The start, (-56, -61):** the walls really stand about 141 in apart, so your wall is about 70.5 in
-  from the middle. A robot 18 in long, touching your wall, has its centre 9 in from the wall:
-  70.5 - 9 = 61.5 in from the middle. So y -61 means "back against your wall". x -56 puts it in the
-  left corner tile (that tile's middle is at x -60).
-- **The goal, (-30, -30):** on your half, just in front of (on your side of) the left corner of the
-  red HIVE.
+  A tile is 24 in, so the gray lines are every 24 in.
+- **The start, (-56, -61):** the walls stand about 141 in apart, so your wall is about 70.5 in
+  from the middle. A robot 18 in long, touching your wall, has its center 9 in from the wall:
+  70.5 - 9 = 61.5 in from the middle. So y -61 means "back against your wall". x -56 puts the robot in
+  the left corner tile (that tile's middle is at x -60).
+- **The goal, (-30, -30):** on your half, just in front of the left corner of the red HIVE (on your
+  side of it).
 - **The park, (-56, -36):** back in the left column, one and a half tiles in front of your wall.
-- **This map is drawn from the RED wall.** From the BLUE wall the numbers are the same: BIOBUZZ's field
+- **This map is drawn from the RED wall.** From the BLUE wall the numbers are the same. BIOBUZZ's field
   is turned half a turn between the alliances, so each team's own wall is y -72.
 
 > **One rule for field numbers.** In your code (start spots, `driveTo`, the reset spot, lesson 9's
-> goal point) always write the numbers **seen from your own drivers' wall**, as in the drawing above.
+> goal point), always write the numbers **seen from your own drivers' wall**, as in the drawing above.
 > On BIOBUZZ they are then the same for BLUE and RED. Only the simulator's field map and its test
-> checks (`expect robot x ...`) use one fixed view for both alliances, from the **red** wall: on BLUE
+> checks (`expect robot x ...`) use one fixed view for both alliances, from the **red** wall. On BLUE,
 > their x and y have the other sign (section "Try it in the simulator").
 
 **The heading** is which way the robot's front points, in degrees:
@@ -93,13 +93,13 @@ How to read it:
 
 > **One rule for every angle.** A **heading** (here, and in `start(...)`, `driveTo`, `turnTo`) goes
 > counterclockwise: heading 90 = facing **left**. A `move`'s **direction** (lesson 6) counts the same
-> way, from the robot's front: direction 90 = moving to the robot's **left**. It is the IMU's own rule
-> (turning left counts up) ([signs and units](../../conventions.md)).
+> way, from the robot's front: direction 90 = moving to the robot's **left**. This is the IMU's own rule:
+> turning left counts up ([signs and units](../../conventions.md)).
 
 **Two new words.** A **field point** is a place on the field written as x and y (and, for `driveTo`,
-a heading). The **start spot** is the field point where you put the robot before ▶ (start on the Driver Hub). You write it
-in `s.start(note, x, y, heading)`: the same `start` as lesson 6, with x and y added (section 6, and
-[the autonomous builder](../../guides/autonomous-builder.md#1-placing-the-robot)).
+a heading). The **start spot** is the field point where you put the robot before ▶ (start on the Driver
+Hub). You write it in `s.start(note, x, y, heading)`: the same `start` as lesson 6, with x and y added
+(section 6, and [field numbers](../../building-autos/01-what-an-auto-can-do.md#field-numbers)).
 
 ## 2. Which one to buy
 
@@ -111,38 +111,38 @@ in `s.start(note, x, y, heading)`: the same `start` as lesson 6, with x and y ad
 
 Two words from the table:
 
-- **I2C port:** the small 4-pin ports on the Control Hub (labelled I2C 0 to 3). Sensors that send
+- **I2C port:** the small 4-pin ports on the Control Hub (labeled I2C 0 to 3). Sensors that send
   numbers, like the Pinpoint and the OTOS, plug in there.
 - **4-bar and swingarm pods:** goBILDA sells two pod designs. Both are a small wheel on a spring that
-  presses it onto the tiles; they differ in how the wheel is held, and in how many encoder counts one
+  presses it onto the tiles. They differ in how the wheel is held, and in how many encoder counts one
   mm of rolling gives. The library expects **4-bar pods** (the default). Swingarm pods need
   `.podsSwingarm()` in the odometry line (section 4).
 
 **Why the lesson uses a Pinpoint:** it does the math itself about 1500 times a second, and the robot
-reads the answer once per loop. Your loop speed does not change how good the pose is, and it uses no
-encoder ports.
+reads the answer once per loop. So your loop speed does not change how good the pose is. It also uses
+no encoder ports.
 
 ## 3. Mount it, wire it, name it
 
-1. **Mount the two pods** under the robot, springs pressing the wheels onto the tiles. One rolls
-   **forward/back** (the **X pod**), one rolls **sideways** (the **Y pod**). They can sit anywhere;
-   section 5 measures where.
+1. **Mount the two pods** under the robot, with the springs pressing the wheels onto the tiles. One
+   rolls **forward/back** (the **X pod**), and one rolls **sideways** (the **Y pod**). They can sit
+   anywhere, and section 5 measures where.
 2. **Mount the Pinpoint** flat, anywhere on the robot (goBILDA's guide shows the details).
-3. **Plug the X pod into the Pinpoint's X port and the Y pod into its Y port.** Why it matters: the
-   Pinpoint treats X as forward. Swapped, the robot thinks forward is sideways.
+3. **Plug the X pod into the Pinpoint's X port and the Y pod into its Y port.** **Why:** the
+   Pinpoint treats X as forward. If you swap them, the robot thinks forward is sideways.
 4. **Plug the Pinpoint into an I2C port** on the Control Hub. Port 0 already has the hub's own IMU, so
    port 1 is a good choice.
 5. **Add it to the robot configuration** on the Driver Station: Configure Robot, edit your
-   configuration, Control Hub, the I2C bus you used (e.g. I2C Bus 1), Add. Choose the type
+   configuration, Control Hub, the I2C bus you used (for example I2C Bus 1), Add. Choose the type
    **goBILDA® Pinpoint Odometry Computer** and name it `pinpoint`. Save, and restart the robot.
 
 An OTOS goes on an I2C port the same way: type **SparkFun OTOS**, name `otos`. Mount it 10 to 12 mm
-above the tiles. Dead wheels: each pod's encoder cable goes into a motor port's encoder connector, and
-the name is that motor port's configuration name ([odometry module](../../modules/odometry.md#three-dead-wheels)).
+above the tiles. For dead wheels, plug each pod's encoder cable into a motor port's encoder connector.
+The pod's name is that motor port's configuration name ([odometry module](../../modules/odometry.md#three-dead-wheels)).
 
 ## 4. One line in Robot.java
 
-This is the odometry robot's `Robot.java`. The odometry line is the only new thing:
+The code below is the odometry robot's `Robot.java`. The odometry line is the only new thing:
 
 ```java
 drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
@@ -154,8 +154,8 @@ odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168)); // (1)!
 intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
 ```
 
-1. On this robot the X pod (it measures forward) is 84 mm RIGHT of the centre, so -84. The Y pod
-   (it measures sideways) is 168 mm BEHIND the centre, so -168. The bullets below explain the signs.
+1. On this robot the X pod (it measures forward) is 84 mm RIGHT of the center, so -84. The Y pod
+   (it measures sideways) is 168 mm BEHIND the center, so -168. The bullets below explain the signs.
 
 **In your own `Robot.java`**, add two lines:
 
@@ -165,8 +165,8 @@ intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
    import com.crossbotics.ftchelper.robot.Odometry;
    ```
 
-2. In `define()`, right after your `drive(...)` line. Start with `0, 0`: the tuner measures the real
-   numbers in section 5.
+2. In `define()`, right after your `drive(...)` line. Start with `0, 0`, because the tuner measures the
+   real numbers in section 5.
 
    ```java
    odometry(Odometry.pinpoint("pinpoint").offsetsMm(0, 0));
@@ -174,20 +174,24 @@ intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
 
 - `Odometry.pinpoint("pinpoint")`: a Pinpoint, named `pinpoint` in the configuration (the name must
   match exactly).
-- `.offsetsMm(first, second)`: where the pods sit, in millimetres, from the robot's **centre** (the
-  point it turns around). Why the library needs them: when the robot turns in place, a pod away from
-  the centre rolls too, and the library must take that roll away.
-  - **The first number:** how far **left** of the centre the **X pod** is (right = negative).
-  - **The second number:** how far **forward** of the centre the **Y pod** is (behind = negative).
+- `.offsetsMm(first, second)`: where the pods sit, in millimeters, from the robot's **center** (the
+  point it turns around). **Why the library needs them:** when the robot turns in place, a pod away from
+  the center rolls too, and the library must take that roll away.
+  - **The first number:** how far **left** of the center the **X pod** is (right = negative).
+  - **The second number:** how far **forward** of the center the **Y pod** is (behind = negative).
 - **Careful, two different x's.** The *field's* x (section 1) goes to the right. The Pinpoint's **X
-  pod** is the pod that measures **forward** (goBILDA's name, from the Pinpoint's own frame). They are
-  not the same direction. In the odometry line, "X" and "Y" always mean the pods.
-- An OTOS: `odometry(Odometry.otos("otos").mountIn(forward, left, heading));`. Dead wheels:
+  pod** is the pod that measures **forward** (goBILDA's name, from the Pinpoint's own frame). The two
+  point in different directions. In the odometry line, "X" and "Y" always mean the pods.
+- **Never measure from the center.** Leave `offsetsMm(0, 0)`: the Odometry Tuner (section 5) measures
+  the offsets. Want a first guess? Measure from the robot's edges with a tape, and the library does the
+  math: `.robotSizeMm(length, width).podsFromEdgesMm(xPodFromLeft, yPodFromFront)` in place of
+  `.offsetsMm(...)`, all in mm ([how](../../modules/odometry.md#pinpoint)).
+- For an OTOS: `odometry(Odometry.otos("otos").robotSizeMm(length, width).mountFromEdgesMm(fromFront, fromLeft, heading));`. For dead wheels:
   `Odometry.threeWheels(...)` or `twoWheels(...)`. All of them:
   [the odometry module](../../modules/odometry.md#robotjava-the-odometry-line).
 
-**And one section in `Tunables.java`:** put it inside `public class Tunables { ... }`, next to the
-`Drive` section (a section is one `public static class` inside it):
+**And one section in `Tunables.java`:** a section is one `public static class` inside
+`public class Tunables { ... }`. Put this one next to the `Drive` section:
 
 ```java
 public static class Odometry {
@@ -199,15 +203,15 @@ public static class Odometry {
 after the tuner's last test passes. **Why:** a pod that counts the wrong way would send the robot the
 wrong way at speed. Until `checked` is true, the `driveTo` steps of section 6 do nothing on the robot.
 
-Build and run your TeleOp. The Driver Station now shows a `Pose` line. Push the robot forward by hand:
-y should go up. Push it left: x should go down. (Wrong? Section 5 fixes it.)
+Build and run your TeleOp. The Driver Station now shows a `Pose` line. Push the robot forward by hand,
+and y should go up. Push it left, and x should go down. If they do not, section 5 fixes it.
 
 ## 5. The Odometry Tuner
 
 The **Odometry Tuner** checks which way each pod counts and measures the offsets. Make a new Java file
-`OdometryTuner.java` next to `Robot.java` in your `teamcode` folder ([how to make a file](../../start-from-zero.md#make-a-new-file-or-folder)),
-and replace everything in it with this whole file (like the Drive Tuner in lesson 6, it only hands
-the tuner your robot):
+`OdometryTuner.java` next to `Robot.java` in your `teamcode` folder ([how to make a file](../../start-from-zero.md#make-a-new-file-or-folder)).
+Replace everything in it with this whole file. Like the Drive Tuner in lesson 6, it only hands the
+tuner your robot:
 
 ```java
 package org.firstinspires.ftc.teamcode;
@@ -228,46 +232,47 @@ public class OdometryTuner extends OdometryTunerOpMode {
 The odometry robot's copy:
 [OdometryTuner.java](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/OdometryTuner.java).
 Put a 48 in strip of tape on the floor, and a tape mark at its start. Run the tuner. The sticks drive
-slowly (30%); you can also push the robot by hand. Choose a test with the D-pad, start it with **A**,
-end it with **B**. Each test starts the pose at 0.
+slowly (30%), and you can also push the robot by hand. Choose a test with the D-pad, start it with **A**,
+and end it with **B**. Each test starts the pose at 0.
 
-| Test | You do | It tells you |
+| Test | You do | What it tells you |
 | --- | --- | --- |
-| 1 Forward 48 in | drive or push the robot 48 in straight forward along the tape, then **B** | "Forward OK" and how far off it is, or that the X pod is reversed |
-| 2 Left 24 in | drive or push it 24 in straight to its **left**, then **B** | "Left OK", or that the Y pod is reversed |
+| 1 Forward 48 in | drive or push the robot 48 in straight forward along the tape, then **B** | whether the X pod counts the right way ("Forward OK" and how far off it is, or that the X pod is reversed) |
+| 2 Left 24 in | drive or push it 24 in straight to its **left**, then **B** | whether the Y pod counts the right way ("Left OK", or that the Y pod is reversed) |
 | 3 Spin 3+ turns | turn it in place at least 3 times (right stick), then **B** | the offsets: the numbers to change in your odometry line |
-| 4 Loop and back | start on the tape mark, drive anywhere, come back onto the mark facing the same way, then **B** | within 1 in and 2 degrees: the odometry is good |
+| 4 Loop and back | start on the tape mark, drive anywhere, come back onto the mark facing the same way, then **B** | whether the odometry is good: within 1 in and 2 degrees |
 
 **What to copy, in this order:**
 
-1. **Forward and Left** say "counted BACKWARD" (or RIGHT)? Add that pod to `.reversed(...)` in the
-   odometry line, e.g. `odometry(Odometry.pinpoint("pinpoint").offsetsMm(0, 0).reversed("x"));`
-   (`"y"` for the Y pod; both: `.reversed("x", "y")`). Rebuild and run them again until both say OK.
-   "More than 2% off": check that the pods are 4-bar pods (swingarm pods need `.podsSwingarm()`) and
-   that the tape is 48 in. "Was it really 48 in?": it measured more than 10% off, which is a mistake
-   in the test (the robot did not go 48 in), not the pods. Measure along the tape and run it again.
-   A name in `.reversed(...)` that is not a pod (a Pinpoint's pods are `"x"` and `"y"`) stops INIT with
-   a message, so a typo cannot leave a pod counting backward.
-2. **Spin** measures the turn with the Pinpoint's own heading, and shows the numbers to change, like
-   `Robot.java: in the odometry(...) line, .offsetsMm(-84.2, -167.5)`. Put those numbers in your own odometry line, in place of the `0, 0`. Everything else in
-   the line (a `.reversed(...)`, the pod type) stays as you wrote it. Rebuild.
-3. **Loop.** When it says "Back on the mark ... the odometry is good", it shows
+1. **Forward and Left:** when one says "counted BACKWARD" (or RIGHT), add that pod to `.reversed(...)`
+   in the odometry line, for example `odometry(Odometry.pinpoint("pinpoint").offsetsMm(0, 0).reversed("x"));`.
+   Write `"y"` for the Y pod, and `.reversed("x", "y")` for both. Rebuild and run them again until both
+   say OK. On "More than 2% off", check that the pods are 4-bar pods (swingarm pods need
+   `.podsSwingarm()`) and that the tape is 48 in. "Was it really 48 in?" means the test measured more
+   than 10% off. That is a mistake in the test (the robot did not go 48 in), not in the pods. Measure
+   along the tape and run it again. When a name in `.reversed(...)` is not a pod (a Pinpoint's pods are
+   `"x"` and `"y"`), INIT stops with a message. So a typo cannot leave a pod counting backward.
+2. **Spin** measures the turn with the Pinpoint's own heading. It shows the numbers to change, like
+   `Robot.java: in the odometry(...) line, .offsetsMm(-84.2, -167.5)`. Put those numbers in your own
+   odometry line, in place of the `0, 0`. Keep everything else in the line (a `.reversed(...)`, the pod
+   type) as you wrote it. Rebuild.
+3. **Loop.** When the tuner says "Back on the mark ... the odometry is good", it shows
    `Tunables.Odometry: checked = true`. Set it in `Tunables.java`:
 
    ```java
    public static boolean checked = true;
    ```
 
-   Off by more? Run Forward, Left and Spin again, copy their lines, rebuild, try Loop again.
+   When it is off by more, run Forward, Left and Spin again, copy their lines, rebuild, and try Loop again.
 
-The lines are also saved in `finder-results.txt` on the Control Hub when you press STOP
+When you press STOP, the tuner also saves the lines in `finder-results.txt` on the Control Hub
 ([the results file](../../guides/finders.md#the-results-file)). An OTOS's Forward test gives
-`Tunables.Odometry: linearScalar = ...` to copy instead, and its turn scale is
-[measured by hand](../../modules/odometry.md#otos-turn-scale-by-hand).
+`Tunables.Odometry: linearScalar = ...` to copy instead. You
+[measure its turn scale by hand](../../modules/odometry.md#otos-turn-scale-by-hand).
 
 ## 6. Drive to field points
 
-This is the odometry robot's autonomous, [`autos/ToTheGoal.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/autos/ToTheGoal.java):
+The odometry robot's autonomous, [`autos/ToTheGoal.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/autos/ToTheGoal.java):
 
 ```java
 @Autonomous(name = "Odometry Bot To the Goal", group = "Examples", preselectTeleOp = "Odometry Bot TeleOp")
@@ -282,20 +287,20 @@ public class ToTheGoal extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
          .run("Intake on", robot.intake::in)
-         .driveTo("To the goal", Tunables.Auto.goalX, Tunables.Auto.goalY, Tunables.Auto.goalHeading, 0.6)
+         .driveTo("To the goal", -30, -30, 45, 0.6)
          .run("Intake off", robot.intake::stop)
          .parkWithSeconds(4)
-         .driveTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.7);
+         .driveTo("Park", -56, -36, 0, 0.7);
     }
 }
 ```
 
 - `start("...", -56, -61, 0)`: the note for the drive team, and **the start spot**: x -56 (left of the
-  centre line), y -61 (against your wall), heading 0 (facing away). Lesson 6's `start(note, heading)`
-  had no spot; `start(note, x, y, heading)` adds it. With odometry the spot matters: the
+  center line), y -61 (against your wall), heading 0 (facing away). Lesson 6's `start(note, heading)`
+  had no spot, and `start(note, x, y, heading)` adds it. With odometry the spot matters, because the
   pose starts there after ▶. **Why:** the points below are field places, so the robot must know
-  where it starts. Find a spot by dragging the robot on the simulator's map before ▶ (the line to
-  copy is under the map, [how](../../guides/autonomous-builder.md#1-placing-the-robot)).
+  where it starts. To find a spot, drag the robot on the simulator's map before ▶. The line to copy
+  is under the map ([how](../../building-autos/01-what-an-auto-can-do.md#field-numbers)).
 - `driveTo("To the goal", x, y, heading, 0.6)`: drive to that field point and turn to that heading at
   the same time, at most 60% power. It checks the pose every loop and keeps correcting. In the last
   8 inches it slows down in proportion to the distance left, so it stops on the point. It is done
@@ -303,36 +308,27 @@ public class ToTheGoal extends Auto<Robot> {
   within 2 degrees of the heading, for 3 loops in a row. While the heading is still off, it turns with
   at least 0.08 power, so a weak turn cannot stop just short.
 - `driveTo("Park", ..., 0, 0.7)`: to the park point, facing away from you again.
-- **The points live in `Tunables.Auto`**, like lesson 6's distances, so you can change them in the
-  tuning menu without a rebuild:
+- **The points are plain numbers in the steps**, like every number of a route. Each autonomous keeps
+  its own, and the simulator's auto builder can read and change them
+  ([why](../../five-files/05-autos.md#the-numbers-are-in-the-step)). `-30, -30, 45` = x, y (inches)
+  and heading (degrees) of the scoring spot. `-56, -36` = the park spot.
 
-  ```java
-  public static class Auto {
-      public static double goalX = -30;                           // scoring spot: inches right of centre
-      public static double goalY = -30;                           // scoring spot: inches from centre, - = our half
-      public static double goalHeading = 45;                      // facing there, degrees
-      public static double parkX = -56;                           // park spot: inches right of centre
-      public static double parkY = -36;                           // park spot: inches from centre, - = our half
-  }
-  ```
-
-**Why `driveTo` and not `move`?** Three reasons:
+**Why `driveTo` and not `move`:** there are three reasons.
 
 1. **It corrects bumps and slip.** A `move` counts the drive wheels. If a partner bumps you, the move
    still "finishes", in the wrong place. `driveTo` sees the real pose, so it drives back on course and
    ends at the point.
-2. **It ends at a field place.** "Go to (-30, -30)" is the same spot from any start. Change one step
-   and the next ones still go to the same places. With `move`, every later step shifts too.
+2. **It ends at a field place.** "Go to (-30, -30)" is the same spot from any start. When you change one
+   step, the next ones still go to the same places. With `move`, every later step shifts too.
 3. **It drives and turns at once,** straight at the point, even sideways.
 
 **Your own file, whole.** Make a new Java file `ToTheGoal.java` in your `autos` folder, and replace
-everything in it with this. No intake? Delete the two `run(...)` lines.
+everything in it with this. If your robot has no intake, delete the two `run(...)` lines.
 
 ```java
 package org.firstinspires.ftc.teamcode.autos;
 
 import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.Tunables;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -350,57 +346,47 @@ public class ToTheGoal extends Auto<Robot> {
     protected void steps(Steps s, Robot robot) {
         s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
          .run("Intake on", robot.intake::in)
-         .driveTo("To the goal", Tunables.Auto.goalX, Tunables.Auto.goalY, Tunables.Auto.goalHeading, 0.6)
+         .driveTo("To the goal", -30, -30, 45, 0.6)
          .run("Intake off", robot.intake::stop)
          .parkWithSeconds(4)
-         .driveTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.7);
+         .driveTo("Park", -56, -36, 0, 0.7);
     }
 }
-```
-
-And add the five points to the `Auto` section of your `Tunables.java` (keep lesson 6's numbers too):
-
-```java
-public static double goalX = -30;                           // scoring spot: inches right of centre
-public static double goalY = -30;                           // scoring spot: inches from centre, - = our half
-public static double goalHeading = 45;                      // facing there, degrees
-public static double parkX = -56;                           // park spot: inches right of centre
-public static double parkY = -36;                           // park spot: inches from centre, - = our half
 ```
 
 **Before the tuner is done** (`checked = false`), each `driveTo` does nothing on the robot, and the
 report says why: `To the goal: skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)`.
 
 **In INIT**, the Driver Station shows `Odometry: Pinpoint ready`, or a warning with the reason, like
-`Odometry (Pinpoint): X pod not found: check its cable`. Look for it before ▶: a missing pod is
+`Odometry (Pinpoint): X pod not found: check its cable`. Look for it before ▶, because a missing pod is
 much easier to fix before the match than after.
 
-**When a `driveTo` cannot finish**, it stops and the report shows a word:
+**When a `driveTo` cannot finish**, it stops, and the report shows a word:
 
-- `STALLED`: the robot is stuck. Far from the point: the same rule as a `move`. In the last 8 inches
-  (where it is slow on purpose): less than 0.1 in closer in 2 seconds.
+- `STALLED`: the robot is stuck. Far from the point, the same rule as a `move` decides it. In the last
+  8 inches (where the robot is slow on purpose), it means less than 0.1 in closer in 2 seconds.
 - `TIMED_OUT`: it took more than 10 seconds.
 - `NO_ODOMETRY`: the odometry stopped working (a pod or I2C cable). A short glitch (one bad reading)
   is fine: the robot holds still and waits up to 0.2 s. If the odometry is still not ready after that,
   the step ends.
 
 **Then the autonomous goes on with its next steps**, from wherever the robot is. So put a mechanism
-action that needs the right place (score, drop) right after the `driveTo` that gets it there, and
-read the report after every practice run: a `driveTo` that did not say `done` means the steps after it
-started from the wrong place.
+action that needs the right place (score, drop) right after the `driveTo` that gets it there. Read the
+report after every practice run. When a `driveTo` did not say `done`, the steps after it started from
+the wrong place.
 
 **RED:** with `mirrorForRed()` false (BIOBUZZ), RED uses the same numbers, seen from the red wall. On a
 mirrored field (`mirrorForRed()` true), RED flips x and the heading. More, and the tolerance option
 (`driveTo(label, x, y, heading, power, inches)`):
-[the autonomous builder](../../guides/autonomous-builder.md#drive-to-a-field-point-driveto).
+[driveTo](../../building-autos/05-auto-builder-odometry-and-pedro.md#drive-to-a-point-driveto).
 
 ### Go around things on the way
 
 A `driveTo` is one straight line. Remember `parkWithSeconds(4)`: when the park time comes, the running
 step stops, wherever the robot is. A straight line home from there can go through a field element, such
-as a HIVE frame. **Why it matters:** the robot stops against it (`STALLED`), and does not park.
+as a HIVE frame. **Why it matters:** the robot stops against it (`STALLED`) and does not park.
 
-So tell the robot where the things are. In `Robot.java`, after the `odometry(...)` line:
+So tell the robot where the field elements are. In `Robot.java`, after the `odometry(...)` line:
 
 ```java
 fieldMap(FieldMap.margin(13)
@@ -409,29 +395,31 @@ fieldMap(FieldMap.margin(13)
 ```
 
 - `keepOut(name, x1, y1, x2, y2)`: a box, from two opposite corners, in the same field numbers as `driveTo`.
-- `margin(13)`: the robot's centre stays this far from every box, in inches. Half the robot's corner to
-  corner size, plus some, because the pose is never perfect.
+- `margin(13)`: the robot's center stays this far from every box, in inches. Use half the robot's
+  corner-to-corner size, plus some, because the pose is never perfect.
 
-Then write `routeTo` where you wrote `driveTo`. It works out its way when the step starts:
+Then write `routeTo` where you wrote `driveTo`. It works out its way around the boxes when the step starts:
 
 ```java
 .parkWithSeconds(6)
-.routeTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+.routeTo("Park", -56, -36, 0, 0.8);
 ```
 
 The whole program: [`autos/ParkAround.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/autos/ParkAround.java).
 
-TeleOp can do it too. In `Controls.java`, `route(...)` makes a job, and a button or a time starts it:
+TeleOp can do it too. In `Controls.java`, `route(...)` makes a job, and a button or a time in the match
+starts it:
 
 ```java
-Runnable park = route("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+Runnable park = route("Park", -56, -36, 0, 0.8);
 g1.dpadLeft.tap(park).says("drive to the park spot (a drive stick stops it)");
 atSecondsLeft(10, park);
 ```
 
-**Any drive stick stops it at once.** The driver always wins. If a stick is pushed at the time you chose, the
-gamepad buzzes and the route waits up to 5 s for the driver to let go. The robot only trusts its pose: it cannot
-see another robot. So the first time, go slow (power 0.3) with your thumb on a stick.
+**Any drive stick stops it at once,** because the driver always wins. If a stick is pushed at the time
+you chose, the gamepad buzzes, and the route waits up to 5 s for the driver to let go. The robot trusts
+only its pose, and it cannot see another robot. So the first time, go slow (power 0.3) with your thumb on
+a stick.
 More: [keep-out boxes and routes](../../modules/odometry.md#keep-out-boxes-and-routes).
 
 ## 7. TeleOp starts where autonomous ended
@@ -439,52 +427,53 @@ More: [keep-out boxes and routes](../../modules/odometry.md#keep-out-boxes-and-r
 You write nothing for this:
 
 - When autonomous ends, its pose (where the robot is, and which way it faces) goes to TeleOp.
-- TeleOp's INIT starts the odometry there (if autonomous ran in the last 5 minutes). So the `Pose`
-  line carries on from autonomous. A Pinpoint is still calibrating right after INIT: the pose is kept
-  and written to it as soon as it is ready.
-- Field-centric "forward" comes from the odometry's heading. Holding BACK (with field-centric on)
+- TeleOp's INIT starts the odometry there, if autonomous ran in the last 5 minutes. So the `Pose`
+  line carries on from autonomous. A Pinpoint is still calibrating right after INIT. The library keeps
+  the pose and writes it to the Pinpoint as soon as it is ready.
+- Field-centric "forward" comes from the odometry's heading. With field-centric on, holding BACK
   makes "forward" the way the robot faces now, for the driver only. The pose does not change, so aiming
-  at a field point stays right. A pose that is wrong is fixed with "set pose here" (section 7).
+  at a field point stays right. To fix a wrong pose, use "set pose here" (section 7).
 
-**No autonomous, or it was stopped early?** Then TeleOp does not know where the robot is (the aim's
-odometry backup stays off and says why). Set the pose by hand: park the robot on a spot you know (the
-start tile against your wall is easiest), let go of the sticks, then hold gamepad 1 **START** (OPTIONS on a PS controller) for 1
-second. Best in INIT, before the match starts: it works there too, so it is done before the buzzer.
-Gamepad 1 buzzes twice and the Driver Station says `Pose set: x -56, y -61 in, heading 0 (BLUE)`.
-While the robot drives (a drive stick pushed, or whole-robot aim on) it says `Pose NOT set: stop
-first` instead. START + A or START + B pairs a gamepad on the Driver Station, so a START held with A
-or B never sets the pose. The spot goes in `Tunables.java`, written for BLUE like the start spot:
+**With no autonomous, or one stopped early,** TeleOp does not know where the robot is. The aim's
+odometry backup stays off and says why. Set the pose by hand. Park the robot on a spot you know (the
+start tile against your wall is easiest), and let go of the sticks. Then hold gamepad 1 **START**
+(OPTIONS on a PS controller) for 1 second. Do it in INIT if you can, before the match starts: it works
+there too, so it is done before the buzzer. Gamepad 1 buzzes twice, and the Driver Station says
+`Pose set: x -56, y -61 in, heading 0 (BLUE)`. While the robot drives (a drive stick pushed, or
+whole-robot aim on), it says `Pose NOT set: stop first` instead. START + A or START + B pairs a gamepad
+on the Driver Station, so a START held with A or B never sets the pose. The spot goes in
+`Tunables.java`, written for BLUE like the start spot:
 
 ```java
 public static class Odometry {
     public static boolean checked = false;                      // true after the Odometry Tuner's loop test
-    public static double resetX = -56;                          // pose spot: inches right of centre
-    public static double resetY = -61;                          // pose spot: inches from centre, - = our half
+    public static double resetX = -56;                          // pose spot: inches right of center
+    public static double resetY = -61;                          // pose spot: inches from center, - = our half
     public static double resetHeading = 0;                      // heading there, degrees: 0 = facing the field
     public static boolean mirrorForRed = false;                 // BIOBUZZ: false
 }
 ```
 
 `mirrorForRed = false` because BIOBUZZ's field is turned half a turn, like your autos'
-`mirrorForRed()`; leave the line out (default true: RED mirrors x and the heading) on a mirrored field.
+`mirrorForRed()`. On a mirrored field, leave the line out. Its default is true: RED mirrors x and the heading.
 
-**One setting for the whole robot.** "Is RED a mirror image of BLUE?" has one answer for the whole
-robot: the autonomous's routes and start spot, this reset spot and lesson 9's goal point all use it.
+**One setting for the whole robot.** Whether RED is a mirror image of BLUE has one answer for the whole
+robot. The autonomous's routes and start spot, this reset spot and lesson 9's goal point all use it.
 The robot takes the first one it finds: `Tunables.Aim.mirrorForRed`, then `Tunables.Odometry.mirrorForRed`,
-then your autonomous's `mirrorForRed()` (in TeleOp: the last autonomous's), else `true`. Write it in
-`Tunables.Odometry` (as above) so a TeleOp with no autonomous before it gets it right too. On BIOBUZZ,
-`false` wherever you write it.
+then your autonomous's `mirrorForRed()` (in TeleOp, the last autonomous's), else `true`. Write it in
+`Tunables.Odometry` (as above), so a TeleOp with no autonomous before it gets it right too. On BIOBUZZ,
+it is `false` wherever you write it.
 
 INIT shows the button and the spot (`Set pose: hold G1 START 1 s at ...`) and the mirroring it uses
 (`Reset spot for RED: the same numbers from the red wall (Tunables.Odometry.mirrorForRed = false)`).
-From code, or in an action: `robot.resetPose()` (this spot) or `robot.resetPose(x, y, heading)` (any
-spot). The button can move: `lib.setPose(...)` ([the button menu](../../guides/buttons.md#moving-the-librarys-buttons)).
+From code, or in an action, use `robot.resetPose()` (this spot) or `robot.resetPose(x, y, heading)` (any
+spot). You can move the button: `lib.setPose(...)` ([the button menu](../../guides/buttons.md#moving-the-librarys-buttons)).
 
-**Wrong alliance in autonomous?** This robot's `Controls.java` turns on the TeleOp alliance switch
-(`lib.switchAlliance(g1.start, g1.back)`; off unless you write it): hold START, then BACK, 1.5 s. On BIOBUZZ's
-turned field the pose from that autonomous cannot be fixed, so the odometry aim goes off until you set
-the pose here again; on a mirrored field the pose is mirrored for you
-([the buttons guide](../../guides/buttons.md#switching-the-alliance-in-teleop)).
+**When the autonomous ran with the wrong alliance:** this robot's `Controls.java` turns on the TeleOp
+alliance switch (`lib.switchAlliance(g1.start, g1.back)`, off unless you write it). Hold START, then
+BACK, for 1.5 s. On BIOBUZZ's turned field, the switch cannot fix the pose from that autonomous. So the
+odometry aim goes off until you set the pose here again. On a mirrored field, the library mirrors the
+pose for you ([the buttons guide](../../guides/buttons.md#switching-the-alliance-in-teleop)).
 
 To show the pose your own way, add one line inside `buttons(...)` in `Controls.java`:
 
@@ -492,14 +481,16 @@ To show the pose your own way, add one line inside `buttons(...)` in `Controls.j
 show("Where", robot::pose);   // e.g. "(-30.0 in, -30.0 in, 45.0 deg)"
 ```
 
-`robot.pose()` is the pose now: `robot.pose().x`, `.y` and `.headingDeg`. The odometry robot's
+`robot.pose()` gives the pose now: `robot.pose().x`, `.y` and `.headingDeg`. The odometry robot's
 [`Controls.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/Controls.java)
 shows only x and y, with no decimals.
 
 ## Try it in the simulator
 
-From the `ftc-helper-lib` folder, write a simulator robot file from the odometry robot's `Robot.java`,
-then start the simulator with the library's examples:
+First write a simulator robot file from the odometry robot's `Robot.java`. Then start the simulator
+with the library's examples.
+
+**Where:** the Terminal, in the `ftc-helper-lib` folder.
 
 ```bash
 ./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.odometrybot.Robot -Pout=build/odometrybot.properties
@@ -509,9 +500,9 @@ then start the simulator with the library's examples:
 Open http://localhost:8780, choose **"Odometry Bot To the Goal"**, press INIT, choose **RED** in the
 INIT menu (gamepad 1 B), then ▶. Watch it drive diagonally to the goal while it turns to 45
 degrees, then park. (The simulator runs `driveTo` even with `checked = false`, and INIT says
-`!! Odometry not checked (Tunables.Odometry.checked = false): driveTo and path steps run in the simulator only`;
-on the robot those steps are skipped until you set it.) When it ends, choose "Odometry Bot
-TeleOp": the pose carries on from where autonomous stopped.
+`!! Odometry not checked (Tunables.Odometry.checked = false): driveTo and path steps run in the simulator only`.
+On the robot, the autonomous skips those steps until you set it.) When it ends, choose "Odometry Bot
+TeleOp". The pose carries on from where autonomous stopped.
 
 **Two places show where the robot is:**
 
@@ -522,7 +513,7 @@ TeleOp": the pose carries on from where autonomous stopped.
   On RED the two use the same numbers. On BLUE the x and y signs are flipped, and the heading differs
   by 180.
 
-The 3D view starts off: tick **"Show"** to turn it on. The field from above is always in the Control
+The 3D view starts off. Tick **"Show"** to turn it on. The field from above is always in the Control
 Hub's Robot tab.
 
 Then see what a badly tuned odometry does. Add this line at the end of `build/odometrybot.properties`
@@ -534,38 +525,41 @@ odometry.scaleError = 0.05   # the pods measure 5% too far
 
 At the goal, the `Pose` line says about (-30, -30), but the page's line shows the robot about 2 in
 short of it, nearer the start. The odometry measured every inch 5% too long, so it "arrived" early.
-Odometry can only be as good as its tuning: on the real robot, the tuner's Forward test finds this
+Odometry can only be as good as its tuning. On the real robot, the tuner's Forward test finds this
 kind of error. `odometry.driftDegPerMin` makes the heading creep instead
 ([simulator lines](../../modules/odometry.md#the-simulator)). Delete the line when you are done.
 
-**Your own robot:** pick **Simulator** in the list next to Android Studio's green Run button, and click Run. Or, from the `ftc-helper-lib` folder:
+**Your own robot:** pick **Simulator** in the list next to Android Studio's green Run button, and click
+Run. Or use the Terminal.
+
+**Where:** the Terminal, in the `ftc-helper-lib` folder.
 
 ```bash
 ./gradlew :sim:run
 ```
 
 When it starts, the simulator writes the odometry lines into your `simulator/robot.properties` from
-the odometry line in `Robot.java`. Choose "To the Goal", INIT, ▶, and read the report at the end.
+the odometry line in `Robot.java`. Choose "To the Goal", press INIT, then ▶, and read the report at the end.
 
 You can also run your "Odometry Tuner" in the simulator, to learn the tests before you try them on the
-robot. **Spin** and **Loop** work with the sticks. **Forward**: use the page's "48 in forward" push
-button (Robot tab). **Left**: drive left with the left stick (there is no push button to the left).
-The simulator puts the pods exactly where your odometry line says, so **Spin** always finds your own
-numbers back: it cannot show you that an offset is wrong. Use it to learn the buttons; the real
+robot. **Spin** and **Loop** work with the sticks. For **Forward**, use the page's "48 in forward" push
+button (Robot tab). For **Left**, drive left with the left stick, because there is no push button to the
+left. The simulator puts the pods exactly where your odometry line says. So **Spin** always finds your
+own numbers back, and it cannot show you that an offset is wrong. Use it to learn the buttons. The real
 offsets come from the real robot.
 
 ## Check it on the robot
 
-1. Push the robot by hand with the TeleOp running: forward = y up, left = x down, turning left =
-   heading up. If not, the tuner's Forward and Left tests first.
-2. The tuner: Forward, Left, Spin, copy, rebuild, then Loop until it passes. Set `checked = true`.
-3. In INIT of "To the Goal", choose the **PRACTICE** profile. Set `Tunables.Drive.practiceMaxPower`
-   low (0.4) for the first runs.
+1. Push the robot by hand with the TeleOp running. Forward must make y go up, left must make x go down,
+   and turning left must make the heading go up. If not, run the tuner's Forward and Left tests first.
+2. In the tuner, run Forward, Left and Spin, copy, rebuild, then run Loop until it passes. Set `checked = true`.
+3. In INIT of "To the Goal", choose the **PRACTICE** profile. Set `Tunables.Drive.maxPower`
+   low (0.4) for the first runs, and back to `DEFAULT` when it works.
 4. Put the robot exactly on the start spot. In INIT, check for `Odometry: Pinpoint ready`. Keep a hand
    on STOP. Run it.
-5. Measure where it ended against the point you wrote (`goalX`, `goalY`): within about an inch? Then
-   run it again and gently push the robot sideways during the drive: it should come back on course.
-6. Then run TeleOp: the `Pose` line should carry on from where autonomous ended.
+5. Measure where it ended against the point you wrote (`goalX`, `goalY`). It should be within about an
+   inch. Then run it again, and gently push the robot sideways during the drive. It should come back on course.
+6. Then run TeleOp. The `Pose` line should carry on from where autonomous ended.
 
 ## If something goes wrong
 
@@ -593,12 +587,12 @@ offsets come from the real robot.
 
 ## Next
 
-The main track is lessons 1 to 6, plus the lessons your robot needs. From here:
+The main track is lessons 1 to 6, plus the lessons your robot needs. From here, go to:
 
 - [Lesson 8: Paths with Pedro Pathing](08-paths-with-pedro.md) (optional): smooth curves and lines, one after another.
 - [Lesson 9: A shooter, a camera and a turret](09-shooter-and-camera.md): for robots that shoot.
 
 - [The odometry module](../../modules/odometry.md): every kind (OTOS, dead wheels), every setting, the frame.
-- [The autonomous builder](../../guides/autonomous-builder.md): everything an autonomous can do.
+- [Building autos](../../building-autos/README.md): everything an autonomous can do.
 - [The finders](../../guides/finders.md): measure every number instead of guessing.
 - [The tutorials page](../README.md): the under-the-hood tutorials.

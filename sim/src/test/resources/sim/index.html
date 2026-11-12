@@ -203,7 +203,7 @@
   #hubSection .tab > h3:first-child { border-top: 0; padding-top: 0; }
   /* Narrow screens, one column: the Driver Hub, then the field, the builder, the gamepads, the Control Hub. */
   #dsSection { order: 1; } #view3dSection { order: 2; } #builderSection { order: 3; } #padsSection { order: 4; } #hubSection { order: 5; }
-  /* What the robot holds, on the 3D view: a dot per piece in its colour, empty dots for the free places. */
+  /* What the robot holds, on the 3D view: a dot per piece in its color, empty dots for the free places. */
   #heldBadge { position: absolute; left: 8px; top: 8px; z-index: 2; display: none; align-items: center; gap: 6px;
     padding: 4px 9px; border-radius: 14px; background: color-mix(in srgb, var(--panel) 88%, transparent);
     border: 1px solid var(--line); font-size: 12.5px; font-weight: 600; pointer-events: none; }
@@ -1567,7 +1567,7 @@ function update3dPaths(s) {
 // on its own ("g") only when it changes; /state carries it as "game".
 let game = null;
 const seenShot = { id: 0, first: true }, seenFoul = { t: -1, first: true };
-const ballVerdict = new Map();          // a piece's key -> its shot's verdict (its trail takes the colour)
+const ballVerdict = new Map();          // a piece's key -> its shot's verdict (its trail takes the color)
 const VERDICT_COLOR = { clean: "#2ecc71", rim: "#f08c00", "other HIVE": "#b07ce8", frame: "#e5534b", miss: "#9aa3ab" };
 const verdictChip = v => `<span class="verdict" style="background:${VERDICT_COLOR[v] || "#6a7282"}">${escapeHtml(v)}</span>`;
 let scoreOpen = "";                     // the side whose breakdown is shown ("" none)
@@ -1586,7 +1586,7 @@ function gotGame(g) {
   const sc = g.score || {}, red = sc.red || { total: 0 }, blue = sc.blue || { total: 0 };
   const pts = v => Math.round(v || 0);
   // Like a referee (manual 10.5): TIPs, LEAVE and AUTO PARK count when they happen; CELL, FLOWER and GARDEN pieces
-  // and TELEOP PARK only at the end of the match. Until then they show grey: "+N at the end, if it ended now".
+  // and TELEOP PARK only at the end of the match. Until then they show gray: "+N at the end, if it ended now".
   const state = (g.match || {}).state || "none", over = state === "ended";
   const shown = side => over || side.counted === undefined ? side.total : side.counted;
   const later = side => !over && side.atEnd ? ` <span class="later">+${pts(side.atEnd)}</span>` : "";
@@ -1597,7 +1597,7 @@ function gotGame(g) {
     : state === "afterAuto" ? "AUTO done" : clockWords(g.clock);
   $("#clockText").textContent = when;
   const hint = over ? "(click: where the points come from)"
-    : (red.atEnd || blue.atEnd) ? "(grey: counted at the end of the match, if it ended now. Click: where)"
+    : (red.atEnd || blue.atEnd) ? "(gray: counted at the end of the match, if it ended now. Click: where)"
     : "(click: where the points come from)";
   $("#scoreBar").innerHTML = `<span class="sr">RED ${pts(shown(red))}</span>${later(red)} &middot; ${escapeHtml(when)} &middot; <span class="sb">BLUE ${pts(shown(blue))}</span>${later(blue)} <span class="hint">${hint}</span>`;
   $("#nectarNote").textContent = g.clock && g.clock.period === "TELEOP" || g.clock && g.clock.period === "AUTO"
@@ -1612,7 +1612,7 @@ function gotGame(g) {
       <span>${escapeHtml(f.name)}</span> <span class="stack">${stack || '<span class="muted">empty</span>'}</span></div>`;
   }).join("") || '<span class="muted">none</span>';
   drawFlowerMarkers(g.flowers || []);
-  // Shots: the tally and the last few; a new verdict colours that piece's trail and shows over the 3D view
+  // Shots: the tally and the last few; a new verdict colors that piece's trail and shows over the 3D view
   const counts = g.verdictCounts || {};
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   $("#verdictTally").innerHTML = total ? Object.entries(counts).filter(([, n]) => n > 0).map(([v, n]) => `${verdictChip(v)} ${n}`).join(" ") +
@@ -1704,7 +1704,7 @@ function showVerdict(x) {
   v3.scene.add(label);
   setTimeout(() => { v3.scene.remove(label); label.material.map.dispose(); label.material.dispose(); }, 2500);
 }
-// FLOWER markers in 3D: a ring over each FLOWER in its owner's colour (grey: none), with how many pieces count.
+// FLOWER markers in 3D: a ring over each FLOWER in its owner's color (gray: none), with how many pieces count.
 function drawFlowerMarkers(flowers) {
   if (!v3.ready) return;
   if (!v3.flowerGroup) { v3.flowerGroup = new THREE.Group(); v3.scene.add(v3.flowerGroup); }
@@ -2173,12 +2173,12 @@ function showHeld(stored, holds) {
   let b = $("#heldBadge");
   if (!b) { b = document.createElement("div"); b.id = "heldBadge"; b.setAttribute("role", "status"); st.appendChild(b); }
   const types = (fieldData && fieldData.pieceTypes) || [];
-  const colour = name => (types.find(t => t.name === name) || {}).color || "#999";
+  const color = name => (types.find(t => t.name === name) || {}).color || "#999";
   const held = Object.entries(stored).filter(([k, n]) => n > 0);
   const count = held.reduce((a, [k, n]) => a + n, 0);
   if (!holds && !count) { b.style.display = "none"; return; }
   let dots = "";
-  for (const [k, n] of held) for (let i = 0; i < n; i++) dots += `<i class="full" style="background:${colour(k)}" title="${escapeHtml(k)}"></i>`;
+  for (const [k, n] of held) for (let i = 0; i < n; i++) dots += `<i class="full" style="background:${color(k)}" title="${escapeHtml(k)}"></i>`;
   for (let i = count; i < holds; i++) dots += "<i></i>";
   const words = held.map(([k, n]) => `${n} ${escapeHtml(k)}`).join(", ");
   b.innerHTML = `In the robot: ${dots} <span>${count}${holds ? " / " + holds : ""}${count ? " &middot; " + words : " &middot; empty"}${holds && count >= holds ? " &middot; <b>full: it takes no more until it fires</b>" : ""}</span>`;

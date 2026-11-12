@@ -1,9 +1,8 @@
 package com.crossbotics.ftchelper.examples.quickstart.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
-// and the two imports below to:  import org.firstinspires.ftc.teamcode.Robot;  import org.firstinspires.ftc.teamcode.Tunables;
+// and the import below to:  import org.firstinspires.ftc.teamcode.Robot;
 
 import com.crossbotics.ftchelper.examples.quickstart.Robot;
-import com.crossbotics.ftchelper.examples.quickstart.Tunables;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -25,8 +24,8 @@ public class FirstAuto extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        // STEP 8: where the drive team puts the robot, and how far it drives.
+        // STEP 8: where the drive team puts the robot, and how far it drives (inches, then power).
         s.start("Against our wall, facing the field", 0)
-         .forward("Leave the start", Tunables.Auto.leaveInches, 0.4);
+         .forward("Leave the start", 12, 0.4);
     }
 }

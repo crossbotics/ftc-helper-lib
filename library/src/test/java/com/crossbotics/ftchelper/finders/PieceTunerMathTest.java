@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
 
-/** The Piece Tuner's arithmetic: hues are averaged round the colour wheel; the gap between kinds. */
+/** The Piece Tuner's arithmetic: hues are averaged round the color wheel; the gap between kinds. */
 public class PieceTunerMathTest {
     @Test public void redHuesEitherSideOfZeroAverageToRed() {
         List<double[]> rows = Arrays.asList(new double[] {350, 0.8, 15}, new double[] {10, 0.6, 17});

@@ -14,12 +14,12 @@ import java.util.Set;
  * <p>The numbers are copied from the parts catalog, which has each seller's page and the date it was
  * checked; a test checks that they still match it.
  *
- * Docs: docs/modules/robot.md (section "Shapes")
+ * Docs: docs/reference/robot-java.md (section "Shapes")
  */
 public final class Parts {
     private Parts() { }
 
-    /** One wheel or roller: its size in millimetres. */
+    /** One wheel or roller: its size in millimeters. */
     public static final class Wheel {
         /** The parts catalog id, e.g. "gobilda-hogback-96". */
         public final String id;
@@ -268,7 +268,7 @@ public final class Parts {
         if (s == null) {
             throw new IllegalArgumentException("Robot.java: no servo \"" + id + "\" in the parts catalog. Known: " + SERVOS.keySet()
                     + ". A servo that is not in the catalog: Parts.customServo(\"" + id + "\", rangeDeg, secPer60Deg) "
-                    + "(docs/modules/robot.md#parts-not-in-the-catalog)");
+                    + "(docs/reference/robot-java.md#parts-not-in-the-catalog)");
         }
         return s;
     }

@@ -1,6 +1,6 @@
 ---
 id: LGT-01
-title: Lights - colour rules and a flash per shot
+title: Lights - color rules and a flash per shot
 area: lights
 priority: low
 where: both
@@ -8,7 +8,7 @@ minutes: 20
 needs: [lights]
 kit_bots: []
 since: v0.17.0
-docs: [tutorials/start/09-shooter-and-camera.md#13-a-light-for-the-drivers, modules/robot.md#lights]
+docs: [tutorials/start/09-shooter-and-camera.md#13-a-light-for-the-drivers, reference/parts/lights.md]
 ---
 
 ## Why
@@ -30,7 +30,7 @@ rule R202 J).
 ## Steps
 
 1. INIT: the light shows the alliance, not your rules (solid red or blue once it is chosen; [LGT-02](LGT-02.md) tests that part). START: a 1 s flash of the alliance, then your rules.
-2. Make each rule true in turn (spin up, aim on, ...) and check the colour.
+2. Make each rule true in turn (spin up, aim on, ...) and check the color.
 3. Make two rules true at once: the one written first wins.
 4. Fire 3 pieces (`fire(3)` or hold RB): 3 white flashes.
 5. Wait for the last 20 s of TeleOp (or use a short match timer): yellow blinking.
@@ -38,17 +38,17 @@ rule R202 J).
 
 ## Pass rule
 
-Every colour matches its rule (all of them), 3 shots give 3 flashes, and the light changes at most
+Every color matches its rule (all of them), 3 shots give 3 flashes, and the light changes at most
 10 times a second (5 on and 5 off).
 
 ## Record
 
 - light type (goBILDA RGB, REV Blinkin)
 - your rules (copy the lines)
-- any colour that was wrong (which rule, what it showed)
+- any color that was wrong (which rule, what it showed)
 - changes per second from the video
 
 ## If your robot is different
 
-Use your own rules; any true/false works. If a goBILDA colour looks wrong on your light, say which
+Use your own rules; any true/false works. If a goBILDA color looks wrong on your light, say which
 LightColor and what you saw.

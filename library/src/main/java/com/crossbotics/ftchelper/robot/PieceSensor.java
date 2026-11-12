@@ -32,21 +32,21 @@ import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
  *
  * <p>Three kinds of sensor:
  * <ul>
- * <li>{@link #color} a REV Color Sensor V3 (REV-31-1557): its colour tells the kinds apart, its
+ * <li>{@link #color} a REV Color Sensor V3 (REV-31-1557): its color tells the kinds apart, its
  *     distance says whether a piece is there (1-10 cm).</li>
  * <li>{@link #distance} a distance sensor (REV 2m Distance Sensor, REV-31-1505) looking ACROSS a
- *     channel: a bigger piece comes closer, so it tells SIZES apart (not colours).</li>
+ *     channel: a bigger piece comes closer, so it tells SIZES apart (not colors).</li>
  * <li>{@link #camera} a second webcam looking at the spot, with the SDK's PredominantColorProcessor
- *     (the main colour inside a box of the picture): colours, no distance.</li>
+ *     (the main color inside a box of the picture): colors, no distance.</li>
  * </ul>
  *
  * <p>Tunables (the section is the device name in CamelCase: "ready_color" reads {@code Tunables.ReadyColor}):
- * one number per kind, named like the kind: its colour (hue, 0-360 degrees) for a colour sensor or a
+ * one number per kind, named like the kind: its color (hue, 0-360 degrees) for a color sensor or a
  * camera, its distance reading (mm) for a distance sensor. Find them with the Piece Tuner
  * ({@link com.crossbotics.ftchelper.finders.PieceTunerOpMode}). Also {@code nearMm} (a piece is there
  * when the distance is below it), {@code hueTolerance} / {@code sizeToleranceMm} (how far from a
- * kind's number still counts), {@code minSaturation} (camera: how colourful the box must be),
- * {@code steadyMs} (a reading must stay this long before it counts), {@code gapMm} (colour and distance
+ * kind's number still counts), {@code minSaturation} (camera: how colorful the box must be),
+ * {@code steadyMs} (a reading must stay this long before it counts), {@code gapMm} (color and distance
  * sensors: two touching pieces count as two when the distance rises and falls again by this much).
  *
  * <p>Never waits: a REV 2m Distance Sensor is read on a helper thread (one reading can take up to
@@ -54,7 +54,7 @@ import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
  * reading for 0.5 s (a sensor unplugged, a camera that stopped) it sees nothing and warns. A sensor
  * missing from the robot configuration warns at INIT and sees nothing: the OpMode still runs.
  *
- * Docs: docs/modules/robot.md (section "Pieces and PieceSensor")
+ * Docs: docs/reference/robot-java.md (section "Pieces and PieceSensor")
  */
 public final class PieceSensor extends Module<PieceSensor> {
     enum Type { COLOR, DISTANCE, CAMERA }
@@ -63,7 +63,7 @@ public final class PieceSensor extends Module<PieceSensor> {
     private List<String> kinds = new ArrayList<>();
     // Where the simulator puts it: "intake" or "ready" (Pieces sets it; alone: "ready").
     String spot = null;
-    // Camera: the box of the picture it looks at, -1..1 from the centre (left, top, right, bottom).
+    // Camera: the box of the picture it looks at, -1..1 from the center (left, top, right, bottom).
     private double[] box = {-0.25, 0.25, 0.25, -0.25};
     private Reader reader;
     private final Map<String, Tunable> kindNumbers = new LinkedHashMap<>();
@@ -96,7 +96,7 @@ public final class PieceSensor extends Module<PieceSensor> {
     }
 
     /**
-     * A colour sensor with a distance reading, like the REV Color Sensor V3 (configure it as "REV
+     * A color sensor with a distance reading, like the REV Color Sensor V3 (configure it as "REV
      * Color Sensor V3"). Put it 1-2 cm from where a piece passes or rests.
      *
      * @param name its configuration name, e.g. "ready_color"
@@ -118,7 +118,7 @@ public final class PieceSensor extends Module<PieceSensor> {
 
     /**
      * A second webcam that looks at the spot from close by (the SDK's PredominantColorProcessor reads
-     * the main colour in a box of the picture). It runs alongside an AprilTag webcam or a Limelight; it
+     * the main color in a box of the picture). It runs alongside an AprilTag webcam or a Limelight; it
      * uses a small picture (320x240) and no live view, to leave USB room for the other camera.
      *
      * @param webcamName its configuration name, e.g. "Webcam 2"
@@ -139,7 +139,7 @@ public final class PieceSensor extends Module<PieceSensor> {
     }
 
     /**
-     * Camera only: the box of the picture to read, from the centre: -1 = left/bottom edge, 1 =
+     * Camera only: the box of the picture to read, from the center: -1 = left/bottom edge, 1 =
      * right/top edge. Default: the middle quarter (-0.25, 0.25, 0.25, -0.25).
      */
     public PieceSensor box(double left, double top, double right, double bottom) {
@@ -182,7 +182,7 @@ public final class PieceSensor extends Module<PieceSensor> {
         if (type == Type.COLOR) {
             NormalizedColorSensor c = devices.tryGet(NormalizedColorSensor.class, device);
             if (c == null) {
-                reader = new BrokenReader("not found: no colour sensor called \"" + device
+                reader = new BrokenReader("not found: no color sensor called \"" + device
                         + "\" in the robot configuration (configure it as \"REV Color Sensor V3\")");
             } else {
                 DistanceSensor d = c instanceof DistanceSensor ? (DistanceSensor) c : null;
@@ -224,7 +224,7 @@ public final class PieceSensor extends Module<PieceSensor> {
     // ----------------------------- reading -----------------------------
 
     /**
-     * Every loop: picks up the newest reading (a colour sensor: a few ms over I2C; a distance sensor or a
+     * Every loop: picks up the newest reading (a color sensor: a few ms over I2C; a distance sensor or a
      * camera: never waits) and works out what is there.
      */
     @Override
@@ -271,7 +271,7 @@ public final class PieceSensor extends Module<PieceSensor> {
                 dipMin = Double.NaN;
                 dipRising = false;
             } else if (!before.equals(Pieces.UNKNOWN) && !steady.equals(Pieces.UNKNOWN)) {
-                if (dipCounted) dipCounted = false;   // the dip already counted it: its colour comes now
+                if (dipCounted) dipCounted = false;   // the dip already counted it: its color comes now
                 else newArrival();
             }
             // else UNKNOWN <-> a kind: the same piece, read better
@@ -305,7 +305,7 @@ public final class PieceSensor extends Module<PieceSensor> {
         boolean there;
         if (type == Type.CAMERA) there = !Double.isNaN(s) && s >= minSaturation.get();
         else if (!Double.isNaN(d)) there = d < nearMm.get();
-        else there = type == Type.COLOR && !Double.isNaN(s) && s >= Math.max(0.2, minSaturation.get());   // no distance: colourful = there
+        else there = type == Type.COLOR && !Double.isNaN(s) && s >= Math.max(0.2, minSaturation.get());   // no distance: colorful = there
         if (!there) return Pieces.NONE;
         if (type != Type.DISTANCE && minSaturation != null && !Double.isNaN(s) && s < minSaturation.get()) return Pieces.UNKNOWN;
         double value = type == Type.DISTANCE ? d : h;
@@ -378,12 +378,12 @@ public final class PieceSensor extends Module<PieceSensor> {
         return clock.getAsLong();
     }
 
-    /** The latest colour, 0-360 degrees (NaN for a distance sensor, or no reading yet). */
+    /** The latest color, 0-360 degrees (NaN for a distance sensor, or no reading yet). */
     public double hueDeg() {
         return hue;
     }
 
-    /** The latest colourfulness, 0 (grey) to 1 (pure colour); NaN for a distance sensor. */
+    /** The latest colorfulness, 0 (gray) to 1 (pure color); NaN for a distance sensor. */
     public double saturation() {
         return saturation;
     }
@@ -393,17 +393,17 @@ public final class PieceSensor extends Module<PieceSensor> {
         return distance;
     }
 
-    /** The number this sensor compares: hue (colour, camera) or distance in mm (distance sensor). */
+    /** The number this sensor compares: hue (color, camera) or distance in mm (distance sensor). */
     public double measured() {
         return type == Type.DISTANCE ? distance : hue;
     }
 
-    /** True for a distance sensor (it compares mm, not colours). */
+    /** True for a distance sensor (it compares mm, not colors). */
     public boolean measuresSize() {
         return type == Type.DISTANCE;
     }
 
-    /** True for a sensor that knows how far away the piece is (colour and distance sensors). */
+    /** True for a sensor that knows how far away the piece is (color and distance sensors). */
     public boolean hasDistance() {
         return type != Type.CAMERA;
     }
@@ -466,16 +466,16 @@ public final class PieceSensor extends Module<PieceSensor> {
         if (type == Type.COLOR) out.add("color." + device + " = at=" + at);
         else if (type == Type.DISTANCE) out.add("distance." + device + " = at=" + (spot == null ? "ready" : spot)
                 + ", acrossMm=150   # TODO measure: from the sensor to the far wall" + (spot == null ? "; at= intake or ready" : ""));
-        // A camera's colours are not simulated: it warns "not found" and sees nothing.
+        // A camera's colors are not simulated: it warns "not found" and sees nothing.
     }
 
-    // The difference between two hues (degrees), going the short way round the colour wheel (350 and 10 are 20 apart).
+    // The difference between two hues (degrees), going the short way round the color wheel (350 and 10 are 20 apart).
     static double hueDiff(double a, double b) {
         double d = Math.abs(((a - b) % 360 + 360) % 360);
         return Math.min(d, 360 - d);
     }
 
-    /** Hue (0-360), saturation (0-1) from red, green, blue (any scale). Hue NaN for black or grey. */
+    /** Hue (0-360), saturation (0-1) from red, green, blue (any scale). Hue NaN for black or gray. */
     static double[] hueSat(double r, double g, double b) {
         double max = Math.max(r, Math.max(g, b)), min = Math.min(r, Math.min(g, b));
         double sat = max <= 0 ? 0 : (max - min) / max;

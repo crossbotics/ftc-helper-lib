@@ -3,15 +3,15 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** teams that use `EasyAuto` and the [starter kit](../starter-kit.md). With a `Robot.java` (the
-robot in five files), use [the autonomous builder](autonomous-builder.md) instead. **You need:** a
-drive that works in TeleOp and has been tuned ([under-the-hood tutorial 09: Autonomous by hand with AutoDrive](../tutorials/09-first-auto.md)).
+robot in five files), use [building autos](../building-autos/README.md) instead. **You need:** a
+drive that works in TeleOp and that you have tuned ([under-the-hood tutorial 09: Autonomous by hand with AutoDrive](../tutorials/09-first-auto.md)).
 
-How to make an autonomous in a few minutes, and how to make MANY of them without copying code.
+You make an autonomous with a short list, and you make MANY of them without copying code.
 `EasyAuto` is the layer under the robot-in-five-files autonomous.
 
 ## The idea
 
-An autonomous is a **list of named steps**. You write the list; `EasyAuto` does the rest:
+An autonomous is a **list of named steps**. You write the list, and `EasyAuto` does the rest:
 
 ```mermaid
 flowchart TB
@@ -42,12 +42,12 @@ public class ParkOnly extends StarterAuto {           // StarterAuto = the robot
 }
 ```
 
-That is a complete, safe autonomous: menu, delay, mirroring, timer, stop, TeleOp hand-off.
+This is a complete, safe autonomous: menu, delay, mirroring, timer, stop, TeleOp hand-off.
 
 ## Many autos, no copied code
 
 Put the robot setup in ONE base class (`StarterAuto` in the [starter kit](../starter-kit.md)).
-Each autonomous `extends` it: it gets all of that setup for free and only lists its steps:
+Each autonomous `extends` it. Then it gets all of that setup and only lists its steps:
 
 ```mermaid
 flowchart TB
@@ -67,8 +67,8 @@ flowchart TB
 | Waiting | `waitFor(label, seconds)`, `waitUntil(label, condition, timeout)` |
 | Park | `thenPark()` and the steps after it |
 
-**Do things at the same time:** start a mechanism with a `startStep` (or `run`), then drive. The
-mechanism keeps moving during the drive because the routine updates it every loop:
+**Do things at the same time:** start a mechanism with a `startStep` (or `run`), then drive. The routine
+updates the mechanism every loop, so it keeps moving during the drive:
 
 ```java
 r.step("Lift starts up", lift.startStep("HIGH"))      // does not wait
@@ -76,7 +76,7 @@ r.step("Lift starts up", lift.startStep("HIGH"))      // does not wait
  .waitUntil("Lift is up", lift::isAtTarget, 2.0);     // only waits if it is not there yet
 ```
 
-`lift::isAtTarget` is a method reference: the method itself, which the wait calls every loop.
+`lift::isAtTarget` is a method reference: it names the method itself, and the wait calls it every loop.
 
 ## Choices in INIT
 
@@ -92,25 +92,25 @@ r.step("Lift starts up", lift.startStep("HIGH"))      // does not wait
 }
 ```
 
-One OpMode with choices is often better than many OpModes: fewer files, and the drive team picks
-at the field. When to use which, naming, and a match-day checklist:
-[Several autonomous modes](autos.md) (written for the five-files `Auto`; the ideas are the same).
+One OpMode with choices is often better than many OpModes. You have fewer files, and the drive team picks
+at the field. For when to use which, naming, and a match-day checklist, read
+[Having multiple autos](../building-autos/03-multiple-autos.md). It is written for the five-files `Auto`, but the ideas are the same.
 
 ## Red and blue
 
-Write every route for **BLUE**. On RED, `turn`, `turnTo`, sideways `move` directions and
-`moveWithTurn` are mirrored for you. Use `alliance()` for anything else
+Write every route for **BLUE**. On RED, the routine mirrors `turn`, `turnTo`, sideways `move` directions and
+`moveWithTurn` for you. Use `alliance()` for anything else
 (`alliance().pick(blueTag, redTag)`).
 
-**Check the field drawing each season.** Mirroring is right for a field that is a MIRROR image
-between the alliances. If the field is ROTATED (turned 180 degrees) instead, the same robot-relative
-route works for both alliances: add `@Override protected boolean mirrorForRed() { return false; }`.
+**Check the field drawing each season.** Mirroring is right for a field where one alliance's half is a MIRROR
+image of the other. When the field is ROTATED (turned 180 degrees) instead, the same robot-relative
+route works for both alliances. Then add `@Override protected boolean mirrorForRed() { return false; }`.
 
 ## Time for parking
 
-The main steps stop (or are skipped) when only the reserved seconds are left; the steps after
-`thenPark()` always run. The report says which steps were cut short or skipped. In a robot-in-five-files
-autonomous the same is one call in the steps: `.parkWithSeconds(4)` ([robot module](../modules/robot.md#keep-time-to-park)).
+When only the reserved seconds are left, the routine stops the main steps (or skips them). The steps after
+`thenPark()` always run. The report says which steps it cut short or skipped. In a robot-in-five-files
+autonomous, the same is one call in the steps: `.parkWithSeconds(4)` ([robot module](../reference/steps.md#keep-time-to-park)).
 
 ```java
 @Override protected double parkReserveSec() { return 4; }   // seconds kept for parking
@@ -123,18 +123,18 @@ r.move(...).move(...)          // main steps: cut short when 4 s are left
 ## Where to place the robot
 
 `startPosition()` is the note the drive team reads in INIT. `startSpotIn()` (in a five-files autonomous:
-`s.start(note, x, y, heading)`) also gives the spot, seen from your drivers' wall and written for BLUE:
-x inches right of the field's centre line, y from the centre toward the far wall (negative = your half).
-RED uses it like the routes: mirrored, or, on a field turned half a turn like BIOBUZZ (`mirrorForRed()`
-false), the same numbers from the red wall. The simulator puts the robot there in INIT. On a field where
-both alliances' drivers stand at one wall (like DECODE 2025-26), also add
-`@Override protected boolean alliancesOnOneWall() { return true; }`, or the simulator puts BLUE at the far wall.
+`s.start(note, x, y, heading)`) also gives the spot. You write it for BLUE, as seen from your drivers' wall:
+x inches right of the field's center line, y from the center toward the far wall (negative = your half).
+RED uses it like the routes do. It is mirrored, or, on a field turned half a turn like BIOBUZZ (`mirrorForRed()`
+false), it is the same numbers from the red wall. The simulator puts the robot there in INIT. On a field where
+both alliances' drivers stand at one wall, also add
+`@Override protected boolean alliancesOnOneWall() { return true; }`. Without it, the simulator puts BLUE at the far wall.
 
 ## Read the report
 
-When the steps are done, autonomous ends at once (even with time left), so the Driver Station moves
-to the TeleOp (`preselectTeleOp`) and the drive team can INIT it. The report of each step's result is
-shown at the end of autonomous, in the robot log, and again on TeleOp's INIT screen:
+When the steps are done, autonomous ends at once, even with time left. Then the Driver Station moves
+to the TeleOp (`preselectTeleOp`), and the drive team can INIT it. The report gives each step's result.
+It shows at the end of autonomous, in the robot log, and again on TeleOp's INIT screen:
 
 ```
 Grab: done
@@ -147,9 +147,9 @@ Park: done
 
 ## Checklist for a new autonomous
 
-1. Copy an existing one, rename the class and the `@Autonomous(name = ...)`.
+1. Copy an existing one. Rename the class and the `@Autonomous(name = ...)`.
 2. Write `startPosition()` exactly as the drive team should place the robot.
-3. Steps for BLUE. Short labels that say what the robot does.
+3. Write the steps for BLUE. Give them short labels that say what the robot does.
 4. Run it at low speed first (`powerLimit` 0.4). Read the report.
 5. Run it as RED once. Run it with a start delay once.
 6. Time it: it must finish (park included) in under ~28 s.

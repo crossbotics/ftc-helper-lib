@@ -8,7 +8,7 @@ minutes: 20
 needs: [limelight|webcam]
 kit_bots: []
 since: v0.37.0
-docs: [modules/vision.md#distancefilter, guides/tunables.md#launcher]
+docs: [modules/vision.md#distancefilter, reference/parts/launcher.md#in-tunablesjava]
 ---
 
 ## Why

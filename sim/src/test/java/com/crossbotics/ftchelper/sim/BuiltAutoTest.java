@@ -196,6 +196,18 @@ public class BuiltAutoTest {
         } finally {
             strafer.closeWorld();
         }
+        // The starter robot file has no "pinpoint": the V2 bot (odometry on a pinpoint) cannot INIT on it, so
+        // the guess is a Robot class that finds every device it needs, never the V2 bot.
+        SimRobot starter = SimRobot.load(Paths.get("robots/starter.properties"));
+        try {
+            Class<? extends RobotDefinition> best = BuiltAuto.guess(list, starter);
+            assertTrue(String.valueOf(best), best != com.crossbotics.ftchelper.examples.v2bot.Robot.class);
+            assertTrue(best + " misses a device: " + BuiltAuto.deviceNames(best) + " vs " + starter.deviceNames(),
+                    BuiltAuto.score(best, starter) >= 0);
+            assertTrue(BuiltAuto.score(com.crossbotics.ftchelper.examples.v2bot.Robot.class, starter) < 0);
+        } finally {
+            starter.closeWorld();
+        }
         String d = BuiltAuto.describe(com.crossbotics.ftchelper.examples.pedrobot.Robot.class);
         assertTrue(d, d.contains("\"drive\":\"mecanum\"") && d.contains("\"odometry\":true") && d.contains("\"follower\":true"));
     }

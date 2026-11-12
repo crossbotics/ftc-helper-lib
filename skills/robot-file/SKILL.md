@@ -25,9 +25,9 @@ project (`ftc-helper-lib/` next to `TeamCode/`) the robot file is `../simulator/
   An unknown stays a `TODO` line, and you tell the team what is still open.
 - **Measurements beat photos.** A photo is fine for the 3D picture. Anything that decides a rule or a
   collision (the robot's size, a lift's top, an arm's reach, the intake height) needs a tape measure.
-  For a size that does not decide anything (an arm's thickness), a labelled estimate is fine:
+  For a size that does not decide anything (an arm's thickness), a labeled estimate is fine:
   `# estimate: not measured`. No photos? Ask for a hand sketch with a few dimensions.
-- **Heights are to the middle** of a part (a wheel's centre, a roller's centre) unless you say otherwise:
+- **Heights are to the middle** of a part (a wheel's center, a roller's center) unless you say otherwise:
   ask that way ("floor to the middle of the wheel").
 - **Names come from the configuration**, exactly (case and spaces). A wrong name makes the OpMode stop
   with "Unable to find a hardware device".
@@ -126,7 +126,7 @@ check your shapes with them: it shows the 18 in start cube and the 29 in line.
 
 Otherwise, use `photos.md` to turn the mechanisms into robot shapes (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel`),
 then the game-piece lines (`collect.`, `shoot.`, `grab.`, and piece sensors `color.`/`distance.`) and the cameras. Mount points (`at=`) and sizes
-(`size=`) in inches from the robot's centre on the floor: forward, left, up.
+(`size=`) in inches from the robot's center on the floor: forward, left, up.
 
 ## 5. Check it
 
@@ -159,7 +159,7 @@ stop
    measure again, e.g. "floor to the top with the lift all the way up"); if they agree, it is a real
    problem: tell the team they need hard stops or a shorter part. Never tune a shape just to pass.
 3. **Names match.** `init` of the team's OpModes gives no error (every configured name is in the file).
-   An OpMode that uses a device the simulator does not have (a colour sensor) stops there: tell
+   An OpMode that uses a device the simulator does not have (a color sensor) stops there: tell
    the team which OpModes those are.
 4. **It looks right.** Show the 3D view (`./gradlew :sim:run`, http://localhost:8780) next to a photo; ask
    the team: "does this look like your robot?" Fix what they point at.

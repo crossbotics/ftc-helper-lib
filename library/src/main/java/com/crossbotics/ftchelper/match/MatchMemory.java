@@ -117,7 +117,7 @@ public final class MatchMemory {
 
     /**
      * A start spot seen from the drivers' wall, as a field position. The drivers' frame: x inches to the
-     * right of the field's centre line, y inches from the centre toward the far wall (negative = your
+     * right of the field's center line, y inches from the center toward the far wall (negative = your
      * half), heading 0 = facing away from you, counterclockwise +. The field frame (the simulator's): the
      * RED drivers at the bottom (y negative), x to their right, heading 0 = facing away from them.
      *

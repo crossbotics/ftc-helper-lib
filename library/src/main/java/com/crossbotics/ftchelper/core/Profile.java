@@ -14,7 +14,7 @@ package com.crossbotics.ftchelper.core;
  * (with {@code InitMenu.profile()} or {@link #set}). The default is COMPETITION, the safe one.
  *
  * <pre>{@code
- * double drivePower = Profile.pick(0.5, 1.0);     // gentle in the shop, full power at events
+ * boolean logEveryShot = Profile.pick(true, false);   // a long log in the shop, none at events
  * if (Profile.current().isPractice()) { ... }
  * }</pre>
  *

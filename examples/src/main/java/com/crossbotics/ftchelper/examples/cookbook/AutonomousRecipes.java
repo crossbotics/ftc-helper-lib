@@ -122,17 +122,17 @@ public class AutonomousRecipes {
              .menuYesNo("Score", true)                  // the drivers choose in INIT with the D-pad
              .menuChoice("Park", "Near", "Far")
              .onlyIf("Score")                           // these steps run only if "Score" is yes
-                 .forward("To the goal", Tunables.Auto.toGoalInches, 0.5)
+                 .forward("To the goal", 30, 0.5)
                  .action(Actions.scoreHigh(robot), 5)
              .end()                                     // never forget end()
              // end recipe
              // recipe: auto-park
              .parkWithSeconds(4)                        // the steps below always get the last 4 s
              .onlyIf("Park", "Near")
-                 .right("Park near", Tunables.Auto.parkInches, 0.7)
+                 .right("Park near", 20, 0.7)
              .end()
              .onlyIf("Park", "Far")
-                 .right("Park far", Tunables.Auto.parkInches * 2, 0.7)
+                 .right("Park far", 40, 0.7)
              .end();
             // end recipe
         }
@@ -185,7 +185,7 @@ public class AutonomousRecipes {
     // recipe: auto-shared-opening
     /** The same first steps for several autos: a method that adds them to the list. */
     static Steps scorePreload(Steps s, Robot robot) {
-        return s.forward("To the goal", Tunables.Auto.toGoalInches, 0.5)
+        return s.forward("To the goal", 30, 0.5)
                 .action(Actions.scoreHigh(robot), 5);
     }
     // in each autonomous:  scorePreload(s.start("...", 0), robot).right("Park", 20, 0.7);

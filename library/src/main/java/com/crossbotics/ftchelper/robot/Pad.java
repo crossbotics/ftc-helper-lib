@@ -33,7 +33,7 @@ import java.util.function.DoubleConsumer;
  * The full menu: docs/guides/buttons.md.
  * The help on the Driver Station (in INIT) shows the whole map.
  *
- * Docs: docs/modules/robot.md (section "Controls")
+ * Docs: docs/reference/robot-java.md (section "Controls")
  */
 public final class Pad {
     /** Face buttons. */

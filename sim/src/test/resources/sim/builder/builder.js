@@ -382,7 +382,7 @@ function renderRobot() {
 	$('bRobotRow').hidden = robots.length <= 1;
 	$('bRobotText').textContent = info
 		? `${robots.length <= 1 ? 'Robot: ' : ''}${info.name}: ${info.drive || '?'} drive${info.odometry ? ', odometry' : ''}${info.follower ? ', Pedro follower' : ''}. Size from the robot file: ${fmt(L)} x ${fmt(W)} in.`
-			+ (robots.length > 1 ? ` Your code has ${robots.length} Robot classes: this auto drives the one picked. "Best match": the one whose motor and servo names match the simulator's robot file.` : '')
+			+ (robots.length > 1 ? ` Your code has ${robots.length} Robot classes: this auto drives the one picked. "Best match": the one that finds every device it needs in the simulator's robot file (motors, servos, sensors, odometry, cameras).` : '')
 		: (robots.length ? '' : 'Looking for your Robot class...');
 	$('bRed').classList.toggle('on', B.alliance === 'RED');
 	$('bBlue').classList.toggle('on', B.alliance === 'BLUE');

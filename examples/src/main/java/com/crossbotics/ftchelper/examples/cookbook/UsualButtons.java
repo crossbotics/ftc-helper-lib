@@ -12,7 +12,7 @@ import com.crossbotics.ftchelper.robot.Turret;
 import com.crossbotics.ftchelper.robot.Wrist;
 
 /**
- * Each part's usual buttons, the lines to copy into Controls.java's buttons(...) (docs/modules/robot.md, each
+ * Each part's usual buttons, the lines to copy into Controls.java's buttons(...) (docs/reference/robot-java.md, each
  * part's "Buttons to add"). They compile here; the example robots' tests (AllButtonsTest) check that the same
  * lines make the same buttons the parts used to add by themselves. The lines between "// recipe: name" and
  * "// end recipe" are shown in the docs: change both together (tools/check_docs.py checks them).
@@ -84,7 +84,7 @@ public class UsualButtons {
         void buttons(Parts robot, Pad g1, Pad g2) {
             // recipe: buttons-turret
             g2.rightStickX.use(v -> robot.turret.manual(-v)).says("by hand (right = clockwise)");
-            g2.back.toggle(robot.turret.followMode()).says("follow the goal on/off");   // only with follows(...)
+            g2.rightStickButton.toggle(robot.turret.followMode()).rumble().says("follow the goal on/off");   // only with follows(...)
             // end recipe
         }
     }

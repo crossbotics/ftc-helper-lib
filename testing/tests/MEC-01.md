@@ -8,7 +8,7 @@ minutes: 30
 needs: [lift]
 kit_bots: []
 since: v0.17.0
-docs: [modules/robot.md#two-motors-on-one-lift-or-arm]
+docs: [reference/parts/lift.md#two-motors-on-one-lift-or-arm]
 ---
 
 ## Why

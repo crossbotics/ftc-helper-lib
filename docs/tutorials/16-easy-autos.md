@@ -9,7 +9,7 @@ The main track's autonomous is built on `EasyAuto` and is shorter still: [Your f
 choices, how red/blue mirroring works, how to keep time for parking, and how to read the report.
 
 **You need:** a tuned drivetrain (tutorial 09: `RobotSettings` with `calibrationConfirmed = true`),
-a motor `lift`, a servo `claw`. Tutorials 09, 10, 14.
+a motor `lift` and a servo `claw`. Do Tutorials 09, 10 and 14 first.
 
 **Full program:** [`Tut16EasyAuto.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut16EasyAuto.java)
 **Reference:** [auto.md](../modules/auto.md). Guide: [Easy autonomous modes](../guides/easy-autos.md).
@@ -18,14 +18,15 @@ a motor `lift`, a servo `claw`. Tutorials 09, 10, 14.
 
 ## 1. Compare with tutorial 10
 
-Tutorial 10's autonomous had: an INIT loop with a menu, mirroring by hand (`side`), a loop hook,
-waiting loops with time limits, `finally` cleanup, a pose hand-off. All needed, all the same in
-every autonomous. `EasyAuto` does all of it; you write only what is special about THIS autonomous.
+Tutorial 10's autonomous had: an INIT loop with a menu, mirroring by hand (`side`), a loop hook, loops
+that wait with time limits, `finally` cleanup, a pose hand-off. Every autonomous needs all of them, and
+they are the same every time. `EasyAuto` does all of it. You write only what is special about THIS
+autonomous.
 
 ## 2. Tell it about the robot
 
-`extends EasyAuto` means your class starts with everything `EasyAuto` already does (it is itself a
-`LinearOpMode`). There is no `runOpMode()` and no loop: you only fill in the parts it asks for.
+`extends EasyAuto` means your class starts with everything `EasyAuto` already does. `EasyAuto` is
+itself a `LinearOpMode`. There is no `runOpMode()` and no loop: you only fill in the parts it asks for.
 
 ```java
 // preselectTeleOp = the TeleOp's exact name: the Driver Station gets it ready after autonomous.
@@ -33,7 +34,7 @@ every autonomous. `EasyAuto` does all of it; you write only what is special abou
 ```
 
 1. When autonomous ends, the Driver Station selects this TeleOp, so the drivers only press INIT.
-   The name must match the TeleOp's name exactly, and that TeleOp must not be `@Disabled` either.
+   The name must match the TeleOp's name exactly. That TeleOp must also not be `@Disabled`.
 
 ```java
 public class Tut16EasyAuto extends EasyAuto {
@@ -50,13 +51,14 @@ public class Tut16EasyAuto extends EasyAuto {
     }
 ```
 
-`@Override` means "I am filling in a method `EasyAuto` asks for". `RobotSettings.config()` hands
-over the drive, tuning and IMU settings from tutorial 09 as one object (a
-[`RobotConfig`](../modules/core.md#robotconfig)); tutorial 20's TeleOp uses the same one. The mechanisms you return are
-updated every loop during every step, so a lift keeps holding while the robot drives, and they all
-stop at the end, even after an error. Start the robot with the lift DOWN: that position counts as 0.
-The claw's `travelTime(0.3)` says the servo needs about 0.3 s for a full move. A servo cannot say
-where it is, so this is how a step knows when the claw should have finished moving.
+`@Override` means "I am filling in a method `EasyAuto` asks for". `RobotSettings.config()` hands over
+the drive, tuning and IMU settings from tutorial 09 as one object (a
+[`RobotConfig`](../modules/core.md#robotconfig)). Tutorial 20's TeleOp uses the same one. `EasyAuto`
+updates the mechanisms you return every loop, during every step. So a lift keeps holding while the robot
+drives. `EasyAuto` also stops them all at the end, even after an error. Start the robot with the lift
+DOWN: that position counts as 0.
+The claw's `travelTime(0.3)` says the servo needs about 0.3 s for a full move. A servo cannot say where
+it is. So with this number, a step knows when the claw should have finished moving.
 
 ## 3. INIT: placement and choices
 
@@ -70,8 +72,8 @@ where it is, so this is how a step knows when the claw should have finished movi
 @Override protected double parkReserveSec() { return 4; }
 ```
 
-The INIT screen shows the placement (so the drive team sets up right), the menu (alliance, delay,
-Route, profile), and warnings. The distances in the steps only work from that exact spot.
+The INIT screen shows the placement, so the drive team sets up right. It also shows the menu (alliance,
+delay, Route, profile) and warnings. The distances in the steps only work from that exact spot.
 `parkReserveSec()` keeps the last 4 seconds of the 30-second autonomous for parking.
 
 ## 4. The steps
@@ -97,49 +99,53 @@ Route, profile), and warnings. The distances in the steps only work from that ex
 }
 ```
 
-Read it out loud: it IS the plan. Things to notice:
+Read it out loud: it IS the plan. Look at these points:
 
-- **Labels** show on the Driver Station during the run and in the report. Make them say what the robot does.
-- **`startStep` vs `goToStep`:** `lift.startStep("HIGH")` starts the lift and goes on at once; it
-  rises while the robot drives. `claw.goToStep("CLOSED")` waits until the claw should be closed.
+- **Labels** show on the Driver Station during the run and in the report. Make them say what the robot
+  does.
+- **`startStep` vs `goToStep`:** `lift.startStep("HIGH")` starts the lift, and the routine goes on at
+  once. The lift rises while the robot drives. `claw.goToStep("CLOSED")` waits until the claw should be
+  closed.
 - **Moves and turns:** `move(name, inches, direction, power)`, with direction 0 = forward, 90 = left,
-  180 = back, -90 = right. Turns: positive degrees = left too. Every angle counts counterclockwise. `turnTo(..., 0, ...)` faces the start direction.
+  180 = back, -90 = right. For turns, positive degrees = left too. Every angle counts counterclockwise.
+  `turnTo(..., 0, ...)` faces the start direction.
   A mecanum robot can also drive AND turn at once: `moveWithTurn(name, inches, direction, heading, power)`.
-  Its direction counts from the start direction (like `turnTo`), because the robot turns on the way.
+  The robot turns on the way, so its direction counts from the start direction (like `turnTo`).
 - **`waitUntil` has a time limit** (2 s). `lift::isAtTarget` is short for `() -> lift.isAtTarget()`:
-  a question the routine asks over and over. If the lift never gets there, the routine goes on and the
-  report says "timed out".
-- **Mirroring:** written for BLUE. On RED, `turn(45)` becomes -45 and `move(20, 90)` goes left. On a field
-  turned half a turn between the alliances (BIOBUZZ), override `mirrorForRed()` to return false: the same
-  route works for both.
-- **Park:** everything before `thenPark()` stops when 4 s are left; Park always runs.
+  a question the routine asks over and over. When the lift never gets there, the routine goes on, and
+  the report says "timed out".
+- **Mirroring:** the routine is written for BLUE. On RED, `turn(45)` becomes -45 and `move(20, 90)`
+  (left on BLUE) goes right. Some fields are turned half a turn between the alliances (BIOBUZZ). For those, override
+  `mirrorForRed()` to return false: then the same route works for both.
+- **Park:** everything before `thenPark()` stops when 4 s are left. Park always runs.
 
 ## Run it
 
-1. INIT: read the placement line. Choose BLUE, Route = Score. Press ▶ (start on the Driver Hub).
+1. In INIT, read the placement line. Choose BLUE, Route = Score. Press ▶ (start on the Driver Hub).
 2. The screen shows "Step 4/11 To the goal" and the time left.
-3. At the end: the report. Is every step "done"?
-4. Run as RED: it turns the other way and parks to the left.
-5. Choose "Park only": just grab, off the wall, park.
-6. Override `maxStartDelaySec()` (write your own version of it, with `@Override`) to return 25 (the menu stops at 10 s), then set a 25 s start delay: the
-   main steps are skipped ("skipped (time for park)") but it still parks.
+3. At the end, read the report. Check that every step says "done".
+4. Run as RED: the robot turns the other way and parks to the left.
+5. Choose "Park only": the robot only grabs, moves off the wall and parks.
+6. The menu stops at 10 s. Override `maxStartDelaySec()` (write your own version of it, with
+   `@Override`) to return 25. Then set a 25 s start delay. The routine skips the main steps
+   ("skipped (time for park)"), but the robot still parks.
 
 ## If something goes wrong
 
 | Problem | Fix |
 | --- | --- |
-| "AUTONOMOUS IS OFF: the drive is not tuned yet" in INIT | tune with tutorial 09, then set `calibrationConfirmed` true in `RobotSettings.auto()` |
-| Lift sags while driving | the lift is not in `createSubsystems()` |
-| A step says STALLED | something was in the way, or the power is too low to move |
-| "timed out" on Lift is up | the lift is slow: tune it, or give `waitUntil` more time |
-| RED does something strange | a step uses a number that should not be mirrored: use `run(...)` or `alliance()` |
+| "AUTONOMOUS IS OFF: the drive is not tuned yet" in INIT | Tune with tutorial 09, then set `calibrationConfirmed` true in `RobotSettings.auto()`. |
+| Lift sags while driving | The lift is not in `createSubsystems()`. |
+| A step says STALLED | Something was in the way, or the power is too low to move the robot. |
+| "timed out" on Lift is up | The lift is slow. Tune it, or give `waitUntil` more time. |
+| RED does something strange | A step uses a number that must not be mirrored. Use `run(...)` or `alliance()`. |
 
 ## Try this
 
 1. Add a choice "Pieces: 1/2" and a second scoring trip for 2.
 2. Use `rememberHeading` before scoring and `returnToHeading` after.
-3. Make a second autonomous class with a different route, sharing the robot setup through a base
-   class (like the [starter kit](../starter-kit.md)'s `StarterAuto`).
+3. Make a second autonomous class with a different route. Share the robot setup through a base class
+   (like the [starter kit](../starter-kit.md)'s `StarterAuto`).
 
 ## Next
 

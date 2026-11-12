@@ -44,6 +44,9 @@ public class SimNewRobotTest {
         String tunables = f.get("Tunables.java");
         assertTrue(tunables, tunables.contains("public static class Feeder {"));
         assertTrue(tunables, tunables.contains("public static class Webcam1 {") || !tunables.contains("Webcam1"));
+        // Route numbers stay in each autonomous's steps: no Auto section (docs/five-files/05-autos.md).
+        assertFalse(tunables, tunables.contains("class Auto"));
+        assertTrue(f.get("autos/LeaveStart.java"), f.get("autos/LeaveStart.java").contains(".forward(\"Leave\", 24, 0.5);"));
         assertTrue(f.get("Actions.java"), f.get("Actions.java").contains("public static Action scoreHigh(Robot r)"));
     }
 

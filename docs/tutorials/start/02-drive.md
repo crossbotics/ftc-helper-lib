@@ -5,17 +5,17 @@
 **Goal:** write the one `drive(...)` line in `Robot.java`, drive the robot with gamepad 1, and check that
 every wheel turns the right way.
 
-**You need:** nothing at first: start in the simulator. Then a drivetrain (mecanum or tank), a block to lift its wheels off
-the ground, and gamepad 1.
+**You need:** nothing at first, because you start in the simulator. Then a drivetrain (mecanum or tank),
+a block to lift its wheels off the ground, and gamepad 1.
 
 **The code:** the lesson robot's [`Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Robot.java)
 and [`Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Tunables.java).
-Every method: [the robot module, Drive](../../modules/robot.md#drive). Before this: [Lesson 1](01-robot-in-five-files.md).
+Every method: [the robot module, Drive](../../reference/parts/drive.md). Before this: [Lesson 1](01-robot-in-five-files.md).
 
 ## 1. Pick the drive type and name the motors
 
-This is the lesson robot's drive line. Your own `Robot.java` (from the Quick start) already has one:
-check yours against it, line by line.
+The code below is the lesson robot's drive line. Your own `Robot.java` (from the Quick start) already
+has one. Check yours against it, line by line.
 
 ```java
 drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
@@ -29,9 +29,9 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
   two motors per side. A tank robot cannot strafe.
 - The names in quotes are the motor names in the robot configuration on the Driver Station. The order
   matters: front left, front right, back left, back right. **Why:** the library works out each wheel's
-  power from its place. Two names swapped make a robot that slides diagonally when it should strafe.
+  power from its place. When two names are swapped, the robot slides diagonally when it should strafe.
 
-A two-motor tank robot (like goBILDA's starter bot) looks like this:
+The line for a two-motor tank robot (like goBILDA's starter bot):
 
 ```java
 drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheelMm(96));
@@ -40,30 +40,30 @@ drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheelMm(
 ## 2. Say which motor and which wheel
 
 - `.motor(id)`: the drive motor by its id in the [parts catalog](../../guides/parts-catalog.md), for
-  example `"gobilda-5203-312"` (goBILDA 312 RPM), `"gobilda-5203-435"` or `"rev-hd-hex-20"`. A typo stops
-  at once with the list of ids. The default is `"gobilda-5203-312"`.
-- `.wheelMm(mm)`: the wheel diameter in millimetres (default 96). goBILDA mecanum wheels are 96 or 104.
+  example `"gobilda-5203-312"` (goBILDA 312 RPM), `"gobilda-5203-435"` or `"rev-hd-hex-20"`. On a typo,
+  the program stops at once and lists the ids. The default is `"gobilda-5203-312"`.
+- `.wheelMm(mm)`: the wheel diameter in millimeters (default 96). goBILDA mecanum wheels are 96 or 104.
 - `.wheel(id)`: the wheel by its catalog id instead, for example `"gobilda-hogback-96"` (a traction
   wheel) or `"gobilda-gripforce-mecanum-104"` (goBILDA's 104 mm mecanum set). The diameter comes from
   the catalog. The [parts catalog](../../guides/parts-catalog.md) lists the common mecanum, omni and
-  traction wheels from goBILDA, REV, AndyMark and Studica. Not there? Use `wheelMm`.
+  traction wheels from goBILDA, REV, AndyMark and Studica. For a wheel that is not there, use `wheelMm`.
 - `.gearRatio(r)`: motor turns per wheel turn, if gears or a belt sit between them. Default 1.
 
-**Why:** TeleOp does not need these, the sticks just set power. But autonomous does: "drive 24 inches"
-becomes encoder counts from the motor's counts per turn, the gears and the wheel size (lesson 6). An
-**encoder** is a sensor on the motor that counts how far its shaft turned. The
-simulator uses them too.
+**Why:** TeleOp does not need these, because the sticks only set power. Autonomous needs them. It turns
+"drive 24 inches" into encoder counts from the motor's counts per turn, the gears and the wheel size
+(lesson 6). An **encoder** is a sensor on the motor that counts how far its shaft turned. The
+simulator uses these numbers too.
 
 ## 3. Say which motors are reversed
 
 Motors on the two sides of a robot face opposite ways. So the same power turns one side forward and the
-other side backward. One side must be **reversed** in the code.
+other side backward. The code must **reverse** one side.
 
 - The default: the left side is reversed (front left and back left). That fits most goBILDA and REV chassis.
 - `.reversed("right_drive")`: exactly these motors are reversed, and no others. List **every** reversed
   motor. `.reversed()` with no names reverses none.
 
-You will find out which is right in step 7. Do not guess more than once: check.
+Step 7 shows you which is right. Do not guess more than once: check.
 
 ## 4. Say how the Control Hub is mounted (the IMU)
 
@@ -82,9 +82,9 @@ Field-centric driving and autonomous turns use it.
   `.imu("imu", LogoFacingDirection.LEFT, UsbFacingDirection.UP)`.
 - `.noImu()`: no IMU. TeleOp then drives robot-centric only, and autonomous refuses to start.
 
-**Why it matters:** with the wrong directions the heading is wrong, so field-centric driving goes the
-wrong way and autonomous turns go wrong. Robot.java needs these imports at the top (an `import`
-line tells Java where to find a name: here `Drive` and the two direction lists):
+**Why it matters:** with the wrong directions the heading is wrong. Then field-centric driving goes the
+wrong way, and autonomous turns go wrong. An `import` line tells Java where to find a name. Robot.java
+needs these imports at the top, for `Drive` and the two direction lists:
 
 ```java
 import com.crossbotics.ftchelper.robot.Drive;
@@ -92,14 +92,14 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 ```
 
-A name in red in Android Studio? Click it and press Alt+Enter (Option+Enter on a Mac) to add its import.
+When Android Studio shows a name in red, click it and press Alt+Enter (Option+Enter on a Mac) to add its import.
 
 ## 5. The numbers: Tunables.Drive
 
 ```java
 public static class Drive {
     public static double maxPower = DEFAULT;                    // top wheel power (1.0)
-    public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+    public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
     public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
     public static double strafeCorrection = DEFAULT;            // sideways moves: Drive Tuner (1.15)
     public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -109,23 +109,25 @@ public static class Drive {
 }
 ```
 
-`DEFAULT` = "use the library's default": the number in brackets at the end of the line.
+`DEFAULT` means "use the library's default": the number in brackets at the end of the line.
 It needs the `import static` line at the top of the file ([lesson 1](01-robot-in-five-files.md#2-tunablesjava-the-numbers)).
 Write your own number in its place to change it.
 
-A **profile** is a set of limits for the whole robot: PRACTICE (gentle, for the shop) or COMPETITION
-(full power, for matches).
+A **profile** is a mode for the whole robot: PRACTICE (for the shop: debug lines, the tuning menu) or
+COMPETITION (for matches).
 
-- `maxPower`: the most power any wheel gets in the COMPETITION profile (0.1 to 1).
-- `practiceMaxPower`: the same in the PRACTICE profile. **Why:** in the shop, new drivers and new code
-  should not run at full speed. You choose the profile in any autonomous's INIT menu (the last line);
-  the hub remembers it. A hub that was never set uses COMPETITION.
+- `maxPower`: the most power any wheel gets (0.1 to 1).
+- `practiceMaxPower`: the same, in the PRACTICE profile only. `DEFAULT` gives the same as `maxPower`.
+  **Why:** the drivers practice at match speed, so their hands learn the real robot. Lower it only for a
+  short time, for example on a new driver's first day. You choose the profile in any autonomous's INIT
+  menu (the last line), and the hub remembers it. A hub that was never set uses COMPETITION.
 - `slowSpeed`: the speed at a full squeeze of the slow trigger (0.3 = 30%).
-- `strafeCorrection` to `moveMinPower`, and `calibrated`, are for autonomous. You set them with the Drive Tuner in lesson 6.
-  Until `calibrated = true`, autonomous does not run.
+- `strafeCorrection` to `moveMinPower`, and `calibrated`, are for autonomous. You set them with the Drive
+  Tuner in lesson 6. Until `calibrated = true`, autonomous does not run.
 
-These are read at INIT. In the tuning menu (PRACTICE profile, hold GUIDE 1 s) you can change them; the
-new value is used from the next INIT. Then copy it back into `Tunables.java`: INIT lists the values that differ.
+The robot reads these at INIT. You can change them in the tuning menu (PRACTICE profile, hold GUIDE 1 s).
+The robot uses the new value from the next INIT. Then copy it back into `Tunables.java`: INIT lists the
+values that differ.
 
 ## 6. The driving you get for free
 
@@ -136,7 +138,7 @@ new value is used from the next INIT. Then copy it back into `Tunables.java`: IN
 | Left stick | drive forward/back; mecanum: also strafe | the same |
 | Right stick X | turn | the same |
 | Slow | LT: the further you pull it, the slower (down to `slowSpeed`) | left stick click: slow on/off |
-| Field-centric on/off (mecanum with an IMU) | Y | right stick click |
+| Field-centric on/off (mecanum with an IMU) | double-tap Y | double-tap the right stick click |
 | BACK | tap: pause everything; tap again: go on | the same |
 | BACK held 1 s | field-centric on: "forward" = the way the robot faces now (one buzz). Robot-centric: nothing. Either way the robot is paused (BACK pauses at the press): tap BACK to go on | the same |
 
@@ -144,14 +146,14 @@ new value is used from the next INIT. Then copy it back into `Tunables.java`: IN
   from the driver, whichever way the robot faces. Two buzzes = field-centric on, one buzz = off.
 - **"Forward"** for field-centric is the way the robot faced at INIT, or what autonomous left behind.
   If it is wrong, turn field-centric on, point the robot straight away from you and hold BACK for
-  1 second (one buzz). In robot-centric driving, holding BACK does nothing (no buzz), and the Driver
-  Station shows for 3 s: `BACK: "forward" is only reset in field-centric driving (turn it on first).`
+  1 second (one buzz). In robot-centric driving, holding BACK does nothing (no buzz). The Driver
+  Station then shows for 3 s: `BACK: "forward" is only reset in field-centric driving (turn it on first).`
   **Why:** robot-centric driving does not use "forward", so a reset there would only surprise you later.
-- **Pause:** a tap of BACK stops every part on **brake** (the motors hold still instead of coasting), and the wheels hold still. The Driver Station
-  says PAUSED. Tap BACK again and each part goes on with what it was doing. **Why:** a quick, safe stop
-  that does not end the program.
-- The sticks have a small dead zone (a resting stick is never exactly 0) and a gentle curve, so small
-  stick moves give fine control.
+- **Pause:** a tap of BACK stops every part on **brake** (the motors hold still instead of coasting), and
+  the wheels hold still. The Driver Station says PAUSED. Tap BACK again, and each part goes on with what it
+  was doing. **Why:** you get a quick, safe stop that does not end the program.
+- The sticks have a small dead zone, because a resting stick is never exactly 0. They also have a gentle
+  curve, so small stick moves give fine control.
 
 ## 7. Check the motor directions
 
@@ -159,49 +161,51 @@ Do this on every new robot, and after any motor or wire change. **Put the robot 
 the ground.**
 
 1. **One motor at a time:** run the Hardware Check ([testing procedures](../19-testing-procedures.md#2-use-it)).
-   D-pad up/down picks a motor, the right stick sets its power. Does the encoder count up with positive
-   power? That shows the motor and its wires work.
-2. **With the code's directions:** run **Tune and check** (in the TeleOp list, group "Finders"; nothing to copy),
-   pick **Motor Direction Check** with the D-pad, press A, then ▶ (start on the Driver Hub). It reads the directions from Robot.java.
-   Hold X, Y, A, B: each spins one wheel at 30% (front left, front right, back left, back right; a
-   two-motor tank: X = left, Y = right). The screen shows the motor's name. **Every wheel must roll the way
-   that moves the robot forward.** ([More](../../guides/finders.md#motor-direction-check-each-wheel-rolls-forward))
-3. **A wheel rolls backward?** Change `.reversed(...)` in Robot.java so that motor's setting flips:
-   add its name to the list, or take it out. Remember the list replaces the default (the left side). For
+   D-pad up/down picks a motor, and the right stick sets its power. Check that the encoder counts up with
+   positive power. That shows the motor and its wires work.
+2. **With the code's directions:** run **Tune and check** (in the TeleOp list, group "Finders"; nothing to copy).
+   Pick **Motor Direction Check** with the D-pad, press A, then ▶ (start on the Driver Hub). It reads the
+   directions from Robot.java. Hold X, Y, A or B, and each spins one wheel at 30%: front left, front right,
+   back left, back right. On a two-motor tank, X = left and Y = right. The screen shows the motor's name.
+   **Every wheel must roll the way that moves the robot forward.** ([More](../../guides/finders.md#motor-direction-check-each-wheel-rolls-forward))
+3. **When a wheel rolls backward:** change `.reversed(...)` in Robot.java so that motor's setting flips.
+   Add its name to the list, or take it out. Remember that the list replaces the default (the left side). For
    example, if the lesson robot's back right wheel rolls backward, it needs
    `.reversed("front_left", "back_left", "back_right")`.
-4. **Each encoder in its own port:** in **Tune and check**, pick **Encoder Check**, press A, then ▶. Hold A:
-   each motor turns a little, one at a time. Every drive motor must say `OK: counts up`. A wrong line names
-   the fault (a cable missing, or two cables swapped). Later lessons trust these counts.
+4. **Each encoder in its own port:** in **Tune and check**, pick **Encoder Check**, press A, then ▶. Hold A,
+   and each motor turns a little, one at a time. Every drive motor must say `OK: counts up`. A wrong line names
+   the fault: a cable missing, or two cables swapped. Later lessons trust these counts.
    ([More](../../guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port))
-5. **The IMU:** run your TeleOp, hold gamepad 1's small **START** button (OPTIONS on a PS controller), then press **BACK** while you
-   still hold START (this turns on the extra **debug lines**
-   on the Driver Station: more numbers for checking, like powers and the `Heading`; it does
-   not pause),
-   and turn the robot LEFT by hand. The `Heading` line must go UP. If it goes down or barely moves, fix
-   the logo and USB directions. (The Hardware Check also shows the IMU, but it always assumes logo up,
-   USB forward, so it only proves your directions if the hub is mounted that way.)
+5. **The IMU:** run your TeleOp. Hold gamepad 1's small **START** button (OPTIONS on a PS controller), then
+   press **BACK** while you still hold START. This turns on the extra **debug lines** on the Driver Station:
+   more numbers for checking, like powers and the `Heading`. It does not pause. Turn the robot LEFT by hand.
+   The `Heading` line must go UP. If it goes down or barely moves, fix the logo and USB directions. (The
+   Hardware Check also shows the IMU. But it always assumes logo up, USB forward, so it proves your
+   directions only if the hub is mounted that way.)
 
 ## Try it in the simulator
 
-From the `ftc-helper-lib` folder, write the lesson robot's simulator file from its Robot.java, then run it:
+First write the lesson robot's simulator file from its Robot.java, then run it.
+
+**Where:** the Terminal, in the `ftc-helper-lib` folder.
 
 ```bash
 ./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.lessonbot.Robot -Pout=build/lessonbot.properties
 ./gradlew :sim:run -PteamCode=none -Probot=build/lessonbot.properties
 ```
 
-Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, ▶. Set gamepad 1's list to "Keyboard". On the keyboard: left stick W A S D,
-right stick the arrows, LT is Z, Y is I, BACK is Backspace. Drive, strafe, turn, pull LT, switch to
-field-centric and turn the robot around. For your own robot: pick **Simulator** in the list next to Android Studio's
-green Run button and click Run (or `./gradlew :sim:run`). ([Simulator guide](../../guides/simulator.md).)
+Open http://localhost:8780, pick "Lesson Bot TeleOp", press INIT, then ▶. Set gamepad 1's list to
+"Keyboard". On the keyboard, the left stick is W A S D, the right stick is the arrows, LT is Z, Y is I,
+and BACK is Backspace. Drive, strafe, turn, pull LT, switch to field-centric and turn the robot around.
+For your own robot, pick **Simulator** in the list next to Android Studio's green Run button and click
+Run (or `./gradlew :sim:run`). ([Simulator guide](../../guides/simulator.md).)
 
 The simulator builds its robot from your code, so it **cannot** find a wrong motor direction. Only the
 real robot can (step 7).
 
 ## Check it on the robot
 
-For the first drive, set `maxPower` and `practiceMaxPower` to 0.4. Raise them when everything works.
+For the first drive, set `maxPower` to 0.4. Raise it when everything works.
 
 1. Wheels off the ground: stick up, every wheel rolls forward.
 2. On the floor: stick up = forward, stick down = back, right stick right = turn clockwise.
@@ -217,11 +221,11 @@ For the first drive, set `maxPower` and `practiceMaxPower` to 0.4. Raise them wh
 | Stops at INIT with a list of names | A motor name in Robot.java does not match the configuration (capitals too). |
 | Spins or drifts when it should go straight | A motor direction is wrong: step 7. |
 | Pushing the stick up drives backward | Every direction is flipped: reverse the other side. |
-| Slides diagonally when it should strafe | Two motor names are on the wrong wheels (e.g. front_left and back_left swapped). |
+| Slides diagonally when it should strafe | Two motor names are on the wrong wheels (for example front_left and back_left swapped). |
 | Field-centric goes the wrong way or circles | The logo/USB directions do not match the hub, or "forward" is wrong: with field-centric on, hold BACK 1 s while facing away. |
 | Y does nothing | Field-centric needs mecanum and an IMU. With one driver it is the right stick click. |
 | Everything stopped and will not move | It is paused: tap BACK. |
-| Slow even without LT | You are in the PRACTICE profile (`practiceMaxPower`), or `maxPower` is low. |
+| Slow even without LT | `maxPower` is low, or `practiceMaxPower` is low and you are in the PRACTICE profile. |
 
 ## Under the hood
 
@@ -230,6 +234,6 @@ and [Tutorial 05: Drive a standard (tank) robot](../05-drive-tank.md).
 
 ## Next
 
-On your robot: [Lesson 2b: Check the hardware](../19-testing-procedures.md) (every motor, servo and sensor,
-by hand; its page is also tutorial 19 of the under-the-hood track, so its file is called
-`19-testing-procedures.md`). Then [Lesson 3: Buttons (Controls.java)](03-buttons.md).
+On your robot: [Lesson 2b: Check the hardware](../19-testing-procedures.md). It checks every motor, servo
+and sensor by hand. Its page is also tutorial 19 of the under-the-hood track, so its file is called
+`19-testing-procedures.md`. Then [Lesson 3: Buttons (Controls.java)](03-buttons.md).

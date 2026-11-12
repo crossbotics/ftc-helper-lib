@@ -149,7 +149,7 @@ public class SimCameraTest {
         TargetObservation ahead = waitForTarget(level, "RED SCORING");
         assertNotNull(ahead);
         assertEquals(0, ahead.bearingDeg, 0.5);
-        // The aiming point, on the floor: straight ahead, 8 in (the camera) + its floor distance from the centre.
+        // The aiming point, on the floor: straight ahead, 8 in (the camera) + its floor distance from the center.
         double fromCentre = 8 + ahead.distanceIn;
         assertTrue("the floor distance is less than the slanted one (52.1): " + ahead, ahead.distanceIn < 50);
         synchronized (r) { r.headingDeg = 115; }        // turned 25 degrees left: the goal is to the right
@@ -206,7 +206,7 @@ public class SimCameraTest {
             assertEquals("tag " + first + " to " + (first + 3) + ": 13 in toward printed right", 13, along, 0.05);
         }
         // RED SCORING's aiming point: 7.19 in toward the printed top and 5.62 in behind the row (SDK numbers);
-        // for these tags (face +x, 60 degrees down; printed top away from the field centre) that is
+        // for these tags (face +x, 60 degrees down; printed top away from the field center) that is
         // 9.0 in toward -x and 1.3 in up from the middle of the row (-11.61, -12.74, 35.53).
         double[] o = org.firstinspires.ftc.vision.apriltag.AprilTagProcessorImpl.clusterOrigin(cam, lib.lookupCluster(30));
         assertEquals(-11.61 - 9.04, o[0], 0.1);

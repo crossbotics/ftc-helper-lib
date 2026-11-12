@@ -93,7 +93,7 @@ public final class CharacterizeMath {
         return Math.max(WINDOW_SEC, 2.5 * d[d.length / 2]);
     }
 
-    // A slow log (moments far apart) still uses one neighbour each side, so a speed-up can be seen.
+    // A slow log (moments far apart) still uses one neighbor each side, so a speed-up can be seen.
     // Returns {lo, hi}; the next search goes on from the window's own edges.
     private static int[] atLeastNeighbours(int i, int lo, int hi, int n) {
         return new int[] {Math.min(lo, Math.max(0, i - 1)), Math.max(hi, Math.min(n - 1, i + 1))};

@@ -2,7 +2,7 @@
 
 **Set up, page 6 of 9.** You build the robot project and install it on the Control Hub.
 
-**Only using the simulator on this laptop?** Skip this page. The simulator needs no hubs. Go to [Every practice](08-every-practice.md).
+**If you use only the simulator on this laptop,** skip this page: the simulator needs no hubs. Go to [Every practice](08-every-practice.md).
 
 **Why:** the robot runs the app that is on the hub, not the code on your laptop. You repeat steps 1, 3
 and 4 after every change.
@@ -20,14 +20,17 @@ The buttons you use are at the top right of Android Studio:
 2. **Connect to the Control Hub.** Turn on the robot. Pick **one**:
    - **USB (the easiest):** a USB cable from the laptop to the Control Hub's USB-C port.
    - **Wi-Fi:** join the laptop to the Control Hub's Wi-Fi network (ask your mentor for its name and
-     password). Then in Android Studio's [Terminal tab](09-the-terminal.md) (any folder) type `adb connect 192.168.43.1:5555`.
-     It says `adb` is not found? Use USB.
+     password). Then type `adb connect 192.168.43.1:5555`.
+
+     **Where:** Android Studio's [Terminal tab](09-the-terminal.md), in any folder.
+
+     If it says `adb` is not found, use USB.
 3. **Pick the hub.** In the device list (1), pick the Control Hub. Its name starts
    with `REV Robotics`.
 4. **Install:** make sure the run list (2) says `TeamCode`, then click **Run** (3).
    It builds again and installs the app on the Control Hub.
 5. **Check on the Driver Hub.** It connects to the robot and shows the TeleOp and Autonomous lists.
-   - FTC's new project shows **empty** lists. That is normal: its sample OpModes are hidden.
+   - FTC's new project shows **empty** lists. That is normal: FTC hides its sample OpModes.
 
 ## Problems
 
@@ -42,3 +45,5 @@ The buttons you use are at the top right of Android Studio:
 The Driver Hub connects to the robot after the install.
 
 **Next:** [Make the robot configuration](07-robot-configuration.md).
+
+**Look it up:** [Troubleshooting: build problems](../troubleshooting.md#build-problems) and [Driver Station errors](../troubleshooting.md#driver-station-errors).

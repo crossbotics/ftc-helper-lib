@@ -23,7 +23,7 @@ import java.util.Properties;
  * <pre>
  * cad.units = mm            # mm (Onshape and Fusion's usual export) or in
  * cad.axes = y,-x,z         # the CAD axes that point the robot's forward, left and up
- * cad.origin = 0,0,0        # the robot's centre on the floor, in CAD units
+ * cad.origin = 0,0,0        # the robot's center on the floor, in CAD units
  * </pre>
  * The 3D view draws the meshes; the size rules use them in place of the boxes they cover. Physics and
  * game pieces keep using the boxes (size=): a box is a far simpler thing to bump into.
@@ -78,7 +78,7 @@ final class SimCad {
         final double scale;             // CAD units -> inches
         final int[] axis = new int[3];  // forward, left, up: which CAD axis (0 x, 1 y, 2 z)
         final double[] sign = new double[3];
-        final double[] origin;          // the robot's centre on the floor, CAD units
+        final double[] origin;          // the robot's center on the floor, CAD units
 
         final String words;             // the settings in words, for "print cad"
 
@@ -124,10 +124,10 @@ final class SimCad {
                 if (q.length != 3) throw new NumberFormatException();
                 origin = new double[] {Double.parseDouble(q[0]), Double.parseDouble(q[1]), Double.parseDouble(q[2])};
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Robot file: cad.origin is the robot's centre on the floor in CAD units: x,y,z");
+                throw new IllegalArgumentException("Robot file: cad.origin is the robot's center on the floor in CAD units: x,y,z");
             }
             String[] n = {"x", "y", "z"};
-            words = String.format(Locale.US, "CAD in %s; the robot's forward is CAD %s%s, left %s%s, up %s%s; its centre on the floor is CAD %s,%s,%s",
+            words = String.format(Locale.US, "CAD in %s; the robot's forward is CAD %s%s, left %s%s, up %s%s; its center on the floor is CAD %s,%s,%s",
                     units, sign[0] < 0 ? "-" : "", n[axis[0]], sign[1] < 0 ? "-" : "", n[axis[1]], sign[2] < 0 ? "-" : "", n[axis[2]],
                     fmt(origin[0]), fmt(origin[1]), fmt(origin[2]));
         }

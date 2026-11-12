@@ -8,7 +8,7 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
 /**
  * The lesson robot's Drive Tuner: measures the wheel size and the strafe correction, and shows
  * the lines to copy into Robot.java and Tunables.Drive.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/06-first-autonomous/
+ * more: https://crossbotics.com/ftc-helper/docs/five-files/05-autos/#tune-the-drive-first
  */
 @TeleOp(name = "Lesson Bot Drive Tuner", group = "Finders")
 @Disabled // hides it on the Driver Station: delete this line in your copy

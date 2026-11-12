@@ -19,7 +19,7 @@ works on many drivetrains, and that the motor-direction steps in lesson 2 find a
 ## Safety
 
 - First run with the robot on a block, wheels off the ground.
-- Keep `maxPower` and `practiceMaxPower` at 0.4 in `Tunables.java` for this test.
+- Keep `maxPower` at 0.4 in `Tunables.java` for this test.
 - A clear floor and a hand near the Driver Station STOP button.
 
 ## Setup

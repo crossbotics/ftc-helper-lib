@@ -1,4 +1,4 @@
-# Starter kit: a whole robot program in 30 minutes
+# Starter kit: a whole robot program
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
@@ -8,8 +8,8 @@ names and numbers, and you have a working robot.
 
 > **Start with the robot in five files instead.** [Lesson 1](tutorials/start/01-robot-in-five-files.md) of the
 > tutorials' main track shows a shorter way: `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and autos, made from your robot
-> configuration by `./gradlew :sim:newRobot`, with ready-made modules ([robot module](modules/robot.md)).
-> This starter kit still works and is kept for teams that use it. New team? Start at
+> configuration by `./gradlew :sim:newRobot`, with ready-made modules ([robot module](reference/robot-java.md)).
+> This starter kit still works, and we keep it for teams that use it. If you are a new team, start at
 > [Pick your road](quick-start.md#pick-your-road) in the Quick start.
 
 **Before this:** [Add the library](setup/04-add-the-library.md).
@@ -24,7 +24,7 @@ names and numbers, and you have a working robot.
 | 4 | `StarterAuto.java` | what every autonomous shares | nothing |
 | 5 | `AutoScoreAndPark.java` | one autonomous (copy for more) | the steps |
 | 6 | `HardwareCheck.java` | tests every device | nothing |
-| + | `ServoFinder.java`, `MotorFinder.java`, `FlywheelFinder.java`, `DriveTuner.java`, `Characterizer.java` | [finders](guides/finders.md): measure servo ends, lift limits, flywheel gains, wheel size, how the motors really move (feedforward, simulator), and show the code to copy | `Characterizer`: your lift/arm limits and flywheel names |
+| + | `ServoFinder.java`, `MotorFinder.java`, `FlywheelFinder.java`, `DriveTuner.java`, `Characterizer.java` | [finders](guides/finders.md): measure servo ends, lift limits, flywheel gains, wheel size, how the motors move on the robot (feedforward, simulator), and show the code to copy | `Characterizer`: your lift/arm limits and flywheel names |
 
 ```mermaid
 flowchart LR
@@ -44,24 +44,24 @@ flowchart LR
    first line of each to `package org.firstinspires.ftc.teamcode;`. Delete each `@Disabled` line.
 3. **Configure the robot** on the Driver Station with the names in `RobotSettings` and `Robot`
    (or change the names in the code to match yours).
-4. **Hardware Check** (robot on a block): every device listed, every motor turns the right way.
+4. **Hardware Check** (robot on a block): check that it lists every device, and that every motor turns the right way.
    Fix directions in `RobotSettings` / `Robot`. Write down servo positions.
 5. **`Robot.java`**: delete mechanisms you do not have. Find each servo's and lift's limits and
    positions with the **Servo Finder** and **Motor Finder** ([finders](guides/finders.md): small
-   OpModes that measure a number and show the code line to copy) and copy the lines they show. Each mechanism type is explained in [mechanism.md](modules/mechanism.md).
+   OpModes that measure a number and show the code line to copy). Copy the lines they show. [mechanism.md](modules/mechanism.md) explains each mechanism type.
 6. **Main TeleOp**: drive at the PRACTICE profile's gentle power (a profile is a set of limits:
-   PRACTICE is gentle for the shop, COMPETITION is full power). It starts robot-centric; Y turns
+   PRACTICE is gentle for the shop, COMPETITION is full power). It starts robot-centric. Double-tap Y to turn
    field-centric on. Check every button in [the list](#the-buttons). Print that list for the
    drive team.
-7. **Tune** the lift with the tuning menu (GUIDE button, PRACTICE profile), copy the numbers into
+7. **Tune** the lift with the tuning menu (GUIDE button, PRACTICE profile), then copy the numbers into
    `Robot.java` ([tuning guide](guides/tuning.md)).
 8. **Autonomous**: tune the drivetrain with the **Drive Tuner** finder, set `calibrationConfirmed = true`,
    then change `AutoScoreAndPark`'s steps for your game ([easy autos](guides/easy-autos.md)).
-9. **Before the event**: Profile COMPETITION, [testing checklist](guides/testing.md).
+9. **Before the event**: pick the COMPETITION profile, and go through the [testing checklist](guides/testing.md).
 
 ## Robot.java: the mechanisms
 
-The mechanisms are set up once, in the constructor (the code that runs at `new Robot(hardwareMap)`,
+`Robot.java` sets up the mechanisms once, in the constructor (the code that runs at `new Robot(hardwareMap)`,
 in INIT). Nothing moves there, so it is safe in INIT. TeleOp and every autonomous make one and use
 `robot.lift`, `robot.claw` and `robot.intake`. The fields are `public` (TeleOp and autonomous can use
 them) and `final` (each is set once and never swapped for another one). Each mechanism type:
@@ -104,10 +104,10 @@ all = new Subsystems().add(lift, claw, intake); // (8)!
 2. The software never drives the lift below 0 or above 2600 ticks (encoder counts: how far the motor
    shaft has turned). The robot still needs a real, physical stop at the top: the rules ask for one,
    and software can fail.
-3. A touch sensor at the bottom. Each time it is pressed, the count goes back to 0, which removes drift.
-   Until it is pressed once, the lift only goes down, slowly. No switch in the configuration? The line
-   is skipped.
-4. Within 250 ticks of either end, the power is cut, down to 20% right at the end, so the lift does not
+3. A touch sensor at the bottom. Each press sets the count back to 0, which removes drift.
+   Until the first press, the lift only goes down, slowly. With no switch in the configuration, the
+   library skips the line.
+4. Within 250 ticks of either end, the lift cuts its power, down to 20% right at the end, so it does not
    slam into its stops.
 5. How hard the lift pushes toward a height: P = 0.004 pushes harder when it is far, I = 0 (not used),
    D = 0.0002 calms it so it does not overshoot, F = 0.05 is a small steady push up that holds it
@@ -117,8 +117,8 @@ all = new Subsystems().add(lift, claw, intake); // (8)!
    The code is the record.
 7. A servo cannot say where it is, so the claw guesses when it has finished moving from this time: about
    how many seconds the servo takes to move the whole way (0 to 1).
-8. `all` is the group that is updated, shown and stopped for you. A mechanism that is not in it never
-   gets updated (it does not move) or stopped.
+8. The library updates, shows and stops the `all` group for you. It never updates (so never moves) or
+   stops a mechanism that is not in it.
 
 ## RobotSettings.java: the drivetrain
 
@@ -127,7 +127,7 @@ once, which `EasyTeleOp` and `EasyAuto` both read. It is not an OpMode (no `@Tel
 on the Driver Station. `drive()` makes a fresh set of settings at each call, so one program cannot change
 another's by mistake. `Profile.pick(0.6, 1.0)`: 60% power in the PRACTICE profile (safer around people
 and while learning), 100% in COMPETITION ([profiles](guides/profiles.md)). The IMU is the hub's built-in
-turn sensor: if its two mounting directions are wrong for your robot, the heading is wrong, and so are
+turn sensor. If its two mounting directions are wrong for your robot, the heading is wrong, and so are
 field-centric driving and every autonomous turn ([hardware.md](modules/hardware.md) has a picture).
 
 ```java
@@ -154,7 +154,7 @@ public AutoDriveConfig auto() {
 
 ## The buttons
 
-Print this list for the drive team. Gamepad 1 comes from `EasyTeleOp`; gamepad 2 from `MainTeleOp.java`.
+Print this list for the drive team. Gamepad 1 comes from `EasyTeleOp`. Gamepad 2 comes from `MainTeleOp.java`.
 Each operator button only sets a target: the mechanisms do the moving in their `update()`, so nothing in
 the TeleOp waits.
 
@@ -168,12 +168,13 @@ the TeleOp waits.
 | GUIDE | tuning menu (PRACTICE) | B (hold) | intake reverse |
 | BACK + START together | debug telemetry on/off | | |
 
-The lift by hand: a deadband of 0.1, so a bumped stick does not cancel a button height. The gamepad
-buzzes at 1:00 and 0:20 left (2026-27 BIOBUZZ: FLOWER ownership unlocks at 1:00; the final 20 s).
+The lift by hand has a deadband of 0.1 (the stick must move past 0.1 before it counts), so a bumped
+stick does not cancel a button height. The gamepad buzzes at 1:00 and 0:20 left (2026-27 BIOBUZZ:
+FLOWER ownership unlocks at 1:00, and then the final 20 s).
 
 ## AutoScoreAndPark.java: an autonomous
 
-Written for BLUE; RED is mirrored for you. `preselectTeleOp` makes the Driver Station pick Main TeleOp
+It is written for BLUE. The library mirrors it for RED. `preselectTeleOp` makes the Driver Station pick Main TeleOp
 after the autonomous. `extends StarterAuto` gives it the shared setup from file 4 (drive, IMU, robot,
 INIT menu), so this file only says where to start, which extra choices to offer, and the steps.
 `startHeadingDeg()` is the way the robot faces at the start, compared with "straight away from your
@@ -217,9 +218,9 @@ protected void buildRoutine(AutoRoutine r) {
 4. The steps before `thenPark()` stop when `parkReserveSec()` (4 s) is left, so the park always runs.
    70% power: the park is a straight, simple move, and time is short.
 
-## Standard (tank) drivetrain?
+## Standard (tank) drivetrain
 
 In `RobotSettings.drive()` use `DriveConfig.tank()` (4 motors) or `DriveConfig.tankTwoMotor()`.
-That is all: `MainTeleOp` drives arcade style by itself (left stick forward/back, right stick turn;
-no field-centric). Autonomous: only forward/back moves and turns (`move(d, 0 or 180, p)`, `turn`,
+That is all: `MainTeleOp` drives arcade style by itself (left stick forward/back, right stick turn).
+It has no field-centric mode. Autonomous can only move forward and back, and turn (`move(d, 0 or 180, p)`, `turn`,
 `turnTo`).

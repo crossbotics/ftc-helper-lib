@@ -13,7 +13,7 @@ import java.util.List;
  * and touched neither the frame (or our own CELL from outside) nor the other HIVE before it got there. The
  * other verdicts say why not: MISS, RIM (it touched the rim going in: it may bounce out), OTHER_HIVE, FRAME.
  *
- * Units inside are metres and seconds. The same rules run two ways: {@link #judge} flies a shot itself (air
+ * Units inside are meters and seconds. The same rules run two ways: {@link #judge} flies a shot itself (air
  * drag and spin lift, as judge() does: one forward step every millisecond), and a {@link Flight} can be fed
  * the positions of a piece the physics engine flies (the verdict the page shows for each real shot).
  */
@@ -37,7 +37,7 @@ final class SimCellJudge {
             bx0 = x0; bx1 = x1; bs0 = s0; bs1 = s1;
         }
 
-        // as sim_core.js inPrism(): the ball (centre p, radius r) overlaps the block
+        // as sim_core.js inPrism(): the ball (center p, radius r) overlaps the block
         boolean hits(double[] p, double r) {
             double[] q = sub(p, piv);
             double a = dot(q, ax), s = dot(q, up), x = dot(q, ex) - xc;
@@ -46,7 +46,7 @@ final class SimCellJudge {
         }
     }
 
-    /** A field part as a straight-up prism (its outline from zMin to zMax, metres): the HIVE frame from the field file. */
+    /** A field part as a straight-up prism (its outline from zMin to zMax, meters): the HIVE frame from the field file. */
     static final class Solid {
         final List<double[]> hull;
         final double zMin, zMax;
@@ -89,7 +89,7 @@ final class SimCellJudge {
      * The target: our HIVE's pivot, the up CELL's arm direction (toward its opening), across its floor, and along
      * the pivot axis (unit vectors); its opening outline (along ex, along nup from the floor), the floor's offset
      * from the pivot line (s0), where the CELL starts and ends along the arm (aIn, aOut) and the frame allowance
-     * (frameTube: the CELL's walls and frame grown by this much; metres). b3: the opening's bottom centre, or null
+     * (frameTube: the CELL's walls and frame grown by this much; meters). b3: the opening's bottom center, or null
      * to work it out (pivot + aOut along the arm + s0 across the floor).
      */
     SimCellJudge(double[] piv, double[] ax, double[] nup, double[] ex, double[][] pent, double s0, double aIn, double aOut,
@@ -97,7 +97,7 @@ final class SimCellJudge {
         this.piv = piv; this.ax = ax; this.nup = nup; this.ex = ex; this.pent = pent;
         this.aIn = aIn; this.aOut = aOut; this.frameTube = frameTube; this.minDescDeg = minDescDeg;
         this.rho = rho; this.cd = cd; this.g = g;
-        // the opening's bottom centre, and the opening's plane faces along the arm
+        // the opening's bottom center, and the opening's plane faces along the arm
         this.b3 = b3 != null ? b3 : add(piv, add(mul(ax, aOut), mul(nup, s0)));
         norm = ax;
         rim = new double[pent.length][][];
@@ -127,8 +127,8 @@ final class SimCellJudge {
     }
 
     /**
-     * One shot's verdict as it flies (judge()'s checks, step by step). Feed it the piece's centre and velocity
-     * after each step (metres, metres per second) until {@link #step} says it is decided.
+     * One shot's verdict as it flies (judge()'s checks, step by step). Feed it the piece's center and velocity
+     * after each step (meters, meters per second) until {@link #step} says it is decided.
      */
     final class Flight {
         final double r;
@@ -187,7 +187,7 @@ final class SimCellJudge {
 
     /**
      * Flies one shot (as judge(): drag, gravity and spin lift from each step's starting velocity, one forward
-     * step every dt seconds, for at most tmax) and returns its verdict. p0, v0 metres and metres per second;
+     * step every dt seconds, for at most tmax) and returns its verdict. p0, v0 meters and meters per second;
      * the ball's mass (kg) and radius (m); spin = its turning, radians per second about x, y, z (null: none).
      */
     int judge(double[] p0, double[] v0, double massKg, double radius, double[] spin, double dt, double tmax) {

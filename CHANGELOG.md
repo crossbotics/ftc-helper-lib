@@ -6,6 +6,17 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Odometry measured from the robot's edges.** `.robotSizeMm(length, width)` with
+  `.podsFromEdgesMm(forwardPodFromLeft, sidewaysPodFromFront)` (Pinpoint) or
+  `.mountFromEdgesMm(fromFront, fromLeft, heading)` (OTOS): a tape from the frame's edges, and the library
+  works out the center numbers (`offsetsMm`, `mountIn`). The center is hard to find on a real robot. The
+  Odometry Tuner then says to write its exact `.offsetsMm(...)` in place of `.podsFromEdgesMm(...)`. The
+  cookbook's Pinpoint and OTOS recipes use the edges now.
+
+- **Simulator: the 4-piece foul (BIOBUZZ G407).** A robot that holds 6 or more pieces at once, or 5 for more
+  than 3 s twice, gets a MAJOR FOUL once per match (20 points to the other alliance), as the manual's
+  STRATEGIC examples say. 5 for a moment is no foul. The rules file has a new `control` section.
+
 - **Docs: Pick your start** (`docs/pick-your-start/`), between Set up and the five files. One page to pick
   how you start (a starter bot, a common setup, or a blank slate), one short page for each, and one page
   for copying example files into TeamCode. Quick start, Pick your template and the starter bots guide now
@@ -13,6 +24,39 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Examples: every common setup has all five files.** `odometrybot` gets an empty `Actions.java`, and
   `pedrobot` gets an empty `Actions.java` and a `Controls.java` ("Pedro Bot TeleOp": the intake's buttons and
   the "Where" line). Its autonomous now picks that TeleOp after it ends.
+- **Docs: Building autos** (`docs/building-autos/`), after the five files: what an auto can do (every step, in
+  groups, with a field-numbers picture), put steps together, having multiple autos, the auto builder (steps; odometry
+  and Pedro), advanced autos (what the builder cannot write: menus, `Routes.java`, `alliance().pick`, `waitUntil`, your
+  own step), and match day. They
+  replace lesson 6, guides/autonomous-builder.md and guides/autos.md, which now point to the new pages.
+
+### Changed
+
+- **Flywheel starting gains:** tutorial 17, the module page and the Shot and Aim tuner examples use
+  `.maxRpm(6000).startingGains()` (REV's formula, right for any motor) in place of the hand-picked
+  `.pidf(10, 3, 0, 12)`.
+
+- **The turret's "follow the goal" button is the operator's right stick click** (it was BACK), with 2 buzzes
+  for on and 1 for off. The right stick X already turns the turret by hand, and robot 1 uses the same click
+  for its auto-aim. With one driver, BACK was also the library's pause. Teams that copied
+  `g2.back.toggle(robot.turret.followMode())` can keep it with two drivers. See
+  [Turret: buttons to add](docs/reference/parts/turret.md#buttons-to-add).
+- **Example autos write route numbers in the steps** (`.forward("Leave", 20, 0.5)`), not in `Tunables.Auto`: each
+  autonomous keeps its own numbers, and the auto builder reads and changes them. The example robots' `Tunables.java`
+  files have no `Auto` section any more (the cookbook's `tunables-auto` recipe is gone), and `:sim:newRobot` writes
+  none: its `autos/LeaveStart.java` has the numbers in the step. Your own sections still work as before.
+- **`practiceMaxPower` now defaults to `maxPower`:** the PRACTICE profile drives at match speed unless you write
+  your own number, so drivers practice with the real robot's speed (it was 0.6). The example robots' `Tunables.java`
+  files and `:sim:newRobot` no longer lower it; the docs use a low `maxPower` for first runs instead. A team that
+  wrote its own `practiceMaxPower` keeps it.
+- Docs and javadoc: in DECODE (2025-26), each alliance's drivers stood at their own wall, like BIOBUZZ. So
+  `alliancesOnOneWall()` (default false) is not needed for DECODE; the docs no longer say it is.
+
+### Fixed
+
+- Auto builder, "Best match": it now counts every device in the robot file (odometry, IMU, cameras, sensors),
+  not only motors and servos. Before, with several Robot classes, it could pick one that needs a device the
+  robot file lacks (the V2 bot's `pinpoint` on the starter robot file), and **Run** stopped at INIT.
 
 ## v0.40.0 - 2026-11-10
 
@@ -90,7 +134,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   from its new "buttons to add" in docs/modules/robot.md, or write `useStandardButtons()` returning `true` to get
   the old way back. The example robots and `:sim:newRobot` write each part's buttons out, and their tests check
   that the button maps did not change.
-- **The Tunables reference has a block to copy for each part** ([tunables.md](docs/guides/tunables.md)): every
+- **The Tunables reference has a block to copy for each part** ([tunables.md](docs/reference/tunables.md)): every
   section starts with the part's lines, most set to `DEFAULT` or `MEASURE`. New blocks for Camera, Lights and a piece
   sensor; the blocks are the cookbook's compiled code, checked by `tools/check_docs.py`.
 - **The five files, one walkthrough page per file** ([docs/five-files/](docs/five-files/README.md)), starting with
@@ -591,7 +635,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   the start for red. A down CELL is never the goal, even when it is the only one in view (from under the
   HIVE): the Driver Station says `Goal : not seen (RED SCORING is upside down (a down CELL))`. The `Goal`
   line also names the CELL group in use. `camera.target("RED SCORING")` still gives that group.
-  [Camera](docs/modules/robot.md#camera)
+  [Camera](docs/reference/parts/camera.md)
 - **Added to the vision classes:** `TargetObservation.rollDeg` and `isUpright()` (the tag's turn in the
   picture; webcam: the SDK's `ftcPose.roll`; Limelight group: from the order of its tags in the row),
   `TagGroup.element`, `TagGroup.goalTarget(camera, name)` and `TagGroup.whyNoGoal(camera, name)`.
@@ -602,7 +646,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   turret to aim. `flywheelbot`'s G2 Y fires with `robot.launcher.fireAllAction()`, and its hand-written
   `Actions.fireThree` is gone. [Lesson 9, section 10](docs/tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot)
 - **`flywheelbot` fires only when LOCKED on the goal** (`.requireReady("aimed", () -> aim().stage() == Aim.Stage.LOCKED)`):
-  never blind, with the aim mode on or off. Its autonomous starts on the 2nd tile right of the centre
+  never blind, with the aim mode on or off. Its autonomous starts on the 2nd tile right of the center
   line (x 48), where its camera sees the up CELL, and drives 24 in.
 - **`flywheelbot` shoots 75 degrees up (was 50), at 2300 rpm (was 2600).** A 50 degree shot came in too
   flat to drop into the CELL from any spot where the camera sees it. Tuned in the simulator: its
@@ -675,7 +719,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   - SPRAY: no wait for the speed band (the wheel must still turn at half its speed). Only with
     `sprayEnabled = true`: then also in TeleOp's last `sprayLastSec` (5 s).
   The Driver Station says `Fire: QUICK (12 s left)`; `shotMode(...)` sets one by hand.
-  [Firing](docs/modules/robot.md#firing-shot-modes-feed-stop-piece-path)
+  [Firing](docs/reference/parts/launcher.md#firing-shot-modes-feed-stop-piece-path)
 - **A feed stop: `.feedStop("feed_stop")` on the launcher** (only if the robot has one). Hold at START
   (never in INIT), open for each piece, closed when the shot is seen (or after `feedStopOpenSec`); in SPRAY
   open until the last piece. The **Feed Stop Finder** (in Tune and check) finds `feedStopHold` and
@@ -726,7 +770,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 - **The score counts like a referee.** HIVE TIPs count when they happen, LEAVE and AUTO PARK at the end of
   AUTO; pieces in the CELLs, FLOWERs and GARDENs and TELEOP PARK only at the end of the match (they change
-  all match long). Until then the score bar shows them grey ("+10": if the match ended now). When TeleOp
+  all match long). Until then the score bar shows them gray ("+10": if the match ended now). When TeleOp
   ends the score is FINAL and held. Click a side: AUTO, TELEOP and FOUL, as on FIRST's score calculator,
   and the RANKING POINTS (SWARM, POLLINATOR 1 and 2) with the count toward each.
 - **Ready-made features: `robot.features()`.** The library works out from Robot.java what it can do for
@@ -744,13 +788,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   away from every wall goes to the nearest one, and a check refuses it. The map draws the real field
   (141.17 in, tiles of 23.53 in, each seam with its 0.4 in band of interlocking teeth, from the field CAD),
   snapping also lines a side up with the teeth's edge, and the line under the spot names the tile
-  ("Centred on tile 4 from the left"). Turn the start with a yellow knob, the Face arrows or 15° buttons; a
+  ("Centered on tile 4 from the left"). Turn the start with a yellow knob, the Face arrows or 15° buttons; a
   tap on the start robot no longer adds a step.
 - **Clearer words in the auto builder:** "Red's side: Rotated 180° (like BIOBUZZ) / Mirrored" (the builder
   writes `mirrorForRed()` for you). "Robot (your Robot.java)" is plain text when your code has one Robot
   class, and a list ("Best match" first) only when it has several.
 - **The start spot lines up along a side wall too** (tile middle, seam, teeth edge), and **the note for the
-  drive team says where in the tile**: "Our wall, tile 3 from left, centred, facing field", "... left edge
+  drive team says where in the tile**: "Our wall, tile 3 from left, centered, facing field", "... left edge
   on seam", "... near edge at teeth".
 - **The auto builder lists your actions.** An Action or Start something step is a list of what your
   code has (`Actions.fireAll(robot)` to shoot, `Actions.deployIntake(robot)`...), with "type your own..."
@@ -1017,7 +1061,7 @@ shapes; arms, turrets and hoods take `looks(...)`; simulator tests that run toge
 ### Fixed
 
 - **Field numbers explained right:** comments on `goalX`/`goalY`, `parkX`/`parkY` and `resetX`/`resetY`
-  said "inches from your wall"; they are inches right of the field's centre (x) and from the centre
+  said "inches from your wall"; they are inches right of the field's center (x) and from the center
   toward the far wall (y, negative = your half), as in lesson 7.
 - Tank-drive example robots (and lesson 1): `strafeCorrection` says it is not used (a tank drive
   cannot strafe).
@@ -1132,13 +1176,13 @@ now start with numbers worked out from the motor: see "Changed".
   number (a lift's `min`/`max`, a hood's stops...) INIT stops. `MEASURE` = a number to find on the robot:
   INIT stops and names the tool (`Tunables.Lift.min = MEASURE: find it on the robot: ... Motor Finder, X`).
   `:sim:newRobot` and the templates write every part's settings this way.
-- **Parts not in the catalog** (docs/modules/robot.md#parts-not-in-the-catalog): `Motors.custom(id,
+- **Parts not in the catalog** (docs/reference/robot-java.md#parts-not-in-the-catalog): `Motors.custom(id,
   countsPerRev, freeRpm)`, `Motors.unknown(id)`, `Parts.customServo(id, rangeDeg, secPer60Deg[, pulse
   range])`, `Parts.unknownServo(id)`. The id works wherever a catalog id goes; the defaults come from its
   numbers; `:sim:fromRobot` writes them (`ticksPerRev=`, `rpm=`, `rangeDeg=`, `secPer60=`). Numbers not
   known (or no `.part(...)`): general defaults, and INIT says so and how to do better. Cookbook: "My motor
   isn't in the catalog".
-- **Defaults from the parts catalog** (docs/guides/tunables.md#first-run-what-you-get-before-tuning): a lift
+- **Defaults from the parts catalog** (docs/reference/tunables.md#first-run-what-you-get-before-tuning): a lift
   with `.part(...)` scales its unwritten `kP`, `kD`, `slowZone` and `tolerance` to the motor's counts per
   turn (the plain defaults are for a goBILDA 312 RPM motor); a Claw, Wrist, Positioner, Hood, servo Turret
   or servo Indexer with `.part(...)` times its moves from the servo's catalog speed at the hub's 5 V
@@ -1172,7 +1216,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
 
 ### Added
 
-- **A lift or arm on two motors** (docs/modules/robot.md#two-motors-on-one-lift-or-arm):
+- **A lift or arm on two motors** (docs/reference/parts/lift.md#two-motors-on-one-lift-or-arm):
   `Lift.slide("lift_left").alsoMotorReversed("lift_right")` (or `alsoMotor` when both turn the same way;
   `Arm` too). Both motors get the same power in the same loop: every command, the stick, stop, pause,
   limits, interlock rules and actions. Only the first motor's encoder is read; the Tunables section is the
@@ -1181,7 +1225,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
   motors (each carries half the gravity). Cookbook: "How do I run one lift on two motors?".
 - **Your own code with the robot's loop:** `robot.addOwn(part)` (a `Subsystem`: updated after the library's
   parts, stopped at STOP and at pause) and `robot.everyLoop(() -> ...)`
-  (docs/modules/robot.md#your-own-code-every-loop).
+  (docs/reference/robot-java.md#your-own-code-every-loop).
 - **A test kit for teams' JUnit tests** (docs/modules/testkit.md): `com.crossbotics.ftchelper.testkit` with
   `PretendDevices` (give it to `robot.setup(...)`), `PretendMotor`, `PretendServo`, `PretendCRServo`,
   `PretendPinpoint`, `PretendTelemetry`; `robot.startForTests()` (START in a test) and `robot.checkTunables()`
@@ -1228,7 +1272,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
 - **Simulator page: the Match panel** (Control Hub, "Match"; with a rules file): RED and BLUE totals with a
   breakdown on click, the period clock and whether NECTAR is allowed (G410), each FLOWER's owner and stack
   (and an owner ring over each FLOWER in 3D), the shot verdict tally and the last shots (the verdict shows
-  over the piece and colours its trail), a Scatter switch, a Hit rate button with its Good/Risky/Poor
+  over the piece and colors its trail), a Scatter switch, a Hit rate button with its Good/Risky/Poor
   verdict, and foul notices. A score bar over the 3D view. The stream sends the game on its own, only when
   it changes (at most 5 a second); each verdict now names its piece (`shots[].ball`). A tipping HIVE
   turns smoothly in step with the simulator's turn.
@@ -1374,7 +1418,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
   turn and move since; its age from the camera's timestamp, or `cameraLatencyMs`). The turret, whole-robot
   aim, `isAimed()` and the launcher's distance all use it. Works with a turret (camera on it or on the
   body, or odometry only) and with a fixed shooter; `shooterForwardIn, shooterLeftIn` and
-  `cameraForwardIn, cameraLeftIn` say where they are from the robot's centre. `Aim.movingShotMode()`
+  `cameraForwardIn, cameraLeftIn` say where they are from the robot's center. `Aim.movingShotMode()`
   (a button can switch it), `isMovingShot()`, `lead()`; the Driver Station says
   `Aim: moving shot: lead 12.3 deg, 18 in`. The math: `vision.MovingShot`. Lesson 9 section 14, a
   cookbook recipe.
@@ -1493,8 +1537,8 @@ changed before the release. Read "Changed" below (each entry says what to do), o
   `nextKind()` (a `Supplier<String>`, e.g. for a shot table per kind), `whenFull()`, `whenEmpty()`,
   `whenNextIs(kind)` (conditions for LEDs, buzzes, waits); by hand `pieceIn(kind)`, `pieceOut()`, `clear()`,
   `set(kinds...)`; the sensors: `comingInSensor()`, `readyToFireSensor()`. `PieceSensor.color(...)` (REV Color Sensor V3:
-  colour + distance), `PieceSensor.distance(...)` (REV 2m Distance Sensor: tells sizes apart, not
-  colours), `PieceSensor.camera(...)` (a second webcam with the SDK's PredominantColorProcessor); also
+  color + distance), `PieceSensor.distance(...)` (REV 2m Distance Sensor: tells sizes apart, not
+  colors), `PieceSensor.camera(...)` (a second webcam with the SDK's PredominantColorProcessor); also
   usable alone. Their numbers (each kind's hue or mm, `nearMm`, tolerances, `steadyMs`) in Tunables.
 - **Piece Tuner** (`PieceTunerOpMode`): each piece sensor's live readings; measures each kind and EMPTY
   and writes the Tunables lines to copy.
@@ -1504,7 +1548,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
   `:sim:fromRobot` writes them, `:sim:newRobot` turns a REV Color Sensor V3 or 2m Distance Sensor in the
   configuration into a `PieceSensor` line. Cookbook: a "Game pieces" section.
 - **Aiming helpers** (so the drivers can focus on driving and firing), in the robot in five files;
-  [robot.md: Aim](docs/modules/robot.md#aim), [lesson 9](docs/tutorials/start/09-shooter-and-camera.md)
+  [robot.md: Aim](docs/reference/parts/aim.md), [lesson 9](docs/tutorials/start/09-shooter-and-camera.md)
   sections 8-11, and four cookbook recipes ("Aiming and shooting"):
   - **The odometry as a backup for the camera:** with an `odometry(...)` line and the goal's place in
     the new `Tunables.Aim` (`goalX`, `goalY`, in `driveTo`'s numbers; `mirrorForRed` like autonomous),
@@ -1605,7 +1649,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
 - A servo hood's first move, and a `PositionServo`'s, counts as "anywhere in its range" until the whole
   move's time is over, also after a new target in the middle of it.
 - A motor hood keeps to the interlock's power caps (it brakes before its fence) and holds where it is when
-  the action moving it is cancelled; the launcher's `stop()` stops a motor hood too.
+  the action moving it is canceled; the launcher's `stop()` stops a motor hood too.
 - `AutoDrive.move()` (and `moveWithTurn` without a final turn) brakes at the distance and waits until the
   robot has stopped rolling, at most 0.3 s (mechanisms keep updating, STOP still works).
 - `driveTo`: the stuck check counts at most 0.1 s per loop, so one very slow loop is not "stuck" (the
@@ -1742,7 +1786,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
 - Docs: `PathAt` examples use parts the example robots have (`"Spin up", robot.launcher::spinUp`), not
   `Actions.spinUp(robot)`, which no example defines; `fraction` is of the WHOLE path; lesson 8 shows a
   time limit with `PathAt`. Lights docs: the `LightColor` import, a whole-robot aim rule, and R402 as advice
-  (the alliance colour goes on the ROBOT SIGNS).
+  (the alliance color goes on the ROBOT SIGNS).
 - Game pieces: a feed counts its piece out once it has gone (the ready sensor sees it leave, or the
   feed ends without a jam), not when it starts; `next()` names the piece after the one being fed.
   `Indexer.isFeeding()`. While the intake pushes out, pieces leaving past the intake sensor count out
@@ -1772,7 +1816,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
 - Simulator: the pose line says it is in the field frame (seen from the red wall), and the start-spot line
   says it is the alliance's own frame (as `s.start` takes it).
 - **goBILDA starter bot's autonomous** (`goBILDA Bot Launch and Back Up`) has a start spot: its back
-  against our wall, left of centre (`-56, -63, 0`; the simulator puts it there), and its last step is
+  against our wall, left of center (`-56, -63, 0`; the simulator puts it there), and its last step is
   `Away from the wall` (forward), not `Back up` (backward from the goal). **What to do:** a scenario or
   a note that says `Back up` needs the new step name; put the robot with its back to your wall.
 - Cookbook, several autos: the recipes are whole files with their `package` and `import` lines
@@ -1785,8 +1829,8 @@ changed before the release. Read "Changed" below (each entry says what to do), o
   to a section you already have (shoot on the move, shot tables, speed trim, the hood's table) shows only
   the lines, and says which section; shoot on the move is `false` until tuned; one shot table per piece
   says which table starts (`main`, else the first by name) and the next-piece recipe is tested; the
-  "two buzzes for a NECTAR" recipe watches both colours; light flashes are short enough to count two
-  quick shots, and an action's "done" flash is not the colour of the rule under it. New recipes: switch
+  "two buzzes for a NECTAR" recipe watches both colors; light flashes are short enough to count two
+  quick shots, and an action's "done" flash is not the color of the rule under it. New recipes: switch
   the alliance in TeleOp, a servo turret, aim with the odometry only, venue lighting
   (`autoPipelines`), a Blinkin pattern, a shorter start delay (`maxStartDelaySec()`), one number per
   alliance (`alliance().pick`), last match's trim from a button (`useLastTrim`), the pose action, the
@@ -1932,7 +1976,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
   and again before the end check.
 - `PieceSensor.distance`: the REV 2m Distance Sensor (up to 0.2 s per reading) is read on a helper
   thread, so the loop never waits; a reading older than 0.25 s is thrown away.
-- A colour or distance sensor missing from the robot configuration no longer stops INIT: it warns and
+- A color or distance sensor missing from the robot configuration no longer stops INIT: it warns and
   sees nothing (like a missing camera).
 - A piece camera that stops streaming, or sends no new picture, no longer keeps its last answer: after
   0.5 s with no new reading any piece sensor sees nothing and warns; Pieces does not count with it.
@@ -2107,10 +2151,10 @@ uses odometry, and only a project that adds the `pedro` folder gets Pedro Pathin
   `:sim:newRobot` and `:sim:fromConfig`: a goBILDA Pinpoint or SparkFun OTOS in the robot configuration
   becomes the odometry (the `Robot.java` line with a `Tunables.Odometry` section, or the robot-file line).
 - Docs: [Lesson 8: Odometry](docs/tutorials/start/07-odometry.md) (which device to buy, wiring, the
-  tuner, `driveTo`, TeleOp hand-off), a labelled
+  tuner, `driveTo`, TeleOp hand-off), a labeled
   [BIOBUZZ field map](docs/images/biobuzz-field-map.svg) in the lesson's frame (made by
   `tools/field_map.py` from the simulator's field file) and the [odometry module](docs/modules/odometry.md); `driveTo` in
-  the [autonomous builder](docs/guides/autonomous-builder.md#drive-to-a-field-point-driveto), the
+  the [autonomous builder](docs/building-autos/05-auto-builder-odometry-and-pedro.md#drive-to-a-point-driveto), the
   Odometry Tuner in the [finders guide](docs/guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
 - Example: `odometrybot` (lesson 8's robot: a Pinpoint, `ToTheGoal` autonomous with `driveTo`, its
   TeleOp and Odometry Tuner), with a simulator test.
@@ -2294,7 +2338,7 @@ Nothing old stops working.
 
 - The two-driver slow trigger's label says what it does: "slow (squeeze: the further, the slower)".
 - The untuned-drive message points to the main track's lesson 6.
-- Docs: the reference is online at crossbotics.com/ftc-helper/reference ([Reference](docs/reference.md)).
+- Docs: the reference is online at crossbotics.com/ftc-helper/reference ([Reference](docs/reference/javadoc.md)).
 - `:library:reference` writes an empty web-font file, so the pages no longer ask for a missing one.
 
 ## v0.11.1 - 2026-10-21
@@ -2307,7 +2351,7 @@ Nothing old stops working.
   `Steps`, built on a tested example (`examples/.../gobildabot/autos/AutoCookbook.java`, run by a
   simulator test with each menu choice).
 - `./gradlew :library:reference`: a searchable reference (web pages) of every public class and method
-  ([Reference](docs/reference.md)).
+  ([Reference](docs/reference/javadoc.md)).
 
 ### Changed
 
@@ -2442,7 +2486,7 @@ Nothing old stops working: a Robot.java without parts or shapes writes the same 
 
 ### Added
 
-- **Shapes and parts in Robot.java** ([docs/modules/robot.md](docs/modules/robot.md#shapes-and-parts)):
+- **Shapes and parts in Robot.java** ([docs/modules/robot.md](docs/reference/robot-java.md#shapes-and-parts)):
   `part(id)` gives a part's motor or servo by its catalog id, `looks(Shape...)` how it looks and where it
   sits (`Shape.roller`, `flywheel`, `arm`, `slide`, `box`), and `./gradlew :sim:fromRobot` writes them into
   the simulator robot file with no TODO shape guesses. Intake, Positioner, Launcher and Indexer take shapes. Also
@@ -2470,7 +2514,7 @@ way to write a robot (the robot in five files) is added next to it; tutorial 22 
 
 ### Added
 
-- **The robot in five files** (package `robot`, [docs/modules/robot.md](docs/modules/robot.md),
+- **The robot in five files** (package `robot`, [docs/modules/robot.md](docs/reference/robot-java.md),
   [tutorial 22](docs/tutorials/start/01-robot-in-five-files.md)): `Robot.java` says what is on the robot
   (`RobotDefinition`: `drive(...)` and one `add(...)` per mechanism), `Tunables.java` holds every number
   (one section per part), `Controls.java` is the TeleOp and the button map (`ControlMap`), `Actions.java`
@@ -2521,13 +2565,13 @@ Nothing changes for a robot project that pulls this version. Everything here is 
 - Scenario checks `expect cell "Red" >= 1`, `expect tips "Red" >= 1`, `expect left >= 1`; `print pieces`
   lists them. Example: `sim/scenarios/hive-tips.sim`.
 - **What the robot holds, on the 3D view:** a badge in the corner with a dot in each held piece's
-  colour, an empty dot for each free place (`holds=`) and the count.
+  color, an empty dot for each free place (`holds=`) and the count.
 
 ### Changed
 
 - The HIVEs are no longer solid blocks: a shot at a CELL used to bounce off, now it goes in. The 3 staged
   NECTAR in each up CELL are loose pieces resting in the CELL (they fall out when it tips).
-- A piece is taken off the field as soon as it is past a wall (was 10 ft from the centre).
+- A piece is taken off the field as soon as it is past a wall (was 10 ft from the center).
 
 ## v0.8.0 - 2026-10-17
 

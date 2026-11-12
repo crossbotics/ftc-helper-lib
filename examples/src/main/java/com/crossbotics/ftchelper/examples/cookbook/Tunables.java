@@ -1,6 +1,6 @@
 package com.crossbotics.ftchelper.examples.cookbook;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/reference/tunables.md)
 
 /**
  * The cookbook's numbers (docs/cookbook.md): one section per part, named after the part's configuration
@@ -14,7 +14,7 @@ public class Tunables {
     // recipe: tunables-drive
     public static class Drive {                                     // a fixed name: always Drive
         public static double maxPower = 0.6;                        // top wheel power: slow for first drives (1.0)
-        public static double practiceMaxPower = 0.4;                // top wheel power in PRACTICE (0.6)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         public static double strafeCorrection = DEFAULT;            // sideways moves: Drive Tuner (1.15)
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -28,8 +28,8 @@ public class Tunables {
     public static class Odometry {                                  // a fixed name: always Odometry
         public static boolean checked = false;                      // true after the Odometry Tuner's Loop test
         // "Set pose here" (TeleOp: hold gamepad 1 START 1 s on this spot), written for BLUE.
-        public static double resetX = -56;                          // inches right of centre, - = left
-        public static double resetY = -61;                          // inches from centre, - = our half
+        public static double resetX = -56;                          // inches right of center, - = left
+        public static double resetY = -61;                          // inches from center, - = our half
         public static double resetHeading = 0;                      // degrees, 0 = facing the field
         // RED: false = the same numbers from the red wall; true (or left out) = mirrored left-right.
         public static boolean mirrorForRed = false;                 // BIOBUZZ: false
@@ -144,7 +144,7 @@ public class Tunables {
         public static double POLLEN = MEASURE;                      // the kind's hue, degrees (Piece Tuner)
         public static double nearMm = DEFAULT;                      // a piece is there below this distance (40)
         public static double hueTolerance = DEFAULT;                // how far from a kind's hue still counts (30)
-        public static double minSaturation = DEFAULT;               // how colourful it must be, 0 to 1 (0)
+        public static double minSaturation = DEFAULT;               // how colorful it must be, 0 to 1 (0)
         public static double steadyMs = DEFAULT;                    // a reading must stay this long (30)
     }
     // end recipe
@@ -186,22 +186,6 @@ public class Tunables {
         public static double push = MEASURE;                        // servo position, piece pushed (Servo Finder)
         public static double pushSec = DEFAULT;                     // time to push (0.25, or the servo's speed)
         public static double returnSec = DEFAULT;                   // time to come back (the same as pushSec)
-    }
-    // end recipe
-
-    // recipe: tunables-auto
-    /** Your own numbers: a section no part reads. Every number here is in the tuning menu too. */
-    public static class Auto {
-        public static double leaveInches = 24;                      // drive off the start line
-        public static double toGoalInches = 30;                     // drive to the goal
-        public static double parkInches = 20;                       // drive into the park zone
-        public static double goalX = -30, goalY = -30;              // scoring spot: inches from centre (- y = our half)
-        public static double goalHeading = 45;                      // facing there, degrees
-        public static double parkX = -56, parkY = -36;              // park spot: inches from centre (- y = our half)
-        // Several autos (guides/autos.md): the cycle, and the FAR start's way to the near side.
-        public static double pickupInches = 20;                     // drive onto a piece
-        public static double offWallInches = 12;                    // back off the wall
-        public static double farToNearInches = 72;                  // the far start to the near side
     }
     // end recipe
 

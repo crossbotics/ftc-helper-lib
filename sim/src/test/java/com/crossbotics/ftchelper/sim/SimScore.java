@@ -53,6 +53,11 @@ final class SimScore {
     private Map<String, Side> ended = null;
     private double endedLeft = Double.NaN, teleopLeft = Double.NaN;
     private boolean teleopBefore = false;   // TELEOP was running at the last step
+    // G407 (too many pieces at a time): since when the robot holds more than the limit (NaN: not now), whether this
+    // stretch was already counted as longer than momentary, how many such stretches, and whether the foul is given.
+    private double overSince = Double.NaN;
+    private boolean overCounted = false, controlFouled = false;
+    private int overLongCount = 0;
 
     SimScore(SimRobot robot, SimPieces pieces) {
         this.robot = robot;
@@ -68,6 +73,10 @@ final class SimScore {
         autoAlliance = "";
         ended = null;
         endedLeft = Double.NaN;
+        overSince = Double.NaN;
+        overCounted = false;
+        controlFouled = false;
+        overLongCount = 0;
     }
 
     /** After each physics step: an autonomous starting is a new match; its end is when LEAVE and AUTO PARK count. */
@@ -91,6 +100,37 @@ final class SimScore {
             endedLeft = c.period().equals("TELEOP") ? 0 : teleopLeft;
         }
         teleopBefore = teleopNow;
+        if (autoNow || teleopNow) checkControl();
+    }
+
+    /**
+     * G407: no more than {@code controlMax} pieces at a time. A MAJOR FOUL once per match when it looks STRATEGIC
+     * (the manual's examples): 2 or more over the limit at once, or 1 over for longer than momentary, twice. One
+     * over for a moment (then reversed) is no foul.
+     */
+    private void checkControl() {
+        SimRules r = pieces.rules;
+        if (r.controlMax <= 0 || controlFouled) return;
+        int n = pieces.storedCount();
+        double t = robot.world == null ? 0 : robot.world.time();
+        if (n <= r.controlMax) {
+            overSince = Double.NaN;
+            overCounted = false;
+            return;
+        }
+        if (Double.isNaN(overSince)) overSince = t;
+        String why = null;
+        if (n >= r.controlMax + 2) {
+            why = n + " pieces at once (the limit is " + r.controlMax + ")";
+        } else if (!overCounted && t - overSince >= r.momentarySec) {
+            overCounted = true;
+            if (++overLongCount >= 2) why = n + " pieces for more than " + fmt(r.momentarySec) + " s, twice (the limit is "
+                    + r.controlMax + ")";
+        }
+        if (why != null) {
+            controlFouled = true;
+            fouls.add(new Foul(ownAlliance(), "G407", why, t));
+        }
     }
 
     /**
@@ -242,7 +282,7 @@ final class SimScore {
         return null;
     }
 
-    // A circle (centre x, y; radius r) at least partly in a convex outline.
+    // A circle (center x, y; radius r) at least partly in a convex outline.
     private static boolean touches(List<double[]> hull, double x, double y, double r) {
         boolean in = true;
         double best = Double.MAX_VALUE;

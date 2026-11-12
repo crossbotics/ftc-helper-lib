@@ -81,7 +81,7 @@ import java.util.List;
  * trim. Double-tap D-pad up: use last time's trim (only when there is one). D-pad right picks the next
  * shot table (with two or more). Each only when that button is free.
  *
- * Docs: docs/modules/robot.md (section "Launcher"), docs/modules/launcher.md
+ * Docs: docs/reference/robot-java.md (section "Launcher"), docs/modules/launcher.md
  */
 public final class Launcher extends Module<Launcher> implements Toggleable {
     private final String motorId;
@@ -467,7 +467,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     /**
      * Says which shot table some game-piece kinds use, for {@link #tableFrom}: e.g. with
      * {@code .tableFrom(pieces.nextKind()).tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")} both NECTAR
-     * colours use {@code speedByDistanceNectar}. A kind with the same name as a table needs no line
+     * colors use {@code speedByDistanceNectar}. A kind with the same name as a table needs no line
      * ("POLLEN" uses "pollen"). "NONE" and "UNKNOWN" (from {@code Pieces}) never change the table.
      *
      * @param table the table's name ("nectar")
@@ -706,7 +706,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         }
         if (distanceFromOdometry && !robot.aim().hasGoalPoint()) {
             throw new IllegalStateException(name() + ".speedFromOdometry() needs the goal on the field: "
-                    + "Tunables.Aim { public static double goalX = ..., goalY = ...; } (inches, see docs/modules/robot.md#aim)");
+                    + "Tunables.Aim { public static double goalX = ..., goalY = ...; } (inches, see docs/reference/parts/aim.md)");
         }
         if (!tables.isEmpty()) {
             String first = tables.containsKey("main") ? "main" : tables.keySet().iterator().next();
@@ -1037,7 +1037,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         part.spinUp();
     }
 
-    // The eject is over (done, cancelled or given up): no piece on its way, and the wheel as it was.
+    // The eject is over (done, canceled or given up): no piece on its way, and the wheel as it was.
     private void endEject() {
         ejecting = false;
         part.stopShooting();

@@ -81,7 +81,7 @@ import java.util.Map;
  * <p>Software only: it does not replace hard stops, and a part pushed by hand (or by another robot)
  * can still end up in its zone. The rule then only lets it move out.
  *
- * Docs: docs/modules/robot.md (section "Interlock"), docs/guides/interlocks.md
+ * Docs: docs/reference/robot-java.md (section "Interlock"), docs/guides/interlocks.md
  */
 public final class Interlock {
     /** The default {@code <part>StopSec}: a motor part in BRAKE stops in about this long (seconds). */
@@ -247,9 +247,9 @@ public final class Interlock {
         if (z.kind == Zone.Kind.BETWEEN && z.part.zoneWraps()) {
             double min = z.part.zoneMin(), max = z.part.zoneMax();
             // A slip-ring turret: near where it is now.
-            double centre = Double.isInfinite(min) || Double.isInfinite(max) ? mid(z.part.zoneSweep()) : (min + max) / 2;
-            if (Double.isNaN(centre) || Double.isInfinite(centre)) centre = 0;
-            double shift = 360.0 * Math.round((centre - (z.lo + z.hi) / 2) / 360.0);
+            double center = Double.isInfinite(min) || Double.isInfinite(max) ? mid(z.part.zoneSweep()) : (min + max) / 2;
+            if (Double.isNaN(center) || Double.isInfinite(center)) center = 0;
+            double shift = 360.0 * Math.round((center - (z.lo + z.hi) / 2) / 360.0);
             for (int k = -3; k <= 3; k++) out.add(new double[] {z.lo + shift + 360.0 * k, z.hi + shift + 360.0 * k});
             return out;
         }

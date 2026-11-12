@@ -450,7 +450,7 @@ final class TunableSection {
     private IllegalStateException measureStop(String field) {
         String tool = tools == null ? null : tools.apply(field);
         if (tool == null || tool.isEmpty()) {
-            tool = "see its \"Found by\" column in docs/guides/tunables.md";
+            tool = "see its \"Found by\" column in docs/reference/tunables.md";
         }
         return new IllegalStateException("Tunables." + name + "." + field + " = MEASURE: a number you find on the robot: "
                 + tool + ". Write the number in place of MEASURE (or DEFAULT for the library's starting value)");

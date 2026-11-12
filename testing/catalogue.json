@@ -553,8 +553,8 @@
    "since": "v0.21.0",
    "docs": [
     {
-     "path": "docs/modules/robot.md",
-     "anchor": "camera"
+     "path": "docs/reference/parts/camera.md",
+     "anchor": ""
     },
     {
      "path": "docs/modules/vision.md",
@@ -636,8 +636,8 @@
      "anchor": "huskylenscamera"
     },
     {
-     "path": "docs/modules/robot.md",
-     "anchor": "camera"
+     "path": "docs/reference/parts/camera.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/AIM-06.md",
@@ -996,7 +996,7 @@
      {
       "ul": [
        "First run with the robot on a block, wheels off the ground.",
-       "Keep `maxPower` and `practiceMaxPower` at 0.4 in `Tunables.java` for this test.",
+       "Keep `maxPower` at 0.4 in `Tunables.java` for this test.",
        "A clear floor and a hand near the Driver Station STOP button."
       ]
      }
@@ -1137,8 +1137,8 @@
      "anchor": "drive-tuner-wheel-size-and-strafe-correction"
     },
     {
-     "path": "docs/guides/tunables.md",
-     "anchor": "drive"
+     "path": "docs/reference/parts/drive.md",
+     "anchor": "in-tunablesjava"
     }
    ],
    "file": "testing/tests/DRV-04.md",
@@ -1302,8 +1302,8 @@
      "anchor": "hood-finder"
     },
     {
-     "path": "docs/modules/robot.md",
-     "anchor": "hood"
+     "path": "docs/reference/parts/hood.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/HOOD-02.md",
@@ -1474,7 +1474,7 @@
      "anchor": "stop-distance-a-fast-part-brakes-in-time"
     },
     {
-     "path": "docs/guides/tunables.md",
+     "path": "docs/reference/tunables.md",
      "anchor": ""
     }
    ],
@@ -1554,7 +1554,7 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/modules/robot.md",
+     "path": "docs/reference/parts/lift.md",
      "anchor": "two-motors-on-one-lift-or-arm"
     }
    ],
@@ -1688,13 +1688,14 @@
        "odometry kind (Pinpoint, OTOS, 2 or 3 dead wheels) and the pod type",
        "Forward test: the % off it showed, before and after fixes",
        "the offsets (or track width) it gave",
+       "Pinpoint with `.podsFromEdgesMm(...)`: the offsets the library worked out from your edge numbers, and how far they were from the tuner's",
        "Loop test: the distance and angle error it showed, and how many tries it took"
       ]
      }
     ],
     "different": [
      {
-      "p": "A tank robot cannot strafe: push it sideways by hand for the Left test. An OTOS has no offsets to measure (measure `mountIn` with a tape). Dead wheels with the IMU need `.imu(...)` in the drive line. Say which of these you did. Pods in odd places (far off centre, angled) are very useful to report."
+      "p": "A tank robot cannot strafe: push it sideways by hand for the Left test. An OTOS has no offsets to measure (measure it from the robot's edges with a tape: `.robotSizeMm(...).mountFromEdgesMm(...)`). Dead wheels with the IMU need `.imu(...)` in the drive line. Say which of these you did. Pods in odd places (far off center, angled) are very useful to report."
      }
     ]
    }
@@ -2040,7 +2041,7 @@
     ],
     "different": [
      {
-      "p": "Any robot works: the point is that the check finds every kind of device. Unusual devices are the most useful to report: a second Limelight, an I2C sensor the library does not know (I2C: the small 4-pin ports on the hub, used by colour and distance sensors), or an Expansion Hub (a second hub, joined to the Control Hub by a cable, for more motors and servos). A part marked `optional()` in `Robot.java` that is not in the configuration should show as `optional, so the part is off (fine)`: say if it did not. If a device type is missing from the list, say its type exactly as the configuration names it."
+      "p": "Any robot works: the point is that the check finds every kind of device. Unusual devices are the most useful to report: a second Limelight, an I2C sensor the library does not know (I2C: the small 4-pin ports on the hub, used by color and distance sensors), or an Expansion Hub (a second hub, joined to the Control Hub by a cable, for more motors and servos). A part marked `optional()` in `Robot.java` that is not in the configuration should show as `optional, so the part is off (fine)`: say if it did not. If a device type is missing from the list, say its type exactly as the configuration names it."
      }
     ]
    }
@@ -2063,7 +2064,7 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/modules/robot.md",
+     "path": "docs/reference/robot-java.md",
      "anchor": "parts-not-on-the-robot-yet"
     },
     {
@@ -2589,7 +2590,7 @@
      "anchor": "speed-trim-and-a-low-battery"
     },
     {
-     "path": "docs/modules/robot.md",
+     "path": "docs/reference/parts/launcher.md",
      "anchor": "speed-trim-and-battery-compensation"
     }
    ],
@@ -2673,11 +2674,11 @@
    "since": "v0.17.1",
    "docs": [
     {
-     "path": "docs/guides/tunables.md",
+     "path": "docs/reference/tunables.md",
      "anchor": "default-and-measure"
     },
     {
-     "path": "docs/guides/tunables.md",
+     "path": "docs/reference/tunables.md",
      "anchor": "first-run-what-you-get-before-tuning"
     },
     {
@@ -2914,8 +2915,8 @@
      "anchor": "the-auto-builder"
     },
     {
-     "path": "docs/guides/autos.md",
-     "anchor": "test-each-one-in-the-simulator"
+     "path": "docs/guides/simulator.md",
+     "anchor": "scenario-files-test-without-a-browser"
     }
    ],
    "file": "testing/tests/SIM-03.md",
@@ -3559,8 +3560,8 @@
    "since": "v0.37.0",
    "docs": [
     {
-     "path": "docs/modules/robot.md",
-     "anchor": "camera"
+     "path": "docs/reference/parts/camera.md",
+     "anchor": ""
     },
     {
      "path": "docs/modules/vision.md",
@@ -3638,8 +3639,8 @@
    "since": "v0.37.0",
    "docs": [
     {
-     "path": "docs/modules/robot.md",
-     "anchor": "aim"
+     "path": "docs/reference/parts/aim.md",
+     "anchor": ""
     },
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -3797,12 +3798,12 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/guides/autos.md",
-     "anchor": "what-the-init-menu-can-choose"
+     "path": "docs/building-autos/06-advanced-autos.md",
+     "anchor": "add-choices-to-the-init-menu"
     },
     {
-     "path": "docs/guides/autos.md",
-     "anchor": "example-2-one-opmode-the-drivers-choose-in-init"
+     "path": "docs/building-autos/06-advanced-autos.md",
+     "anchor": "a-whole-example-one-auto-the-drivers-choose"
     }
    ],
    "file": "testing/tests/AUTO-01.md",
@@ -3822,7 +3823,7 @@
     "setup": [
      {
       "ul": [
-       "An autonomous with a menu line and a `start(...)` for each option, like [example 2](repo:docs/guides/autos.md#example-2-one-opmode-the-drivers-choose-in-init): `s.menuChoice(\"Start\", \"Near\", \"Far\")`, then `s.onlyIf(\"Start\", \"Near\").start(\"NEAR: ...\", ...)...end()` and the same for \"Far\".",
+       "An autonomous with a menu line and a `start(...)` for each option, like [example 2](repo:docs/building-autos/06-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose): `s.menuChoice(\"Start\", \"Near\", \"Far\")`, then `s.onlyIf(\"Start\", \"Near\").start(\"NEAR: ...\", ...)...end()` and the same for \"Far\".",
        "Simulator: your robot from `Robot.java` (`./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then `./gradlew :sim:run -PteamCode=../TeamCode`)."
       ]
      }
@@ -4067,7 +4068,7 @@
        "Pick the TeleOp and press INIT. The screen must show \"Choose (D-pad), then ▶\" with \"> Alliance: BLUE\" and \"Profile: ...\" under it.",
        "Press gamepad 1 D-pad right. The alliance must change to RED (\"Alliance : RED (chosen here)\").",
        "Press D-pad down, then D-pad left. The profile must change (COMPETITION to PRACTICE, or back). In PRACTICE, the screen must say \"PRACTICE profile\".",
-       "Press ▶ on the Driver Hub and drive. In PRACTICE the top speed must be lower (`Tunables.Drive.practiceMaxPower`).",
+       "Press ▶ on the Driver Hub and drive. With no `practiceMaxPower` in `Tunables.Drive`, the top speed must be the same in both profiles. With `practiceMaxPower = 0.5`, it must be lower in PRACTICE.",
        "STOP, INIT again: the profile you chose must still be there.",
        "Set the profile back to what it was."
       ]
@@ -4425,7 +4426,7 @@
     "safety": [
      {
       "ul": [
-       "Clear floor, about 6 x 6 ft. Low power (`practiceMaxPower` 0.4, PRACTICE profile).",
+       "Clear floor, about 6 x 6 ft. Low power (`maxPower` 0.4).",
        "A hand near STOP."
       ]
      }
@@ -4572,11 +4573,11 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/modules/robot.md",
-     "anchor": "hood"
+     "path": "docs/reference/parts/hood.md",
+     "anchor": ""
     },
     {
-     "path": "docs/guides/tunables.md",
+     "path": "docs/reference/tunables.md",
      "anchor": ""
     }
    ],
@@ -4654,7 +4655,7 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/modules/robot.md",
+     "path": "docs/reference/parts/lights.md",
      "anchor": "the-alliance-at-init"
     },
     {
@@ -4699,7 +4700,7 @@
     ],
     "pass": [
      {
-      "p": "Each state shows the right colour (4 of 4: blinking white, blue, red, the flash at START), and two people can tell red from blue from 6 ft away."
+      "p": "Each state shows the right color (4 of 4: blinking white, blue, red, the flash at START), and two people can tell red from blue from 6 ft away."
      }
     ],
     "record": [
@@ -4707,14 +4708,14 @@
       "ul": [
        "light model, and where it sits on the robot",
        "whether red and blue were easy to tell apart, and from where",
-       "any colour that looked wrong (and which `allianceColors(...)` fixed it, if you tried)",
+       "any color that looked wrong (and which `allianceColors(...)` fixed it, if you tried)",
        "what step 6 showed"
       ]
      }
     ],
     "different": [
      {
-      "p": "If your light shows red or blue badly, try `robot.lights.allianceColors(LightColor.PURPLE, LightColor.ORANGE);` in `Controls.java` (blue's colour first) and say whether it is better. A REV Blinkin with a strip of your own: say the strip and its length."
+      "p": "If your light shows red or blue badly, try `robot.lights.allianceColors(LightColor.PURPLE, LightColor.ORANGE);` in `Controls.java` (blue's color first) and say whether it is better. A REV Blinkin with a strip of your own: say the strip and its length."
      }
     ]
    }
@@ -4816,12 +4817,12 @@
    "since": "v0.30.0",
    "docs": [
     {
-     "path": "docs/modules/robot.md",
-     "anchor": "claw"
+     "path": "docs/reference/parts/claw.md",
+     "anchor": ""
     },
     {
-     "path": "docs/guides/tunables.md",
-     "anchor": "claw-wrist-and-positioner"
+     "path": "docs/reference/parts/claw.md",
+     "anchor": "in-tunablesjava"
     }
    ],
    "file": "testing/tests/MEC-03.md",
@@ -4916,7 +4917,7 @@
     "safety": [
      {
       "ul": [
-       "PRACTICE profile and `Tunables.Drive.practiceMaxPower` 0.4 for the first runs.",
+       "PRACTICE profile and `Tunables.Drive.maxPower` 0.4 for the first runs.",
        "The robot drives by itself: a clear path, everyone out of it, a hand on STOP."
       ]
      }
@@ -4935,7 +4936,7 @@
       "ol": [
        "Put the robot exactly on the start spot. INIT the autonomous, check for the odometry \"ready\" line.",
        "START. Let it drive to the point and stop.",
-       "Measure the robot's centre against the target point (x and y error), and its heading error.",
+       "Measure the robot's center against the target point (x and y error), and its heading error.",
        "Do it 3 times. Write each.",
        "Run it once more and gently push the robot sideways during the drive: it should come back on course.",
        "Read the report at the end of autonomous."
@@ -5202,15 +5203,15 @@
      "anchor": "piece-tuner-what-each-sensor-sees"
     },
     {
-     "path": "docs/modules/robot.md",
-     "anchor": "pieces-and-piecesensor"
+     "path": "docs/reference/parts/pieces.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/PCS-01.md",
    "sections": {
     "why": [
      {
-      "p": "A colour sensor (or a distance sensor) tells the robot which piece it holds: POLLEN or NECTAR, red or blue. How well it works depends on where the sensor is mounted and the light. We want readings from many mounts."
+      "p": "A color sensor (or a distance sensor) tells the robot which piece it holds: POLLEN or NECTAR, red or blue. How well it works depends on where the sensor is mounted and the light. We want readings from many mounts."
      }
     ],
     "safety": [
@@ -5258,7 +5259,7 @@
     ],
     "different": [
      {
-      "p": "A distance sensor tells sizes apart, not colours: test POLLEN against NECTAR only. Different light (a gym, a window) changes colour readings: if you can, test in two places and say where."
+      "p": "A distance sensor tells sizes apart, not colors: test POLLEN against NECTAR only. Different light (a gym, a window) changes color readings: if you can, test in two places and say where."
      }
     ]
    }
@@ -5366,11 +5367,11 @@
    "since": "v0.17.1",
    "docs": [
     {
-     "path": "docs/guides/tunables.md",
+     "path": "docs/reference/tunables.md",
      "anchor": "default-and-measure"
     },
     {
-     "path": "docs/modules/robot.md",
+     "path": "docs/reference/robot-java.md",
      "anchor": "parts-not-in-the-catalog"
     }
    ],
@@ -5448,8 +5449,8 @@
    "since": "v0.24.0",
    "docs": [
     {
-     "path": "docs/guides/tunables.md",
-     "anchor": "launcher"
+     "path": "docs/reference/parts/launcher.md",
+     "anchor": "in-tunablesjava"
     },
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -5536,8 +5537,8 @@
      "anchor": "4-the-two-safety-rules"
     },
     {
-     "path": "docs/guides/tunables.md",
-     "anchor": "launcher"
+     "path": "docs/reference/parts/launcher.md",
+     "anchor": "in-tunablesjava"
     }
    ],
    "file": "testing/tests/SHOT-08.md",
@@ -5613,12 +5614,12 @@
    "since": "v0.29.0",
    "docs": [
     {
-     "path": "docs/modules/robot.md",
+     "path": "docs/reference/parts/launcher.md",
      "anchor": "firing-shot-modes-feed-stop-piece-path"
     },
     {
-     "path": "docs/guides/tunables.md",
-     "anchor": "indexer"
+     "path": "docs/reference/parts/indexer.md",
+     "anchor": "in-tunablesjava"
     }
    ],
    "file": "testing/tests/SHOT-09.md",
@@ -5693,12 +5694,12 @@
    "since": "v0.34.0",
    "docs": [
     {
-     "path": "docs/modules/robot.md",
+     "path": "docs/reference/parts/launcher.md",
      "anchor": "firing-shot-modes-feed-stop-piece-path"
     },
     {
-     "path": "docs/guides/tunables.md",
-     "anchor": "launcher"
+     "path": "docs/reference/parts/launcher.md",
+     "anchor": "in-tunablesjava"
     }
    ],
    "file": "testing/tests/SHOT-10.md",
@@ -5774,8 +5775,8 @@
      "anchor": "distancefilter"
     },
     {
-     "path": "docs/guides/tunables.md",
-     "anchor": "launcher"
+     "path": "docs/reference/parts/launcher.md",
+     "anchor": "in-tunablesjava"
     }
    ],
    "file": "testing/tests/SHOT-11.md",
@@ -5926,7 +5927,7 @@
      "anchor": "measure-in-the-simulator"
     },
     {
-     "path": "docs/guides/tunables.md",
+     "path": "docs/reference/tunables.md",
      "anchor": "default-and-measure"
     }
    ],
@@ -6297,8 +6298,8 @@
      "anchor": "the-auto-builder"
     },
     {
-     "path": "docs/guides/autonomous-builder.md",
-     "anchor": "4-actions-several-parts-together"
+     "path": "docs/building-autos/02-put-steps-together.md",
+     "anchor": "start-something-or-wait-for-it"
     }
    ],
    "file": "testing/tests/SIM-12.md",
@@ -6592,7 +6593,7 @@
   },
   {
    "id": "LGT-01",
-   "title": "Lights - colour rules and a flash per shot",
+   "title": "Lights - color rules and a flash per shot",
    "area": "lights",
    "priority": "low",
    "where": "both",
@@ -6610,8 +6611,8 @@
      "anchor": "13-a-light-for-the-drivers"
     },
     {
-     "path": "docs/modules/robot.md",
-     "anchor": "lights"
+     "path": "docs/reference/parts/lights.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/LGT-01.md",
@@ -6641,7 +6642,7 @@
      {
       "ol": [
        "INIT: the light shows the alliance, not your rules (solid red or blue once it is chosen; [LGT-02](repo:testing/tests/LGT-02.md) tests that part). START: a 1 s flash of the alliance, then your rules.",
-       "Make each rule true in turn (spin up, aim on, ...) and check the colour.",
+       "Make each rule true in turn (spin up, aim on, ...) and check the color.",
        "Make two rules true at once: the one written first wins.",
        "Fire 3 pieces (`fire(3)` or hold RB): 3 white flashes.",
        "Wait for the last 20 s of TeleOp (or use a short match timer): yellow blinking.",
@@ -6651,7 +6652,7 @@
     ],
     "pass": [
      {
-      "p": "Every colour matches its rule (all of them), 3 shots give 3 flashes, and the light changes at most 10 times a second (5 on and 5 off)."
+      "p": "Every color matches its rule (all of them), 3 shots give 3 flashes, and the light changes at most 10 times a second (5 on and 5 off)."
      }
     ],
     "record": [
@@ -6659,14 +6660,83 @@
       "ul": [
        "light type (goBILDA RGB, REV Blinkin)",
        "your rules (copy the lines)",
-       "any colour that was wrong (which rule, what it showed)",
+       "any color that was wrong (which rule, what it showed)",
        "changes per second from the video"
       ]
      }
     ],
     "different": [
      {
-      "p": "Use your own rules; any true/false works. If a goBILDA colour looks wrong on your light, say which LightColor and what you saw."
+      "p": "Use your own rules; any true/false works. If a goBILDA color looks wrong on your light, say which LightColor and what you saw."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SIM-13",
+   "title": "The simulator gives the 4-piece foul (G407)",
+   "area": "simulator",
+   "priority": "low",
+   "where": "sim",
+   "minutes": 10,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "gobilda-strafer"
+   ],
+   "since": "v0.41.0",
+   "docs": [
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "game-rules-and-the-score"
+    },
+    {
+     "path": "docs/reference/parts/intake.md",
+     "anchor": "in-robotjava"
+    }
+   ],
+   "file": "testing/tests/SIM-13.md",
+   "sections": {
+    "why": [
+     {
+      "p": "BIOBUZZ rule G407: a robot may not hold more than 4 pieces at a time. A robot that holds 6, or holds 5 for a long time more than once, gets a MAJOR FOUL. The simulator must give it, so a team sees the cost of an intake that takes too many."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SIM-01 works on this laptop.",
+       "A copy of your robot file. On its `collect.` line, set `holds=6`."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Start the simulator with the copy. Run a TeleOp and press ▶.",
+       "Drive over pieces until the robot holds 5. Push one out within 3 s. The **Fouls** list must stay empty.",
+       "Take a fifth piece again and keep it for more than 3 s. Push one out. Do it a second time. The **Fouls** list must show one G407 foul, and the other alliance must get 20 points.",
+       "Press **Back to start**. Run the TeleOp again and take 6 pieces. The G407 foul must show as the sixth piece comes in.",
+       "Take more pieces. No second G407 foul may show in the same match."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "Your computer and browser.",
+       "The robot file you used."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any robot file with a `collect.` line works. A robot that cannot reach 5 pieces cannot do this test."
      }
     ]
    }

@@ -8,7 +8,7 @@ minutes: 30
 needs: [hood-motor, flywheel]
 kit_bots: []
 since: v0.17.0
-docs: [guides/finders.md#hood-finder, modules/robot.md#hood]
+docs: [guides/finders.md#hood-finder, reference/parts/hood.md]
 ---
 
 ## Why

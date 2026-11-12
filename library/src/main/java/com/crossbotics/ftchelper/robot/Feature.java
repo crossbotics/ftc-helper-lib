@@ -6,7 +6,7 @@ package com.crossbotics.ftchelper.robot;
  * it does by itself ("the Goal line on the Driver Station"). Ready when the robot has the parts it
  * needs; otherwise {@link #missing} says what to add. {@link #code} is the line to use it.
  *
- * Docs: docs/modules/robot.md, "What your robot can do"
+ * Docs: docs/reference/robot-java.md, "What your robot can do"
  */
 public final class Feature {
     /** Where it is used. */

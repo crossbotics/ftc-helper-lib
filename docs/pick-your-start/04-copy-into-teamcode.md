@@ -45,7 +45,7 @@ Android Studio may have changed some of them for you when you pasted. Check ever
 
 ## 3. Change the imports
 
-The files in `autos` import `Robot`, and some import `Tunables` and `Actions`. Those imports still name
+The files in `autos` import `Robot`, and some import `Actions`. Those imports still name
 the example folder. Change each one to `org.firstinspires.ftc.teamcode`.
 
 Before:
@@ -100,3 +100,5 @@ Station picks that TeleOp for you.
 **Next:** go back to your start page: [a starter bot](01-starter-bot.md#4-check-the-imu-line),
 [a common setup](02-common-setup.md#3-make-it-match-your-robot), or
 [a blank slate](03-blank-slate.md#way-b-copy-the-smallest-files).
+
+**Look it up:** [Search every class and method](../reference/javadoc.md) and [Troubleshooting: build problems](../troubleshooting.md#build-problems).

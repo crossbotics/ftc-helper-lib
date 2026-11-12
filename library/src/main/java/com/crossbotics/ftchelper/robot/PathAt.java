@@ -164,12 +164,12 @@ public final class PathAt {
     // ----------------------------- near a field point -----------------------------
 
     /**
-     * When the robot (its centre, from the odometry) comes within {@code withinIn} of a field point.
+     * When the robot (its center, from the odometry) comes within {@code withinIn} of a field point.
      * The point is in the same numbers as {@code driveTo}, written for BLUE and mirrored for RED. If
      * the robot never comes that close, it does not happen (the report says so).
      *
-     * @param xIn      inches right of the centre line
-     * @param yIn      inches from the centre toward the far wall
+     * @param xIn      inches right of the center line
+     * @param yIn      inches from the center toward the far wall
      * @param withinIn how close, inches (more than 0; the robot's own path may pass a few inches off)
      * @param label    a name for the report
      * @param command  what to do

@@ -54,7 +54,7 @@ import java.util.function.LongSupplier;
  * (no rule against it); the ROBOT SIGNS must still show the alliance color (R402). Keep your other
  * rules' colors away from red and blue, so nobody reads them as the alliance.
  *
- * Docs: docs/modules/robot.md (section "Lights")
+ * Docs: docs/reference/robot-java.md (section "Lights")
  */
 public final class Lights extends Module<Lights> {
     /** A flash's length when none is given: half a second. */

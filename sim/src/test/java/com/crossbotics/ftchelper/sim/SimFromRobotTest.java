@@ -228,7 +228,7 @@ public class SimFromRobotTest {
         Tunables.Drive.calibrated = true;   // as if the Drive Tuner was done
         try (SimRun s = new SimRun(file.toString())) {
             s.init("FlywheelBot Shoot and Leave");
-            assertTrue(s.screenHas("Back wall, 2nd tile right of the centre line"));
+            assertTrue(s.screenHas("Back wall, 2nd tile right of the center line"));
             double y0 = s.robot().y;
             s.start();
             assertTrue("it finishes", SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 25));
@@ -336,7 +336,7 @@ public class SimFromRobotTest {
             assertFalse(String.join("\n", s.screen()), s.screenHas("not written"));
             // autoPipelines: the lighting test runs in INIT and its line is on the Driver Station.
             assertTrue(SimRun.waitFor(() -> s.screenHas("limelight lighting"), 2));
-            assertTrue(s.screenHas("G2 BACK: follow the goal on/off"));
+            assertTrue(s.screenHas("G2 right stick click: follow the goal on/off"));
             s.start();
             SimLight light = s.robot().lights.get("light");          // the light: purple while following the goal
             assertTrue(light.words(), SimRun.waitFor(() -> light.words().equals("PURPLE"), 3));
@@ -362,7 +362,7 @@ public class SimFromRobotTest {
 
     // The Limelight rides the turret (Robot.java: follows(camera)): the robot file says on=turret, so the
     // simulator's camera turns with the turret. RED, beside the HIVE and turned 20 degrees away from the
-    // goal (the Limelight sees 27 degrees each way): the turret turns about -20 degrees, centres the goal, says AIMED, and the shots go in.
+    // goal (the Limelight sees 27 degrees each way): the turret turns about -20 degrees, centers the goal, says AIMED, and the shots go in.
     @Test public void turretBotsCameraTurnsWithTheTurretAndTheShotsScore() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
         String text = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
@@ -401,7 +401,7 @@ public class SimFromRobotTest {
     }
 
     // BLUE's goal (BLUE SCORING, tags 42-45) starts high, under BLUE's raised CELL on the far side of the
-    // HIVE, facing away from the audience: seen from the far side (lesson 9's spot), the turret centres it.
+    // HIVE, facing away from the audience: seen from the far side (lesson 9's spot), the turret centers it.
     @Test public void turretBotOnBlueSeesItsGoalFromTheFarSide() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
         com.crossbotics.ftchelper.match.MatchMemory.clear();
@@ -664,7 +664,7 @@ public class SimFromRobotTest {
             s.g1().left_stick_y = -1;                                 // stick forward: drive forward
             SimRun.pause(1.0);
             s.g1().left_stick_y = 0;
-            // It starts against an alliance wall facing the field: forward is toward the centre (y nearer 0).
+            // It starts against an alliance wall facing the field: forward is toward the center (y nearer 0).
             assertTrue("it drove forward: y " + y0 + " -> " + s.robot().y, Math.abs(y0) - Math.abs(s.robot().y) > 6);
             assertEquals("", s.error());
         }
@@ -753,7 +753,7 @@ public class SimFromRobotTest {
                 "Studica Bot TeleOp", "Studica Bot Shoot and Leave");
     }
 
-    // The guide's example (docs/guides/autonomous-builder.md): every builder feature runs, and the menu
+    // The guide's example (once in docs/guides/autonomous-builder.md): every builder feature runs, and the menu
     // choice picks the branch.
     @Test public void theAutoCookbookRunsBothBranches() throws Exception {
         try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {

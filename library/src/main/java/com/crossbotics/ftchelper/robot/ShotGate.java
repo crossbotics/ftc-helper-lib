@@ -232,7 +232,7 @@ final class ShotGate implements Feeder {
     }
 
     /**
-     * An action was cancelled: the feed ends now (an indexer that has not pushed yet never pushes), the
+     * An action was canceled: the feed ends now (an indexer that has not pushed yet never pushes), the
      * stop closes, the pushers go back.
      */
     void cancel() {

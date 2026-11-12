@@ -11,15 +11,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 /**
  * A pretend sensor that sees the game piece at one spot of the robot (needs game pieces: physics = engine):
  *
- *   color.NAME = at=ready                  a colour sensor with distance (REV Color Sensor V3): the piece's
- *                                          colour from the field file and 15 mm when one is there; dark grey
+ *   color.NAME = at=ready                  a color sensor with distance (REV Color Sensor V3): the piece's
+ *                                          color from the field file and 15 mm when one is there; dark gray
  *                                          and 120 mm when not
  *   distance.NAME = at=intake, acrossMm=150   a distance sensor looking across a channel: acrossMm minus the
  *                                          piece's diameter when one is there, acrossMm when not
  *
  * at=ready: the next piece to fire (the oldest held); after each shot it reads empty for 0.08 s while the
  * next piece rolls into the slot. at=intake: each piece the intake takes in, for 0.25 s.
- * The colours are the field file's screen colours, not a real sensor's: tune the real robot with the Piece
+ * The colors are the field file's screen colors, not a real sensor's: tune the real robot with the Piece
  * Tuner (the simulator's numbers will differ).
  */
 final class SimPieceSensor {
@@ -73,7 +73,7 @@ final class SimPieceSensor {
         return p == null ? acrossMm : Math.max(0, acrossMm - p.diameterIn * 25.4);
     }
 
-    /** The colour it reads now (each 0-1). */
+    /** The color it reads now (each 0-1). */
     float[] rgb() {
         SimField.PieceType p = piece();
         if (p == null) return new float[] {0.02f, 0.02f, 0.02f};
@@ -102,7 +102,7 @@ final class SimPieceSensor {
                     out.alpha = Math.max(c[0], Math.max(c[1], c[2]));
                     return out;
                 }
-                case "getDeviceName": return color ? "Simulated colour sensor" : "Simulated distance sensor";
+                case "getDeviceName": return color ? "Simulated color sensor" : "Simulated distance sensor";
                 case "hashCode": return System.identityHashCode(proxy);
                 case "equals": return proxy == a[0];
                 default: return SimDefaults.of(m.getReturnType());

@@ -43,7 +43,7 @@ import java.util.function.Supplier;
  *
  * <p>Nothing moves in INIT: the modules make their hardware then, and move only after START.
  *
- * Docs: docs/modules/robot.md. Tutorial: docs/tutorials/start/01-robot-in-five-files.md
+ * Docs: docs/reference/robot-java.md. Tutorial: docs/tutorials/start/01-robot-in-five-files.md
  */
 public abstract class RobotDefinition {
     private Drive drive = null;
@@ -657,7 +657,7 @@ public abstract class RobotDefinition {
                 if (m.deviceIn(devices)) throw e;
                 throw new IllegalArgumentException(e.getMessage() + " Not on the robot yet? Add .optional() to "
                         + m.name() + "'s line in Robot.java: the part is then off until \"" + m.device
-                        + "\" is in the configuration (docs/modules/robot.md#parts-not-on-the-robot-yet).", e);
+                        + "\" is in the configuration (docs/reference/robot-java.md#parts-not-on-the-robot-yet).", e);
             }
             return;
         }
@@ -782,8 +782,8 @@ public abstract class RobotDefinition {
 
     /**
      * Sets the odometry's pose to the reset spot in {@code Tunables.Odometry}: {@code resetX},
-     * {@code resetY} (inches, as seen from your drivers' wall: x to the right of the field's centre
-     * line, y from the centre toward the far wall) and {@code resetHeading} (degrees, 0 = facing away
+     * {@code resetY} (inches, as seen from your drivers' wall: x to the right of the field's center
+     * line, y from the center toward the far wall) and {@code resetHeading} (degrees, 0 = facing away
      * from you, counterclockwise +). Written for BLUE; RED uses it mirrored left-right (x and the
      * heading flip), like autonomous's start spot, unless {@code Tunables.Odometry.mirrorForRed = false}
      * (a field turned half a turn: the same numbers from the red wall).
@@ -812,8 +812,8 @@ public abstract class RobotDefinition {
      * Sets the odometry's pose to this spot, written for BLUE (mirrored for RED as in {@link #resetPose()}).
      * Never waits.
      *
-     * @param xIn        inches to the right of the field's centre line, seen from your drivers' wall
-     * @param yIn        inches from the centre toward the far wall (negative = your half)
+     * @param xIn        inches to the right of the field's center line, seen from your drivers' wall
+     * @param yIn        inches from the center toward the far wall (negative = your half)
      * @param headingDeg 0 = facing away from you, counterclockwise +
      * @throws IllegalStateException if the robot has no odometry (or before setup)
      */
@@ -1280,12 +1280,12 @@ public abstract class RobotDefinition {
 
     /** Stops an action. Its parts stop safely (a lift holds its height, waiting shots are dropped). */
     public final void cancel(Action action) {
-        runner.stop(action, "cancelled");
+        runner.stop(action, "canceled");
     }
 
     /** Stops every running action. */
     public final void cancelAll() {
-        runner.stopAll("cancelled");
+        runner.stopAll("canceled");
     }
 
     /** The alliance for this match (chosen in autonomous; TeleOp remembers it). */

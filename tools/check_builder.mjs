@@ -255,7 +255,7 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		const sx = half - 0.5 - R[1] / 2, c4 = -half + 3.5 * tile;
 		const p = S.snapStart({ x: sx, y: c4 + 1, h: 0 }, R, half);
 		ok(near(p.y, c4, 0.06) && near(p.x, sx, 0.06), 'snapStart: against a side wall it lines up along that wall too');
-		ok(S.autoNote({ x: -half + 2.5 * tile, y: wallY, h: 0 }, R, half) === 'Our wall, tile 3 from left, centred, facing field', 'autoNote: says the robot is centred in the tile');
+		ok(S.autoNote({ x: -half + 2.5 * tile, y: wallY, h: 0 }, R, half) === 'Our wall, tile 3 from left, centered, facing field', 'autoNote: says the robot is centered in the tile');
 		ok(/left edge on seam/.test(S.autoNote({ x: -half + 2 * tile + R[1] / 2, y: wallY, h: 0 }, R, half)), 'autoNote: an edge on the seam');
 		ok(/left edge at teeth/.test(S.autoNote({ x: -half + 2 * tile + S.TEETH_IN + R[1] / 2, y: wallY, h: 0 }, R, half)), 'autoNote: an edge at the teeth');
 		ok(S.autoNote({ x: -sx, y: -half + 3 * tile + R[0] / 2, h: 0 }, R, half) === 'Left wall, 4th tile out, near edge on seam, facing field', 'autoNote: along a side wall, the wall and the place stay');
@@ -300,7 +300,7 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		r.plan.steps[0].inches = 5;
 		ok(/back\("Off", 5, 0\.3/.test(S.toJava({ ...r.plan, drive: 'tank' }).steps), 'toJava: a changed number is written as the number');
 	}
-	ok(/Centred on tile 4 from the left\.$/.test(S.startInches({ x: -half + 3.5 * tile, y: wallY, h: 0 }, R, half)), 'startInches: names the tile it is centred on');
+	ok(/Centered on tile 4 from the left\.$/.test(S.startInches({ x: -half + 3.5 * tile, y: wallY, h: 0 }, R, half)), 'startInches: names the tile it is centered on');
 	ok(/Left side on the seam 2\|3/.test(S.startInches({ x: -half + 2 * tile + R[1] / 2, y: wallY, h: 0 }, R, half)), 'startInches: a side on a seam');
 	{
 		const plan = { drive: 'tank', start: { x: 0, y: wallY, h: 0 }, steps: [{ kind: 'aim', label: 'Aim', timeout: 3 }] };

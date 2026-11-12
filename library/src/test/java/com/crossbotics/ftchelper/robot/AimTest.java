@@ -100,7 +100,7 @@ public class AimTest {
         };
     }
 
-    // The goal 24 in left of the centre line and 48 in toward the far wall (written for BLUE).
+    // The goal 24 in left of the center line and 48 in toward the far wall (written for BLUE).
     public static class GoalTunables {
         public static class Aim {
             public static double goalX = -24, goalY = 48;
@@ -365,7 +365,7 @@ public class AimTest {
         assertEquals("pollen", r.launcher.tableName());
     }
 
-    // Game pieces pick the table: both NECTAR colours use "nectar"; NONE and UNKNOWN keep the table.
+    // Game pieces pick the table: both NECTAR colors use "nectar"; NONE and UNKNOWN keep the table.
     @Test public void pieceKindsPickTheirShotTable() {
         AimBot r = bot(GoalTunables.class, false);
         r.started();

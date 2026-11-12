@@ -3,42 +3,45 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** students who have written a TeleOp and want the big picture. **You need:** nothing to
-install; the first [lessons](../tutorials/README.md#start-here-the-main-track) help.
+install. The first [lessons](../tutorials/README.md#start-here-the-main-track) help.
 
-One page to see the whole library, and where your team's code goes. TeamCode is the folder in your
+This page shows the whole library, and where your team's code goes. TeamCode is the folder in your
 robot project where your team's own code lives.
 
 ## The layers
 
 ```mermaid
 flowchart TB
-    subgraph TEAM["TeamCode (your team, changes every season)"]
-        RS["RobotSettings (RobotConfig)<br/>names, numbers"]
-        RB["Robot<br/>your mechanisms"]
-        TO["MainTeleOp (EasyTeleOp)<br/>buttons -> actions"]
-        AU["Autos (EasyAuto)<br/>lists of steps"]
+    subgraph TEAM["TeamCode (your team, changes every season): the five files"]
+        RB["Robot.java<br/>the parts: drive, odometry, intake, lift..."]
+        TU["Tunables.java<br/>their numbers"]
+        CO["Controls.java<br/>buttons -> jobs"]
+        AC["Actions.java<br/>jobs made of several moves"]
+        AU["One file per auto<br/>lists of steps"]
     end
     subgraph LIB["ftc-helper-lib (stays the same across seasons)"]
         direction TB
-        R["robot: RobotDefinition, the modules (Intake, Lift, Claw, Launcher...),<br/>ControlMap, Action, Auto + Steps"]
-        A["teleop + auto: EasyTeleOp, EasyAuto, AutoRoutine, AutoStep"]
-        M["mechanism + launcher + vision<br/>PositionMotor, SpinMotor, servos, Flywheel, Turret, Launcher, cameras"]
-        D["drive: MecanumDrive, TankDrive, DriverControls, DriverHeading, AutoDrive"]
-        FI["finders + testing: Servo/Motor/Flywheel finders, Drive/Shot/Aim tuners, Hardware Check"]
-        G["gamepad + match + tuning + telemetry<br/>ControllerBindings, InitMenu, MatchTimer, Tunable, RobotTelemetry"]
-        C["core + control + safety + hardware + util<br/>Subsystem, Profile, RobotConfig, PidController, SafeMotor, MotorSetup, MathUtil"]
+        R["robot: RobotDefinition, the modules (Drive, Odometry, Intake, Lift, Claw, Launcher, Turret...),<br/>ControlMap, Action, Auto + Steps"]
+        M["the plain parts: mechanism, launcher, vision, drive, odometry<br/>PositionMotor, SpinMotor, servos, Flywheel, cameras, MecanumDrive, PinpointOdometry"]
+        FI["finders + testing: Servo/Motor/Flywheel finders, Odometry Tuner, Hardware Check"]
+        C["core + control + safety + hardware + util<br/>Subsystem, Profile, PidController, SafeMotor, MotorSetup, MathUtil"]
     end
     SDK["FTC SDK (FIRST, new version each season)"]
     TEAM --> LIB --> SDK
 ```
 
-The five-files way ([robot module](../modules/robot.md)) sits on top: the team's `Robot.java`,
-`Tunables.java`, `Controls.java`, `Actions.java` and autos use the `robot` package (a package is a
-folder of classes that belong together), which builds the
-same mechanism, drive, teleop and auto parts underneath. Both ways work; a team can mix them (a module's
-`part()` gives the plain part inside).
+Your team writes the [five files](../five-files/README.md). They use the library's `robot` package (a
+package is a folder of classes that belong together): `Robot.java` extends `RobotDefinition`, and each
+`add(...)` line makes a module, such as `Intake` or `Lift`. A module is built on the plain parts underneath.
+It adds the things every team needs: its numbers in `Tunables.java`, its usual buttons, safety checks, and
+the simulator's picture of it.
 
-**Rule of thumb:** if it is true for any game, it goes in the library. If it is about THIS game
+**The plain parts work alone too.** Your own `LinearOpMode` can use `PositionMotor`, `Flywheel` or
+`PidController` with no five files ([use only what you need](use-only-what-you-need.md)). A module's
+`part()` gives the plain part inside it. Older programs use `EasyTeleOp` and `EasyAuto` (the
+[earlier tutorials](../tutorials/README.md)): they still work, but new code uses the five files.
+
+**Rule of thumb:** when it is true for any game, it goes in the library. When it is about THIS game
 (field positions, which tag, how many pieces, scoring heights), it goes in TeamCode.
 
 ## One loop, every loop
@@ -47,9 +50,9 @@ Every TeleOp has the same shape, whatever the robot:
 
 ```mermaid
 flowchart LR
-    R["read the gamepads<br/>controls.update()"] --> C["commands<br/>(quick: set targets and modes)"]
-    C --> U["update every mechanism<br/>robot.all.update()"]
-    U --> T["telemetry<br/>t.update()"]
+    R["read the gamepads<br/>(Controls.java's buttons)"] --> C["commands<br/>(quick: set targets and modes)"]
+    C --> U["update every part<br/>(PID, limits, jam checks)"]
+    U --> T["telemetry<br/>(the Driver Hub screen)"]
     T --> R
 ```
 
@@ -57,26 +60,22 @@ flowchart LR
 - **`update()` does the work**, once per loop: PID (the math that moves a motor to a target and
   holds it there), limits, jam checks, timing.
 - **No `sleep()` in TeleOp.** While the code sleeps, the robot cannot react. Full guide:
-  [Non-blocking code](non-blocking.md). Only autonomous moves and steps block, on purpose.
+  [Non-blocking code](non-blocking.md). Only autonomous moves and steps block, and they do it on purpose.
 
-[`EasyTeleOp`](../modules/teleop.md) runs this loop for you in TeleOp. In autonomous, `AutoRoutine`
-runs the same `update()` for you during every move and wait. The exact order, what each part reads
-and writes on the hub, when files are written and what stays between OpMode runs:
+The library runs this loop for you: in TeleOp, and during every step of an auto. You never write it. For the exact order, what each part reads
+and writes on the hub, when the library writes files and what stays between OpMode runs, read
 [what runs every loop](every-loop.md).
-
-You do not have to take all of it: every building block (buttons, `SafeMotor`, `PositionMotor`,
-`PidController`, bulk reads, timers, the finders) works alone in your own `LinearOpMode`.
-See [use only what you need](use-only-what-you-need.md).
 
 ## The interfaces (where new things plug in)
 
-An interface is a short list of methods a class promises to have. Any class that has them can plug in.
+An interface is a short list of methods that a class promises to have. Any class that has them can plug in.
 
 | Interface | Ready-made | Write your own when... |
 | --- | --- | --- |
+| `Module` (a class to extend) | `Intake`, `Lift`, `Claw`, `Launcher`... | a new kind of part for `Robot.java` |
 | `Subsystem` | every mechanism helper | you build a new kind of mechanism |
 | `AutoStep` | `goToStep`, `shootStep`, `runForStep`... | a step needs custom logic |
-| `Feeder` | `MotorFeeder`, `ServoFeeder` | the launcher is fed a new way |
+| `Feeder` | `MotorFeeder`, `ServoFeeder` | a new kind of feeder feeds the launcher |
 | `TargetSource` | `WebcamTags`, `LimelightTags`, `HuskyLensCamera` | a new camera or a new kind of target |
 
 See [Extending the library](extending.md).
@@ -85,8 +84,9 @@ See [Extending the library](extending.md).
 
 | Number | Lives in | Changed by |
 | --- | --- | --- |
-| motor names, directions, gear ratios | TeamCode `RobotSettings` / `Robot` (five files: `Robot.java`) | code |
-| every module's numbers (five files) | TeamCode `Tunables.java`, one section per part | tuning menu, then copied into the file (INIT lists the lines) |
-| PID gains, positions, shot table | TeamCode, made `tunable(...)` while tuning | tuning menu, then copied into code |
+| motor and servo names, directions, gear ratios | `Robot.java` | code |
+| every part's numbers: positions, speeds, PID gains, the shot table | `Tunables.java`, one section per part | the finders and the tuning menu, then copied into the file (INIT lists the lines) |
+| which button does what | `Controls.java` | code |
+| start spots, routes, field points | each auto's steps | code, or the auto builder |
 | practice vs competition values | `Profile.pick(a, b)` | the INIT menu's profile line |
-| match choices (alliance, delay, route) | `InitMenu` | the drivers, in INIT |
+| match choices (alliance, delay, which auto) | the INIT menu | the drivers, in INIT |

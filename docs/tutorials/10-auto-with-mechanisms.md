@@ -5,9 +5,14 @@
 **You will build:** an autonomous that raises the lift while it drives, with alliance and start delay chosen on the gamepad in INIT.
 The main track does this with steps and actions: [Actions](start/05-actions.md) and [Your first autonomous](start/06-first-autonomous.md).
 
-**You will learn:** how to keep a lift working WHILE the robot drives, how to choose alliance
-and a start delay in INIT with the gamepad, how to mirror a route for red and blue, how to react
-when a move gets stuck, how to wait for a mechanism safely, and how to hand information to TeleOp.
+**You will learn:**
+
+- how to keep a lift working WHILE the robot drives
+- how to choose the alliance and a start delay in INIT with the gamepad
+- how to mirror a route for red and blue
+- what to do when a move gets stuck
+- how to wait for a mechanism safely
+- how to hand information to TeleOp
 
 **You need:** a tuned drivetrain (Tutorial 09) and the lift from Tutorial 08.
 
@@ -29,19 +34,19 @@ SafeMotor lift = new SafeMotor(liftMotor).setLimits(0, 2600).setSlowZone(250, 0.
 PidController liftPid = new PidController(0.004, 0, 0.0002, 0.05).setTolerance(20);   // tutorial 07 (2)!
 ```
 
-1. 2600 is a bit above `LIFT_UP` (2400), so a wrong target or a bug cannot drive the lift into
-   its top. Within 250 ticks of an end, the power goes down to at most 0.2, so the lift does not
-   slam. FTC robots also need a physical hard stop: [safety.md](../modules/safety.md).
+1. 2600 is a bit above `LIFT_UP` (2400). So a wrong target or a bug cannot drive the lift into its
+   top. Within 250 ticks of an end, the power goes down to at most 0.2, so the lift does not slam.
+   FTC robots also need a physical hard stop: [safety.md](../modules/safety.md).
 2. kP 0.004 pushes harder the farther away the lift is. kI 0: no I part. kD 0.0002 brakes a little
-   near the target, so it does not overshoot. kF 0.05 is a small push that holds the lift up.
+   near the target, so the lift does not overshoot. kF 0.05 is a small push that holds the lift up.
    Within 20 ticks counts as "there".
 
 Start the robot with the lift DOWN: `resetEncoder()` makes the current position 0.
 
 ## 2. The problem: moves wait
 
-`auto.move(30, 0, 0.6)` does not return until the move is done. While it runs, none of YOUR
-code runs: a lift PID in your loop would stop being updated, and the lift would sag or overshoot.
+`auto.move(30, 0, 0.6)` does not return until the move is done. While it runs, none of YOUR code runs.
+So a lift PID in your loop gets no updates, and the lift sags or overshoots.
 
 ## 3. The loop hook
 
@@ -58,7 +63,7 @@ auto.setLoopHook(() -> {
 1. First: read the lift's switch and position.
 2. Then: PID power toward the target, with the limits applied.
 
-Now the lift keeps working during every move. To raise the lift while driving, just change the
+Now the lift keeps working during every move. To raise the lift while the robot drives, change the
 target and then drive:
 
 ```java
@@ -68,12 +73,12 @@ auto.move(30, 0, 0.6);                // ...while driving
 
 `liftTarget` is a field, because the hook (a lambda) reads it.
 
-Keep the hook quick: no `sleep`, no waiting loops.
+Keep the hook quick: no `sleep`, and no loops that wait.
 
 ## 4. Choose the plan in INIT
 
-Before ▶ (start on the Driver Hub), the drivers set up the robot and choose things. Use a small `ControllerBindings`
-in an INIT loop:
+Before ▶ (start on the Driver Hub), the drivers set up the robot and make choices. Use a small
+`ControllerBindings` in an INIT loop:
 
 ```java
 ControllerBindings setup = new ControllerBindings()
@@ -90,16 +95,17 @@ while (opModeInInit()) {
 if (isStopRequested()) return;
 ```
 
-`opModeInInit()` is true until ▶ (or STOP). The library's rule is that the robot does not move in INIT (a safety choice; the game asks only that it
-is still once INIT is done); reading buttons and showing choices is fine. Blue = X (the blue button on many pads), red = B.
+`opModeInInit()` is true until ▶ (or STOP). The library's rule is that the robot does not move in INIT.
+That rule is a safety choice: the game asks only that the robot is still once INIT is done. Reading
+buttons and showing choices in INIT is fine. Blue = X (the blue button on many pads), red = B.
 `Math.min` and `Math.max` keep the delay between 0 and 10 seconds.
 
 A start delay lets you stay out of your partner's way.
 
 ## 5. Mirror the route for red and blue
 
-The red side of the field is usually a mirror image of blue. Write the route once, for blue, and
-flip left/right for red:
+The red side of the field is usually a mirror image of blue. Write the route once, for blue. Then flip
+left and right for red:
 
 ```java
 double side = red ? -1 : 1;
@@ -108,8 +114,8 @@ auto.turn(90 * side, 0.5);     // blue: left 90, red: right 90
 
 Mirror sideways moves the same way: `auto.move(12, 90 * side, 0.5)`. Forward and back do not change.
 
-Check your game's field first: some fields are rotated, not mirrored. Then flip the forward/back
-parts too.
+Check your game's field first: some fields are rotated, not mirrored. For a rotated field, flip the
+forward and back parts too.
 
 ## 6. React to a stuck move
 
@@ -123,14 +129,14 @@ if (r == AutoDrive.Result.STALLED) {
 }
 ```
 
-`STALLED` means the robot stopped making progress (another robot, a wall, a game piece).
-Pushing on would waste time and could burn out the motors.
-Other results: `DONE`, `TIMED_OUT`, `STOPPED` (the match ended).
+`STALLED` means the robot stopped making progress: another robot, a wall or a game piece blocks it.
+To push on would waste time and could burn out the motors.
+The other results are `DONE`, `TIMED_OUT` and `STOPPED` (the match ended).
 
 ## 7. Wait for a mechanism, safely
 
-Between moves, the hook is not running. If you need to wait for the lift, keep it working
-yourself, and always add a time limit:
+Between moves, the hook does not run. To wait for the lift, keep it working yourself, and always add a
+time limit:
 
 ```java
 ElapsedTime wait = new ElapsedTime();
@@ -140,11 +146,11 @@ while (opModeIsActive() && !liftPid.atTarget() && wait.seconds() < 2.0) {
 }
 ```
 
-Three conditions, every time: **the match is still on, the job is not done, the time is not up.**
+Use three conditions, every time: **the match is still on, the job is not done, the time is not up.**
 A loop without a time limit can wait forever and waste the whole autonomous.
 
-**Do not use `sleep(...)`**, even for a start delay: while the code sleeps, nothing runs (no
-telemetry, no mechanism updates). Wait with a loop instead, like the start delay in the program:
+**Do not use `sleep(...)`**, also not for a start delay. While the code sleeps, nothing runs: no
+telemetry, no mechanism updates. Wait with a loop instead, like the start delay in the program:
 
 ```java
 ElapsedTime delay = new ElapsedTime();
@@ -166,33 +172,33 @@ while (opModeIsActive() && delay.seconds() < delaySec) {
 }
 ```
 
-`finally` runs even if the match ends in the middle of a move. A **pose** is where the robot is
-(x, y) and which way it faces (heading). `PoseStore` keeps the saved pose
-until TeleOp reads it (Tutorial 12 uses `DriverHeading` for this). Here we only know the
-heading; with odometry pods (extra unpowered wheels with encoders that track x and y) you would save x and y too.
+`finally` runs also when the match ends in the middle of a move. A **pose** is where the robot is
+(x, y) and which way it faces (heading). `PoseStore` keeps the saved pose until TeleOp reads it
+(Tutorial 12 uses `DriverHeading` for this). Here the program knows only the heading. Odometry pods are
+extra unpowered wheels with encoders that track x and y. With them, you save x and y too.
 
 ## Run it
 
-1. INIT: press B (red), D-pad up twice (2 s delay). The screen shows your choices.
-2. Press ▶. It waits 2 s, drives forward while the lift rises, turns RIGHT (red), drives on.
-3. Run it again as blue: it turns LEFT.
-4. Put a box in the way of the first move: it backs off and tries again.
+1. Press INIT. Press B (red), then D-pad up twice (2 s delay). The screen shows your choices.
+2. Press ▶. The robot waits 2 s, drives forward while the lift rises, turns RIGHT (red), and drives on.
+3. Run it again as blue: the robot turns LEFT.
+4. Put a box in the way of the first move: the robot backs off and tries again.
 
 ## If something goes wrong
 
 | Problem | Fix |
 | --- | --- |
-| Lift sags during moves | The loop hook is not set, or it does not call `moveTo`. |
-| Lift keeps going after the program ends | `lift.stop()` must be in `finally`. |
-| Choices do not change in INIT | `setup.update(gamepad1, gamepad2)` must be inside the `opModeInInit()` loop. |
-| Red and blue go the same way | `side` is not used in a turn or sideways move. |
-| Waits forever | A waiting loop without a time limit. Add `&& timer.seconds() < ...`. |
+| Lift sags during moves | The program sets no loop hook, or the hook does not call `moveTo`. |
+| Lift keeps going after the program ends | Put `lift.stop()` in `finally`. |
+| Choices do not change in INIT | Put `setup.update(gamepad1, gamepad2)` inside the `opModeInInit()` loop. |
+| Red and blue go the same way | A turn or sideways move does not use `side`. |
+| Waits forever | A loop that waits has no time limit. Add `&& timer.seconds() < ...`. |
 
 ## Try this
 
 1. Add a choice of two routes ("near" and "far") on the D-pad left/right.
 2. Lower the lift on the way back without stopping: set `liftTarget = LIFT_DOWN` before the move.
-3. If the first move is `STALLED` twice, skip to "park" instead of trying the rest.
+3. When the first move is `STALLED` twice, skip to "park" instead of trying the rest.
 
 ## Next
 

@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.crossbotics.ftchelper.examples.revbot.Actions;
 import com.crossbotics.ftchelper.examples.revbot.Robot;
-import com.crossbotics.ftchelper.examples.revbot.Tunables;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 
@@ -18,11 +17,11 @@ public class ShootAndLeave extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        // The spot is the simulator robot file's: back against our wall, 56 in left of the centre.
+        // The spot is the simulator robot file's: back against our wall, 56 in left of the center.
         s.start("Back against our wall, facing the field", -56, -61.9, 0)
          .action(Actions.fireAll(robot), 12)
          .parkWithSeconds(3)                                          // the last 3 s are for leaving
-         .forward("Leave", Tunables.Auto.leaveInches, Tunables.Auto.leavePower);
+         .forward("Leave", 20, 0.5);
     }
 
     // BIOBUZZ's field is turned half a turn between alliances (not mirrored): one route works for both.

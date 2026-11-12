@@ -357,7 +357,7 @@ public class LibraryButtonsTest {
         g1.back = true;
         loop(k, 0.02);
         loop(k, 1.0);
-        assertTrue("not yet at 1 s (and START's own hold is cancelled by the pair)", ran.isEmpty());
+        assertTrue("not yet at 1 s (and START's own hold is canceled by the pair)", ran.isEmpty());
         loop(k, 0.6);
         assertEquals("[SWITCH_ALLIANCE]", ran.toString());
         loop(k, 2.0);

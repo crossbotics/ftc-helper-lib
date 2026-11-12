@@ -23,7 +23,7 @@ import java.util.Random;
  * shaftRpm: the flywheel motor's shaft speed. shot: the share of feeds that leave as a shot (the rest drop out).
  * speedIn (in/s), angleDeg (up from the shape's forward, in its forward-up plane, like angle=) and backspin
  * (rad/s; negative = topspin): [mean, spread (one standard deviation)]. exit: where the piece leaves, forward and
- * up from the shape's centre (inches). Between rows the numbers are blended; past the ends the speed grows with
+ * up from the shape's center (inches). Between rows the numbers are blended; past the ends the speed grows with
  * the wheel speed and the rest stays.
  */
 final class SimShotTable {

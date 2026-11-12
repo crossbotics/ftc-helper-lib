@@ -8,7 +8,7 @@ minutes: 25
 needs: [limelight|webcam]
 kit_bots: []
 since: v0.21.0
-docs: [modules/robot.md#camera, modules/vision.md#taggroup]
+docs: [reference/parts/camera.md, modules/vision.md#taggroup]
 ---
 
 ## Why

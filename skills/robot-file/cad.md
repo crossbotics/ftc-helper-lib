@@ -92,7 +92,7 @@ Each shape gets the parts that move with it; everything else is the chassis. Wri
 ```
 
 - `"parts"`: the part index (`i` in parts.json; not the seller's part number). `"near"` + `"within"`: every part whose middle is within that
-  many inches of the point (robot frame). `"onAxis": true` keeps only parts centred on the axle line through the
+  many inches of the point (robot frame). `"onAxis": true` keeps only parts centered on the axle line through the
   point (`"axle"`; within `"axisTolIn"`, default 0.15 in): use it for anything that spins. `"names"`: a regex on the part's name. `"except"`: drop parts.
 - **A spinning group holds only the parts that spin** (wheels, hubs, shaft): the size rules count a spinning model
   as the whole circle it sweeps, so a motor or bracket in it makes the robot look bigger than it is. Keep motors in

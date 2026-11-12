@@ -2,8 +2,8 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-This page is for you if you have made programs with blocks (Scratch, FTC Blocks, or similar) but not
-with Java. It shows where each block you know went in the robot's five files. Come back to it with
+Read this page if you have made programs with blocks (Scratch, FTC Blocks, or similar) but not
+with Java. Each block you know has a place in the robot's five files. Come back to this page with
 [Lesson 3: Buttons](tutorials/start/03-buttons.md).
 
 **Before this:** [Set up](setup/README.md) (if you are new to Android Studio). Read this
@@ -33,7 +33,7 @@ protected void buttons(Robot robot, Pad g1, Pad g2) {
 }
 ```
 
-(The claw line needs a claw in `Robot.java`; the Quick start robot has only an intake.)
+(The claw line needs a claw in `Robot.java`. The Quick start robot has only an intake.)
 
 **Why it is built this way:** in one loop, many jobs share the robot. If one job stops to wait, the
 whole robot stops: no driving, no other button. So **a job must never wait.** Waits happen only inside
@@ -73,10 +73,10 @@ Notes on the table:
 
 - **Autonomous steps DO run in order and wait**, like a stack of blocks. `s.move(...)` finishes
   before the next step starts. **Why the difference:** in an autonomous, no driver is waiting for a
-  button; the library still keeps every part working while a step waits.
+  button. The library still keeps every part working while a step waits.
 - **Sticks give numbers.** Up and right are `+`, from -1 to 1. `robot.lift::manual` gets that number
   every loop.
-- **A number in `Tunables.java` can be changed live:** in the PRACTICE profile, hold GUIDE for 1 s to
+- **You can change a number in `Tunables.java` live:** in the PRACTICE profile, hold GUIDE for 1 s to
   open the tuning menu ([Lesson 1](tutorials/start/01-robot-in-five-files.md#2-tunablesjava-the-numbers)).
   Then copy the good value back into `Tunables.java`.
 - `atStart(...)` comes from the example robot
@@ -87,13 +87,13 @@ Notes on the table:
 
 ## FTC Blocks: the robot blocks
 
-The FTC Blocks editor has blocks for the robot itself. Here is where each one went:
+The FTC Blocks editor has blocks for the robot itself. Each one has a place in Java:
 
 | FTC Blocks block | In Java with this library | Where |
 | --- | --- | --- |
 | `waitForStart` | nothing: the library waits for ▶. Something right after ▶: `atStart(...)` ([cookbook](cookbook.md#how-do-i-run-an-action-when-the-opmode-starts)) | `Robot.java`, in `define()` |
 | `repeat while opModeIsActive` | nothing: the library's loop | |
-| `telemetry.addData("key", value)` and `telemetry.update` | `show("Lift ticks", robot.lift::position);` once, in `buttons(...)`. The library shows it every loop as `Lift ticks : 350`; no `update` needed | `Controls.java` |
+| `telemetry.addData("key", value)` and `telemetry.update` | `show("Lift ticks", robot.lift::position);` once, in `buttons(...)`. The library shows it every loop as `Lift ticks : 350`. You need no `update` | `Controls.java` |
 | `gamepad1.left_stick_y` (and the other sticks) | driving is built in. For your own part: `g2.leftStickY.use(robot.lift::manual);` | `Controls.java` |
 | `if gamepad2.y then ...` | `g2.y.press(...)`, one line, once ([lesson 3](tutorials/start/03-buttons.md)) | `Controls.java` |
 | `set servo.Position to 0.75` | a named position in `Tunables.java` (`open = 0.20, closed = 0.75` in `Tunables.Claw`), then `robot.claw.close()`; any servo: `robot.intakeDeploy.goTo("deployed")` | `Tunables.java`, then `Controls.java` or `Actions.java` |
@@ -106,8 +106,8 @@ The FTC Blocks editor has blocks for the robot itself. Here is where each one we
 **negative** number, so Blocks programs put a "negative" block (or `-1 *`) in front of
 `gamepad1.left_stick_y`. **Here the sign is already fixed:** every stick value the library hands you
 (`use(...)`, the driving) is **+ when pushed up or right**. Do not add the minus, or the part moves the
-wrong way. (Only if you read `gamepad1.left_stick_y` yourself, outside the library, do you still need
-it: [signs and units](conventions.md#gamepad-sticks).)
+wrong way. (You need the minus only when you read `gamepad1.left_stick_y` yourself, outside the library:
+[signs and units](conventions.md#gamepad-sticks).)
 
 ## Never sleep() or a while loop in a button job
 
@@ -126,8 +126,8 @@ Driver Station then shows a warning like this:
 G2:DPAD_LEFT button job took 512 ms: the whole robot stopped that long. No sleep() or while loop in a button job: use an Action with waitSeconds (lesson 5)
 ```
 
-(It starts with the button, `G2:DPAD_LEFT` here. A job on a gesture or a "buzz when" starts with
-`a button job took ...` instead.)
+(The warning starts with the button, `G2:DPAD_LEFT` here. For a job on a gesture or a "buzz when", it
+starts with `a button job took ...` instead.)
 
 Do this instead (the Quick start's `spitOut` in `Actions.java`):
 
@@ -140,7 +140,7 @@ public static Action spitOut(Robot r) {
 }
 ```
 
-and in `Controls.java`: `g2.dpadLeft.press(Actions.spitOut(robot)).says("spit out");`.
+In `Controls.java`, add `g2.dpadLeft.press(Actions.spitOut(robot)).says("spit out");`.
 **Why it works:** the Action waits "inside itself". Each loop it checks the time and lets the loop go
 on, so the robot keeps driving.
 
@@ -181,7 +181,7 @@ keeps its value between loops. Put it in `Controls.java`, inside the class, abov
 private int count = 0;   // a whole number, starts at 0; private = only this file uses it
 ```
 
-and in `buttons(...)`, a button job that changes it, and a `show(...)` line to see it:
+In `buttons(...)`, add a button job that changes it, and a `show(...)` line to see it:
 
 ```java
 g2.x.press(() -> count++);        // X: count goes up by 1 (count++ means "count = count + 1")
@@ -191,8 +191,8 @@ show("Count", () -> count);       // the Driver Station shows "Count : 3"
 **Why a field, not a variable inside `buttons(...)`:** a variable made inside `buttons(...)` is gone
 when it ends (at INIT), and Java does not let a job change it. A field stays as long as the TeleOp runs.
 
-**Check it in a simulator test** ([start lesson 10](tutorials/start/10-test-your-robot-code.md)): a `show(...)` line is on the screen as `Label : value`, so
-`expect screen has "Count : 1"` after one press of X. A `true`/`false` value is checked the same way:
+**Check it in a simulator test** ([start lesson 10](tutorials/start/10-test-your-robot-code.md)): a `show(...)` line is on the screen as `Label : value`. So
+after one press of X, check `expect screen has "Count : 1"`. Check a `true`/`false` value the same way:
 `expect screen has "Intake on : true"` ([Scenario files](guides/simulator.md#scenario-files-test-without-a-browser)).
 
 ## Java punctuation: a short guide
@@ -213,7 +213,7 @@ when it ends (at INIT), and Java does not let a job change it. A field stays as 
   (`"high"`). Words without quotes are names in the code (`robot`, `intake`, `goTo`).
 - **`return`** hands a result back. `spitOut` builds an Action and `return`s it, so the button can
   use it.
-- **`r` or `robot`?** Only a name. A method names its inputs in its first line:
+- **`r` and `robot`:** these are only names. A method names its inputs in its first line:
   `spitOut(Robot r)` calls its robot `r`; `buttons(Robot robot, Pad g1, Pad g2)` calls it `robot`. It
   is the same robot. **Why short `r`:** Actions use it on every line.
 - **`this`** means "this object, the one this code is in". In `Robot.java`, `this` is the robot, so

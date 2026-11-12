@@ -2,13 +2,13 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**For:** anyone new to Java. **Before this:** [Set up](setup/README.md), pages 1 to 7. **Time:** 20 minutes.
+**For:** anyone new to Java. **Before this:** [Set up](setup/README.md), pages 1 to 7.
 At the end you can read a Java file, change one line safely, and make new files in TeamCode.
 
 ## Reading Java without writing it
 
-You do not need to write Java yet. You need to read it well enough to change one line safely. Here is
-a small file, the FTC sample `ConceptNullOp.java`, shortened:
+You do not need to write Java yet. You need to read it well enough to change one line safely. This small
+file is the FTC sample `ConceptNullOp.java`, shortened:
 
 ```java
 package org.firstinspires.ftc.robotcontroller.external.samples;
@@ -39,7 +39,7 @@ What each part is:
 - **`@TeleOp(...)`** and **`@Disabled`** are notes for the Driver Station. `@TeleOp(name = "...")`
   is the name in the TeleOp list. `@Disabled` hides the OpMode from the list.
 - **`{` and `}`** (curly brackets) hold a group of lines together. Every `{` has its own `}` further
-  down. The class has one pair; each part inside it has its own pair.
+  down. The class has one pair. Each part inside it has its own pair.
 - **`;`** (semicolon) ends a statement (one command), like a full stop ends a sentence.
 - **`//`** starts a **comment**: words for people, from `//` to the end of the line. Java ignores them.
 - **`"text in quotes"`** is text, used as it is (a name on the Driver Station, a motor name).
@@ -60,7 +60,7 @@ twenty more errors below it, and they all go away with the first fix.
 
 ### Java words
 
-These words are in the code and in these docs. One line each; you meet them again in the lessons.
+You meet these words in the code, in these docs, and again in the lessons.
 
 - **variable:** a name that holds a value, like a box with a label. `maxPower` holds `0.4`.
 - **`double`:** a kind of variable that holds a number with a decimal point (`0.4`, `96`).
@@ -104,8 +104,8 @@ Now run your own first OpMode: a copy of the FTC sample above. It needs no motor
    (Android Studio may change it for you when you paste. Check it anyway.)
 4. Delete the whole line `@Disabled`. **Why:** with it, the Driver Station hides the OpMode.
 5. Build (hammer), then Run (triangle) to install it.
-6. On the Driver Station, pick **Concept: NullOp** in the TeleOp list. INIT: it shows
-   `Status: Initialized`. ▶: it shows the run time. STOP.
+6. On the Driver Station, pick **Concept: NullOp** in the TeleOp list. Press INIT: it shows
+   `Status: Initialized`. Press ▶: it shows the run time. Then press STOP.
 
 Common mistakes:
 
@@ -116,31 +116,31 @@ Common mistakes:
 
 ### Make a new file or folder
 
-Later pages say "make a file" or "make a folder". This is how, in the **Project** panel (the
-**Project** view, [Set up 3](setup/03-github-and-the-project.md#3-open-the-project-in-android-studio)). Each kind is made a different way:
+Later pages say "make a file" or "make a folder". Do it in the **Project** panel (the
+**Project** view, [Set up 3](setup/03-github-and-the-project.md#3-open-the-project-in-android-studio)). You make each kind a different way:
 
-1. **A new Java file** (a class, for example `HardwareCheck.java`): right-click the `teamcode` folder,
+1. **A new Java file** (a class, for example `HardwareCheck.java`): right-click the `teamcode` folder and click
    **New > Java Class**. Type the name **without** `.java` (`HardwareCheck`), pick **Class**, and
    press Enter. Android Studio writes the `package` line for you. Then replace everything in the new
    file with the whole file the page shows (select all with **Edit > Select All**, then paste), and
    check that the first line is still `package org.firstinspires.ftc.teamcode;`.
    **Why:** the file name must be the class name, and the `package` line must match the folder.
-2. **A Java folder** (a folder of code, for example `autos`): right-click the `teamcode` folder,
+2. **A Java folder** (a folder of code, for example `autos`): right-click the `teamcode` folder, click
    **New > Package**, and type `autos` (after the `teamcode.` that is already there). A file in it
-   starts with `package org.firstinspires.ftc.teamcode.autos;`. **Why "Package":** in Java, a folder
-   of code is called a package.
+   starts with `package org.firstinspires.ftc.teamcode.autos;`. **Why "Package":** Java calls a folder
+   of code a package.
 3. **A plain text file** (not Java: for example `local.properties` or a scenario `my-test.sim`):
-   right-click the folder it goes in, **New > File**, and type the **full** name with its ending
+   right-click the folder it goes in, click **New > File**, and type the **full** name with its ending
    (`local.properties`, `my-test.sim`). Do not add `.txt`. If Android Studio asks what kind of file
    it is ("Register New File Type Association"), pick **Text**.
-   **Why the full name:** the ending tells the tools what the file is; `my-test.sim.txt` is not found.
+   **Why the full name:** the ending tells the tools what the file is. The tools do not find `my-test.sim.txt`.
 4. **A plain folder** (not Java: for example `simulator/scenarios` next to `TeamCode`): right-click
-   the top project folder (the one with `TeamCode` in it), **New > Directory**, and type
+   the top project folder (the one with `TeamCode` in it), click **New > Directory**, and type
    `simulator/scenarios`. The `/` makes a folder inside a folder.
 
 The Quick start puts the autonomous programs in a Java folder `autos` inside `teamcode` (kind 2).
 
 ## Next
 
-1. Used Scratch or Blocks before? Read [From Blocks to Java](blocks-to-java.md): it shows where each block you know went.
+1. If you used Scratch or Blocks before, read [From Blocks to Java](blocks-to-java.md): it shows where each block you know went.
 2. [Quick start](quick-start.md): [pick your road](quick-start.md#pick-your-road), get the five robot files, and drive.

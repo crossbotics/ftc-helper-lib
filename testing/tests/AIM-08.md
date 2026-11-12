@@ -8,7 +8,7 @@ minutes: 15
 needs: [limelight|webcam]
 kit_bots: []
 since: v0.37.0
-docs: [modules/robot.md#aim, tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot]
+docs: [reference/parts/aim.md, tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot]
 ---
 
 ## Why

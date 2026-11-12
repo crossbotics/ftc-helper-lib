@@ -8,7 +8,7 @@ minutes: 20
 needs: []
 kit_bots: [gobilda-strafer]
 since: v0.33.0
-docs: [guides/finders.md#drive-tuner-wheel-size-and-strafe-correction, guides/tunables.md#drive]
+docs: [guides/finders.md#drive-tuner-wheel-size-and-strafe-correction, reference/parts/drive.md#in-tunablesjava]
 ---
 
 ## Why

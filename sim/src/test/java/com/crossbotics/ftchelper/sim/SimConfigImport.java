@@ -200,7 +200,7 @@ public final class SimConfigImport {
         b.append("# ---- Size and start (TODO: measure the robot) ----\n");
         b.append("robot.lengthIn = 18   # TODO: front to back, inches\nrobot.widthIn = 18    # TODO: side to side\nrobot.heightIn = 18   # TODO: tallest at the start\n");
         if (field.equals("biobuzz-2026")) {
-            b.append("start.x = -56\nstart.y = -61.55\nstart.heading = 0     # TODO: where it starts (inches from the field centre; 0 = facing away from the drivers)\n\n");
+            b.append("start.x = -56\nstart.y = -61.55\nstart.heading = 0     # TODO: where it starts (inches from the field center; 0 = facing away from the drivers)\n\n");
         } else {
             b.append("start.x = 0\nstart.y = -48\nstart.heading = 0     # TODO: where it starts on this field (it must not overlap a field part)\n\n");
         }
@@ -220,7 +220,7 @@ public final class SimConfigImport {
             if (part != null) b.append("drive.part = ").append(part).append("\n");
             else b.append("# drive.part = TODO: ").append(MOTOR_FAMILIES.getOrDefault(d0.tag, "which motor?")).append("\n");
             b.append("drive.wheelDiameterIn = 4.09   # TODO: the wheel's real diameter (goBILDA 104 mm = 4.09; REV 75 mm = 2.95)\n");
-            questions.add("Drivetrain: mecanum or tank? Which motors (catalog part) and wheels (diameter)? Track width and wheelbase (wheel centre to wheel centre).");
+            questions.add("Drivetrain: mecanum or tank? Which motors (catalog part) and wheels (diameter)? Track width and wheelbase (wheel center to wheel center).");
             for (String s : drive) used.add(s);
         } else {
             b.append("drive.type = none   # TODO: no drive motors found by name (front/back + left/right): which motors drive it?\n");
@@ -277,7 +277,7 @@ public final class SimConfigImport {
                 b.append(k).append('.').append(key(d.name)).append(" = at=ready").append(k.equals("distance") ? ", acrossMm=150" : "")
                         .append("   # TODO: at=intake (sees each piece come in) or at=ready (the next to fire)")
                         .append(k.equals("distance") ? "; acrossMm = from the sensor to the far wall" : "").append('\n');
-                questions.add((k.equals("color") ? "Colour sensor \"" : "Distance sensor \"") + d.name
+                questions.add((k.equals("color") ? "Color sensor \"" : "Distance sensor \"") + d.name
                         + "\": does it watch pieces come in (intake) or the piece ready to fire?");
             }
             if ((k.equals("pinpoint") || k.equals("otos")) && !keys.contains("odometry")) {
@@ -289,7 +289,7 @@ public final class SimConfigImport {
             if (k.equals("webcam")) {
                 b.append("camera.").append(unique(safe(d.name), keys)).append(" = name=").append(d.name)
                         .append(", forward=0, left=0, up=10, yaw=0, pitch=0   # TODO: where it sits and how it is tilted\n");
-                questions.add("Webcam \"" + d.name + "\": where is it (forward/left/up from the robot's centre, inches) and how is it tilted?");
+                questions.add("Webcam \"" + d.name + "\": where is it (forward/left/up from the robot's center, inches) and how is it tilted?");
             }
             if (k.equals("huskylens")) {
                 b.append("huskylens.").append(unique(safe(d.name), keys)).append(" = name=").append(d.name)

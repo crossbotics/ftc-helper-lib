@@ -41,7 +41,7 @@ public class SimWorldTest {
         r.setPose(40, -55, 0);
         push(r, -30, 0, 1.5);                 // backward into the red wall (y = -70.6)
         assertEquals("field wall", r.bumpedInto);
-        assertEquals("stops at the wall: robot centre 9 in from it", -70.585 + 9, r.y, 0.3);
+        assertEquals("stops at the wall: robot center 9 in from it", -70.585 + 9, r.y, 0.3);
         // pushing back-and-right along the wall: it slides right, still touching it
         push(r, -10, 20, 1.0);
         assertTrue("slid along the wall: x " + r.x, r.x > 55);
@@ -91,14 +91,14 @@ public class SimWorldTest {
         r.setPose(0, -60, 0);                 // facing +y, the HIVE frame base (y -24.7..-15.5) ahead
         push(r, 15, 0, 3.0);
         assertTrue("the pole hits the HIVE: " + r.bumpedInto, r.bumpedInto.contains("HIVE"));
-        assertEquals("stopped by the pole's tip, 20.5 in ahead of the robot's centre", -24.73 - 20.5, r.y, 0.5);
+        assertEquals("stopped by the pole's tip, 20.5 in ahead of the robot's center", -24.73 - 20.5, r.y, 0.5);
         // physics = simple: the old rule, a bump stops the whole move
         SimRobot s = robot("physics = simple\n");
         assertTrue(s.world == null);
     }
 
     // Air: a POLLEN (25 g, 2.8 in) thrown level at 10 m/s, high up, slows as drag says: dv/dt = -k v^2 with
-    // k = 1/2 rho Cd A / m = 0.0477 per metre, so after 0.1 s it is at 10 / (1 + k 10 0.1) = 9.545 m/s.
+    // k = 1/2 rho Cd A / m = 0.0477 per meter, so after 0.1 s it is at 10 / (1 + k 10 0.1) = 9.545 m/s.
     @Test public void airSlowsAFlyingPieceAndBackspinLiftsIt() throws Exception {
         SimRobot r = robot("");
         r.setPose(0, -60, 0);

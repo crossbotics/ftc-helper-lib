@@ -2,20 +2,20 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-Short answers to the questions students ask most. Each recipe is one question, a few lines of code
+Short answers to the questions students ask most. Each recipe has one question, a few lines of code
 to copy, one sentence on **why**, and links to the lesson that explains more.
 
-**Find your question fast:** press **Ctrl+F** (on a Mac: **Cmd+F**) and type a word, like `lift`,
-`double-tap` or `park`. Or use the list just below.
+**To find your question:** press **Ctrl+F** (on a Mac: **Cmd+F**) and type a word, like `lift`,
+`double-tap` or `park`. Or use the list below.
 
-**The code always works.** Every code block on this page is copied from real Java files in
-[`examples/.../cookbook`](../examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook). Those
-files are built and run in the simulator each time the library changes, and a check
-(`tools/check_docs.py`) makes sure this page and the files say the same thing.
+**The code works.** Every code block on this page is a copy of real Java files in
+[`examples/.../cookbook`](../examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook). Each time
+the library changes, we build those files and run them in the simulator. A check
+(`tools/check_docs.py`) makes sure that this page and the files say the same thing.
 
-**New here?** Do the [Quick start](quick-start.md) first: it puts the five files in your robot project.
-These recipes go into those files. Never coded before? Read [Words you will meet](#words-you-will-meet)
-first.
+**If you are new:** do the [Quick start](quick-start.md) first. It puts the five files in your robot
+project, and these recipes go into those files. If you never coded before, read
+[Words you will meet](#words-you-will-meet) first.
 
 ## The questions
 
@@ -46,6 +46,7 @@ first.
 - [How do I make the gamepad buzz?](#how-do-i-make-the-gamepad-buzz)
 - [How do I control a part with a stick?](#how-do-i-control-a-part-with-a-stick)
 - [How do I move a part's button to another button?](#how-do-i-move-a-parts-button-to-another-button)
+- [How do I put the launcher's fire button on another button?](#how-do-i-put-the-launchers-fire-button-on-another-button)
 - [How do I let the parts add their usual buttons by themselves?](#how-do-i-let-the-parts-add-their-usual-buttons-by-themselves)
 - [How do I move the library's own buttons (slow, field-centric, pause)?](#how-do-i-move-the-librarys-own-buttons-slow-field-centric-pause)
 - [How do I change the double-tap and hold times?](#how-do-i-change-the-double-tap-and-hold-times)
@@ -85,6 +86,7 @@ first.
 - [How do I keep aiming when the camera loses the goal?](#how-do-i-keep-aiming-when-the-camera-loses-the-goal)
 - [How do I aim with the odometry only (no camera)?](#how-do-i-aim-with-the-odometry-only-no-camera)
 - [How do I make the camera work in any venue's light?](#how-do-i-make-the-camera-work-in-any-venues-light)
+- [How do I find game pieces with a HuskyLens?](#how-do-i-find-game-pieces-with-a-huskylens)
 - [How do I shoot while the robot is driving?](#how-do-i-shoot-while-the-robot-is-driving)
 - [How do I use one shot table per game piece?](#how-do-i-use-one-shot-table-per-game-piece)
 - [Every shot is a bit short today. How do I trim the speed (a low battery)?](#every-shot-is-a-bit-short-today-how-do-i-trim-the-speed-a-low-battery)
@@ -117,11 +119,11 @@ first.
 - [How do I run a mechanism while the robot drives?](#how-do-i-run-a-mechanism-while-the-robot-drives)
 - [How do I wait for my alliance partner?](#how-do-i-wait-for-my-alliance-partner)
 - [How do I write a step the list cannot say?](#how-do-i-write-a-step-the-list-cannot-say)
-- [How do I change a distance without building the code again?](#how-do-i-change-a-distance-without-building-the-code-again)
+- [How do I change a distance in an autonomous?](#how-do-i-change-a-distance-in-an-autonomous)
 - [How do I share the same first steps in several autos?](#how-do-i-share-the-same-first-steps-in-several-autos)
 - [How do I make the start delay shorter, or use a different number on RED?](#how-do-i-make-the-start-delay-shorter-or-use-a-different-number-on-red)
 
-**Several autos and choosing one** (more: [the guide](guides/autos.md))
+**Several autos and choosing one** (more: [Building autos 3: having multiple autos](building-autos/03-multiple-autos.md))
 - [How do I build several autos from the same pieces?](#how-do-i-build-several-autos-from-the-same-pieces)
 - [How do I make two autos that differ by one piece?](#how-do-i-make-two-autos-that-differ-by-one-piece)
 - [How do I let the drivers choose the start spot and the plan in INIT?](#how-do-i-let-the-drivers-choose-the-start-spot-and-the-plan-in-init)
@@ -132,6 +134,7 @@ first.
 - [How do I add dead wheels?](#how-do-i-add-dead-wheels)
 - [How do I tune the odometry?](#how-do-i-tune-the-odometry)
 - [How do I drive to a point on the field?](#how-do-i-drive-to-a-point-on-the-field)
+- [How do I get around field elements on the way to a spot?](#how-do-i-get-around-field-elements-on-the-way-to-a-spot)
 - [How do I show where the robot is?](#how-do-i-show-where-the-robot-is)
 - [How do I use the robot's position in an action?](#how-do-i-use-the-robots-position-in-an-action)
 - [How do I set the pose when autonomous did not run?](#how-do-i-set-the-pose-when-autonomous-did-not-run)
@@ -142,6 +145,7 @@ first.
 - [How do I follow a path in an autonomous?](#how-do-i-follow-a-path-in-an-autonomous)
 - [How do I drive two paths with no stop, slow down, or hold at the end?](#how-do-i-drive-two-paths-with-no-stop-slow-down-or-hold-at-the-end)
 - [How do I keep facing the goal along a path?](#how-do-i-keep-facing-the-goal-along-a-path)
+- [How do I drive first and turn at the end of a path (or turn first)?](#how-do-i-drive-first-and-turn-at-the-end-of-a-path-or-turn-first)
 - [How do I start something partway along a path?](#how-do-i-start-something-partway-along-a-path)
 
 **Telemetry** (lines on the Driver Station)
@@ -178,7 +182,7 @@ first.
 
 | In Blocks you used | Here you write | In which file |
 | --- | --- | --- |
-| a `repeat while opModeIsActive` loop | nothing: the library runs the loop for you, many times a second | |
+| a `repeat while opModeIsActive` loop | nothing: the library runs the loop for you, many times a second | - |
 | drive forward, turn (in autonomous) | `.move("Forward", 24, 0, 0.5)`, `.turn("Left", 90, 0.4)` ([moves](#how-do-i-drive-forward-sideways-and-turn)) | a file in `autos/` |
 | `if` a sensor or part says something, then ... | `.waitUntil(...)`: wait until it is true, then go on ([wait until](#how-do-i-wait-until-something-is-true)) | `Actions.java` or an autonomous |
 | `if` the drivers chose something before the match | `onlyIf(...)` with a menu choice ([choices](#how-do-i-let-the-drivers-choose-before-the-match)) | an autonomous |
@@ -194,18 +198,19 @@ first.
 | set motor power | a command of the part: `robot.intake.in()`, `robot.lift.goTo("high")` ([parts](#how-do-i-send-a-part-to-a-position-from-a-button)) | `Controls.java`, `Actions.java` |
 | a variable for a number (a speed, a position) | a number in `Tunables.java` ([numbers](#where-do-the-numbers-go)) | `Tunables.java` |
 | `telemetry.addData` | `show("Label", ...)` ([show](#how-do-i-show-a-value-on-the-driver-station-screen)) | `Controls.java` |
-| drive blocks (sticks to motor powers) | nothing: driving is built in ([driving](#driving-that-is-already-built-in)) | |
+| drive blocks (sticks to motor powers) | nothing: driving is built in ([driving](#driving-that-is-already-built-in)) | - |
 
-**Why no loop?** In Blocks your code ran again and again in the loop. Here `buttons(...)` runs **once**,
-at INIT: each line plugs a job into a button. The library's loop then runs the job each time the button
-is pressed. So you never write `if`, `while` or `sleep` for buttons. More: [From Blocks to Java](blocks-to-java.md).
+**Why there is no loop:** in Blocks, your code ran again and again in the loop. Here `buttons(...)` runs
+**once**, at INIT, and each line plugs a job into a button. Then the library's loop runs the job each time
+the driver presses the button. So you never write `if`, `while` or `sleep` for buttons. More:
+[From Blocks to Java](blocks-to-java.md).
 
 ## Where does each line go? The files, whole
 
-Each recipe gives a few lines. They go INSIDE one of these files, at the spot the comment shows. Keep
-every other line of the file. Your files also start with a `package` line and some `import` lines (not
-shown here; they stay at the very top, above `public class`). An import tells Java where a word like
-`Lift` comes from: when a word is red in Android Studio, click it and press **Alt+Enter** (Mac:
+Each recipe gives a few lines. Put them INSIDE one of these files, at the spot the comment shows. Keep
+every other line of the file. Your files also start with a `package` line and some `import` lines. They
+are not shown here, and they stay at the very top, above `public class`. An import tells Java where a word
+like `Lift` comes from. When Android Studio shows a word in red, click it and press **Alt+Enter** (Mac:
 **Option+Enter**) to add its import.
 
 **`Robot.java`**: the parts. Fields at the top, one line per part inside `define()`:
@@ -237,7 +242,7 @@ public class Robot extends RobotDefinition {
 }
 ```
 
-1. `.part(...)` says which motor or servo it is. It is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The ids here are examples: write the ids of your parts, from the [parts catalog](guides/parts-catalog.md). An arm, a turret and a launcher take the motor's id in their brackets instead, and need it. Every recipe below has the same `.part(...)` comment: this is what it means.
+1. `.part(...)` says which motor or servo it is. It is optional, but we recommend it: with it, the library takes better starting values from the part's numbers, and the simulator moves like the real part. The ids here are examples. Write the ids of your parts, from the [parts catalog](guides/parts-catalog.md). An arm, a turret and a launcher need the motor's id, and take it in their brackets instead. Every recipe below has the same `.part(...)` comment, with this meaning.
 
 **`Controls.java`**: the buttons, and your TeleOp. Button lines go inside `buttons(...)`:
 
@@ -278,23 +283,23 @@ An autonomous file: see [your first autonomous](#how-do-i-make-my-first-autonomo
 The numbers file: see [Tunables.java](#where-do-the-numbers-go).
 
 **`Tunables.java`**: one section per part, inside `public class Tunables { ... }`. When a recipe adds a
-new part, it shows the part's whole section (`public static class Lift { ... }`): put it inside
+new part, it shows the part's whole section (`public static class Lift { ... }`). Put it inside
 `Tunables`, next to the other sections. If your file **already has** a section with that name, do not add
-a second one (two sections with one name do not compile): copy only the lines inside it into yours, and
-change the lines you already have. A recipe that adds to a section you already have says so ("In your
-`Tunables.Launcher` section") and shows only the lines.
+a second one, because two sections with one name do not compile. Copy only the lines inside it into
+yours, and change the lines you already have. A recipe that adds to a section you already have says so
+("In your `Tunables.Launcher` section") and shows only the lines.
 
 **How a recipe's section reads:** one number per line, with a short comment.
-- `MEASURE`: a number only your robot can give (a lift's top, a servo's positions). INIT stops and
+- `MEASURE`: a number that only your robot can give (a lift's top, a servo's positions). INIT stops and
   names the tool that finds it. Write the number in its place.
 - `DEFAULT`: the library's starting value, shown in brackets in the comment. Change it
-  only when you see the problem it fixes ([Find a setting by what you want](guides/tunables.md#find-a-setting-by-what-you-want)).
+  only when you see the problem it fixes ([Find a setting by what you want](reference/tunables.md#find-a-setting-by-what-you-want)).
 - A real number: the point of the recipe (a slower robot, a spot on the field).
 - These words need one line at the top of `Tunables.java`: `import static com.crossbotics.ftchelper.robot.Starting.*;`
 
-**Names:** the name in quotes in `Robot.java` (`Lift.slide("lift")`) is the device's name in the
-robot configuration on the Driver Station, exactly. The section's name is that name in CamelCase:
-`"lift"` reads `Lift`, `"intake_deploy"` reads `IntakeDeploy`.
+**Names:** the name in quotes in `Robot.java` (`Lift.slide("lift")`) is exactly the device's name in the
+robot configuration on the Driver Station. The section's name is that name in CamelCase (each word starts
+with a capital letter, no spaces or `_`): `"lift"` reads `Lift`, `"intake_deploy"` reads `IntakeDeploy`.
 
 ## Words you will meet
 
@@ -306,32 +311,32 @@ robot configuration on the Driver Station, exactly. The section's name is that n
 | `Actions.java` | moves that use several steps or parts (score, grab) |
 | `autos/` | the folder with your autonomous programs, one file each |
 | configuration name | the name of a motor or servo you typed on the Driver Station (`"lift"`). The code must use the same name |
-| `robot.lift::position` | `::` hands over a method without running it. The library runs it later (when the button is pressed) |
+| `robot.lift::position` | `::` hands over a method without running it. The library runs it later (when the driver presses the button) |
 | `() -> robot.lift.goTo("high")` | a **lambda**: a small piece of code the library runs later. Use `::` when the job is one method with nothing in its brackets (`robot.claw::open`); use `() ->` when the brackets hold something (`goTo("high")`) or for several commands |
 | `g1`, `g2` | gamepad 1 (the driver) and gamepad 2 (the operator) |
 | operator | the second driver, on gamepad 2: runs the mechanisms while the driver drives |
-| GUIDE | the centre button of the gamepad. **Tap:** the button map (what each button does). **Hold 1 s** (PRACTICE profile): the tuning menu |
+| GUIDE | the center button of the gamepad. **Tap:** the button map (what each button does). **Hold 1 s** (PRACTICE profile): the tuning menu (change numbers while the robot runs) |
 | "every loop" | the library's loop runs many times a second: it reads the gamepads, runs the jobs and updates every part. You never write it |
-| power | from 0 (stopped) to 1 (full); a negative power runs the other way |
+| power | from 0 (stopped) to 1 (full). A negative power runs the other way |
 | `robot`, `g1`, `g2`, `s` | names the library hands you: `buttons(Robot robot, Pad g1, Pad g2)` and `steps(Steps s, Robot robot)` (see [the files, whole](#where-does-each-line-go-the-files-whole)) |
 | `;` | ends a line of Java. A chain of steps (`.move(...)` then `.turn(...)`) is ONE line split over several lines: only its last line has `;` |
 | `"lift"` (in quotes) | a name. Capitals and spelling must match exactly |
 | class | one Java file's main block: `public class Robot ... { ... }`. "Inside the class" = between its `{` and `}` |
 | method | a named piece of code, like `define()` or `scoreHigh(...)`. Its lines go between its `{` and `}` |
-| `@TeleOp(...)`, `@Autonomous(...)` | put the program in the Driver Station's list, with this name |
-| `@Disabled` | hides the program from the list. The cookbook's programs have it; delete it in your copy |
+| `@TeleOp(...)`, `@Autonomous(...)` | puts the program in the Driver Station's list, with this name |
+| `@Disabled` | hides the program from the list. The cookbook's programs have it. Delete it in your copy |
 | `@Override`, `public`, `static`, `protected` | Java words the file needs. Copy them as they are |
-| INIT, ▶ | the Driver Station's two buttons: INIT gets ready (the library moves nothing then), ▶ (start) runs |
+| INIT, ▶ | the Driver Station's two buttons: INIT gets ready (the library moves nothing then), and ▶ (start) runs the program |
 | PRACTICE, COMPETITION | the two profiles (ways to run): PRACTICE is slower and has the tuning menu |
 | ticks (counts) | how far a motor has turned, from its encoder (a sensor in the motor) |
 | `kP`, `kI`, `kD`, `kF` | the PID numbers: how hard a lift pushes toward its target. Start with the defaults |
 | catalog id (`"gobilda-5203-312"`) | a motor's or servo's name in the [parts catalog](guides/parts-catalog.md): 5203 is goBILDA's motor series, 312 its RPM (on the motor's label) |
-| `.part("gobilda-5203-435")` | which motor or servo a part uses. Optional, recommended: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. An arm, a turret and a launcher take the id in their brackets instead, and need it |
-| tuning menu | change numbers while the robot runs (not the INIT choice menu of an autonomous) |
+| `.part("gobilda-5203-435")` | which motor or servo a part uses. Optional, but recommended: with it, the library takes better starting values from the part's numbers, and the simulator moves like the real part. An arm, a turret and a launcher need the id, and take it in their brackets instead |
+| tuning menu | a menu where you change numbers while the robot runs. The INIT choice menu of an autonomous is a different menu |
 | terminal | a window where you type commands. In Android Studio: the **Terminal** tab at the bottom ([how](setup/09-the-terminal.md)) |
 
-**One rule for every recipe:** a job never waits. No `sleep(...)` and no `while` loop in a button job
-or an action: they freeze the whole robot. To wait, see
+**One rule for every recipe:** a job never waits. A `sleep(...)` or a `while` loop in a button job or an
+action freezes the whole robot, so never write one there. To wait, see
 [how do I wait half a second (like sleep)?](#how-do-i-wait-half-a-second-like-sleep-in-blocks).
 
 ## Driving
@@ -349,7 +354,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 ```
 
 **Why:** the names must match the configuration, and the wheel size makes autonomous distances right.
-**More:** [Lesson 2: Drive](tutorials/start/02-drive.md), [Drive](modules/robot.md#drive).
+**More:** [Lesson 2: Drive](tutorials/start/02-drive.md), [Drive](reference/parts/drive.md).
 
 ### How do I set up a tank (standard) drive?
 
@@ -363,9 +368,9 @@ drive(Drive.tank("left_drive", "right_drive")
         .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 ```
 
-**Why:** the motors on the two sides face opposite ways, so one side runs backward: list that side's
-motors in `.reversed(...)`. Two motors per side? Name all four: `Drive.tank("front_left", "front_right", "back_left", "back_right")`.
-**More:** [Lesson 2](tutorials/start/02-drive.md#1-pick-the-drive-type-and-name-the-motors), [Drive](modules/robot.md#drive).
+**Why:** the motors on the two sides face opposite ways, so one side runs backward. List that side's
+motors in `.reversed(...)`. With two motors per side, name all four: `Drive.tank("front_left", "front_right", "back_left", "back_right")`.
+**More:** [Lesson 2](tutorials/start/02-drive.md#1-pick-the-drive-type-and-name-the-motors), [Drive](reference/parts/drive.md).
 
 ### A wheel turns the wrong way. How do I fix it?
 
@@ -380,7 +385,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
         .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 ```
 
-**Why:** motors on the two sides face opposite ways, so one side must run reversed for the robot to go straight.
+**Why:** the motors on the two sides face opposite ways. So one side must run reversed, or the robot does not go straight.
 **More:** [Lesson 2: check the motor directions](tutorials/start/02-drive.md#7-check-the-motor-directions), [Troubleshooting](troubleshooting.md#robot-behavior).
 
 ### How do I tell the robot how the Control Hub is mounted?
@@ -395,7 +400,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
         .imu("imu", LogoFacingDirection.LEFT, UsbFacingDirection.UP));
 ```
 
-**Why:** the IMU (the hub's turn sensor) must know which way is up, or turns and field-centric driving go wrong.
+**Why:** the IMU (the hub's turn sensor) must know which way is up. If it does not, turns and field-centric driving go wrong.
 **More:** [Lesson 2: the IMU](tutorials/start/02-drive.md#4-say-how-the-control-hub-is-mounted-the-imu).
 
 ### How do I make the robot slower (or faster)?
@@ -406,7 +411,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 ```java title="Tunables.java"
 public static class Drive {                                     // a fixed name: always Drive
     public static double maxPower = 0.6;                        // top wheel power: slow for first drives (1.0)
-    public static double practiceMaxPower = 0.4;                // top wheel power in PRACTICE (0.6)
+    public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
     public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
     public static double strafeCorrection = DEFAULT;            // sideways moves: Drive Tuner (1.15)
     public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -416,8 +421,9 @@ public static class Drive {                                     // a fixed name:
 }
 ```
 
-**Why:** `practiceMaxPower` is used in the PRACTICE profile and `maxPower` in COMPETITION, so practice
-is safe and matches are fast.
+**Why:** `maxPower` is the top power in both profiles, so the drivers practice at match speed. Lower it
+for the first drives, then set it back. To set a lower top power for PRACTICE only, use
+`practiceMaxPower`, for example on a new driver's first day.
 **More:** [Lesson 2: the numbers](tutorials/start/02-drive.md#5-the-numbers-tunablesdrive), [Profiles](guides/profiles.md).
 
 ### How do I let one driver do everything?
@@ -435,7 +441,7 @@ public static boolean oneDriver = true;
 
 ### How do I put slow mode on a trigger?
 
-**Where:** `Controls.java`, inside `buttons(...)`. For one driver (with two drivers, LT on gamepad 1 is already slow).
+**Where:** `Controls.java`, inside `buttons(...)`. This is for one driver. With two drivers, LT on gamepad 1 is already slow mode.
 
 <!-- recipe: slow-trigger -->
 ```java title="Controls.java"
@@ -443,28 +449,29 @@ public static boolean oneDriver = true;
 g1.lt.slow().says("slow");
 ```
 
-**Why:** a trigger gives fine control: a little squeeze is a little slower.
-**More:** [ControlMap: one driver](modules/robot.md#controlmap).
+**Why:** a trigger gives fine control: a small squeeze makes the robot a little slower.
+**More:** [ControlMap: one driver](reference/controls.md#controlmap).
 
 ### Driving that is already built in
 
-No code needed. With `Controls.java` (two drivers):
+You write no code for these. With `Controls.java` (two drivers):
 
-- **Drive:** gamepad 1 left stick drives (and strafes), right stick X turns. LT: slow (the further, the slower).
-- **Field-centric** (mecanum): gamepad 1 **Y** switches it on/off. "Forward" is then away from the drivers.
-- **Pause:** tap gamepad 1 **BACK**: everything stops on brake. Tap again to go on.
-- **Reset "forward":** hold gamepad 1 **BACK** for 1 second with the robot facing away from you.
+- **Drive:** the gamepad 1 left stick drives (and strafes), and right stick X turns. LT gives slow mode: the further you pull it, the slower the robot.
+- **Field-centric** (mecanum): double-tap gamepad 1 **Y** to switch it on and off. Then "forward" is away from the drivers, whichever way the robot faces.
+- **Pause:** tap gamepad 1 **BACK**, and everything stops on brake. Tap again to go on.
+- **Reset "forward":** turn the robot to face away from you, then hold gamepad 1 **BACK** for 1 second.
 
-**More:** [Lesson 2: the driving you get for free](tutorials/start/02-drive.md#6-the-driving-you-get-for-free), [the standard map](modules/robot.md#controlmap).
+**More:** [Lesson 2: the driving you get for free](tutorials/start/02-drive.md#6-the-driving-you-get-for-free), [the standard map](reference/controls.md#controlmap).
 
 ## Buttons and gestures
 
-All button recipes go in `Controls.java`, inside `buttons(...)`. That method runs once, at INIT: each
+All button recipes go in `Controls.java`, inside `buttons(...)`. That method runs once, at INIT, and each
 line plugs a job into a button. Every line ends with `;`. `.says("...")` is the text on the button map.
 
-**Pick a free button.** Each part's usual buttons are lines in `Controls.java` too (each part's "buttons
-to add" in the [reference](modules/robot.md)): for example the claw on operator **B**, the lift on **A**,
-**X**, **Y**. Two jobs on one button stop INIT with the button's name. INIT lists the free buttons.
+**Pick a free button.** Each part's usual buttons are lines in `Controls.java` too (see each part's
+"buttons to add" in the [reference](reference/robot-java.md)). For example, the claw is on operator **B**,
+and the lift is on **A**, **X** and **Y**. When two jobs are on one button, INIT stops and names the
+button. INIT also lists the free buttons
 ([move a button](#how-do-i-move-a-parts-button-to-another-button)).
 
 ### How do I make a button do something once?
@@ -492,7 +499,7 @@ g2.x.press(() -> robot.lift.goTo("low")).says("lift to low");
 g1.a.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
 ```
 
-**Why:** without the second job, the intake would keep running after you let go.
+**Why:** the second job stops the intake when you let go. Without it, the intake keeps running.
 **More:** [The button menu](guides/buttons.md#one-job-on-the-button).
 
 ### How do I switch something on and off with one button?
@@ -505,7 +512,7 @@ g1.a.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
 g1.x.toggle(robot.intake).rumble().says("intake on/off");
 ```
 
-**Why:** `toggle` remembers on or off for you, and the buzz tells the driver which one without looking.
+**Why:** `toggle` remembers on or off for you. The buzz tells the driver which one it is, so the driver does not have to look.
 **More:** [The button menu](guides/buttons.md#one-job-on-the-button).
 
 ### How do I put a tap, a hold and a double-tap on one button?
@@ -533,7 +540,7 @@ g2.rb.tap(robot.launcher::fire).says("fire one")
 g2.dpadLeft.heldFor(1.0, robot.launcher::stop).says("hold 1 s: flywheel off");
 ```
 
-**Why:** a quick bump of the button does nothing, so a big job cannot start by accident.
+**Why:** a quick bump of the button does nothing, so nobody starts a big job by accident.
 **More:** [The button menu: gestures](guides/buttons.md#several-gestures-on-one-button).
 
 ### How do I use two buttons together (like a shift key)?
@@ -546,15 +553,15 @@ g2.dpadLeft.heldFor(1.0, robot.launcher::stop).says("hold 1 s: flywheel off");
 g1.rb.with(g1.dpadUp, () -> robot.lift.goTo("high")).says("lift to high");
 ```
 
-**Why:** a pair is a safe place for rare, big jobs (a climb); D-pad up alone still does its own job.
+**Why:** a pair is a safe place for a big job that you use only once or twice a match, like a climb. D-pad up alone still does its own job.
 **More:** [The button menu: two buttons together](guides/buttons.md#two-buttons-together).
 
 ### How do I make the gamepad buzz?
 
 **Where:** `Controls.java`, inside `buttons(...)`.
 
-Add `.rumble()` after a job (see [the toggle recipe](#how-do-i-switch-something-on-and-off-with-one-button)),
-or buzz when the robot gets ready:
+Add `.rumble()` after a job (see [the toggle recipe](#how-do-i-switch-something-on-and-off-with-one-button)).
+Or make the gamepad buzz when the robot gets ready:
 
 <!-- recipe: rumble-when -->
 ```java title="Controls.java"
@@ -562,7 +569,7 @@ or buzz when the robot gets ready:
 g2.rumbleWhen(robot.launcher::isReady);
 ```
 
-**Why:** the drivers watch the robot, not the Driver Station, so a buzz says "ready" without looking away.
+**Why:** the drivers watch the robot, not the Driver Station. A buzz tells them "ready", so they do not have to look away.
 **More:** [The button menu: feedback](guides/buttons.md#4-feedback).
 
 ### How do I control a part with a stick?
@@ -575,15 +582,15 @@ g2.rumbleWhen(robot.launcher::isReady);
 g2.rightStickY.use(robot.lift::manual).says("lift by hand");
 ```
 
-**Why:** a stick gives a number every loop, so the part moves as far as you push it (and holds when you let go).
+**Why:** a stick gives a number every loop, so the part moves as far as you push the stick. When you let go, the part holds.
 **More:** [The button menu: sticks](guides/buttons.md#sticks).
 
 ### How do I move a part's button to another button?
 
 **Where:** `Controls.java`, inside `buttons(...)`.
 
-A part's buttons are lines in `Controls.java` (the intake's usual ones: operator RT and LT). To move them,
-change the button in their lines:
+A part's buttons are lines in `Controls.java`. For example, the intake's usual buttons are operator RT and
+LT. To move them, change the button in their lines:
 
 <!-- recipe: move-a-button -->
 ```java title="Controls.java"
@@ -592,7 +599,7 @@ g2.lb.hold(robot.intake::holdIn, robot.intake::stop).says("intake in (hold)");
 g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
 ```
 
-**Why:** a part's buttons are your lines: put its jobs on the buttons you want, and leave its usual ones free.
+**Why:** a part's buttons are your own lines. Put its jobs on the buttons you want, and leave its usual buttons free.
 **More:** [Lesson 3: the buttons the parts bring](tutorials/start/03-buttons.md#2-the-parts-buttons-written-out).
 
 ### How do I put the launcher's fire button on another button?
@@ -605,10 +612,10 @@ robot.launcher.fireOn(g2.y);   // all of RB's firing moves to Y
 robot.launcher.spinOn(g2.x);   // LB's spin up / down moves to X
 ```
 
-**Why:** the fire button is more than one job: a tap fires one, quick taps line up more shots, a hold keeps
-firing, and a tap then a hold sprays. `fireOn` moves all of it in one line, and RB is free for something else.
-`fireOn(null)` leaves no fire button at all.
-**More:** [Firing](modules/robot.md#firing-shot-modes-feed-stop-piece-path).
+**Why:** the fire button does more than one job. A tap fires one piece, quick taps line up more shots, a
+hold keeps firing, and a tap then a hold sprays. `fireOn` moves all of these jobs in one line, and RB is
+then free for something else. `fireOn(null)` leaves no fire button at all.
+**More:** [Firing](reference/parts/launcher.md#firing-shot-modes-feed-stop-piece-path).
 
 ### How do I let the parts add their usual buttons by themselves?
 
@@ -624,10 +631,11 @@ protected boolean useStandardButtons() {
 }
 ```
 
-**Why:** code written before v0.39.0 relied on it: each part put its usual buttons on the gamepads without
-a line in `Controls.java`. Since v0.39.0 a part has no buttons until you write its lines (each part's
-"buttons to add" in the [reference](modules/robot.md)), so every button is a line you can read.
-**More:** [ControlMap](modules/robot.md#controlmap).
+**Why:** code written before v0.39.0 needs it. In that code, each part put its usual buttons on the
+gamepads with no line in `Controls.java`. Since v0.39.0, a part has no buttons until you write its lines
+(see each part's "buttons to add" in the [reference](reference/robot-java.md)). So you can read every
+button as a line.
+**More:** [ControlMap](reference/controls.md#controlmap).
 
 ### How do I move the library's own buttons (slow, field-centric, pause)?
 
@@ -646,9 +654,9 @@ protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
 }
 ```
 
-**Why:** the old button is then free for your own jobs in `buttons(...)`. Two library jobs on one
-button stop INIT with the button's name. Only one `libraryButtons(...)` method per file: put every
-`lib.` line in it.
+**Why:** the old button is then free for your own jobs in `buttons(...)`. When two library jobs are on
+one button, INIT stops and names the button. A file has only one `libraryButtons(...)` method, so put
+every `lib.` line in it.
 **More:** [The button menu: moving the library's buttons](guides/buttons.md#moving-the-librarys-buttons).
 
 ### How do I change the double-tap and hold times?
@@ -664,17 +672,18 @@ public static class Buttons {                                   // a fixed name:
 }
 ```
 
-**Why:** some drivers tap slower; these times are in the tuning menu too. A value you tune there,
-copy back into `Tunables.java` (the file is the record).
+**Why:** some drivers tap slower. These times are in the tuning menu too. When you tune a value there,
+copy it back into `Tunables.java`, because the file is the record.
 **More:** [The button menu](guides/buttons.md#several-gestures-on-one-button).
 
 ### How do I switch the alliance during TeleOp?
 
-The alliance is chosen in INIT (gamepad 1: X = BLUE, B = RED). Picked the wrong one, and the match has
-started? Turn on the switch (it is off by default, so nobody switches by accident).
+The drivers choose the alliance in INIT (gamepad 1: X = BLUE, B = RED). When they picked the wrong one
+and the match has started, this switch fixes it. Turn it on first. It is off by default, so nobody
+switches by accident.
 
 **Where:** `Controls.java`, inside the class, as a method of its own (below the `}` that ends
-`buttons(...)`). Already have a `libraryButtons(...)` method? Add only the `lib.switchAlliance` line to it.
+`buttons(...)`). If you already have a `libraryButtons(...)` method, add only the `lib.switchAlliance` line to it.
 
 <!-- recipe: switch-alliance -->
 ```java title="Controls.java"
@@ -687,30 +696,31 @@ protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
 }
 ```
 
-**Why:** the alliance picks the goal the camera and the turret aim at, and the light's color. A wrong
-pick aims at the other alliance's goal all match. START first, then BACK: BACK alone is the pause, so
-pressing BACK first just pauses. Holding 1.5 s means a bump does nothing.
+**Why:** the alliance sets the goal that the camera and the turret aim at, and the light's color. With
+the wrong alliance, the robot aims at the other alliance's goal all match. Press START first, then BACK.
+BACK alone is the pause, so BACK first only pauses the robot. The 1.5 s hold means a bump does nothing.
 **More:** [The button menu: moving the library's buttons](guides/buttons.md#moving-the-librarys-buttons).
 
 ### Buttons that are already built in
 
 - **The button map:** INIT shows every button and what it does. During the match, tap **GUIDE**.
 - **The tuning menu:** hold **GUIDE** for 1 second (PRACTICE profile). A tap shows the map, a hold opens the menu.
-- **Two jobs on one button** stop INIT with the button's name, so a mistake is found before the match.
-- **Pause:** press gamepad 1 **BACK** (the small button left of the centre): everything stops at once.
-  A tap again goes on.
-- **Wrong alliance?** Choose it in INIT (gamepad 1: X = BLUE, B = RED). Switching during TeleOp is
-  optional: [turn it on](#how-do-i-switch-the-alliance-during-teleop), then on gamepad 1 hold the small
-  **START** button, then press and hold **BACK** too, 1.5 s.
-- **Set pose here** (robots with odometry): hold gamepad 1 **START** 1 s on the reset spot, sticks let go, in INIT or in the match ([below](#how-do-i-set-the-pose-when-autonomous-did-not-run)).
+- **Two jobs on one button:** INIT stops and names the button, so you find the mistake before the match.
+- **Pause:** press gamepad 1 **BACK** (the small button left of the center), and everything stops at once.
+  Tap it again to go on.
+- **Alliance:** choose it in INIT (gamepad 1: X = BLUE, B = RED). Switching during TeleOp is
+  optional. [Turn it on](#how-do-i-switch-the-alliance-during-teleop). Then, on gamepad 1, hold the small
+  **START** button, then press and hold **BACK** too, for 1.5 s. If you let go sooner, the alliance stays the
+  same and the debug lines turn on or off.
+- **Set pose here** (robots with odometry): put the robot on the reset spot, let go of the sticks, and hold gamepad 1 **START** for 1 s. This works in INIT or in the match ([below](#how-do-i-set-the-pose-when-autonomous-did-not-run)).
 
 **More:** [Lesson 3: the button map](tutorials/start/03-buttons.md#6-the-button-map-init-and-guide).
 
 ## Mechanisms
 
-Each part is one line in `Robot.java`'s `define()`, plus a field for it at the top of the class (for
+Each part is one line in `Robot.java`'s `define()`. It also needs a field at the top of the class (for
 example `public Lift lift;`) and a section with its numbers in `Tunables.java`. The section's name is
-the configuration name in CamelCase (each word starts with a capital letter, no spaces or `_`): `intake_deploy` reads `IntakeDeploy`. Its buttons: copy its lines into `Controls.java` ("buttons to add" in the [reference](modules/robot.md)).
+the configuration name in CamelCase: `intake_deploy` reads `IntakeDeploy`. For its buttons, copy its lines into `Controls.java` (see "buttons to add" in the [reference](reference/robot-java.md)).
 
 ### How do I add an intake on a motor?
 
@@ -732,8 +742,8 @@ public static class Intake {                                    // "intake" in t
 }
 ```
 
-**Why:** the intake brings its numbers (`Tunables.Intake`). Its buttons are lines in `Controls.java`: [Intake: buttons to add](modules/robot.md#intake-buttons-to-add).
-**More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#1-three-lines-in-robotjava), [Intake](modules/robot.md#intake).
+**Why:** the intake reads its numbers from `Tunables.Intake`. Its buttons are lines in `Controls.java`: [Intake: buttons to add](reference/parts/intake.md#buttons-to-add).
+**More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#1-three-lines-in-robotjava), [Intake](reference/parts/intake.md).
 
 ### How do I add an intake on CR servos?
 
@@ -750,10 +760,10 @@ intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-s
         .reversed("right_intake"));
 ```
 
-1. Also add the field at the top of the class: `public Intake intake;`. The two servos face each other, so one must turn the other way: `.reversed(...)` names that one.
+1. Also add the field at the top of the class: `public Intake intake;`. The two servos face each other, so one must turn the other way. `.reversed(...)` names that servo.
 
 **Why:** two servos that face each other must turn opposite ways to pull a piece in. The numbers are in `Tunables.Intake` too (`inPower`, `outPower`).
-**More:** [Intake](modules/robot.md#intake).
+**More:** [Intake](reference/parts/intake.md).
 
 ### How do I make the intake run from the start?
 
@@ -766,8 +776,8 @@ intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-s
 add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
 ```
 
-**Why:** many robots collect all match, so the driver should not have to switch it on.
-**More:** [Intake](modules/robot.md#intake).
+**Why:** many robots collect pieces all match. With this line, the driver does not have to switch the intake on.
+**More:** [Intake](reference/parts/intake.md).
 
 ### How do I add a lift with set heights?
 
@@ -781,7 +791,7 @@ add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
 lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
 ```
 
-1. The bottom switch sets the lift's 0 each time it is pressed. No switch? Delete `.bottomSwitch(...)`.
+1. Each time the lift presses the bottom switch, the switch sets the lift's 0. With no switch, delete `.bottomSwitch(...)`.
 
 <!-- recipe: tunables-lift -->
 ```java title="Tunables.java"
@@ -798,10 +808,10 @@ public static class Lift {                                      // "lift" in the
 }
 ```
 
-**Why:** the lift never goes past `min` and `max`, so it cannot break itself; INIT stops if they are missing.
-`MEASURE` stops INIT until you write the real number: find yours with the [Motor Finder](#how-do-i-find-a-lifts-limits-and-heights).
-`"lift"` must be the motor's name in your configuration. To send it to a height: [from a button](#how-do-i-send-a-part-to-a-position-from-a-button).
-**More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#2-their-numbers-in-tunablesjava), [Lift](modules/robot.md#lift),
+**Why:** the lift never goes past `min` and `max`, so it cannot break itself. INIT stops if they are missing.
+`MEASURE` stops INIT until you write the real number. Find yours with the [Motor Finder](#how-do-i-find-a-lifts-limits-and-heights).
+`"lift"` must be the motor's name in your configuration. To send the lift to a height, see [from a button](#how-do-i-send-a-part-to-a-position-from-a-button).
+**More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#2-their-numbers-in-tunablesjava), [Lift](reference/parts/lift.md),
 [why the bottom switch matters](tutorials/start/04-lift-and-claw.md#4-why-the-bottom-switch-matters-homing).
 
 ### My lift goes down when it should go up. How do I fix it?
@@ -833,17 +843,17 @@ lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));
 ```
 
 1. Find the two numbers on the seller's page. goBILDA: "Encoder Resolution" (the number "at the Output Shaft") and "No-Load Speed". REV: "Encoder Counts per Revolution" (at the output) and "Free Speed". The name (`"my-flywheel-motor"`) then works like a catalog id, here and in `.part(...)`.
-2. If the seller lists 4.8 V and 6 V, use the 4.8 V speed: the hub gives a servo about 5 V.
-3. `Double.NaN` means "I don't know this one". The part then uses general defaults, and INIT says so. A launcher or an arm must have at least the counts per turn: `Motors.custom("...", 28, Double.NaN)`.
+2. When the seller lists 4.8 V and 6 V, use the 4.8 V speed, because the hub gives a servo about 5 V.
+3. `Double.NaN` means "I don't know this one". The part then uses general defaults, and INIT says so. A launcher or an arm needs at least the counts per turn: `Motors.custom("...", 28, Double.NaN)`.
 
 **Why:** the library works out a part's defaults (a launcher's gains and speed, a lift's kP, a servo's
-move time) from its motor's or servo's numbers. Describe yours with the seller's numbers and it works like
-a catalog part: INIT says `defaults from my-flywheel-motor (custom)`, and `:sim:fromRobot` writes its
-numbers into the simulator's robot file. A number you do not know: write `Double.NaN` ("I don't know
-this one"), or the whole part as `Motors.unknown` / `Parts.unknownServo`. The part then uses general
-defaults, and INIT says so. Do not use a catalog motor that is "close": its
-numbers would be quietly wrong.
-**More:** [Parts not in the catalog](modules/robot.md#parts-not-in-the-catalog), [Parts catalog](guides/parts-catalog.md).
+move time) from its motor's or servo's numbers. When you describe yours with the seller's numbers, it
+works like a catalog part. INIT says `defaults from my-flywheel-motor (custom)`, and `:sim:fromRobot`
+writes its numbers into the simulator's robot file. For a number you do not know, write `Double.NaN`
+("I don't know this one"). Or write the whole part as `Motors.unknown` / `Parts.unknownServo`. The part
+then uses general defaults, and INIT says so. Do not use a catalog motor that is "close": its numbers
+would be wrong, and nothing would warn you.
+**More:** [Parts not in the catalog](reference/robot-java.md#parts-not-in-the-catalog), [Parts catalog](guides/parts-catalog.md).
 
 ### How do I run one lift on two motors?
 
@@ -858,8 +868,8 @@ lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("l
 ```
 
 1. The numbers are in `Tunables.LiftLeft` (the FIRST motor's name in CamelCase), not in `Tunables.Lift`.
-2. Both motors always get the same power (also when the lift stops or pauses), so one encoder is enough.
-3. Both motors turn the same way for "up"? Use `.alsoMotor("lift_right")` instead.
+2. Both motors always get the same power, also when the lift stops or pauses. So one encoder is enough.
+3. When both motors turn the same way for "up", use `.alsoMotor("lift_right")` instead.
 
 <!-- recipe: tunables-lift-two-motors -->
 ```java title="Tunables.java"
@@ -879,13 +889,14 @@ public static class LiftLeft {                                  // "lift_left" i
 ```
 
 **Why:** two motors on one slide must never fight. The library sends both the very same power in the same
-loop, also when it stops, pauses (BACK) or an interlock rule holds the lift; your own code copying the
-power every loop would miss pause and STOP. **Check the directions before the chain goes on**: with the
-chain or belt off, each motor must turn the way that lifts; if one is wrong, swap `alsoMotorReversed`
-and `alsoMotor`. Two motors pushing against each other get hot and can break a gearbox. An arm works the
-same: `Arm.motor("arm_left", "gobilda-5203-117").alsoMotorReversed("arm_right")`. The simulator ties both
+loop. It does this also when the lift stops or pauses (BACK), or when an interlock rule (a rule that stops
+two parts from hitting each other) holds the lift. Your own code that copies the power every loop would
+miss pause and STOP. **Check the directions before the chain goes on.** With the chain or belt off, each
+motor must turn the way that lifts. If one is wrong, swap `alsoMotorReversed` and `alsoMotor`. Two motors
+that push against each other get hot and can break a gearbox. An arm works the same way:
+`Arm.motor("arm_left", "gobilda-5203-117").alsoMotorReversed("arm_right")`. The simulator ties both
 motors to one slide (`:sim:fromRobot` writes the second motor's line).
-**More:** [Two motors on one lift or arm](modules/robot.md#two-motors-on-one-lift-or-arm), [Tunables names](guides/tunables.md#lift-and-arm).
+**More:** [Two motors on one lift or arm](reference/parts/lift.md#two-motors-on-one-lift-or-arm), [Tunables names](reference/parts/lift.md#in-tunablesjava).
 
 ### How do I add an arm that moves in degrees?
 
@@ -899,7 +910,7 @@ motors to one slide (`:sim:fromRobot` writes the second motor's line).
 arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
 ```
 
-1. Like a turret's or a launcher's, the arm's motor id is not optional: the arm needs the motor's counts per turn to work in degrees.
+1. The arm needs the motor's counts per turn to work in degrees. So, as for a turret or a launcher, the arm's motor id is required.
 
 <!-- recipe: tunables-arm -->
 ```java title="Tunables.java"
@@ -916,8 +927,8 @@ public static class Arm {                                       // "arm" in the 
 }
 ```
 
-**Why:** degrees are easier to think about than encoder counts; INIT the program with the arm at its 0.
-**More:** [Arm](modules/robot.md#arm).
+**Why:** degrees are easier to think about than encoder counts. Put the arm at its 0 before you press INIT.
+**More:** [Arm](reference/parts/arm.md).
 
 ### How do I add a claw?
 
@@ -941,8 +952,8 @@ public static class Claw {                                      // "claw" in the
 }
 ```
 
-**Why:** the Servo Finder gives the two numbers. Its button is a line in `Controls.java`: [Claw: buttons to add](modules/robot.md#claw-buttons-to-add).
-**More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#1-three-lines-in-robotjava), [Claw](modules/robot.md#claw).
+**Why:** a claw needs two numbers, open and closed, and the Servo Finder gives them. Its button is a line in `Controls.java`: [Claw: buttons to add](reference/parts/claw.md#buttons-to-add).
+**More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#1-three-lines-in-robotjava), [Claw](reference/parts/claw.md).
 
 ### How do I run a claw on two servos?
 
@@ -969,13 +980,13 @@ public static class ClawLeft {                                  // "claw_left" i
 ```
 
 **Why:** two servos on one part must never fight. The library sends both the same position at the same
-moment, also when the robot pauses (BACK) or stops; your own code copying the position would miss some of
-them. **Reversed or not?** Servos that face each other (mirror images, the usual way) turn opposite ways:
-`alsoServoReversed`. Both facing the same way: `.alsoServo("claw_right")`. **The fingers do not quite meet?**
-The horns may sit a spline tooth apart: set `alsoTrim` (a small raw position, like 0.02) for the second
-servo. The same line works on a Wrist, a Positioner and a servo feeder:
+moment, also when the robot pauses (BACK) or stops. Your own code that copies the position would miss
+some of these moments. **Reversed or not:** servos that face each other (mirror images, the usual way)
+turn opposite ways, so use `alsoServoReversed`. When both face the same way, use `.alsoServo("claw_right")`.
+**When the fingers do not quite meet:** the horns may sit a spline tooth apart. Set `alsoTrim` (a small raw
+position, like 0.02) for the second servo. The same line works on a Wrist, a Positioner and a servo feeder:
 `Indexer.servo("feeder_left").alsoServoReversed("feeder_right")` (two arms that pinch a piece into a launcher).
-**More:** [Two servos on one part](modules/robot.md#claw), [Tunables names](guides/tunables.md#claw-wrist-and-positioner).
+**More:** [Two servos on one part](reference/parts/claw.md), [Tunables names](reference/parts/claw.md#in-tunablesjava).
 
 ### How do I add a wrist?
 
@@ -999,8 +1010,8 @@ public static class Wrist {                                     // "wrist" in th
 }
 ```
 
-**Why:** a wrist steps through its named positions. Its buttons are lines in `Controls.java`: [Wrist: buttons to add](modules/robot.md#wrist-buttons-to-add).
-**More:** [Wrist](modules/robot.md#wrist).
+**Why:** a wrist steps through its named positions. Its buttons are lines in `Controls.java`: [Wrist: buttons to add](reference/parts/wrist.md#buttons-to-add).
+**More:** [Wrist](reference/parts/wrist.md).
 
 ### How do I add any servo with named positions (a gate, a fold-out)?
 
@@ -1025,8 +1036,8 @@ public static class IntakeDeploy {                              // "intake_deplo
 }
 ```
 
-**Why:** a `Positioner` has no usual buttons, so you choose when it moves (here: at ▶).
-**More:** [Positioner](modules/robot.md#positioner), [an action at ▶](#how-do-i-run-an-action-when-the-opmode-starts).
+**Why:** a `Positioner` has no usual buttons, so you choose when it moves. Here it moves at ▶.
+**More:** [Positioner](reference/parts/positioner.md), [an action at ▶](#how-do-i-run-an-action-when-the-opmode-starts).
 
 ### How do I get my servo's full range?
 
@@ -1039,14 +1050,14 @@ public static class IntakeDeploy {                              // "intake_deplo
 wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());
 ```
 
-1. The hub normally sends 600-2400 us (microseconds) for positions 0 to 1: a goBILDA 2000 servo then turns only 270 of its 300 degrees. `fullRange()` sends the whole 500-2500 us.
+1. For positions 0 to 1, the hub normally sends 600-2400 us (microseconds). With that signal, a goBILDA 2000 servo turns only 270 of its 300 degrees. `fullRange()` sends the whole 500-2500 us.
 
 **Why:** the FTC SDK's normal servo signal (600 to 2400 microseconds) is narrower than what most servos
-take (500 to 2500), so they turn less than the seller says: 270 degrees for a goBILDA 2000, 243 for a REV
-Smart Robot Servo. Only add it when you need the extra turn. It works the same on a Claw, a Positioner,
-`Hood.servo`, `Turret.servo` and `Indexer.servo`. Positions you measured before point somewhere else after
-the change: measure them again. Without `.fullRange()` nothing changes.
-**More:** [Full range](modules/hardware.md#full-range) (a table per servo), [Claw, Wrist, Positioner](modules/robot.md#claw).
+take (500 to 2500). So the servos turn less than the seller says: 270 degrees for a goBILDA 2000, 243 for
+a REV Smart Robot Servo. Add it only when you need the extra turn. It works the same on a Claw, a
+Positioner, `Hood.servo`, `Turret.servo` and `Indexer.servo`. After the change, the positions you measured
+before point somewhere else, so measure them again. Without `.fullRange()`, nothing changes.
+**More:** [Full range](modules/hardware.md#full-range) (a table per servo), [Claw, Wrist, Positioner](reference/parts/claw.md).
 
 ### How do I send a part to a position from a button?
 
@@ -1062,17 +1073,18 @@ g2.b.press(robot.claw::toggle).says("claw open/close");
 g2.back.press(() -> robot.intakeDeploy.goTo("stowed")).says("fold the intake in");
 ```
 
-**Why:** `goTo("name")` uses the position by its name, so the number lives only in `Tunables.java`.
-These lines use Y, A, X and B, the buttons the lift's and the claw's usual lines use: write one or the
-other; see [pick a free button](#buttons-and-gestures).
-**More:** [Lift](modules/robot.md#lift), [Claw](modules/robot.md#claw).
+**Why:** `goTo("name")` uses the position by its name, so the number is only in `Tunables.java`.
+These lines use Y, A, X and B. The lift's and the claw's usual lines use the same buttons, so write one
+or the other. See [pick a free button](#buttons-and-gestures).
+**More:** [Lift](reference/parts/lift.md), [Claw](reference/parts/claw.md).
 
 ### My robot doesn't have this part yet. How do I keep its code?
 
-Three places: the part's line in `Robot.java`, the action in `Actions.java`, its button in `Controls.java`.
+You change three places: the part's line in `Robot.java`, the action in `Actions.java`, and its button in
+`Controls.java`.
 
-**`Robot.java`**, inside `define()`: add `.optional()` to the part's `add` line (here a deploy servo that
-folds the intake out). The `atStart` line runs the action below at ▶.
+**`Robot.java`**, inside `define()`: add `.optional()` to the part's `add` line. Here the part is a deploy
+servo that folds the intake out. The `atStart` line runs the action below at ▶.
 
 <!-- recipe: optional-part -->
 ```java title="Robot.java"
@@ -1084,8 +1096,8 @@ intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
 atStart(() -> Actions.deployIntake(this));
 ```
 
-1. The deploy servo is not on the robot yet. INIT goes on with a note (see **Why**, below).
-2. With no deploy servo, the action skips the servo (and the wait for it) and only starts the intake.
+1. The deploy servo is not on the robot yet. INIT shows a note and goes on (see **Why**, below).
+2. With no deploy servo, the action skips the servo and the wait for it, and only starts the intake.
 
 **`Actions.java`**, inside `public class Actions { ... }`: the action. In your file the brackets say
 `(Robot r)`.
@@ -1110,17 +1122,19 @@ public static Action deployIntake(NotOnTheRobotYet r) {   // in your Actions.jav
 g2.x.press(Actions.deployIntake(robot)).says("deploy intake").needs(robot.intakeDeploy);
 ```
 
-**Why:** robots are built in steps. Without `optional()`, a part whose device is not in the
-configuration stops INIT (`No Servo named "intake_deploy" ...`). With it, INIT goes on with a note:
+**Why:** teams build robots in steps. Without `optional()`, INIT stops when the part's device is not in
+the configuration (`No Servo named "intake_deploy" ...`). With it, INIT shows a note and goes on:
 `"intake_deploy" not in the configuration: IntakeDeploy is off (optional part)`. In the COMPETITION
-profile the note is a warning at the top of the screen (`!! COMPETITION: ... IntakeDeploy is OFF ...`),
-so nobody plays a match without a part by mistake. Everything that uses the part skips it: its commands,
-its buttons (the button map says `G2 X: deploy intake - off: IntakeDeploy not on the robot`), the action
-steps (an autonomous keeps going and its report says `skipped IntakeDeploy (not on the robot)`). The day
-the servo is wired and in the configuration, it just works, with no code to change. No
-`if (HAS_DEPLOY_SERVO)` switches. To try it in the simulator without the part: `missing = intake_deploy`
+profile, the note is a warning at the top of the screen (`!! COMPETITION: ... IntakeDeploy is OFF ...`).
+So nobody plays a match without a part by mistake. Everything that uses the part skips it:
+- its commands
+- its buttons (the button map says `G2 X: deploy intake - off: IntakeDeploy not on the robot`)
+- the action steps (an autonomous keeps going, and its report says `skipped IntakeDeploy (not on the robot)`)
+
+When you wire the servo and add it to the configuration, it works, with no code to change. You need no
+`if (HAS_DEPLOY_SERVO)` switches. To try it in the simulator without the part, write `missing = intake_deploy`
 in the robot file.
-**More:** [Parts not on the robot yet](modules/robot.md#parts-not-on-the-robot-yet).
+**More:** [Parts not on the robot yet](reference/robot-java.md#parts-not-on-the-robot-yet).
 
 ### How do I add a launcher (flywheel and feeder)?
 
@@ -1166,8 +1180,8 @@ public static class Indexer {                                   // "indexer" in 
 }
 ```
 
-**Why:** the launcher only feeds a piece when the wheel is at speed, so every shot flies the same way.
-**More:** [Lesson 9](tutorials/start/09-shooter-and-camera.md#1-a-flywheel-and-its-feeder), [Launcher](modules/robot.md#launcher).
+**Why:** the launcher feeds a piece only when the wheel is at speed, so every shot flies the same way.
+**More:** [Lesson 9](tutorials/start/09-shooter-and-camera.md#1-a-flywheel-and-its-feeder), [Launcher](reference/parts/launcher.md).
 
 ### How do I add a turret that follows the goal?
 
@@ -1197,7 +1211,7 @@ public static class Turret {                                    // "turret" in t
 ```
 
 **Why:** the turret aims for the driver, and its limits keep the wires from twisting.
-**More:** [Lesson 9: the turret](tutorials/start/09-shooter-and-camera.md#6-a-turret-that-follows-it), [Turret](modules/robot.md#turret), [Camera](modules/robot.md#camera).
+**More:** [Lesson 9: the turret](tutorials/start/09-shooter-and-camera.md#6-a-turret-that-follows-it), [Turret](reference/parts/turret.md), [Camera](reference/parts/camera.md).
 
 ### How do I fire only when aimed, at the right speed?
 
@@ -1215,14 +1229,14 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 ```
 
 **Why:** a shot fired before the turret is on target, or at the wrong speed, is a lost piece. For a
-turret that follows the goal, `isAimed()` means on the goal NOW: losing the goal makes it false.
+turret that follows the goal, `isAimed()` means on the goal NOW. When the camera loses the goal, it is false.
 **More:** [Lesson 9](tutorials/start/09-shooter-and-camera.md#7-speed-from-distance-and-fire-only-when-aimed).
 
 ## Game pieces
 
-A `Pieces` line in `Robot.java` counts the pieces the robot holds and knows which kind fires next,
-from a sensor at the intake and (optional) one at the "ready to fire" slot. Each kind's colour (or
-size) goes in `Tunables.java`, measured with the Piece Tuner. All of it: [Pieces and PieceSensor](modules/robot.md#pieces-and-piecesensor).
+A `Pieces` line in `Robot.java` counts the pieces the robot holds, and knows which kind fires next. It
+uses a sensor at the intake, and (optional) one at the "ready to fire" slot. Measure each kind's color
+(or size) with the Piece Tuner, and write it in `Tunables.java`. The full details: [Pieces and PieceSensor](reference/parts/pieces.md).
 
 ### How do I know which piece is in the robot, and how many?
 
@@ -1239,14 +1253,14 @@ pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
         .startsWith(4, "POLLEN"));                      // the 4 POLLEN preload
 ```
 
-1. Above the intake line, the count is up to date in each loop before the intake asks "full?".
-2. BIOBUZZ: yellow POLLEN, red and blue NECTAR. Then the most pieces the rules allow (`max`) and the preload (`startsWith`).
+1. Put it above the intake line. Then, in each loop, the count is up to date before the intake asks "full?".
+2. BIOBUZZ has yellow POLLEN, and red and blue NECTAR. Then come the most pieces the rules allow (`max`) and the preload (`startsWith`).
 
-**Why:** each piece the intake sensor sees counts one in; each feed of the indexer counts one out, the
-oldest first, once the piece has gone (a jammed feed counts nothing). Until a kind is tuned with the
-Piece Tuner it reads `"UNKNOWN"`. `robot.pieces.count()`, `robot.pieces.next()` ("POLLEN", "UNKNOWN" or "NONE") and
+**Why:** each piece the intake sensor sees counts one in. Each feed of the indexer counts one out, the
+oldest first, once the piece has gone. A jammed feed counts nothing. Until you tune a kind with the
+Piece Tuner, it reads `"UNKNOWN"`. `robot.pieces.count()`, `robot.pieces.next()` ("POLLEN", "UNKNOWN" or "NONE") and
 `robot.pieces.isFull()` work anywhere in your code.
-**More:** [Pieces and PieceSensor](modules/robot.md#pieces-and-piecesensor).
+**More:** [Pieces and PieceSensor](reference/parts/pieces.md).
 
 ### How do I stop the intake when the robot is full?
 
@@ -1259,7 +1273,7 @@ Piece Tuner it reads `"UNKNOWN"`. `robot.pieces.count()`, `robot.pieces.next()` 
 intake = add(Intake.motor("intake").part("gobilda-5203-1150").stopsWhen(() -> pieces.isFull()));
 ```
 
-1. The intake then does not pull in a 5th piece. `() ->` means: the test is asked in every loop. Pushing out still works.
+1. The intake then does not pull in a 5th piece. `() ->` means that the intake asks the test in every loop. Pushing out still works.
 
 <!-- recipe: launcher-needs-a-piece -->
 ```java title="Robot.java"
@@ -1270,12 +1284,13 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .requireReady("a piece to fire", () -> !pieces.isEmpty()));
 ```
 
-**Why:** BIOBUZZ rule G407: a robot may not control more than 4 pieces. The rules ask for "systems to
-prevent active pickup" of a 5th: this is one. Put the intake sensor where a piece is already held, so
-the intake does not stop with a piece half in. The count can be wrong (two pieces read as one), so the
-drivers, not the count, are responsible for G407: when it says full and the robot is not, holding RT
-for 1 s pulls in anyway, and the Driver Station warns when the intake is held back for more than 2 s.
-**More:** [Intake](modules/robot.md#intake).
+**Why:** BIOBUZZ rule G407 says that a robot may not control more than 4 pieces. The rules ask for
+"systems to prevent active pickup" of a 5th, and this is one. Put the intake sensor where the robot
+already holds a piece, so the intake does not stop with a piece half in. The count can be wrong (two
+pieces can read as one). So the drivers are responsible for G407, not the count. When the count says
+full and the robot is not, hold RT for 1 s to pull in anyway. The Driver Station warns when the intake
+is held back for more than 2 s.
+**More:** [Intake](reference/parts/intake.md).
 
 ### How do I tell pieces apart by size, or with a second camera?
 
@@ -1283,21 +1298,21 @@ for 1 s pulls in anyway, and the Driver Station warns when the intake is held ba
 
 <!-- recipe: pieces-other-sensors -->
 ```java title="Robot.java"
-// A REV 2m Distance Sensor across the intake tells the sizes apart (not the colours). (1)!
-// A second webcam on the ready slot: colours. (2)!
+// A REV 2m Distance Sensor across the intake tells the sizes apart (not the colors). (1)!
+// A second webcam on the ready slot: colors. (2)!
 pieces = add(Pieces.kinds("POLLEN", "NECTAR")
         .comingIn(PieceSensor.distance("intake_distance"))
         .readyToFire(PieceSensor.camera("Webcam 2"))
         .max(4));
 ```
 
-1. A NECTAR (3.6 in) comes closer to the sensor than a POLLEN (2.8 in). Size only: it cannot tell a red NECTAR from a blue one.
-2. The webcam reads the main colour in a box of its picture.
+1. A NECTAR (3.6 in) comes closer to the sensor than a POLLEN (2.8 in). It sees size only, so it cannot tell a red NECTAR from a blue one.
+2. The webcam reads the main color in a box of its picture.
 
-**Why:** a distance sensor reads 20 mm closer with a NECTAR than with a POLLEN, but it sees no colour,
-and rule G408 forbids controlling the other alliance's NECTAR. A webcam sees colours from farther
-away, but not how far the piece is.
-**More:** [the sensors compared](modules/robot.md#pieces-and-piecesensor).
+**Why:** a distance sensor reads 20 mm closer with a NECTAR than with a POLLEN, but it sees no color.
+Rule G408 forbids controlling the other alliance's NECTAR. A webcam sees colors from farther away, but
+it cannot tell how far the piece is.
+**More:** [the sensors compared](reference/parts/pieces.md).
 
 ### How do I use the count (buzz, LEDs, the shot table)?
 
@@ -1320,15 +1335,16 @@ show("At the intake", robot.pieces::atIntake);
 // and hold the intake's RT 1 s to pull in although the count says full.
 ```
 
-**Why:** `whenFull()`, `whenEmpty()` and `whenNextIs("POLLEN")` (one kind) are conditions any part can
-watch: a buzz, a light (the [Lights](#lights) recipes), an action that waits. For "either NECTAR", the
-recipe asks `next()` (the next kind's name) whether it ends with `NECTAR`. Pieces brings a button too:
-hold G2's left stick button 1 s to set the count to 0 when it went wrong (pieces taken out by hand).
-**More:** [hooks for other parts](modules/robot.md#pieces-and-piecesensor).
+**Why:** `whenFull()`, `whenEmpty()` and `whenNextIs("POLLEN")` (one kind) are conditions that any part
+can watch: a buzz, a light (the [Lights](#lights) recipes), or an action that waits. For "either NECTAR",
+the recipe asks `next()` (the next kind's name) whether it ends with `NECTAR`. Pieces brings a button
+too. When the count is wrong (for example, after you take pieces out by hand), hold G2's left stick
+button for 1 s to set the count to 0.
+**More:** [hooks for other parts](reference/parts/pieces.md).
 
 ### How do I let the next piece pick the shot table?
 
-**Where:** `Robot.java`, inside `define()`, on your launcher line (the Pieces line must be above it), and
+**Where:** `Robot.java`, inside `define()`, on your launcher line (the Pieces line must be above it). Also
 two tables in your `Tunables.Launcher` section ([one table per piece](#how-do-i-use-one-shot-table-per-game-piece)).
 
 <!-- recipe: pieces-shot-tables -->
@@ -1340,19 +1356,20 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .speedFromDistance(camera)
         .startTable("pollen")                                 // before a piece is known
         .tableFrom(pieces.nextKind())                         // the next piece picks the table
-        .tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR"));    // both NECTAR colours use "nectar"
+        .tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR"));    // both NECTAR colors use "nectar"
 ```
 
-**Why:** POLLEN and NECTAR fly differently. With these lines the drivers never switch tables by hand:
-each time the next piece changes, its table is used. A kind with the same name as a table needs no line
-(`POLLEN` uses `pollen`); `tableFor` puts both NECTAR colours on the `nectar` table. `NONE` and
-`UNKNOWN` (a kind not tuned yet) never change the table, and `startTable` is the table before the first
-piece is known. A button (D-pad right) can still pick another table until the next piece changes.
-**More:** [Launcher: shot tables](modules/robot.md#launcher), [Lesson 9: the next piece picks the table](tutorials/start/09-shooter-and-camera.md#12-extra-know-which-piece-fires-next).
+**Why:** POLLEN and NECTAR fly differently. With these lines, the drivers never switch tables by hand.
+Each time the next piece changes, the launcher uses that piece's table. A kind with the same name as a
+table needs no line (`POLLEN` uses `pollen`). `tableFor` puts both NECTAR colors on the `nectar` table.
+`NONE` and `UNKNOWN` (a kind not tuned yet) never change the table. `startTable` is the table before the
+robot knows the first piece. A button (D-pad right) can still pick another table until the next piece
+changes.
+**More:** [Launcher: shot tables](reference/parts/launcher.md), [Lesson 9: the next piece picks the table](tutorials/start/09-shooter-and-camera.md#12-extra-know-which-piece-fires-next).
 
 ### How do I tune the piece sensors?
 
-**Where:** a new file next to `Robot.java`, `PieceTuner.java`. The whole file: its first line is
+**Where:** a new file next to `Robot.java`, `PieceTuner.java`. Below is the whole file. Its first line is
 `package org.firstinspires.ftc.teamcode;` (Android Studio writes it when you make the file), then:
 
 <!-- recipe: piece-tuner -->
@@ -1373,19 +1390,20 @@ public class PieceTuner extends PieceTunerOpMode {
 }
 ```
 
-**Why:** each sensor and each robot reads colours a little differently. Hold each kind in front of the
-sensor, press A, then copy the lines it shows into `Tunables.java`.
+**Why:** each sensor and each robot reads colors a little differently. Hold each kind in front of the
+sensor and press A. Then copy the lines that the tuner shows into `Tunables.java`.
 **More:** [Piece Tuner](modules/finders.md#piecetuneropmode).
 ## Aiming and shooting
 
-Things the robot does for the drivers, so they can focus on driving and firing. They all use one idea:
-**the camera first, the odometry as a backup** ([Aim](modules/robot.md#aim)).
+The robot does these jobs for the drivers, so they can focus on driving and firing. They all use one
+idea: **the camera first, the odometry as a backup** ([Aim](reference/parts/aim.md)). Odometry is how
+the robot tracks its own position on the field.
 
 ### How do I make the whole robot aim at the goal (no turret)?
 
 **Where:** `Controls.java`, inside `buttons(...)` (and `Tunables.java` for the numbers, below). The
 robot needs a camera with a [`goal(...)`](tutorials/start/09-shooter-and-camera.md#5-a-camera-that-knows-the-goal)
-(or odometry with a goal point). Not with a turret that follows the goal: turret-following and
+(or odometry with a goal point). Do not use it with a turret that follows the goal. Turret-following and
 whole-robot aim are separate modes, so INIT stops with a message if both are there.
 
 <!-- recipe: aim-whole-robot -->
@@ -1396,12 +1414,12 @@ g1.rb.hold(robot.aimMode()::on, robot.aimMode()::off).says("hold: aim the robot 
 // g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
 ```
 
-1. Let go: the aim is off, and the driver turns again. Move the turn stick while you hold RB to turn by hand. Not with a turret that follows the goal: these are separate modes (INIT stops with a message).
-2. A press switches it on, the next press switches it off. Two buzzes = on.
+1. When you let go, the aim is off, and the driver turns again. To turn by hand while you hold RB, move the turn stick. Do not use it with a turret that follows the goal: these are separate modes (INIT stops with a message).
+2. A press switches it on, and the next press switches it off. Two buzzes = on.
 
-**Why:** the driver drives; the robot keeps itself pointed at the goal. Hold-to-aim first: let go and
-the robot stops turning by itself, so it never surprises anyone. The stick always wins, so the driver
-can take over at once. The toggle (commented out) keeps aiming after you let go.
+**Why:** the driver drives, and the robot keeps itself pointed at the goal. Start with hold-to-aim. When
+you let go, the robot stops turning by itself, so it never surprises anyone. The stick always wins, so
+the driver can take over at once. The toggle (commented out) keeps aiming after you let go.
 **More:** [Lesson 9: aim the whole robot](tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot).
 
 ### How do I make the gamepad buzz when the aim is on target?
@@ -1415,7 +1433,7 @@ can take over at once. The toggle (commented out) keeps aiming after you let go.
 g2.rumbleWhenAimed();
 ```
 
-**Why:** the driver who fires watches the field, not the screen: the buzz says "now".
+**Why:** the driver who fires watches the field, not the screen. The buzz tells the driver "now".
 **More:** [Lesson 9: feel the aim](tutorials/start/09-shooter-and-camera.md#11-feel-the-aim-a-buzz-when-on-target).
 
 ### How do I keep aiming when the camera loses the goal?
@@ -1441,8 +1459,8 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 /** Aiming (every line is optional; leave out what you do not use). */
 public static class Aim {                                       // a fixed name: always Aim
     // The goal on the field, in inches, seen from your drivers' wall (the same numbers as driveTo). (1)!
-    public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
-    public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
+    public static double goalX = 13;                            // inches right of center (BIOBUZZ)
+    public static double goalY = -13;                           // inches from center, - = our half (BIOBUZZ)
     public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
     public static double turnKp = DEFAULT;                      // whole-robot aim: push per degree off (0.02)
     public static double turnKd = DEFAULT;                      // brake near the goal (0.002)
@@ -1453,19 +1471,20 @@ public static class Aim {                                       // a fixed name:
 }
 ```
 
-1. With odometry, the aim goes on when the camera loses the goal. BIOBUZZ: your HIVE's CELL that is up at the start, 13 in right of the centre line and 13 in toward you.
-2. Quick turn on fire, for a robot with no turret: with aim mode off, RB with the goal in view turns the robot to the goal, then fires (at most 0.5 s later: `aimOnFireSec`). Off unless you set it to `true`, because it turns the robot.
+1. With odometry, the aim goes on when the camera loses the goal. In BIOBUZZ, the goal is your HIVE's CELL that is up at the start, 13 in right of the center line and 13 in toward you.
+2. Quick turn on fire, for a robot with no turret: with aim mode off and the goal in view, RB turns the robot to the goal, then fires (at most 0.5 s later: `aimOnFireSec`). It is off unless you set it to `true`, because it turns the robot.
 
-**Why:** a tag gets blocked by a robot or a game piece; the odometry still knows where the goal is. The
-Driver Station says which one aims (`following: camera` or `following: odometry`). It needs the pose
-from autonomous (or [set pose here](#how-do-i-set-the-pose-when-autonomous-did-not-run)): without it, the
-backup stays off and the Driver Station says so. `goalX`, `goalY` are written from your own drivers'
-wall, like every field number in your code (only the simulator's map and its scenario checks use the red
-wall). `mirrorForRed` is ONE setting for the whole robot (the routes, the start and reset spots, this goal
-point): the first one found of `Tunables.Aim.mirrorForRed`, `Tunables.Odometry.mirrorForRed`, your
-autonomous's `mirrorForRed()`, else `true` (a mirrored field). BIOBUZZ's turned field needs `false`: write
-it once, here. INIT shows the alliance and this choice. The numbers in `Tunables.Aim` are in the tuning
-menu too: copy tuned values back into `Tunables.java`.
+**Why:** a robot or a game piece can block a tag, but the odometry still knows where the goal is. The
+Driver Station says which one aims (`following: camera` or `following: odometry`). The backup needs the
+pose (the robot's position and heading) from autonomous, or from
+[set pose here](#how-do-i-set-the-pose-when-autonomous-did-not-run). Without it, the backup stays off,
+and the Driver Station says so. You write `goalX`, `goalY` from your own drivers' wall, like every field
+number in your code. Only the simulator's map and its scenario checks use the red wall. `mirrorForRed`
+is ONE setting for the whole robot (the routes, the start and reset spots, this goal point). The library
+takes the first one it finds of `Tunables.Aim.mirrorForRed`, `Tunables.Odometry.mirrorForRed` and your
+autonomous's `mirrorForRed()`. If it finds none, it uses `true` (a mirrored field). BIOBUZZ's turned
+field needs `false`: write it once, here. INIT shows the alliance and this choice. The numbers in
+`Tunables.Aim` are in the tuning menu too, so copy tuned values back into `Tunables.java`.
 **More:** [Lesson 9: when the camera loses the goal](tutorials/start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry), [Lesson 7: odometry](tutorials/start/07-odometry.md).
 
 ### How do I aim with the odometry only (no camera)?
@@ -1491,19 +1510,19 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 public static class Aim {                                       // a fixed name: always Aim
     // Where the goal is, seen from YOUR drivers' wall (inches; the same numbers as driveTo).
     // BIOBUZZ: your HIVE's CELL that is up at the start.
-    public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
-    public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
+    public static double goalX = 13;                            // inches right of center (BIOBUZZ)
+    public static double goalY = -13;                           // inches from center, - = our half (BIOBUZZ)
     public static boolean mirrorForRed = false;                 // BIOBUZZ's field is turned, not mirrored
 }
 ```
 
-**Why:** no camera to buy, mount or tune. But the aim is only as good as the pose: it needs the start spot
-from autonomous (or [set pose here](#how-do-i-set-the-pose-when-autonomous-did-not-run)), and a bump that
-slips the wheels moves the aim off a little. With a camera too, use
+**Why:** you have no camera to buy, mount or tune. But the aim is only as good as the pose. It needs the
+start spot from autonomous (or [set pose here](#how-do-i-set-the-pose-when-autonomous-did-not-run)). A
+bump that slips the wheels moves the aim off a little. When you have a camera too, use
 [the camera first, the odometry as backup](#how-do-i-keep-aiming-when-the-camera-loses-the-goal).
-The turret is taken to turn about the robot's centre. Whole-robot aim (no turret) works from the odometry
-in the same way.
-**More:** [Aim](modules/robot.md#aim), [Turret](modules/robot.md#turret).
+The library takes it that the turret turns about the robot's center. Whole-robot aim (no turret) works
+from the odometry in the same way.
+**More:** [Aim](reference/parts/aim.md), [Turret](reference/parts/turret.md).
 
 ### How do I make the camera work in any venue's light?
 
@@ -1520,17 +1539,18 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
 1. Each venue's lights are different. Set up each pipeline on the Limelight's web page for one kind of light. The Limelight keeps the pipeline that sees the most AprilTags, and the Driver Station says which one.
 
 **Why:** bright stage lights or a dark corner can make a camera miss the AprilTags it saw in your shop.
-The test runs in INIT (nothing moves), takes about a second per setting, and the Driver Station says what
-it kept. Point the robot at the tags in INIT. Its numbers are optional (`Tunables.Limelight`:
-`autoLighting = false` skips the test and uses `pipeline`).
-**Tilted up?** Add its tilt to the same section: `public static double pitchDeg = 35;` (degrees up, measured
-on the robot). Then a goal off to the side reads the right angle, and distances are along the floor.
-**More:** [Vision: venue lighting](modules/vision.md#venue-lighting), [CameraTilt](modules/vision.md#cameratilt), [Camera](modules/robot.md#camera).
+The test runs in INIT (nothing moves) and takes about a second per setting. The Driver Station says
+which setting it kept. Point the robot at the tags in INIT. Its numbers are optional. In
+`Tunables.Limelight`, `autoLighting = false` skips the test and uses `pipeline`.
+**For a camera tilted up:** add its tilt to the same section: `public static double pitchDeg = 35;`
+(degrees up, measured on the robot). Then a goal off to the side reads the right angle, and distances
+are along the floor.
+**More:** [Vision: venue lighting](modules/vision.md#venue-lighting), [CameraTilt](modules/vision.md#cameratilt), [Camera](reference/parts/camera.md).
 
 ### How do I find game pieces with a HuskyLens?
 
-**Where:** `Robot.java`, inside `define()`. First teach it, on the camera: dial to Color Recognition, turn
-on Learn Multiple, point the `+` at a piece, press the learning button.
+**Where:** `Robot.java`, inside `define()`. First teach the camera, on the camera itself: dial to Color
+Recognition, turn on Learn Multiple, point the `+` at a piece, and press the learning button.
 
 <!-- recipe: huskylens -->
 ```java title="Robot.java"
@@ -1540,20 +1560,22 @@ pieceCamera = add(Camera.huskyLens("huskylens").colors().label(1, "POLLEN").labe
 // camera = add(Camera.huskyLens("huskylens").tag(1, 34).tag(2, 35).goal("BLUE SCORING", "RED SCORING"));
 ```
 
-1. A HuskyLens is one camera doing one job: colors or tags, not both at the same time.
+1. A HuskyLens does one job at a time: colors or tags, not both.
 2. It says the number you taught it, never the tag's real number.
 
 **Why:** the camera finds the piece itself, so the hub does no picture work. Then
 `pieceCamera.target("POLLEN")` gives the bearing to the nearest box, or null. In `Tunables`, set `hfovDeg`
-(measure it) and, for a rough distance, `sizeIn` (the longest side of the piece it sees). Not tested on a real robot yet.
-**More:** [HuskyLensCamera](modules/vision.md#huskylenscamera), [Camera](modules/robot.md#camera).
+(the camera's side-to-side view angle: measure it). For a rough distance, also set `sizeIn` (the longest
+side of the piece it sees). Nobody has tested it on a real robot yet.
+**More:** [HuskyLensCamera](modules/vision.md#huskylenscamera), [Camera](reference/parts/camera.md).
 
 ### How do I shoot while the robot is driving?
 
 **Where:** `Tunables.java` (the numbers, in your `Aim` section), and a button in `Controls.java`
-(inside `buttons(...)`) to switch it on and off. The robot needs [odometry](modules/robot.md#odometry):
-it gives the robot's speed. **Off until you tune it on the real robot** (`shootOnMove = false`): measure
-`flightSec` with a slow-motion video, test shots while driving, and only then write `true`.
+(inside `buttons(...)`) to switch it on and off. The robot needs [odometry](reference/parts/odometry.md),
+because the odometry gives the robot's speed. **It stays off until you tune it on the real robot**
+(`shootOnMove = false`). Measure `flightSec` with a slow-motion video, and test shots while driving.
+Only then write `true`.
 
 <!-- recipe: tunables-moving-shot -->
 ```java title="Tunables.java"
@@ -1562,11 +1584,11 @@ public static boolean shootOnMove = false;                  // true only after t
 public static double flightSec = MEASURE;                   // seconds in the air (slow-motion video) (1)!
 public static double flightSecPerIn = DEFAULT;              // longer shots fly longer: per inch (0)
 public static double maxLeadIn = DEFAULT;                   // never lead more than this, inches (24)
-// Where the shooter (a turret's pivot) and a camera on the body are from the robot's centre. (2)!
-public static double shooterForwardIn = MEASURE;            // inches forward of the centre (a tape)
-public static double shooterLeftIn = MEASURE;               // inches left of the centre (a tape)
-public static double cameraForwardIn = MEASURE;             // inches forward of the centre (a tape)
-public static double cameraLeftIn = MEASURE;                // inches left of the centre (a tape)
+// Where the shooter (a turret's pivot) and a camera on the body are from the robot's center. (2)!
+public static double shooterForwardIn = MEASURE;            // inches forward of the center (a tape)
+public static double shooterLeftIn = MEASURE;               // inches left of the center (a tape)
+public static double cameraForwardIn = MEASURE;             // inches forward of the center (a tape)
+public static double cameraLeftIn = MEASURE;                // inches left of the center (a tape)
 ```
 
 1. Film a shot in slow motion. Count the frames from when the piece leaves the launcher to when it reaches the goal. Divide by the video's frames per second.
@@ -1582,12 +1604,13 @@ g2.a.toggle(robot.aim().movingShotMode()).says("shoot on the move on/off").rumbl
 ```
 
 **Why:** a piece shot from a moving robot keeps the robot's speed, so it lands to the side (30 in/s for
-0.8 s: 24 in). With `shootOnMove` the turret (or the whole robot) aims at a point that far the other way,
-and the launcher's speed comes from that point's distance. It also brings the camera's picture forward
-to now (the robot turned and moved since it was taken). It works with a turret or whole-robot aim, a
-camera on the turret or on the body, or the odometry alone; tell it where the shooter and the camera
-are. The Driver Station says `Aim : moving shot: lead 12.3 deg, 18 in` while it leads.
-**More:** [Lesson 9: shooting while moving](tutorials/start/09-shooter-and-camera.md#14-extra-shooting-while-moving), [Aim](modules/robot.md#aim).
+0.8 s: 24 in). With `shootOnMove`, the turret (or the whole robot) aims at a point that far the other way,
+and the launcher takes its speed from that point's distance. It also brings the camera's picture forward
+to now, because the robot turned and moved since the camera took it. It works with a turret or
+whole-robot aim, with a camera on the turret or on the body, or with the odometry alone. Tell it where
+the shooter and the camera are. The Driver Station says `Aim : moving shot: lead 12.3 deg, 18 in` while
+it leads.
+**More:** [Lesson 9: shooting while moving](tutorials/start/09-shooter-and-camera.md#14-extra-shooting-while-moving), [Aim](reference/parts/aim.md).
 
 ### How do I use one shot table per game piece?
 
@@ -1622,20 +1645,21 @@ public static Action fireNectar(Robot r) {
 }
 ```
 
-**Why:** POLLEN (2.8 in) and NECTAR (3.6 in) fly differently, so each needs its own speeds. **Which
-table at ▶?** A plain `speedByDistance` table (named `main`) if there is one, else the first by name:
-here `nectar` (n before p). To start on POLLEN, add `.startTable("pollen")` to the launcher line in
+**Why:** POLLEN (2.8 in) and NECTAR (3.6 in) fly differently, so each needs its own speeds. **The table
+at ▶:** a plain `speedByDistance` table (named `main`) if there is one. If not, the first by name: here
+`nectar` (n before p). To start on POLLEN, add `.startTable("pollen")` to the launcher line in
 `Robot.java` ([like here](#how-do-i-keep-aiming-when-the-camera-loses-the-goal)). The Driver Station's
 `Shot table` line says which one is in use. Fill each table with the
-[Shot Tuner](guides/finders.md#shot-tuner-the-shot-table) ([its file](#how-do-i-build-a-shot-table-speed-for-each-distance);
-Y until `> Table`, then the D-pad picks the one you tune), then copy its line into `Tunables.java`. Let
-the robot pick the table by itself: [the next piece picks it](#how-do-i-let-the-next-piece-pick-the-shot-table).
-**More:** [Lesson 9: two shot tables](tutorials/start/09-shooter-and-camera.md#8-two-game-pieces-two-shot-tables), [Launcher](modules/robot.md#launcher).
+[Shot Tuner](guides/finders.md#shot-tuner-the-shot-table) ([its file](#how-do-i-build-a-shot-table-speed-for-each-distance)).
+Press Y until `> Table`, then pick the table you tune with the D-pad. Then copy its line into
+`Tunables.java`. To let the robot pick the table by itself, see
+[the next piece picks it](#how-do-i-let-the-next-piece-pick-the-shot-table).
+**More:** [Lesson 9: two shot tables](tutorials/start/09-shooter-and-camera.md#8-two-game-pieces-two-shot-tables), [Launcher](reference/parts/launcher.md).
 
 ### Every shot is a bit short today. How do I trim the speed (a low battery)?
 
-**Where:** nothing to write for the D-pad (the launcher brings it); your `Tunables.Launcher` section for
-the numbers; `Controls.java` (inside `buttons(...)`) for your own buttons.
+**Where:** you write nothing for the D-pad, because the launcher brings it. The numbers go in your
+`Tunables.Launcher` section. Your own buttons go in `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: tunables-speed-trim -->
 ```java title="Tunables.java"
@@ -1665,24 +1689,29 @@ g2.a.press(Action.named("Far shot +5%")
 g2.x.press(robot.launcher::useLastTrim).says("use last match's trim");
 ```
 
-1. Hold the D-pad for 4 steps a second. Double-tap D-pad down = back to 0. The launcher's first line on the Driver Station shows the trim: `Speed trim : +3%  READY`.
+1. Hold the D-pad for 4 steps a second. Double-tap D-pad down to go back to 0. The launcher's first line on the Driver Station shows the trim: `Speed trim : +3%  READY`.
 
-**Why:** a worn wheel or softer balls make every shot a little short. The trim (+/- 1% a press, at most
-15% and never past the motor's top speed, back to 0 at every INIT) fixes it for this match, for every
-table. At INIT the Driver Station offers last time's trim (`Trim last time : +3%`): double-tap D-pad up
-after ▶ to use it (or your own button: `useLastTrim`, in the recipe); it is never applied by itself. Battery compensation scales the F gain by `nominalVolts` / the battery
-(tuned at 12.6 V, at 11.5 V: F x 1.10). It is not yet proven on a real robot, so it is off: the
-box writes `batteryCompensation = false`. Change it to `true` only when you want to test it. It needs the `kF` and
-`nominalVolts` the Flywheel Finder found together, which is why the box writes the gains as `MEASURE`;
-without battery compensation, `DEFAULT` gains (from the motor) are a fine start. A trim you need every match, with a charged battery, points at the wheel
-or the balls: the table is off. Make the trim part of it (+3%: every
-speed x 1.03, `{48, 2550}` becomes `{48, 2627}`), copy the lines into `Tunables.java`, and trim back to 0.
-**More:** [Lesson 9: speed trim and a low battery](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery), [Launcher](modules/robot.md#speed-trim-and-battery-compensation).
+**Why:** a worn wheel or softer balls make every shot a little short. The trim fixes it for this match,
+for every table. It moves +/- 1% a press, at most 15%, and never past the motor's top speed. It goes
+back to 0 at every INIT. At INIT, the Driver Station offers last time's trim (`Trim last time : +3%`).
+To use it, double-tap D-pad up after ▶ (or use your own button: `useLastTrim`, in the recipe). The
+library never applies it by itself.
+
+Battery compensation scales the F gain by `nominalVolts` / the battery (tuned at 12.6 V, at 11.5 V:
+F x 1.10). Nobody has proven it on a real robot yet, so it is off: the box writes
+`batteryCompensation = false`. Change it to `true` only when you want to test it. It needs the `kF` and
+`nominalVolts` that the Flywheel Finder found together. That is why the box writes the gains as
+`MEASURE`. Without battery compensation, `DEFAULT` gains (from the motor) are a good start.
+
+When you need a trim every match, with a charged battery, the cause is the wheel or the balls, and the
+table is off. Make the trim part of the table (+3%: every speed x 1.03, `{48, 2550}` becomes
+`{48, 2627}`). Copy the lines into `Tunables.java`, and trim back to 0.
+**More:** [Lesson 9: speed trim and a low battery](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery), [Launcher](reference/parts/launcher.md#speed-trim-and-battery-compensation).
 
 ### How do I add a hood to my launcher?
 
-**Where:** `Robot.java`, inside `define()`: add `.hood(...)` to your launcher line. `Tunables.java`: a new
-section `Hood` (its stops), and a third number in each row of your `Launcher` section's shot table.
+**Where:** `Robot.java`, inside `define()`: add `.hood(...)` to your launcher line. In `Tunables.java`, add
+a new section `Hood` (its stops), and a third number in each row of your `Launcher` section's shot table.
 
 <!-- recipe: robot-hood -->
 ```java title="Robot.java"
@@ -1718,10 +1747,10 @@ Then the shot table:
 public static double[][] speedByDistance = {{24, 2200, 3}, {48, 2550, 12}, {72, 2900, 20}};
 ```
 
-1. This goes in your `Tunables.Launcher` section. The hood angle is blended between rows like the speed.
+1. This goes in your `Tunables.Launcher` section. The launcher blends the hood angle between rows, like the speed.
 
-Never measured an angle? Leave out `angleA`, `angleB`: the hood works in servo positions, and the table's
-third number is a servo position.
+**With no measured angles:** leave out `angleA`, `angleB`. The hood then works in servo positions, and
+the table's third number is a servo position.
 
 <!-- recipe: tunables-hood-positions -->
 ```java title="Tunables.java"
@@ -1730,8 +1759,8 @@ third number is a servo position.
 public static double[][] speedByDistance = {{24, 2200, 0.24}, {48, 2550, 0.38}, {72, 2900, 0.50}};
 ```
 
-A hood on a linkage or cam (equal servo steps do not make equal angles): this `Hood` section in place of
-the one above (a calibration table instead of `posA`, `posB`, `angleA`, `angleB`).
+**A hood on a linkage or cam:** equal servo steps do not make equal angles. Use this `Hood` section in
+place of the one above. It has a calibration table instead of `posA`, `posB`, `angleA`, `angleB`.
 
 <!-- recipe: tunables-hood-linkage -->
 ```java title="Tunables.java"
@@ -1744,8 +1773,8 @@ public static class Hood {                                      // "hood" in the
 
 1. The angles must keep going one way: in servo-position order, the angles all go up, or all go down.
 
-A hood on a motor with an encoder (it knows where it is): `Hood.motor` in the launcher line, and this
-`Hood` section in place of the one above.
+**A hood on a motor with an encoder** (it knows where it is): write `Hood.motor` in the launcher line, and
+use this `Hood` section in place of the one above.
 
 <!-- recipe: robot-hood-motor -->
 ```java title="Robot.java"
@@ -1780,20 +1809,22 @@ g2.a.press(() -> robot.launcher.hood().step(-1)).says("hood -1 step");
 g2.x.press(() -> robot.launcher.hood().goToStart()).says("hood to its start angle");
 ```
 
-**Why:** close shots need a steep angle, far ones a flatter one, so each distance gets a speed AND a
+**Why:** close shots need a steep angle, and far ones a flatter one. So each distance gets a speed AND a
 hood angle, blended between rows. `posA`, `posB` are hard limits: nothing sends the hood past a stop.
-The launcher waits for the hood before it fires (a servo hood: a share of `travelSec`; a motor hood: its
-encoder). The stick (gamepad 2 left Y) is a hood trim while the table sets the angle (a goal is seen);
-with no goal seen it moves the hood itself, so you always see what it does. Double-tap D-pad down clears
-both trims. A lift brings the same stick (gamepad 2 left Y): with a hood AND a lift, give one of them
-another stick ([move a button](#how-do-i-move-a-parts-button-to-another-button)); INIT says which part has it. Find the stops with the [Hood Finder](#how-do-i-find-my-hoods-stops-and-angles),
-then fill the table with the [Shot Tuner](#how-do-i-build-a-shot-table-speed-for-each-distance) (Y until `> Hood`).
-**More:** [Lesson 9: a hood](tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle), [Hood](modules/robot.md#hood).
+The launcher waits for the hood before it fires. For a servo hood, it waits a share of `travelSec`. For
+a motor hood, it reads the encoder. While the camera sees a goal, the table sets the angle, and the
+stick (gamepad 2 left Y) is a hood trim. With no goal seen, the stick moves the hood itself, so you
+always see what it does. Double-tap D-pad down to clear both trims. A lift brings the same stick
+(gamepad 2 left Y). With a hood AND a lift, give one of them another stick
+([move a button](#how-do-i-move-a-parts-button-to-another-button)). INIT says which part has it. Find the stops with the [Hood Finder](#how-do-i-find-my-hoods-stops-and-angles),
+then fill the table with the [Shot Tuner](#how-do-i-build-a-shot-table-speed-for-each-distance) (press Y until `> Hood`).
+**More:** [Lesson 9: a hood](tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle), [Hood](reference/parts/hood.md).
 
 ## Turrets and interlocks
 
-Every kind of turret (motor, servo, CR servo; switch or not; any range) has its own lines: see
-[Setting up a turret](guides/turret-setup.md). Code: [`InterlockRecipes.java`](../examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook/InterlockRecipes.java).
+Every kind of turret has its own lines: motor, servo or CR servo, with a switch or not, with any range.
+See [Setting up a turret](guides/turret-setup.md). An interlock is a rule that stops two parts from
+hitting each other. Code: [`InterlockRecipes.java`](../examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook/InterlockRecipes.java).
 
 ### How do I home my turret with a switch?
 
@@ -1808,8 +1839,8 @@ turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
         .follows(camera));
 ```
 
-1. The home switch: a touch sensor ("REV Touch Sensor" in the configuration) or a magnetic switch ("Digital Device", for example the REV Magnetic Limit Switch).
-2. After that, each time the turret passes the switch, its angle is set right again.
+1. The home switch is a touch sensor ("REV Touch Sensor" in the configuration) or a magnetic switch ("Digital Device", for example the REV Magnetic Limit Switch).
+2. After that, each time the turret passes the switch, the switch sets its angle right again.
 
 <!-- recipe: tunables-turret-switch -->
 ```java title="Tunables.java"
@@ -1822,11 +1853,12 @@ public static class Turret {                                    // "turret" in t
 }
 ```
 
-**Why:** a motor's encoder counts from where the turret was at INIT. With a switch the turret finds its
-real angle at ▶ by itself (never during INIT: nothing moves before ▶), and a slipping belt is
-fixed every time it passes the switch. Until it is homed it does not follow the goal and is never "aimed".
-`homeAngle` must be written (INIT stops without it); `min`, `max` default to -90 and 90. No switch? Put the
-turret at `startAngle` (default 0, straight forward) by hand before INIT.
+**Why:** a motor's encoder counts from where the turret was at INIT. With a switch, the turret finds its
+real angle at ▶ by itself. It never does this during INIT, because nothing moves before ▶. Every time
+the turret passes the switch, the switch fixes the error from a slipping belt. Until the turret is homed
+(has found its real angle), it does not follow the goal and is never "aimed". You must write
+`homeAngle`, or INIT stops. `min`, `max` default to -90 and 90. With no switch, put the turret at
+`startAngle` (default 0, straight forward) by hand before INIT.
 **More:** [Setting up a turret: how it knows its angle](guides/turret-setup.md#2-how-does-it-know-its-angle).
 
 ### How do I set up a turret on a servo?
@@ -1840,8 +1872,8 @@ turret at `startAngle` (default 0, straight forward) by hand before INIT.
 turret = add(Turret.servo("turret").part("gobilda-2000-speed").fullRange().follows(camera));
 ```
 
-1. A standard servo turns the turret to an angle by itself: no encoder, no PID, no homing.
-2. A goBILDA 2000 servo then turns 300 degrees, not 270. Find posA and posB with the Servo Finder: press Y while you choose the servo.
+1. A standard servo turns the turret to an angle by itself. It needs no encoder, no PID and no homing.
+2. With it, a goBILDA 2000 servo turns 300 degrees, not 270. Find posA and posB with the Servo Finder: press Y while you choose the servo.
 
 <!-- recipe: tunables-turret-servo -->
 ```java title="Tunables.java"
@@ -1857,12 +1889,12 @@ public static class Turret {                                    // "turret" in t
 }
 ```
 
-**Why:** a servo knows how to go to a position, so the turret needs no encoder, no PID and no homing: the
-cheapest turret. But a servo cannot say where it is, so at ▶ it is sent to `startAngle` (or the
-middle of its range), and "aimed" waits `travelSec` for it. `posA`, `angleA`, `posB`, `angleB` must be
-written (INIT stops without them): find the positions with the [Servo Finder](#how-do-i-find-a-servos-open-and-closed-numbers)
+**Why:** a servo knows how to go to a position, so the turret needs no encoder, no PID and no homing.
+It is the cheapest turret. But a servo cannot say where it is. So at ▶, the library sends it to
+`startAngle` (or the middle of its range), and "aimed" waits `travelSec` for it. You must write `posA`,
+`angleA`, `posB`, `angleB`, or INIT stops. Find the positions with the [Servo Finder](#how-do-i-find-a-servos-open-and-closed-numbers),
 and measure the angle at each with a phone angle app. Its range is between `angleA` and `angleB`. Put
-hard stops just past them.
+hard stops a little past them.
 **More:** [Setting up a turret](guides/turret-setup.md#1-what-turns-it), [Full range](#how-do-i-get-my-servos-full-range).
 
 ### How do I set up a slip-ring turret (round and round)?
@@ -1878,7 +1910,7 @@ turret = add(Turret.crServo("turret").part("axon-max-mk2").analogEncoder("turret
         .follows(camera));
 ```
 
-1. The encoder is on an analog port and knows the angle at once: no homing. A slip ring carries the wires, so the turret has no limits and always takes the shortest way.
+1. The encoder is on an analog port and knows the angle at once, so the turret needs no homing. A slip ring (a turning joint that carries the wires) lets the turret turn with no limits, and it always takes the shortest way.
 
 <!-- recipe: tunables-turret-slip-ring -->
 ```java title="Tunables.java"
@@ -1892,14 +1924,14 @@ public static class Turret {                                    // "turret" in t
 }
 ```
 
-**Why:** with a slip ring the wires never wind up, so the turret can always take the shortest way to the
-goal and is never "out of range". A motor turret can be `continuous()` too.
+**Why:** with a slip ring, the wires never wind up. So the turret can always take the shortest way to
+the goal, and is never "out of range". A motor turret can be `continuous()` too.
 **More:** [Setting up a turret: how far can it turn?](guides/turret-setup.md#3-how-far-can-it-turn).
 
 ### How do I stop two parts from hitting each other?
 
-**Where:** `Robot.java`, inside `define()`, one line below the parts' `add` lines; and a new section in
-`Tunables.java` (the zones), named like the rule.
+**Where:** `Robot.java`, inside `define()`, one line below the parts' `add` lines. Also a new section in
+`Tunables.java` for the zones, with the same name as the rule.
 
 <!-- recipe: interlock-rule -->
 ```java title="Robot.java"
@@ -1920,12 +1952,13 @@ public static class TurretLift {                                // keepApart("Tu
 ```
 
 **Why:** each part is safe inside its own limits, but a turret over the back and a lift at the back can
-still meet. The rule is kept every loop, whoever moves the parts (buttons, sticks, actions, a following
-turret, autonomous steps): the part that is in its zone first keeps it, the other waits at the edge of
-its own zone, and the Driver Station says so (`TurretLift : Lift held at 216 counts: Turret is between
-130 and 218 deg`). A fast part is slowed down as it comes near and brakes in time, even with slow loops:
-the rule measures its speed every loop. The zones are read at INIT only: change them in `Tunables.java`.
-**More:** [Two parts that must not collide](guides/interlocks.md), [Interlock](modules/robot.md#interlock).
+still meet. The library keeps the rule every loop, whatever moves the parts: buttons, sticks, actions, a
+following turret or autonomous steps. The part that is in its zone first keeps it. The other part waits
+at the edge of its own zone, and the Driver Station says so (`TurretLift : Lift held at 216 counts: Turret is between
+130 and 218 deg`). The rule slows a fast part down as it comes near, so it brakes in time, even with
+slow loops. To do this, the rule measures the part's speed every loop. The library reads the zones at
+INIT only, so change them in `Tunables.java`.
+**More:** [Two parts that must not collide](guides/interlocks.md), [Interlock](reference/parts/interlock.md).
 
 ### How do I pick up and score with a lift, a wrist and a claw?
 
@@ -1953,16 +1986,16 @@ public static Action scoreInFlower(Robot r) {
 }
 ```
 
-**Why:** the order keeps the parts out of each other's way: the claw swings out before the lift rises and
-folds only after it is down. Each wait has a time limit, so a stuck part ends the action instead of
-stopping the robot. With an interlock rule the lift waits by itself while the turret is in the way.
+**Why:** the order keeps the parts out of each other's way. The claw swings out before the lift rises,
+and folds only after the lift is down. Each wait has a time limit, so a stuck part ends the action
+instead of stopping the robot. With an interlock rule, the lift waits by itself while the turret is in the way.
 **More:** the whole robot: [`v2bot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Actions.java).
 
 ## Actions
 
 An action is a list of steps that use several parts, with waits between them. It never makes the robot
-wait: it does a little every loop. Actions go in `Actions.java`, one method each. The same action works
-on a button and in an autonomous.
+wait, because it does a little every loop. Actions go in `Actions.java`, one method each. The same
+action works on a button and in an autonomous.
 
 ### How do I do several things one after the other?
 
@@ -1982,7 +2015,7 @@ public static Action scoreHigh(Robot r) {
 ```
 
 **Why:** each step starts when the one before it is done, and the driver can still drive the whole time.
-**More:** [Lesson 5: scoreHigh](tutorials/start/05-actions.md#2-scorehigh-line-by-line), [Action](modules/robot.md#action).
+**More:** [Lesson 5: scoreHigh](tutorials/start/05-actions.md#2-scorehigh-line-by-line), [Action](reference/steps.md#action).
 
 ### How do I repeat steps several times?
 
@@ -2003,8 +2036,8 @@ public static Action pulseThree(Robot r) {
 }
 ```
 
-**Why:** the `for` loop runs once, while the action is made, and writes the steps 3 times; the action then does them one after the other without making the robot wait.
-**More:** [Action](modules/robot.md#action).
+**Why:** the `for` loop runs once, while Java makes the action, and writes the steps 3 times. Then the action does them one after the other, and the robot does not wait.
+**More:** [Action](reference/steps.md#action).
 
 ### How do I move two parts at the same time?
 
@@ -2026,7 +2059,9 @@ public static Action grabAndLift(Robot r) {
 
 ### How do I wait half a second (like sleep in Blocks)?
 
-Search words: sleep, wait, pause, delay. **In an action** (`Actions.java`):
+Search words: sleep, wait, pause, delay.
+
+**In an action** (`Actions.java`):
 
 <!-- recipe: wait-in-action -->
 ```java title="Actions.java"
@@ -2039,7 +2074,7 @@ public static Action dropAndLower(Robot r) {
 }
 ```
 
-**In an autonomous** (inside `steps(...)`): the step gets a name first, for the report:
+**In an autonomous** (inside `steps(...)`), give the step a name first, for the report:
 
 <!-- recipe: wait-in-auto -->
 ```java title="autos/YourAuto.java"
@@ -2048,7 +2083,7 @@ s.run("Open the claw", robot.claw::open)
  .run("Lift down", () -> robot.lift.goTo("down"));
 ```
 
-**Why:** `sleep()` stops the whole robot (no driving, no other part); `waitSeconds` waits while everything keeps running.
+**Why:** `sleep()` stops the whole robot: no driving, and no other part moves. `waitSeconds` waits while everything keeps running.
 **More:** [Lesson 5: the rules](tutorials/start/05-actions.md#5-the-rules-every-action-follows), [Non-blocking code](guides/non-blocking.md).
 
 ### How do I wait until something is true?
@@ -2067,7 +2102,7 @@ public static Action lowerAndRelease(Robot r) {
 }
 ```
 
-**Why:** every wait has a time limit, so a stuck part can never freeze the action forever.
+**Why:** every wait has a time limit, so a stuck part cannot freeze the action forever.
 **More:** [Lesson 5: the rules](tutorials/start/05-actions.md#5-the-rules-every-action-follows).
 
 ### How do I start an action from a button?
@@ -2076,12 +2111,12 @@ public static Action lowerAndRelease(Robot r) {
 
 <!-- recipe: action-button -->
 ```java title="Controls.java"
-// Press Y: the action starts. Press Y again while it runs: it is cancelled, safely.
+// Press Y: the action starts. Press Y again while it runs: it is canceled, safely.
 g2.y.press(Actions.scoreHigh(robot)).says("score high");
 g2.x.press(Actions.grabAndLift(robot)).says("grab and lift");
 ```
 
-**Why:** the same button cancels it, and a stick or button that moves the same part also stops it: the driver always wins.
+**Why:** the same button cancels it. A stick or button that moves the same part also stops it, so the driver always wins.
 **More:** [Lesson 5: start it from a button](tutorials/start/05-actions.md#4-start-it-from-a-button).
 
 ### How do I stop every running action?
@@ -2094,8 +2129,8 @@ g2.x.press(Actions.grabAndLift(robot)).says("grab and lift");
 g2.back.press(robot::cancelAll).says("stop all actions");
 ```
 
-**Why:** a stopped action leaves each part safe: a lift holds its height, an intake stops.
-**More:** [RobotDefinition: for your code](modules/robot.md#robotdefinition).
+**Why:** a stopped action leaves each part safe: a lift holds its height, and an intake stops.
+**More:** [RobotDefinition: for your code](reference/robot-java.md#robotdefinition).
 
 ### How do I run an action when the OpMode starts?
 
@@ -2118,8 +2153,9 @@ public static Action deployIntake(Robot r) {
 }
 ```
 
-**Why:** the library never moves anything in INIT (its safety choice: people are still next to the robot), so a
-fold-out waits for ▶. The game rules would allow it (R103.B), but the robot must be still once INIT is done (G304.H).
+**Why:** the library never moves anything in INIT, so a fold-out waits for ▶. This is the library's
+safety choice, because people are still next to the robot. The game rules would allow it (R103.B), but
+the robot must be still once INIT is done (G304.H).
 **More:** [Lesson 5: an action at ▶](tutorials/start/05-actions.md#7-an-action-when-the-opmode-starts).
 
 ### How do I use the same action in an autonomous?
@@ -2134,28 +2170,28 @@ s.start("Against our wall, facing the field", 0)
  .back("Back up", 12, 0.5);
 ```
 
-**Why:** write the move once, use it in TeleOp and autonomous; the report says if it timed out.
+**Why:** you write the move once, and use it in TeleOp and autonomous. The report says if it timed out.
 **More:** [Lesson 5: in an autonomous](tutorials/start/05-actions.md#6-the-same-action-in-an-autonomous).
 
 ## Autonomous
 
 An autonomous is one file in `autos/`: a list of named steps. Distances are in **inches** (1 foot = 12
-inches, so 2 feet = 24), directions in degrees, power from 0 to 1.
+inches, so 2 feet = 24). Directions are in degrees, and power is from 0 to 1.
 
-> **One rule for every angle:** counterclockwise, like the IMU: 0 = forward, **90 = left**, 180 = back,
-> -90 = right. For a move (`.move("Left", 12, 90, 0.5)`), a turn (`.turn("Left", 90, 0.4)`), `turnTo(...)`,
-> and the heading in `start(...)` and `driveTo(...)`. Straight moves and turns can use words instead:
-> `.forward`, `.back`, `.left`, `.right`, `.turnLeft`, `.turnRight`.
+> **One rule for every angle:** angles count counterclockwise, like the IMU: 0 = forward, **90 = left**,
+> 180 = back, -90 = right. The rule is for a move (`.move("Left", 12, 90, 0.5)`), a turn
+> (`.turn("Left", 90, 0.4)`), `turnTo(...)`, and the heading in `start(...)` and `driveTo(...)`. Straight
+> moves and turns can use words instead: `.forward`, `.back`, `.left`, `.right`, `.turnLeft`, `.turnRight`.
 
-**The robot only drives after the Drive Tuner.** Until then the autonomous shows "AUTONOMOUS IS OFF".
-Run the [Drive Tuner](#how-do-i-tune-the-drive-for-autonomous), copy its lines, then set
-`calibrated = true` in `Tunables.java`, section `Drive`. The simulator runs it anyway, so you can try a
-route before tuning.
+**The robot drives only after you run the Drive Tuner.** Until then, the autonomous shows "AUTONOMOUS IS OFF".
+Run the [Drive Tuner](#how-do-i-tune-the-drive-for-autonomous) and copy its lines. Then set
+`calibrated = true` in `Tunables.java`, section `Drive`. The simulator runs the autonomous anyway, so you
+can try a route before tuning.
 
 ### How do I make my first autonomous (drive 2 feet)?
 
-**Where:** a new file in `autos/` (in Android Studio: right-click the `autos` folder, New, Java Class,
-name `LeaveTheStart`). The whole file; change the `package` and `import ...Robot` lines as the comment says:
+**Where:** a new file in `autos/`. In Android Studio, right-click the `autos` folder, then New, Java Class,
+and name it `LeaveTheStart`. Below is the whole file. Change the `package` and `import ...Robot` lines as the comment says:
 
 <!-- recipe: auto-first -->
 ```java title="autos/LeaveTheStart.java"
@@ -2182,8 +2218,8 @@ public class LeaveTheStart extends Auto<Robot> {
 }
 ```
 
-**Why:** `preselectTeleOp` makes the Driver Station pick your TeleOp next, so the drivers only press INIT.
-**More:** [Lesson 6: the file, line by line](tutorials/start/06-first-autonomous.md#2-the-file-line-by-line).
+**Why:** `preselectTeleOp` makes the Driver Station pick your TeleOp next, so the drivers only have to press INIT.
+**More:** [Red and blue](building-autos/02-put-steps-together.md#red-and-blue).
 
 ### How do I drive forward, sideways and turn?
 
@@ -2201,15 +2237,15 @@ s.start("Against our wall, facing the field", 0)
  .turnTo("Face the start way", 0, 0.4); // to a heading: 0 = the way it faced at the start
 ```
 
-**Why:** each move is measured from where the robot is now, so the steps read like directions to a person.
-`moveWithTurn` is the one exception: it drives and turns at once, so its direction is fixed on the field,
-counted like `turnTo`'s heading from the way the robot faced at the start (180 = the opposite way).
-**More:** [Driving: move, turn, turnTo](guides/autonomous-builder.md#driving-move-turn-turnto).
+**Why:** each move starts from where the robot is now, so the steps read like directions to a person.
+`moveWithTurn` is the one exception. It drives and turns at once, so its direction is fixed on the
+field. It counts like `turnTo`'s heading, from the way the robot faced at the start (180 = the opposite way).
+**More:** [Driving: move, turn, turnTo](building-autos/01-what-an-auto-can-do.md#drive).
 
 ### Does my autonomous need a RED version?
 
-No. Write it once, for BLUE. On BIOBUZZ's field (turned half a turn between the alliances) add this
-to the autonomous class:
+No. Write it once, for BLUE. BIOBUZZ's field is turned half a turn between the alliances. For it, add
+this to the autonomous class:
 
 <!-- recipe: auto-turned-field -->
 ```java title="autos/YourAuto.java"
@@ -2220,8 +2256,8 @@ protected boolean mirrorForRed() {
 }
 ```
 
-**Why:** RED then uses the same numbers, seen from the red wall; on a mirrored field (the default), RED is flipped for you.
-**More:** [The autonomous builder: placing the robot](guides/autonomous-builder.md#1-placing-the-robot).
+**Why:** RED then uses the same numbers, seen from the red wall. On a mirrored field (the default), the library flips RED for you.
+**More:** [Field numbers](building-autos/01-what-an-auto-can-do.md#field-numbers).
 
 ### How do I let the drivers choose before the match?
 
@@ -2233,31 +2269,31 @@ s.start("Against our wall, facing the field", 0)
  .menuYesNo("Score", true)                  // the drivers choose in INIT with the D-pad
  .menuChoice("Park", "Near", "Far")
  .onlyIf("Score")                           // these steps run only if "Score" is yes
-     .forward("To the goal", Tunables.Auto.toGoalInches, 0.5)
+     .forward("To the goal", 30, 0.5)
      .action(Actions.scoreHigh(robot), 5)
  .end()                                     // never forget end()
 ```
 
-**Why:** one file covers several plans, and the drivers choose in INIT with the D-pad (alliance and start delay come free).
-**More:** [The INIT menu](guides/autonomous-builder.md#2-the-init-menu), [Branches: onlyIf](guides/autonomous-builder.md#5-branches-onlyif).
+**Why:** one file covers several plans, and the drivers choose in INIT with the D-pad. The alliance and start delay choices come with it, with no code.
+**More:** [The INIT menu](building-autos/06-advanced-autos.md#add-choices-to-the-init-menu), [Branches: onlyIf](building-autos/06-advanced-autos.md#add-choices-to-the-init-menu).
 
 ### How do I make sure there is time to park?
 
-Add `parkWithSeconds` before the park steps (this follows the menu recipe above):
+Add `parkWithSeconds` before the park steps. This code follows the menu recipe above:
 
 <!-- recipe: auto-park -->
 ```java title="autos/YourAuto.java"
 .parkWithSeconds(4)                        // the steps below always get the last 4 s
 .onlyIf("Park", "Near")
-    .right("Park near", Tunables.Auto.parkInches, 0.7)
+    .right("Park near", 20, 0.7)
 .end()
 .onlyIf("Park", "Far")
-    .right("Park far", Tunables.Auto.parkInches * 2, 0.7)
+    .right("Park far", 40, 0.7)
 .end();
 ```
 
-**Why:** when 4 s are left, the main steps stop, so a slow step can never eat the parking points.
-**More:** [Keep time to park](modules/robot.md#keep-time-to-park).
+**Why:** when 4 s are left, the main steps stop, so a slow step cannot cost you the parking points.
+**More:** [Keep time to park](reference/steps.md#keep-time-to-park).
 
 ### How do I run a mechanism while the robot drives?
 
@@ -2273,8 +2309,8 @@ s.start("Against our wall, facing the field", 0)
  .run("Intake off", robot.intake::stop);
 ```
 
-**Why:** `run` starts a part and goes on at once; `waitUntil` waits only when the next step needs it.
-**More:** [Mechanisms: run and wait](guides/autonomous-builder.md#3-mechanisms-run-and-wait). Whole actions while driving: `alongside(...)` ([recipes](guides/autonomous-builder.md#recipes)).
+**Why:** `run` starts a part and goes on at once. `waitUntil` waits only when the next step needs it.
+**More:** [Mechanisms: run and wait](building-autos/02-put-steps-together.md#start-something-or-wait-for-it). For whole actions while driving, use `alongside(...)` ([write each piece once](building-autos/06-advanced-autos.md#routes)).
 
 ### How do I wait for my alliance partner?
 
@@ -2288,8 +2324,8 @@ s.menuYesNo("Wait for partner", false)
  .end();
 ```
 
-**Why:** the drivers decide in INIT; for a wait before the first step, the menu already has a start delay.
-**More:** [The autonomous builder: recipes](guides/autonomous-builder.md#recipes).
+**Why:** the drivers decide in INIT. For a wait before the first step, the menu already has a start delay.
+**More:** [Write each piece once](building-autos/06-advanced-autos.md#routes).
 
 ### How do I write a step the list cannot say?
 
@@ -2305,34 +2341,21 @@ s.step("Clear the intake", ctx -> {
 });
 ```
 
-**Why:** `ctx.waitFor` keeps every part updating and the timer working; `sleep()` would freeze them.
-**More:** [Your own steps](guides/autonomous-builder.md#6-your-own-steps).
+**Why:** `ctx.waitFor` keeps every part updating and the timer working. `sleep()` would freeze them.
+**More:** [Your own steps](building-autos/06-advanced-autos.md#write-your-own-step).
 
-### How do I change a distance without building the code again?
+### How do I change a distance in an autonomous?
 
-**Where:** `Tunables.java`: your own section (no part reads it). Use it in a step as `Tunables.Auto.leaveInches`.
+**Where:** the step itself, in your file in `autos/`. Change the number and build again.
 
-<!-- recipe: tunables-auto -->
-```java title="Tunables.java"
-/** Your own numbers: a section no part reads. Every number here is in the tuning menu too. */
-public static class Auto {
-    public static double leaveInches = 24;                      // drive off the start line
-    public static double toGoalInches = 30;                     // drive to the goal
-    public static double parkInches = 20;                       // drive into the park zone
-    public static double goalX = -30, goalY = -30;              // scoring spot: inches from centre (- y = our half)
-    public static double goalHeading = 45;                      // facing there, degrees
-    public static double parkX = -56, parkY = -36;              // park spot: inches from centre (- y = our half)
-    // Several autos (guides/autos.md): the cycle, and the FAR start's way to the near side.
-    public static double pickupInches = 20;                     // drive onto a piece
-    public static double offWallInches = 12;                    // back off the wall
-    public static double farToNearInches = 72;                  // the far start to the near side
-}
+```text title="autos/YourAuto.java"
+.forward("To the goal", 30, 0.5)   // 30 = inches; change it here
 ```
 
-**Why:** every number in your own section is in the tuning menu: change it in the TeleOp, save (A), and
-the autonomous uses it from its next INIT. **Then copy the good value into `Tunables.java`**: a value
-saved only on the hub is lost with a new Control Hub.
-**More:** [Lesson 6: route numbers](tutorials/start/06-first-autonomous.md#3-route-numbers-live-in-tunablesauto), [Tunables.java](modules/robot.md#tunablesjava).
+**Why:** each autonomous keeps its own numbers, so a change to one auto does not change another. The
+simulator's auto builder can read the auto, change a number, and give you the new file. `Tunables.java`
+keeps the robot's numbers (speeds, positions, gains), which are the same in every auto.
+**More:** [The numbers are in the step](five-files/05-autos.md#the-numbers-are-in-the-step).
 
 ### How do I share the same first steps in several autos?
 
@@ -2342,19 +2365,20 @@ saved only on the hub is lost with a new Control Hub.
 ```java title="autos/YourAuto.java"
 /** The same first steps for several autos: a method that adds them to the list. */
 static Steps scorePreload(Steps s, Robot robot) {
-    return s.forward("To the goal", Tunables.Auto.toGoalInches, 0.5)
+    return s.forward("To the goal", 30, 0.5)
             .action(Actions.scoreHigh(robot), 5);
 }
 // in each autonomous:  scorePreload(s.start("...", 0), robot).right("Park", 20, 0.7);
 ```
 
-**Why:** fix the opening once and every autonomous gets the fix.
-**More:** [The autonomous builder: recipes](guides/autonomous-builder.md#recipes).
+**Why:** when you fix the opening once, every autonomous gets the fix.
+**More:** [Write each piece once](building-autos/06-advanced-autos.md#routes).
 
 ### How do I make the start delay shorter, or use a different number on RED?
 
 Every autonomous's INIT menu already has `Alliance` and `Start delay` (0 to 10 s, D-pad left/right).
-A shorter menu line: **where:** your autonomous class, as a method of its own next to `steps(...)`:
+
+**For a shorter menu line, where:** your autonomous class, as a method of its own next to `steps(...)`:
 
 <!-- recipe: auto-max-start-delay -->
 ```java title="autos/YourAuto.java"
@@ -2366,8 +2390,9 @@ protected double maxStartDelaySec() {
 }
 ```
 
-One number that is different on RED (most routes need none: RED is mirrored or turned for you):
-**where:** inside `steps(...)`, above the steps.
+Most routes need no number that is different on RED, because the library mirrors or turns RED for you.
+
+**For one number that is different on RED, where:** inside `steps(...)`, above the steps.
 
 <!-- recipe: auto-alliance-pick -->
 ```java title="autos/YourAuto.java"
@@ -2379,33 +2404,31 @@ s.start("Against our wall, facing the field", 0)
  .forward("Leave the start", 24, 0.4);
 ```
 
-**Why:** the start delay waits before the first step, so a partner can go first; 10 s is a lot to scroll
+**Why:** the start delay waits before the first step, so a partner can go first. 10 s is a lot to scroll
 through. `alliance().pick(blue, red)` works for any kind of value: a number, a name, an AprilTag id.
-**More:** [What the INIT menu can choose](guides/autos.md#what-the-init-menu-can-choose).
+**More:** [What the INIT menu can choose](building-autos/06-advanced-autos.md#add-choices-to-the-init-menu).
 
 ## Several autos and choosing one
 
-One autonomous per plan, or one autonomous with an INIT menu? Both, built from the same pieces. The
-decision table, naming, simulator tests and a match-day checklist: [the guide](guides/autos.md). Each
-file below is whole: copy it into `autos/` and change the `package` and `import` lines as its comment
-says. The numbers come from your `Tunables.Auto` section ([these lines](#how-do-i-change-a-distance-without-building-the-code-again):
-`toGoalInches`, `pickupInches`, `parkInches`, `offWallInches`, `farToNearInches`).
+You can have one autonomous per plan, or one autonomous with an INIT menu. Both use the same pieces. For
+the decision table, naming, simulator tests and a match-day checklist, see [Building autos 3: having multiple autos](building-autos/03-multiple-autos.md). Each
+file below is whole. Copy it into `autos/`, and change the `package` and `import` lines as its comment
+says. The distances are plain numbers in the steps ([why](#how-do-i-change-a-distance-in-an-autonomous)).
 
 ### How do I build several autos from the same pieces?
 
-**Where:** a new file `Routes.java` in `autos/`. It is not an OpMode (no `@Autonomous`): the autos
-below call its methods.
+**Where:** a new file `Routes.java` in `autos/`. It has no `@Autonomous`, so it is not an OpMode (a
+program in the Driver Station's list). The autos below call its methods.
 
 <!-- recipe: autos-routes -->
 ```java title="autos/Routes.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
-// and the first three imports below to:  import org.firstinspires.ftc.teamcode.Actions;
-//   import org.firstinspires.ftc.teamcode.Robot;   import org.firstinspires.ftc.teamcode.Tunables;
+// and the first two imports below to:  import org.firstinspires.ftc.teamcode.Actions;
+//   import org.firstinspires.ftc.teamcode.Robot;
 
 import com.crossbotics.ftchelper.examples.cookbook.Actions;
 import com.crossbotics.ftchelper.examples.cookbook.Robot;
-import com.crossbotics.ftchelper.examples.cookbook.Tunables;
 import com.crossbotics.ftchelper.robot.Steps;
 
 /** The pieces every autonomous is made from. Write each piece once. No @Autonomous: not an OpMode. */
@@ -2413,31 +2436,31 @@ public class Routes {
     /** Score the piece the robot starts with: hold it, drive to the goal, score. */
     public static Steps scorePreload(Steps s, Robot robot) {
         return s.run("Hold the preload", robot.claw::close)
-                .forward("To the goal", Tunables.Auto.toGoalInches, 0.6)
+                .forward("To the goal", 30, 0.6)
                 .action(Actions.scoreHigh(robot), 5);
     }
 
     /** One more piece: back to the pieces, grab one, forward to the goal, score. */
     public static Steps cycle(Steps s, Robot robot) {
-        return s.back("To the pieces", Tunables.Auto.pickupInches, 0.6)
+        return s.back("To the pieces", 20, 0.6)
                 .run("Grab", robot.claw::close)
                 .waitSeconds("Let the claw close", 0.3)
-                .forward("Back to the goal", Tunables.Auto.pickupInches, 0.6)
+                .forward("Back to the goal", 20, 0.6)
                 .action(Actions.scoreHigh(robot), 5);
     }
 
     /** The park: back toward our wall. It keeps the last 3 seconds for itself, so it always runs. */
     public static Steps park(Steps s) {
         return s.parkWithSeconds(3)
-                .back("Park", Tunables.Auto.parkInches, 0.7);
+                .back("Park", 20, 0.7);
     }
 }
 ```
 
-**Why:** each piece is written once, so a fix (or a new number in `Tunables.Auto`) reaches every
-autonomous. `public static Steps scorePreload(Steps s, Robot robot)`: a method any file can call
-(`public static`) that adds its steps to the list `s` and hands the list back (`return`).
-**More:** [Build them from shared steps](guides/autos.md#build-them-from-shared-steps).
+**Why:** you write each piece once, so a fix (or a new number in it) reaches every autonomous.
+`public static Steps scorePreload(Steps s, Robot robot)` is a method that any file can call
+(`public static`). It adds its steps to the list `s` and hands the list back (`return`).
+**More:** [Build them from shared steps](building-autos/06-advanced-autos.md#routes).
 
 ### How do I make two autos that differ by one piece?
 
@@ -2468,7 +2491,7 @@ public class NearPreloadPark extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        s.start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0);
+        s.start("NEAR: against our wall, 2nd tile left of center, facing the field", -36, -61, 0);
         Routes.scorePreload(s, robot);
         Routes.park(s);
     }
@@ -2498,7 +2521,7 @@ public class NearCycle extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        s.start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0);
+        s.start("NEAR: against our wall, 2nd tile left of center, facing the field", -36, -61, 0);
         Routes.scorePreload(s, robot);
         Routes.cycle(s, robot);
         Routes.park(s);
@@ -2506,9 +2529,9 @@ public class NearCycle extends Auto<Robot> {
 }
 ```
 
-**Why:** two lines on the Driver Station, named after the start spot and the plan, so the drivers pick fast.
-Each line in `steps(...)` calls a piece; the piece adds its steps to the same list `s`.
-**More:** [Example 1](guides/autos.md#example-1-two-opmodes-from-the-same-pieces), [names and groups](guides/autos.md#names-and-groups).
+**Why:** the Driver Station shows two lines, named after the start spot and the plan, so the drivers pick fast.
+Each line in `steps(...)` calls a piece, and the piece adds its steps to the same list `s`.
+**More:** [Write each piece once](building-autos/06-advanced-autos.md#routes), [names and groups](building-autos/03-multiple-autos.md#names-on-the-driver-station).
 
 ### How do I let the drivers choose the start spot and the plan in INIT?
 
@@ -2518,11 +2541,9 @@ Each line in `steps(...)` calls a piece; the piece adds its steps to the same li
 ```java title="autos/ChooseInInit.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
-// and the first two imports below to:  import org.firstinspires.ftc.teamcode.Robot;
-//   import org.firstinspires.ftc.teamcode.Tunables;
+// and the first import below to:  import org.firstinspires.ftc.teamcode.Robot;
 
 import com.crossbotics.ftchelper.examples.cookbook.Robot;
-import com.crossbotics.ftchelper.examples.cookbook.Tunables;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -2546,13 +2567,13 @@ public class ChooseInInit extends Auto<Robot> {
 
         // The start spot follows the "Start" line: the note and the simulator's robot change with it.
         s.onlyIf("Start", "Near")
-             .start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0)
+             .start("NEAR: against our wall, 2nd tile left of center, facing the field", -36, -61, 0)
          .end()
          .onlyIf("Start", "Far")
-             .start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -61, 0)
+             .start("FAR: against our wall, 2nd tile right of center, facing the field", 36, -61, 0)
              // Off the wall first: the FLOWER on our wall stands between the two start spots.
-             .forward("Off the wall", Tunables.Auto.offWallInches, 0.5)
-             .left("Across to the near side", Tunables.Auto.farToNearInches, 0.7)
+             .forward("Off the wall", 12, 0.5)
+             .left("Across to the near side", 72, 0.7)
          .end();
 
         // The plan: plain Java "if". choice(...) = the option chosen, as text. (1)!
@@ -2564,23 +2585,24 @@ public class ChooseInInit extends Auto<Robot> {
 }
 ```
 
-1. The pieces are Java methods, so a plain `if` picks them. `choice(...)` gives the text of the option (a String). `equals(...)` asks "the same text?". `!` means "not".
+1. The pieces are Java methods, so a plain `if` picks them. `choice(...)` gives the text of the option (a String). `equals(...)` tests whether two texts are the same. `!` means "not".
 
-**Why:** a `start(...)` inside an `onlyIf` is used only for its option, so the "Place robot" note (and
-the simulator's robot) changes as the drivers change the menu. The first option of each line is the
-default: make it your safest plan. Your lines come after the library's two (`Alliance`, `Start delay`),
-so the drivers press D-pad down twice to reach `Start`. The FAR route drives off the wall first: the
-FLOWER on your wall stands between the two start spots. A few Java words: `String plan` keeps a text;
-`plan.equals("Park only")` is true when the two texts are the same; `!` means "not".
-**More:** [Example 2](guides/autos.md#example-2-one-opmode-the-drivers-choose-in-init), [what the menu can choose](guides/autos.md#what-the-init-menu-can-choose).
+**Why:** the library uses a `start(...)` inside an `onlyIf` only for its option. So the "Place robot"
+note (and the simulator's robot) changes as the drivers change the menu. The first option of each line
+is the default, so make it your safest plan. Your lines come after the library's two (`Alliance`,
+`Start delay`), so the drivers press D-pad down twice to reach `Start`. The FAR route drives off the
+wall first, because the FLOWER on your wall stands between the two start spots. A few Java words:
+`String plan` keeps a text. `plan.equals("Park only")` is true when the two texts are the same. `!`
+means "not".
+**More:** [One file, the drivers choose in INIT](building-autos/06-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose), [what the menu can choose](building-autos/06-advanced-autos.md#add-choices-to-the-init-menu).
 
 ## Odometry and driveTo
 
-Odometry tells the robot where it is on the field. **Field numbers:** x = inches right of the centre
-line, y = inches away from your wall (negative = your half), heading 0 = facing away from you,
-counterclockwise (left) is +. **Always seen from your own drivers' wall**, whatever your alliance: every
-number in your code (start spots, `driveTo`, the goal point, the reset spot). Only the simulator's map
-and its scenario checks (`expect robot x ...`) use one fixed view, from the red wall. See the
+Odometry tells the robot where it is on the field. **Field numbers:** x = inches right of the center
+line, and y = inches away from your wall (negative = your half). Heading 0 = facing away from you, and
+counterclockwise (left) is +. **Every number in your code is seen from your own drivers' wall**, whatever
+your alliance: start spots, `driveTo`, the goal point, the reset spot. Only the simulator's map and its
+scenario checks (`expect robot x ...`) use one fixed view, from the red wall. See the
 [field map](tutorials/start/07-odometry.md#1-why-odometry).
 
 ### How do I add a goBILDA Pinpoint?
@@ -2589,14 +2611,14 @@ and its scenario checks (`expect robot x ...`) use one fixed view, from the red 
 
 <!-- recipe: odometry-pinpoint -->
 ```java title="Robot.java"
-// After drive(...). Offsets, mm: how far LEFT the forward pod is, how far FORWARD the sideways pod is. (1)!
-// Not sure? Write offsetsMm(0, 0): the Odometry Tuner measures them.
-odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
+// After drive(...). The robot's length and width, then where each pod's wheel is, mm: (1)!
+// the forward pod from the LEFT edge, the sideways pod from the FRONT edge.
+odometry(Odometry.pinpoint("pinpoint").robotSizeMm(430, 400).podsFromEdgesMm(284, 383));
 ```
 
-1. Both from the robot's centre. Right and behind are minus: here the forward pod is 84 mm right of the centre, and the sideways pod is 168 mm behind it.
+1. Measure with a tape across the frame, bumpers off. The library finds the robot's center from the size. Here it works out `offsetsMm(-84, -168)`: the forward pod is 84 mm right of the center, and the sideways pod is 168 mm behind it. The Odometry Tuner then measures the exact offsets, and you write `.offsetsMm(...)` in place of `.podsFromEdgesMm(...)`.
 
-**Why:** the offsets tell it where the pods are, so a turn on the spot does not look like a move.
+**Why:** the Pinpoint must know where the pods are, so a turn on the spot does not look like a move.
 **More:** [Lesson 7: one line in Robot.java](tutorials/start/07-odometry.md#4-one-line-in-robotjava), [Pinpoint](modules/odometry.md#pinpoint).
 
 ### How do I add a SparkFun OTOS?
@@ -2605,11 +2627,11 @@ odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
 
 <!-- recipe: odometry-otos -->
 ```java title="Robot.java"
-// Where the OTOS sits: inches forward and left of the robot's centre, and its turn in degrees.
-odometry(Odometry.otos("otos").mountIn(3.5, 0, 0));
+// The robot's length and width, then the OTOS's middle from the FRONT and LEFT edges (mm), and its turn.
+odometry(Odometry.otos("otos").robotSizeMm(430, 400).mountFromEdgesMm(126, 200, 0));
 ```
 
-**Why:** the OTOS measures at its own spot, so it must know where it sits to give the robot centre's place.
+**Why:** the OTOS measures at its own spot. To give the place of the robot's center, it must know where it sits.
 **More:** [OTOS](modules/odometry.md#otos).
 
 ### How do I add dead wheels?
@@ -2619,7 +2641,7 @@ odometry(Odometry.otos("otos").mountIn(3.5, 0, 0));
 <!-- recipe: odometry-dead-wheels -->
 ```java title="Robot.java"
 // The configuration names of the motor ports the pods plug into: left, right, sideways pod.
-// trackWidthIn: left pod to right pod. perpForwardIn: the sideways pod, 6 in BEHIND the centre.
+// trackWidthIn: left pod to right pod. perpForwardIn: the sideways pod, 6 in BEHIND the center.
 odometry(Odometry.threeWheels("par_left", "par_right", "perp")
         .trackWidthIn(13.2).perpForwardIn(-6));
 ```
@@ -2644,33 +2666,33 @@ public class OdometryTuner extends OdometryTunerOpMode {
 }
 ```
 
-**Why:** it checks which way each pod counts and measures the offsets; then set `Tunables.Odometry.checked = true`, or `driveTo` does nothing on the robot.
-It is its own small file because each program in the Driver Station's list is one class; `robot()` makes
+**Why:** the tuner checks which way each pod counts, and measures the offsets. Then set `Tunables.Odometry.checked = true`, or `driveTo` does nothing on the robot.
+It is its own small file, because each program in the Driver Station's list is one class. `robot()` makes
 it use your `Robot.java`, so it measures the same odometry line that autonomous uses.
 **More:** [Lesson 7: the Odometry Tuner](tutorials/start/07-odometry.md#5-the-odometry-tuner), [Finders](guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
 
 ### How do I drive to a point on the field?
 
-**Where:** a file in `autos/`, inside `steps(...)`. Needs a mecanum drive.
+**Where:** a file in `autos/`, inside `steps(...)`. It needs a mecanum drive.
 
 <!-- recipe: drive-to -->
 ```java title="autos/YourAuto.java"
 // The start spot (x, y, heading) must be where the robot really stands: the pose starts there.
 s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
- .driveTo("To the goal", Tunables.Auto.goalX, Tunables.Auto.goalY, Tunables.Auto.goalHeading, 0.6)
+ .driveTo("To the goal", -30, -30, 45, 0.6)
  .parkWithSeconds(4)
  // The last number: "close enough", in inches (default 1).
- .driveTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.7, 2.0);
+ .driveTo("Park", -56, -36, 0, 0.7, 2.0);
 ```
 
 It replaces `.move(...)`: you give a place on the field, not a distance.
-**Why:** `driveTo` keeps checking where the robot is, so a bump or wheel slip does not matter: it ends on the point.
-On the robot it only works after the [Odometry Tuner](#how-do-i-tune-the-odometry) and `checked = true` in `Tunables.java`, section `Odometry`.
-**More:** [Lesson 7: drive to field points](tutorials/start/07-odometry.md#6-drive-to-field-points), [driveTo](guides/autonomous-builder.md#drive-to-a-field-point-driveto).
+**Why:** `driveTo` keeps checking where the robot is. So a bump or a wheel slip does not matter, and the robot ends on the point.
+On the robot, it works only after the [Odometry Tuner](#how-do-i-tune-the-odometry) and `checked = true` in `Tunables.java`, section `Odometry`.
+**More:** [Lesson 7: drive to field points](tutorials/start/07-odometry.md#6-drive-to-field-points), [driveTo](building-autos/05-auto-builder-odometry-and-pedro.md#drive-to-a-point-driveto).
 
 ### How do I get around field elements on the way to a spot?
 
-**Where:** `Robot.java`, inside `define()`, then a file in `autos/`, or `Controls.java`. Needs odometry and a mecanum drive.
+**Where:** `Robot.java`, inside `define()`, then a file in `autos/`, or `Controls.java`. It needs odometry and a mecanum drive.
 
 <!-- recipe: field-map -->
 ```java title="Robot.java"
@@ -2681,28 +2703,28 @@ fieldMap(FieldMap.margin(13)
         .keepOut("HIVE frame, far", -19.5, 15.4, 19.5, 24.8));
 ```
 
-In an autonomous, `routeTo` is `driveTo` with a way around the boxes. It starts from wherever the park time stopped the robot:
+In an autonomous, `routeTo` is `driveTo` with a way around the boxes (the keep-out areas in the field map). It starts from wherever the park time stopped the robot:
 
 <!-- recipe: route-to-park -->
 ```java title="autos/YourAuto.java"
 s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
- .driveTo("To the goal", Tunables.Auto.goalX, Tunables.Auto.goalY, Tunables.Auto.goalHeading, 0.6)
+ .driveTo("To the goal", -30, -30, 45, 0.6)
  .parkWithSeconds(6)    // the route slows at each corner: give it more time than a straight line
- .routeTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+ .routeTo("Park", -56, -36, 0, 0.8);
 ```
 
-In TeleOp, a button or a time starts it. Any drive stick stops it:
+In TeleOp, a button or a time starts it, and any drive stick stops it:
 
 <!-- recipe: route-button -->
 ```java title="Controls.java"
 // route(...) makes the job. It starts when the button or the time says so.
-Runnable park = route("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+Runnable park = route("Park", -56, -36, 0, 0.8);
 g1.dpadLeft.tap(park).says("drive to the park spot (a drive stick stops it)");
 atSecondsLeft(10, park);
 ```
 
 **Why:** a straight line from an unknown place can go through a field element. The robot works out the way when it sets off.
-It uses only its pose: it cannot see another robot. Go slow the first time.
+It uses only its pose, so it cannot see another robot. Go slow the first time.
 **More:** [Keep-out boxes and routes](modules/odometry.md#keep-out-boxes-and-routes).
 
 ### How do I show where the robot is?
@@ -2715,7 +2737,7 @@ show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in, heading %.0f",
         robot.pose().x, robot.pose().y, robot.pose().headingDeg));
 ```
 
-**Why:** you can check the odometry by pushing the robot by hand and watching the numbers.
+**Why:** to check the odometry, push the robot by hand and watch the numbers.
 **More:** [robot.pose()](modules/odometry.md#robotpose). (TeleOp also starts where autonomous ended: [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended).)
 
 ### How do I use the robot's position in an action?
@@ -2728,41 +2750,42 @@ show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in, heading %.0f",
 public static Action intakeOnOurHalf(Robot r) {
     return Action.named("Intake on our half")
             .then(r.intake::in)
-            .waitUntil("past the centre line", () -> r.pose().y > 0, 10.0)
+            .waitUntil("past the center line", () -> r.pose().y > 0, 10.0)
             .then(r.intake::stop);
 }
 ```
 
-**Why:** `robot.pose()` is fresh every loop, so a wait can test where the robot is.
+**Why:** the library updates `robot.pose()` every loop, so a wait can test where the robot is.
 **More:** [robot.pose()](modules/odometry.md#robotpose).
 
 ### How do I set the pose when autonomous did not run?
 
 **Where:** `Tunables.java`, section `Odometry` (and `Controls.java` for more spots).
 
-Autonomous was stopped early, or did not run: TeleOp does not know where the robot is. Park it on the
-reset spot, then hold gamepad 1 **START** for 1 second ("set pose here"), in INIT or in the match, with
-the drive sticks let go. The spot, written for BLUE like a start spot. `mirrorForRed = false` because
-BIOBUZZ's field is turned half a turn (RED uses the same numbers from its own wall); leave it out
-(default `true`, RED mirrored) on a mirrored field. INIT's `Reset spot for RED` line shows which is used.
+When autonomous stopped early or did not run, TeleOp does not know where the robot is. Park the robot on
+the reset spot and let go of the drive sticks. Then hold gamepad 1 **START** for 1 second ("set pose
+here"). This works in INIT or in the match. Write the spot for BLUE, like a start spot. Write
+`mirrorForRed = false` because BIOBUZZ's field is turned half a turn (RED uses the same numbers from its
+own wall). On a mirrored field, leave it out (default `true`, RED mirrored). INIT's `Reset spot for RED`
+line shows which one the library uses.
 
 <!-- recipe: tunables-reset-spot -->
 ```java title="Tunables.java"
 public static class Odometry {                                  // a fixed name: always Odometry
     public static boolean checked = false;                      // true after the Odometry Tuner's Loop test
     // "Set pose here" (TeleOp: hold gamepad 1 START 1 s on this spot), written for BLUE. (1)!
-    public static double resetX = -56;                          // inches right of centre, - = left
-    public static double resetY = -61;                          // inches from centre, - = our half
+    public static double resetX = -56;                          // inches right of center, - = left
+    public static double resetY = -61;                          // inches from center, - = our half
     public static double resetHeading = 0;                      // degrees, 0 = facing the field
     // RED: false = the same numbers from the red wall; true (or left out) = mirrored left-right. (2)!
     public static boolean mirrorForRed = false;                 // BIOBUZZ: false
 }
 ```
 
-1. Inches and degrees seen from your wall, like a start spot. Here: our left corner tile, facing the field.
-2. BIOBUZZ's field is turned half a turn between the alliances: write `false`. `true` is for a mirrored field.
+1. Inches and degrees seen from your wall, like a start spot. Here the spot is our left corner tile, facing the field.
+2. BIOBUZZ's field is turned half a turn between the alliances, so write `false`. `true` is for a mirrored field.
 
-More spots, or from an action: in `Controls.java`, inside `buttons(...)`:
+For more spots, or to set the pose from an action, write this in `Controls.java`, inside `buttons(...)`:
 
 <!-- recipe: reset-pose-button -->
 ```java title="Controls.java"
@@ -2787,14 +2810,14 @@ public static Action poseHereThenIntake(Robot r) {
 }
 ```
 
-**Why:** with a pose, the aim's odometry backup and field-centric "forward" work again. Holding 1 s
-means a bump of the button does nothing. All the spots are written from your own drivers' wall, like
-every field number in your code.
-**More:** [Lesson 7: TeleOp starts where autonomous ended](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended), [resetPose()](modules/robot.md#robotdefinition).
+**Why:** with a pose, the aim's odometry backup and field-centric "forward" work again. The 1 s hold
+means a bump of the button does nothing. Write all the spots from your own drivers' wall, like every
+field number in your code.
+**More:** [Lesson 7: TeleOp starts where autonomous ended](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended), [resetPose()](reference/robot-java.md#robotdefinition).
 
 ## Pedro paths
 
-Needs the `pedro` folder in your project ([add Pedro](tutorials/start/08-paths-with-pedro.md#3-add-pedro-to-your-project)),
+Pedro Pathing drives smooth curves. It needs the `pedro` folder in your project ([add Pedro](tutorials/start/08-paths-with-pedro.md#3-add-pedro-to-your-project)),
 a mecanum drive and tuned odometry. Paths use the same field numbers as `driveTo`.
 
 ### How do I add Pedro Pathing to Robot.java?
@@ -2809,7 +2832,7 @@ odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));   // Pedro needs o
 follower(Pedro.follower(PedroConstants.foresight));
 ```
 
-**Why:** Pedro uses your drive and odometry lines, so there is only one robot description.
+**Why:** Pedro uses your drive and odometry lines, so you describe the robot only once.
 **More:** [Lesson 8: Robot.java](tutorials/start/08-paths-with-pedro.md#4-robotjava-one-line-and-pedros-numbers), [Tuning Pedro](modules/pedro.md#tuning-pedro).
 
 ### How do I make a straight path and a curve?
@@ -2824,7 +2847,7 @@ static final PedroPath OUT = PedroPath.line(-56, -61, -56, -36).keepHeading(0);
 static final PedroPath TO_GOAL = PedroPath.curve(-56, -36, -44, -36, -30, -30).turnTo(0, 45);
 ```
 
-**Why:** a path is made once (`static final`) because it is the same every match.
+**Why:** Java makes a path once (`static final`), because it is the same every match.
 **More:** [PedroPath](modules/pedro.md#pedropath-paths-in-our-field-numbers).
 
 ### How do I follow a path in an autonomous?
@@ -2842,7 +2865,7 @@ s.start("Against our wall, in the left corner tile, facing the field", -56, -61,
  .driveTo("Park", -56, -36, 0, 0.7);     // driveTo works too (it ends any hold first)
 ```
 
-**Why:** each `follow` brakes to a stop at its end; start the next path where the last one ended.
+**Why:** each `follow` brakes to a stop at its end. Start the next path where the last one ended.
 **More:** [Lesson 8: your first path](tutorials/start/08-paths-with-pedro.md#5-write-your-first-path), [follow](modules/pedro.md#follow-the-autonomous-step).
 
 ### How do I drive two paths with no stop, slow down, or hold at the end?
@@ -2885,13 +2908,13 @@ static final PedroPath WATCH_GOAL = PedroPath.line(-30, -30, -56, -36).facePoint
 static final PedroPath DRIVE_THEN_TURN = PedroPath.line(-56, -61, -30, -30).turnTo(0, 90, 0.7, 1);
 ```
 
-**Why:** `turnTo(a, b)` turns all along the part. The two more numbers say on which stretch it turns (0 = the
-part's start, 1 = its end): `0, 0.3` turns first, then drives; `0.7, 1` drives first, then turns.
+**Why:** `turnTo(a, b)` turns all along the part. The two extra numbers say on which stretch it turns (0 = the
+part's start, 1 = its end). `0, 0.3` turns first, then drives. `0.7, 1` drives first, then turns.
 **More:** [PedroPath: the heading](modules/pedro.md#pedropath-paths-in-our-field-numbers).
 
 ### How do I start something partway along a path?
 
-**Where:** your autonomous, `steps(...)`. Android Studio shows `PathAt` in red: Alt+Enter adds the import.
+**Where:** your autonomous, `steps(...)`. Android Studio shows `PathAt` in red. Press Alt+Enter to add the import.
 
 <!-- recipe: pedro-along -->
 ```java title="autos/YourAuto.java"
@@ -2903,13 +2926,13 @@ s.start("Against our wall, in the left corner tile, facing the field", -56, -61,
  .waitSeconds("Score (the robot holds still)", 0.5);
 ```
 
-Also `PathAt.fraction(0.5, ...)` (halfway along the whole path), `PathAt.inchesDone(10, ...)`,
-`PathAt.near(x, y, 6, ...)`, e.g. `PathAt.inchesLeft(12, "Spin up", robot.launcher::spinUp)`, or an action from
-your `Actions.java` instead of a name and a command (`PathAt.inchesLeft(12, Actions.scoreHigh(robot))`: any
-action you wrote).
+You can also use `PathAt.fraction(0.5, ...)` (halfway along the whole path), `PathAt.inchesDone(10, ...)`
+and `PathAt.near(x, y, 6, ...)`, for example `PathAt.inchesLeft(12, "Spin up", robot.launcher::spinUp)`.
+In place of a name and a command, you can give an action from your `Actions.java`
+(`PathAt.inchesLeft(12, Actions.scoreHigh(robot))`: any action you wrote).
 
 **Why:** the robot does not stop to start a mechanism, and Pedro has no "do this here" of its own. If the
-path ends early, the report says which did not start (`STALLED, not fired: Intake off`).
+path ends early, the report says which ones did not start (`STALLED, not fired: Intake off`).
 **More:** [Do things along the path](modules/pedro.md#do-things-along-the-path).
 
 ## Telemetry
@@ -2926,8 +2949,8 @@ show("Intake on", robot.intake::isRunning);                 // shows "Intake on 
 show("Flywheel ready", () -> robot.launcher.isReady());
 ```
 
-**Why:** you see what the robot "thinks" while you drive. The value must be quick to read (no waiting).
-**More:** [The button menu: feedback](guides/buttons.md#4-feedback). Debug lines (loop time and more): hold gamepad 1 START, then press BACK (BACK first is just a pause).
+**Why:** you see what the robot "thinks" while you drive. The value must be quick to read, with no waiting.
+**More:** [The button menu: feedback](guides/buttons.md#4-feedback). For debug lines (loop time and more), hold gamepad 1 START, then press BACK. The lines turn on or off when you let go. BACK first only pauses the robot. When the alliance switch is on, let go before 1.5 s: a 1.5 s hold switches the alliance and does not change the debug lines.
 
 ### How do I round a number on the Driver Station?
 
@@ -2939,7 +2962,7 @@ show("Flywheel ready", () -> robot.launcher.isReady());
 show("Target RPM", () -> String.format(Locale.US, "%.0f", robot.launcher.targetRpm()));
 ```
 
-**Why:** `%.0f` means "a number with 0 decimals"; `%.2f` gives 2.
+**Why:** `%.0f` means "a number with 0 decimals", and `%.2f` gives 2.
 **More:** [The button menu: feedback](guides/buttons.md#4-feedback).
 
 ### How do I show lines from my own autonomous step?
@@ -2960,15 +2983,15 @@ s.step("Spin up", ctx -> {
 });
 ```
 
-**Why:** `ctx.loop()` keeps the robot running inside your loop, and the time limit makes sure the loop ends.
-**More:** [Your own steps](guides/autonomous-builder.md#6-your-own-steps), [The report](guides/autonomous-builder.md#the-report).
+**Why:** `ctx.loop()` keeps the robot running inside your loop. The time limit makes sure that the loop ends.
+**More:** [Your own steps](building-autos/06-advanced-autos.md#write-your-own-step), [The report](building-autos/07-match-day.md#after-the-match-read-the-report).
 
 ## Lights
 
-A colored light on the robot tells the drivers what the robot "knows" (full, ready, a mode on) without
-looking at the Driver Station. The color names need `import com.crossbotics.ftchelper.robot.LightColor;`
+A colored light on the robot tells the drivers what the robot "knows" (full, ready, a mode on), so they
+do not have to look at the Driver Station. The color names need `import com.crossbotics.ftchelper.robot.LightColor;`
 at the top of each file that uses them: `Controls.java`, and `Actions.java` if an action flashes the
-light (Alt+Enter on a red `LightColor` adds it). All of it: [Lights](modules/robot.md#lights).
+light. To add it, press Alt+Enter on a red `LightColor`. The full details: [Lights](reference/parts/lights.md).
 
 ### How do I add a colored light for the drivers?
 
@@ -2983,10 +3006,10 @@ lights = add(Lights.gobilda("light"));
 //   lights = add(Lights.blinkin("blinkin"));
 ```
 
-1. `Controls.java` needs `import com.crossbotics.ftchelper.robot.LightColor;` for the colors (Alt+Enter on a red `LightColor` adds it).
+1. `Controls.java` needs `import com.crossbotics.ftchelper.robot.LightColor;` for the colors. To add it, press Alt+Enter on a red `LightColor`.
 
-**Why:** one line, like any part. It has no numbers and no buttons of its own: the colors come from your rules.
-**More:** [Lights](modules/robot.md#lights) (the parts and their color tables).
+**Why:** the light is one line, like any part. It has no numbers and no buttons of its own: the colors come from your rules.
+**More:** [Lights](reference/parts/lights.md) (the parts and their color tables).
 
 ### How do I change a color on a REV Blinkin?
 
@@ -3003,8 +3026,8 @@ lights.blinkinPattern(LightColor.BLUE, RevBlinkinLedDriver.BlinkinPattern.BLUE_V
 
 1. The pattern names are on REV's Blinkin page. Other lights ignore this line.
 
-**Why:** each `LightColor` is one of the Blinkin's patterns (`BLUE` is its plain blue). LED strips differ:
-when one color looks wrong on yours, give that color another pattern. Your rules keep saying
+**Why:** each `LightColor` is one of the Blinkin's patterns (`BLUE` is its plain blue). LED strips differ.
+When one color looks wrong on yours, give that color another pattern. Your rules still say
 `LightColor.BLUE`. A goBILDA light ignores the line.
 
 ### How do I show a color when something is true?
@@ -3021,17 +3044,18 @@ robot.lights.show(LightColor.PURPLE).when(robot.intake::isRunning);             
 robot.lights.otherwise(LightColor.OFF);                                         // none true
 ```
 
-**Why:** any true/false works as a rule: a part's method (`robot.intake::isRunning`), a mode
-(`() -> robot.turret.followMode().isOn()`: the turret follows the goal; on a robot without a turret,
-`() -> robot.aimMode().isOn()`: whole-robot aim is on), or your own test
-(`() -> robot.lift.position() > 1000`, if your robot has a lift). Blinking stops at 5 times a second, and
-the light never changes faster than every 0.1 s (FTC rule R202 J).
-**More:** [Lights](modules/robot.md#lights), [lambdas](tutorials/start/05-actions.md).
+**Why:** any true/false works as a rule:
+- a part's method (`robot.intake::isRunning`)
+- a mode: `() -> robot.turret.followMode().isOn()` (the turret follows the goal), or on a robot without a turret, `() -> robot.aimMode().isOn()` (whole-robot aim is on)
+- your own test (`() -> robot.lift.position() > 1000`, if your robot has a lift)
+
+Blinking is at most 5 times a second, and the light never changes faster than every 0.1 s (FTC rule R202 J).
+**More:** [Lights](reference/parts/lights.md), [lambdas](tutorials/start/05-actions.md).
 
 ### How do I show the alliance on the light before the match?
 
-**Where:** nothing to add: it is on by default. To change its colors or turn it off, `Controls.java`,
-inside `buttons(...)`.
+**Where:** you add nothing, because it is on by default. To change its colors or turn it off, write in
+`Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: light-alliance -->
 ```java title="Controls.java"
@@ -3042,14 +3066,14 @@ robot.lights.allianceColors(LightColor.BLUE, LightColor.PURPLE);
 //     robot.lights.allianceAtInit(false);
 ```
 
-1. Until an alliance is chosen, the light blinks white. You do not write anything for this.
-2. Your rules then show from INIT on. Or, in `Tunables.java`, in the light's section: `public static class Light { public static boolean allianceAtInit = false; }`. The line in `Controls.java` wins.
+1. Until the drivers choose an alliance, the light blinks white. You do not write anything for this.
+2. Your rules then show from INIT on. Or, in `Tunables.java`, write this in the light's section: `public static class Light { public static boolean allianceAtInit = false; }`. The line in `Controls.java` wins.
 
-**Why:** a wrong alliance pick in INIT aims at the other alliance's goal all match. With the light solid
-RED or BLUE before ▶ (white blinking once a second until the drivers pick), the drive team sees a wrong
-pick from the field. The game manual has no rule against a light in your alliance color; the ROBOT SIGNS
-are still required (R401, R402). Keep your own rules' colors away from red and blue.
-**More:** [Lights](modules/robot.md#the-alliance-at-init).
+**Why:** with a wrong alliance pick in INIT, the robot aims at the other alliance's goal all match. The
+light is solid RED or BLUE before ▶ (white, blinking once a second, until the drivers pick). So the drive
+team sees a wrong pick from the field. The game manual has no rule against a light in your alliance
+color, but the ROBOT SIGNS are still required (R401, R402). Keep your own rules' colors away from red and blue.
+**More:** [Lights](reference/parts/lights.md#the-alliance-at-init).
 
 ### How do I flash the light when something happens?
 
@@ -3064,13 +3088,13 @@ robot.lights.show(LightColor.WHITE).forSeconds(0.2)
 g2.a.press(() -> robot.lights.flash(LightColor.YELLOW)).says("flash the light (signal the partner)");
 ```
 
-1. A flash wins wherever it is written. The launcher counts the pieces it feeds. The flash is 0.2 s, so two quick shots are two flashes, not one long one.
+1. A flash wins, wherever you write it. The launcher counts the pieces it feeds. The flash is 0.2 s, so two quick shots are two flashes, not one long one.
 
 **Why:** `whenCountGoesUp` flashes each time the number goes up, so each flash is a real shot.
 `whenStarts(test)` flashes when a true/false turns from false to true (`whenStarts(robot.intake::isRunning)`:
-the intake just started). A flash lasts 0.5 s; `.forSeconds(...)` before `when...` changes it (shorter here,
-so two shots a quarter second apart are two flashes, not one long one). `flash(color)` from a button or
-an action flashes once.
+the intake has started). A flash lasts 0.5 s. `.forSeconds(...)` before `when...` changes it. Here it is
+shorter, so two shots a quarter second apart are two flashes, not one long one. `flash(color)` from a
+button or an action flashes once.
 
 ### How do I flash the light when an action is done?
 
@@ -3092,9 +3116,8 @@ public static Action shootTwo(Robot r) {
 
 1. A GREEN flash over the GREEN "ready" rule cannot be seen. Pick another color, or a longer time.
 
-**Why:** the light is never "claimed" by an action, so any action (or button) may flash it. A flash
-beats every rule, but a flash in the same color as the rule under it cannot be seen: pick another color,
-or a longer time.
+**Why:** no action "claims" the light, so any action (or button) may flash it. A flash beats every rule.
+But you cannot see a flash in the same color as the rule under it, so pick another color, or a longer time.
 
 ### How do I blink the light in the last 20 seconds?
 
@@ -3106,19 +3129,19 @@ or a longer time.
 robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);
 ```
 
-**Why:** the time counts from ▶ (TeleOp's 2:00), like the gamepad buzzes: about a second off from
-the field clock, fine for a reminder.
+**Why:** the time counts from ▶ (TeleOp's 2:00), like the gamepad buzzes. It is about a second off from
+the field clock, which is good enough for a reminder.
 
 ## Tuning and finders
 
 ### Where do the numbers go?
 
 In `Tunables.java`, one section per part (see [the lift recipe](#how-do-i-add-a-lift-with-set-heights)).
-A finder shows lines like `Tunables.Claw: P1 = 0.210, P2 = 0.770`: copy them into that section (keep the other lines) and give
-P1 and P2 real names. A number you leave out uses the library's default (INIT says which), except a
-lift's or arm's `min` and `max`: those must be written.
+A finder (a program that measures a number on the robot) shows lines like `Tunables.Claw: P1 = 0.210, P2 = 0.770`.
+Copy them into that section, keep the other lines, and give P1 and P2 real names. A number you leave out
+uses the library's default (INIT says which). The exception is a lift's or arm's `min` and `max`: you must write those.
 
-**More:** [Tunables.java](modules/robot.md#tunablesjava), [Finding your numbers](guides/finders.md).
+**More:** [Tunables.java](reference/tunables.md), [Finding your numbers](guides/finders.md).
 
 ### How do I find a servo's open and closed numbers?
 
@@ -3133,13 +3156,14 @@ public class ServoFinder extends ServoFinderOpMode {
 }
 ```
 
-**Use it:** robot on a block. Run "Cookbook Servo Finder" (your name for it). Choose the servo (D-pad, A).
-A servo cannot say where it is, so choose a start number close to where it sits now (D-pad, A). Nudge it
-with the D-pad. At each end of its safe travel (just before it pushes on the frame) press X, then B. Then
-move it to each position you need and press A: for example fully open, A (that is P1); closed, A (P2). Copy the line it shows (`Tunables.Claw: P1 = 0.210, P2 = 0.770`)
-into `Tunables.java` and rename P1, P2 (`open`, `closed`). A part with
-[`.fullRange()`](#how-do-i-get-my-servos-full-range) in Robot.java: press Y while choosing the servo first.
-**Why:** a servo pushed past its end hums, gets hot and breaks; the finder finds the safe numbers.
+**Use it:** put the robot on a block. Run "Cookbook Servo Finder" (your name for it). Choose the servo
+(D-pad, A). A servo cannot say where it is, so choose a start number close to where it sits now (D-pad,
+A). Nudge it with the D-pad. At each end of its safe travel (right before it pushes on the frame), press X,
+then B. Then move it to each position you need and press A. For example: fully open, A (that is P1);
+closed, A (P2). Copy the line it shows (`Tunables.Claw: P1 = 0.210, P2 = 0.770`)
+into `Tunables.java` and rename P1, P2 (`open`, `closed`). For a part with
+[`.fullRange()`](#how-do-i-get-my-servos-full-range) in Robot.java, press Y first, while you choose the servo.
+**Why:** a servo pushed past its end hums, gets hot and breaks. The finder finds the safe numbers.
 **More:** [Servo Finder](guides/finders.md#servo-finder-ends-and-positions), [the order](guides/finders.md#the-order).
 
 ### How do I find a lift's limits and heights?
@@ -3155,21 +3179,21 @@ public class MotorFinder extends MotorFinderOpMode {
 }
 ```
 
-**Use it:** put the lift all the way down first (the count starts at 0 there). Choose the motor (D-pad,
-A). Move it slowly with the right stick. Press X just above the bottom and B just below the top, then
-A at each height you need. Copy the line it shows (`Tunables.Lift: min = 0, max = 2580, P1 = 1200`)
+**Use it:** first put the lift all the way down, because the count starts at 0 there. Choose the motor
+(D-pad, A). Move it slowly with the right stick. Press X a little above the bottom and B a little below the top.
+Then press A at each height you need. Copy the line it shows (`Tunables.Lift: min = 0, max = 2580, P1 = 1200`)
 into `Tunables.java` and rename P1 (`low`).
-**Why:** a wrong top limit drives the lift into its hard stop; measured limits keep it safe.
+**Why:** a wrong top limit drives the lift into its hard stop. Measured limits keep it safe.
 **More:** [Motor Finder](guides/finders.md#motor-finder-limits-positions-top-speed).
 
 ### How do I change a number while the robot runs?
 
-No code needed with the five files. In the TeleOp (PRACTICE profile), after ▶, **hold GUIDE for
-1 second**: the tuning menu opens. D-pad up/down chooses, right/left changes, **A** saves it on the
-hub, **B** lists the changed values. **Then copy each good value into `Tunables.java`**: a value saved
-only on the hub is lost with a new Control Hub, and your teammates cannot see it.
+With the five files, you write no code for this. In the TeleOp (PRACTICE profile), after ▶, **hold GUIDE
+for 1 second**, and the tuning menu opens. D-pad up/down chooses a number, and right/left changes it.
+**A** saves it on the hub, and **B** lists the changed values. **Then copy each good value into
+`Tunables.java`.** A value saved only on the hub is lost with a new Control Hub, and your teammates cannot see it.
 
-**Why:** you see the effect at once, with no rebuild.
+**Why:** you see the effect at once, and you do not have to build and install again.
 **More:** [Tuning](guides/tuning.md#3-use-it), [Lesson 4: tune the lift live](tutorials/start/04-lift-and-claw.md#6-tune-the-lift-live).
 
 ### How do I tune the drive for autonomous?
@@ -3189,25 +3213,26 @@ public class DriveTuner extends DriveTunerOpMode {
 }
 ```
 
-**Why:** it measures the real wheel size and strafe correction; copy its lines, then set `Tunables.Drive.calibrated = true`.
-**More:** [Lesson 6: tune the drive first](tutorials/start/06-first-autonomous.md#1-tune-the-drive-first), [Drive Tuner](guides/finders.md#drive-tuner-wheel-size-and-strafe-correction).
+**Why:** the tuner measures the real wheel size and strafe correction. Copy its lines, then set `Tunables.Drive.calibrated = true`.
+**More:** [Tune the drive first](five-files/05-autos.md#tune-the-drive-first), [Drive Tuner](guides/finders.md#drive-tuner-wheel-size-and-strafe-correction).
 
 ### How do I set the flywheel numbers?
 
-Before you have them, write `DEFAULT` in their place (or leave the lines out): the launcher
-starts from the parts catalog's numbers for its motor
-(a goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117, and 60% of its top speed, 3600 RPM) and INIT
-says so. Then run the **Flywheel Finder** (in the [starter kit](starter-kit.md)) and copy its line into
-`Tunables.Launcher` (see [the launcher recipe](#how-do-i-add-a-launcher-flywheel-and-feeder)). Do not copy
-another robot's gains: they were found for its wheel.
+Before you have them, write `DEFAULT` in their place, or leave the lines out. The launcher then starts
+from the parts catalog's numbers for its motor, and INIT says so. For a goBILDA 6000 RPM motor, these
+are kF 11.7, kP 1.17, kI 0.117, and 60% of its top speed, 3600 RPM. Then run the **Flywheel Finder**
+(in the [starter kit](starter-kit.md)) and copy its line into `Tunables.Launcher` (see
+[the launcher recipe](#how-do-i-add-a-launcher-flywheel-and-feeder)). Do not copy another robot's gains,
+because its team found them for its own wheel.
 
-**Why:** the right `kP`..`kF` make the wheel get back to speed fast after each shot.
+**Why:** the right `kP`..`kF` (the gains: how hard the motor pushes toward the target speed) make the
+wheel get back to speed fast after each shot.
 **More:** [Flywheel Finder](guides/finders.md#flywheel-finder-gains-and-recovery).
 
 ### How do I build a shot table (speed for each distance)?
 
 **Where:** a new file in TeamCode, `ShotTuner.java`. Run the [Aim Tuner](guides/finders.md#aim-tuner-camera-offset) first.
-The whole file: its first line is `package org.firstinspires.ftc.teamcode;` (Android Studio writes it
+Below is the whole file. Its first line is `package org.firstinspires.ftc.teamcode;` (Android Studio writes it
 when you make the file), then:
 
 <!-- recipe: shot-tuner -->
@@ -3228,10 +3253,11 @@ public class ShotTuner extends ShotTunerOpMode {
 }
 ```
 
-**Why:** at each distance you shoot 3-5 per speed and mark each HIT (A) or MISS (B), all on gamepad 1
-(left stick click takes the last mark back); X keeps the speed with the best hit ratio (hits out of
-shots). It fills `Tunables.Launcher.speedByDistance` (one line per table to copy), so the
-launcher picks the speed for each distance.
+**Why:** the launcher needs a speed for each distance. At each distance, you shoot 3-5 times per speed
+and mark each HIT (A) or MISS (B), all on gamepad 1. A left stick click takes the last mark back. X
+keeps the speed with the best hit ratio (hits out of shots). The tuner fills
+`Tunables.Launcher.speedByDistance` (one line per table to copy), so the launcher picks the speed for
+each distance.
 **More:** [Shot Tuner](guides/finders.md#shot-tuner-the-shot-table).
 
 ### How do I find my hood's stops and angles?
@@ -3257,9 +3283,9 @@ public class HoodFinder extends HoodFinderOpMode {
 }
 ```
 
-**Why:** nudge the hood to each stop, back off a hair, X and B: it writes `Tunables.Hood: posA = ..., posB = ...`.
-Hold LB + D-pad to type in the angle you measured before X / B (or A for a point in between, for a
-linkage). Copy the lines into `Tunables.java`.
+**Why:** the hood needs its stops and angles. Nudge the hood to each stop, back off a hair, and press X
+and B. The finder writes `Tunables.Hood: posA = ..., posB = ...`. Before X / B, hold LB + D-pad to type
+in the angle you measured (or press A for a point in between, for a linkage). Copy the lines into `Tunables.java`.
 **More:** [Hood Finder](guides/finders.md#hood-finder).
 
 ## Simulator
@@ -3267,34 +3293,35 @@ linkage). Copy the lines into `Tunables.java`.
 The simulator runs your real code on a laptop, with the field in 3D. The easy way to start it is a
 button in Android Studio (below). Or type the commands in a terminal:
 in Android Studio, the **Terminal** tab at the bottom ([how](setup/09-the-terminal.md)).
-First go into the `ftc-helper-lib` folder by typing `cd ftc-helper-lib`. (It is the library's folder
-inside your robot project, next to `TeamCode` in Android Studio's Project panel. Not there? Ask your
-mentor, or see [Add the library](setup/04-add-the-library.md).) `./gradlew` runs Gradle, the tool that builds the code; `-P...` gives it a setting.
+First go into the `ftc-helper-lib` folder by typing `cd ftc-helper-lib`. It is the library's folder
+inside your robot project, next to `TeamCode` in Android Studio's Project panel. If it is not there, ask
+your mentor, or see [Add the library](setup/04-add-the-library.md). `./gradlew` runs Gradle, the tool
+that builds the code, and `-P...` gives it a setting.
 
 ### How do I start the simulator?
 
-In Android Studio, pick **Simulator** in the list next to the green Run button, and click Run. (No
-**Simulator** in the list? Close the project and open it again: [the buttons](setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing).)
+In Android Studio, pick **Simulator** in the list next to the green Run button, and click Run. If
+**Simulator** is not in the list, close the project and open it again ([the buttons](setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing)).
 Or, in the terminal:
 
 ```bash
 ./gradlew :sim:run
 ```
 
-Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, then ▶. The red
-**Stop** button (or Ctrl+C in the terminal) stops it.
+Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, then ▶. To stop the
+simulator, click the red **Stop** button (or press Ctrl+C in the terminal).
 
 **Why:** you can try buttons and autonomous routes before the robot is built.
 **More:** [Simulator: start it](guides/simulator.md#start-it).
 
 ### How do I see my own robot in the simulator?
 
-Start the simulator (the **Simulator** button, or `./gradlew :sim:run`). It runs your TeamCode, and
-when it starts it makes the simulator's robot file from your `Robot.java`: it prints `Robot file made
+Start the simulator (the **Simulator** button, or `./gradlew :sim:run`). It runs your TeamCode. When it
+starts, it makes the simulator's robot file from your `Robot.java`, and prints `Robot file made
 from Robot.java: simulator/robot.properties`.
 
-**Why:** the robot file then always matches your code. Your own lines in it are kept. Changed the
-code? Stop the simulator and start it again.
+**Why:** the robot file then always matches your code. The simulator keeps your own lines in it. When
+you change the code, stop the simulator and start it again.
 **More:** [A robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava), [Your own robot code](guides/simulator.md#your-own-robot-code).
 
 ### How do I make the simulator draw my part?
@@ -3324,25 +3351,26 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 200)));
 ```
 
-1. The real robot never reads `.looks(...)`. Measure with a tape, or shape the part in the simulator's Edit robot mode and copy its lines.
+1. The real robot never reads `.looks(...)`. Measure with a tape, or shape the part in the simulator's Edit robot mode and copy the lines it shows.
 2. The arm hinges at the front and rests on its stop. The roller rides on the arm's end: `on("intake_arm")`.
 
-**One shape or several:** one shape goes inside `looks(...)` on the part's line. Two or more (an arm
-and its roller): give each a name first (`Shape intakeArm = ...;`), then write `looks(intakeArm, intakeRoller)`
-([how](modules/robot.md#shapes-and-parts)).
-**Why:** without `.looks(...)` the simulator still runs, with a guessed box for each part (marked
-`TODO measure` in the robot file). With it, the 3D view shows your robot, the size check (18 in start
-cube, 29 in tall) is right, and pieces touch the intake where the real one is. Name the part
-(`.part(...)`) too: a roller's or a wheel's size then comes from the parts catalog. **The easy way:**
-the simulator's **Edit robot** mode: drag and size each part on the 3D robot, then copy the
+**One shape or several:** one shape goes inside `looks(...)` on the part's line. For two or more (an arm
+and its roller), give each a name first (`Shape intakeArm = ...;`), then write `looks(intakeArm, intakeRoller)`
+([how](reference/robot-java.md#shapes-and-parts)).
+**Why:** without `.looks(...)`, the simulator still runs, with a guessed box for each part (marked
+`TODO measure` in the robot file). With it, the 3D view shows your robot, and the size check (18 in start
+cube, 29 in tall) is right. Pieces also touch the intake where the real one is. Name the part
+(`.part(...)`) too, so a roller's or a wheel's size comes from the parts catalog. **The easy way:** use
+the simulator's **Edit robot** mode. Drag and size each part on the 3D robot, then copy the
 `.looks(...)` lines it shows into `Robot.java`. After a change, stop the simulator and start it again.
-**More:** [Shapes and parts](modules/robot.md#shapes-and-parts) (every shape and setting),
+**More:** [Shapes and parts](reference/robot-java.md#shapes-and-parts) (every shape and setting),
 [A robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava).
 
 ### How do I test my code with a script?
 
-The easy way: **record** it. In the simulator, **Tests > Record a test**, drive, **Stop recording**,
-keep the ticked checks, **Save**: the simulator writes `simulator/scenarios/NAME.sim` for you
+A script (a scenario file) presses buttons and checks the robot for you. The easy way is to **record**
+it. In the simulator, click **Tests > Record a test**, drive, and click **Stop recording**. Keep the
+ticked checks and click **Save**. The simulator then writes `simulator/scenarios/NAME.sim` for you
 ([start lesson 10](tutorials/start/10-test-your-robot-code.md)). Or write one by hand, for example
 `simulator/scenarios/intake.sim` (the library runs this same file as a test: `sim/scenarios/cookbook-intake.sim`):
 
@@ -3356,8 +3384,8 @@ expect within 1 motor intake power = 0 0.01
 expect error none
 ```
 
-Run every test in the folder: **Tests > Run all tests** on the simulator page, or the **Simulator tests**
-button in Android Studio. Or, in the terminal (leave out `-Pfile` for every test):
+To run every test in the folder, click **Tests > Run all tests** on the simulator page, or the
+**Simulator tests** button in Android Studio. Or use the terminal (leave out `-Pfile` for every test):
 
 ```bash
 ./gradlew :sim:scenario -Pfile=../simulator/scenarios/intake.sim
@@ -3365,14 +3393,14 @@ button in Android Studio. Or, in the terminal (leave out `-Pfile` for every test
 
 It runs your own code (`../TeamCode`, next to the library in your robot project).
 **Why:** a script checks the same things every time, with no clicking, and catches a mistake before a meeting.
-Button names in a scenario are the FTC names, not the Java ones: `g2.rt`, `g2.lb`, `g2.a` are the same,
-but `g2.dpadUp` is `g2.dpad_up` and `g2.leftStickY` is `g2.left_stick_y`.
+A scenario uses the FTC button names, which can differ from the Java names. `g2.rt`, `g2.lb`, `g2.a` are
+the same, but `g2.dpadUp` is `g2.dpad_up` and `g2.leftStickY` is `g2.left_stick_y`.
 
 **More:** [Start lesson 10: Test your robot code](tutorials/start/10-test-your-robot-code.md), [Scenario files](guides/simulator.md#scenario-files-test-without-a-browser) (every command and button name).
 
 ## Not here?
 
-- Every class and method: the [reference](reference.md) and the [module pages](../README.md#what-is-inside).
+- Every class and method: the [reference](reference/README.md) and the [module pages](../README.md#what-is-inside).
 - Something goes wrong: [Troubleshooting](troubleshooting.md).
 - Learn it step by step: the [lessons](tutorials/README.md).
-- A question this page should answer? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
+- A question this page does not answer: [tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
