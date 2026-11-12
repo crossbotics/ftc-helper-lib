@@ -27,7 +27,7 @@ import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
  * }
  * }</pre>
  *
- * Docs: docs/modules/finders.md. Guide: docs/guides/finders.md
+ * Docs: docs/modules/finders.md. Guide: docs/tuning/README.md
  */
 public abstract class MotorDirectionCheckOpMode extends FinderOpMode {
 

@@ -1,0 +1,65 @@
+{
+  "pictures": {
+    "piece-tuner-go-menu": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Tune and check ---",
+        "Robot: Robot",
+        "  Hardware Check: every device found, ...",
+        "  ...",
+        "*> Piece Tuner: what each piece sensor sees",
+        "D-pad up/down = pick, A = open it. Then ▶."
+      ]
+    },
+    "piece-tuner-go-start": {
+      "button": "▶ (start)",
+      "where": "Press on the Driver Hub:",
+      "lines": [
+        "*Piece Tuner: 2 sensor(s). Nothing moves. Press ▶.",
+        "GUIDE (center button), or hold START 1 s = help."
+      ]
+    },
+    "piece-tuner-step-choose": {
+      "button": "D-pad",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "*--- Sensor 1/2: intake_color (color) ---",
+        "Distance : 22 mm",
+        "Color : hue 74 deg, saturation 0.61",
+        "It sees : UNKNOWN",
+        "*--- In front of it: < POLLEN >   (D-pad left/right) ---",
+        "A = measure it, B = forget this sensor's, D-pad up/down ..."
+      ]
+    },
+    "piece-tuner-step-measure": {
+      "button": "A",
+      "where": "Hold the piece still, press:",
+      "order": "press-first",
+      "lines": [
+        "--- In front of it: < POLLEN >   (D-pad left/right) ---",
+        "A = measure it, B = forget this sensor's, D-pad up/down ...",
+        "*Measured POLLEN at intake_color.",
+        "...",
+        "--- Copy into your code ---",
+        "*Tunables.IntakeColor: POLLEN = 74   // its color (hue, ..."
+      ]
+    },
+    "piece-tuner-step-empty": {
+      "button": "A",
+      "where": "With nothing there, press:",
+      "order": "press-first",
+      "lines": [
+        "--- In front of it: < EMPTY >   (D-pad left/right) ---",
+        "*Measured EMPTY at intake_color.",
+        "...",
+        "--- Copy into your code ---",
+        "Tunables.IntakeColor: POLLEN = 74   // its color (hue, ...",
+        "Tunables.IntakeColor: RED_NECTAR = 8   // its color ...",
+        "Tunables.IntakeColor: hueTolerance = 33",
+        "Tunables.IntakeColor: BLUE_NECTAR = 215   // its color ...",
+        "*Tunables.IntakeColor: nearMm = 51   // a piece is there ..."
+      ]
+    }
+  }
+}

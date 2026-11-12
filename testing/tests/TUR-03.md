@@ -8,7 +8,7 @@ minutes: 30
 needs: [turret]
 kit_bots: []
 since: v0.17.0
-docs: [guides/turret-setup.md#1-what-turns-it, guides/finders.md#servo-finder-ends-and-positions, modules/hardware.md#full-range]
+docs: [guides/turret-setup.md#1-what-turns-it, tuning/03-servo-finder.md, modules/hardware.md#full-range]
 ---
 
 ## Why
@@ -25,7 +25,7 @@ angle. A small, cheap turret is common on new teams' robots; we have only tried 
 ## Setup
 
 - `Turret.servo("turret")` in `Robot.java` (add `.follows(camera)` to test the aim too).
-- `Tunables.Turret`: `posA`, `angleA`, `posB`, `angleB` from the [Servo Finder](../../docs/guides/finders.md#servo-finder-ends-and-positions) and a phone angle app, and `travelSec` (time a move from posA to posB).
+- `Tunables.Turret`: `posA`, `angleA`, `posB`, `angleB` from the [Servo Finder](../../docs/tuning/03-servo-finder.md) and a phone angle app, and `travelSec` (time a move from posA to posB).
 - Optional: `.fullRange()` on the line for the servo's whole turn ([MEC-02](MEC-02.md)). Measure posA and posB after turning it on.
 
 ## Steps

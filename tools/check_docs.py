@@ -439,33 +439,37 @@ def check_recipe_sections():
 
 
 def check_finder_order():
-    """docs/guides/finders.md keeps the Tune and check menu's order: its table, its "The order" diagram and its
-    sections. Three different orders confused readers before; the menu (TuneAndCheckOpMode) is the source."""
+    """docs/tuning/ keeps the Tune and check menu's order: the menu table (01-tune-and-check.md), the
+    "tuning order" diagram (README.md) and the tool pages (NN-*.md, in file order). Three different orders
+    confused readers before; the menu (TuneAndCheckOpMode) is the source."""
     java = ROOT / "library/src/main/java/com/crossbotics/ftchelper/finders/TuneAndCheckOpMode.java"
-    guide = ROOT / "docs/guides/finders.md"
+    folder = ROOT / "docs/tuning"
     menu = re.findall(r'new Tool\("([^"]+)"', java.read_text())
-    text = guide.read_text()
-    where = "docs/guides/finders.md"
     if not menu:
         problems.append(f"{java.relative_to(ROOT)}: no menu tools found (new Tool(\"...\"))")
         return
-    table = [m.group(1) for m in re.finditer(r"^\| ([A-Z][A-Za-z ]+?)(?: \(\*\*alpha\*\*\))? \|", text, re.M)
+    first = (folder / "01-tune-and-check.md").read_text()
+    table = [m.group(1) for m in re.finditer(r"^\| ([A-Z][A-Za-z ]+?)(?: \(\*\*alpha\*\*\))? \|", first, re.M)
              if m.group(1) in menu]
     if table != menu:
-        problems.append(f"{where}: the Tune and check table must list the menu's tools in its order: {', '.join(menu)}")
-    # the diagram and the sections: the menu's tools in the menu's order (the own-file tools may sit between)
-    block = text[text.index("## The order"):text.index("## Before you start")]
+        problems.append(f"docs/tuning/01-tune-and-check.md: the Tune and check table must list the menu's tools in its order: {', '.join(menu)}")
+    # the diagram: the menu's tools in the menu's order (the wiring checks are one box; the own-file tools may sit between)
+    readme = (folder / "README.md").read_text()
+    block = readme[readme.index("```mermaid"):]
+    block = block[:block.index("```", 3)]
     diagram = [n for n in re.findall(r'\["([A-Z][A-Za-z ]+?)(?: \(own file\))?<br/>', block) if n in menu]
-    if diagram != menu:
-        problems.append(f"{where}: \"The order\" diagram must show the menu's tools in its order: {', '.join(menu)}")
-    sections = []
-    for h in re.findall(r"^## (.+)$", text, re.M):
-        name = re.split(r":| \(", h)[0].strip()
-        if name in menu:
-            sections.append(name)
-    expected = [n for n in menu if n != "Hardware Check"]   # the Hardware Check has its own page (testing.md)
-    if sections != expected:
-        problems.append(f"{where}: the tool sections must follow the menu's order: {', '.join(expected)} (found {', '.join(sections)})")
+    wiring = ["Hardware Check", "Motor Direction Check", "Encoder Check"]
+    if diagram != [n for n in menu if n not in wiring]:
+        problems.append(f"docs/tuning/README.md: the tuning order diagram must show the menu's tools in its order: {', '.join(menu)}")
+    # the pages: in file order, each page's title and sections name the menu's tools in the menu's order
+    pages = []
+    for p in sorted(folder.glob("[0-9][0-9]-*.md")):
+        for h in re.findall(r"^#{1,2} (.+)$", p.read_text(), re.M):
+            name = re.split(r":| \(", h)[0].strip()
+            if name in menu and name not in pages:
+                pages.append(name)
+    if pages != menu:
+        problems.append(f"docs/tuning/: the tool pages must follow the menu's order: {', '.join(menu)} (found {', '.join(pages)})")
 
 
 # Skills (skills/<name>/*.md) are instructions for teams' AI agents. They name library paths; a renamed or
@@ -490,7 +494,6 @@ def check_skills():
     for folder in sorted(p.name for p in (ROOT / "docs").iterdir() if p.is_dir() and p.name != "images"):
         if f"`docs/{folder}/" not in text:
             problems.append(f"skills/ftc-helper/SKILL.md: add docs/{folder}/ to its \"Where to look\" table")
-
 
 
 check_links()

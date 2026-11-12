@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Finds a flywheel's speed-control numbers. Step 1 measures the top speed at full power and works
  * out starting gains from it. Step 2 holds a speed you choose, so you can fine-tune the main gain
- * (F), feed a piece by hand, and see how fast the wheel gets back to speed after a shot.
+ * (F), feed a piece (with the feeder or a stick, never fingers), and see how fast the wheel gets back to speed after a shot.
  * No code to write: it lists every motor in the robot configuration.
  *
  * <p>It shows the code for {@code Flywheel} and, for the robot in five files, the line for
@@ -28,7 +28,7 @@ import java.util.List;
  * Choose:  D-pad up/down = motor, A = use it
  * Step 1:  hold A = full power (at most 5 s). Release when the speed stops rising.
  * Step 2:  B = hold a speed on/off. D-pad up/down = +/- 100 RPM, right/left = +/- 25 RPM.
- *          RB / LB = F gain +2% / -2%. Feed a piece by hand: it shows the recovery time.
+ *          RB / LB = F gain +2% / -2%. Feed a piece with the feeder or a stick (never fingers): it shows the recovery time.
  *          X = the wheel spins the wrong way: reverse it (for both steps; adds .reversed())
  *          BACK = choose another motor
  * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
@@ -39,7 +39,7 @@ import java.util.List;
  * public class FlywheelFinder extends FlywheelFinderOpMode { }}. If the encoder is not on the
  * motor's own shaft at 28 counts per turn, override {@link #countsPerRev()}.
  *
- * Docs: docs/modules/finders.md. Guide: docs/guides/finders.md
+ * Docs: docs/modules/finders.md. Guide: docs/tuning/README.md
  */
 public abstract class FlywheelFinderOpMode extends FinderOpMode {
 
@@ -334,7 +334,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             "   +/-100 RPM, right/left = +/-25 RPM.",
             "4. Too slow at every speed: {RB} (F +2%).",
             "   Too fast: {LB} (F -2%).",
-            "5. Feed a piece by hand: the recovery time shows.",
+            "5. Feed: feeder or stick, NO fingers. See recovery.",
             "   {B} again = stop. {BACK} = another motor.",
             "STOP saves the lines (gains + the battery volts).",
         };

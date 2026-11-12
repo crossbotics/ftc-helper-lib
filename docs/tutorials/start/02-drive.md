@@ -167,7 +167,7 @@ the ground.**
    Pick **Motor Direction Check** with the D-pad, press A, then ▶ (start on the Driver Hub). It reads the
    directions from Robot.java. Hold X, Y, A or B, and each spins one wheel at 30%: front left, front right,
    back left, back right. On a two-motor tank, X = left and Y = right. The screen shows the motor's name.
-   **Every wheel must roll the way that moves the robot forward.** ([More](../../guides/finders.md#motor-direction-check-each-wheel-rolls-forward))
+   **Every wheel must roll the way that moves the robot forward.** ([More](../../tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward))
 3. **When a wheel rolls backward:** change `.reversed(...)` in Robot.java so that motor's setting flips.
    Add its name to the list, or take it out. Remember that the list replaces the default (the left side). For
    example, if the lesson robot's back right wheel rolls backward, it needs
@@ -175,7 +175,7 @@ the ground.**
 4. **Each encoder in its own port:** in **Tune and check**, pick **Encoder Check**, press A, then ▶. Hold A,
    and each motor turns a little, one at a time. Every drive motor must say `OK: counts up`. A wrong line names
    the fault: a cable missing, or two cables swapped. Later lessons trust these counts.
-   ([More](../../guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port))
+   ([More](../../tuning/02-wiring-checks.md#encoder-check-each-encoder-cable-in-its-own-port))
 5. **The IMU:** run your TeleOp. Hold gamepad 1's small **START** button (OPTIONS on a PS controller), then
    press **BACK** while you still hold START. This turns on the extra **debug lines** on the Driver Station:
    more numbers for checking, like powers and the `Heading`. It does not pause. Turn the robot LEFT by hand.

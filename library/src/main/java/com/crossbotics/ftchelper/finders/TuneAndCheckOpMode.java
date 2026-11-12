@@ -36,9 +36,9 @@ import java.util.function.Supplier;
  * tools that need no robot (Hardware Check, Servo, Motor and Flywheel finders).
  *
  * <p>Not in the menu: the Aim Tuner and the Characterizer. They need your camera or your lifts, so they
- * keep their own file (docs/guides/finders.md).
+ * keep their own file (docs/tuning/01-tune-and-check.md).
  *
- * Docs: docs/guides/finders.md, "Tune and check"
+ * Docs: docs/tuning/01-tune-and-check.md, "Tune and check"
  */
 @TeleOp(name = TuneAndCheckOpMode.NAME, group = "Finders")
 public class TuneAndCheckOpMode extends LinearOpMode {

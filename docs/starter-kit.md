@@ -24,7 +24,7 @@ names and numbers, and you have a working robot.
 | 4 | `StarterAuto.java` | what every autonomous shares | nothing |
 | 5 | `AutoScoreAndPark.java` | one autonomous (copy for more) | the steps |
 | 6 | `HardwareCheck.java` | tests every device | nothing |
-| + | `ServoFinder.java`, `MotorFinder.java`, `FlywheelFinder.java`, `DriveTuner.java`, `Characterizer.java` | [finders](guides/finders.md): measure servo ends, lift limits, flywheel gains, wheel size, how the motors move on the robot (feedforward, simulator), and show the code to copy | `Characterizer`: your lift/arm limits and flywheel names |
+| + | `ServoFinder.java`, `MotorFinder.java`, `FlywheelFinder.java`, `DriveTuner.java`, `Characterizer.java` | [finders](tuning/README.md): measure servo ends, lift limits, flywheel gains, wheel size, how the motors move on the robot (feedforward, simulator), and show the code to copy | `Characterizer`: your lift/arm limits and flywheel names |
 
 ```mermaid
 flowchart LR
@@ -47,14 +47,14 @@ flowchart LR
 4. **Hardware Check** (robot on a block): check that it lists every device, and that every motor turns the right way.
    Fix directions in `RobotSettings` / `Robot`. Write down servo positions.
 5. **`Robot.java`**: delete mechanisms you do not have. Find each servo's and lift's limits and
-   positions with the **Servo Finder** and **Motor Finder** ([finders](guides/finders.md): small
+   positions with the **Servo Finder** and **Motor Finder** ([finders](tuning/README.md): small
    OpModes that measure a number and show the code line to copy). Copy the lines they show. [mechanism.md](modules/mechanism.md) explains each mechanism type.
 6. **Main TeleOp**: drive at the PRACTICE profile's gentle power (a profile is a set of limits:
    PRACTICE is gentle for the shop, COMPETITION is full power). It starts robot-centric. Double-tap Y to turn
    field-centric on. Check every button in [the list](#the-buttons). Print that list for the
    drive team.
 7. **Tune** the lift with the tuning menu (GUIDE button, PRACTICE profile), then copy the numbers into
-   `Robot.java` ([tuning guide](guides/tuning.md)).
+   `Robot.java` ([tuning guide](tuning/16-tuning-menu.md)).
 8. **Autonomous**: tune the drivetrain with the **Drive Tuner** finder, set `calibrationConfirmed = true`,
    then change `AutoScoreAndPark`'s steps for your game ([easy autos](guides/easy-autos.md)).
 9. **Before the event**: pick the COMPETITION profile, and go through the [testing checklist](guides/testing.md).
@@ -113,7 +113,7 @@ all = new Subsystems().add(lift, claw, intake); // (8)!
    D = 0.0002 calms it so it does not overshoot, F = 0.05 is a small steady push up that holds it
    against gravity. These are starting values: tune yours ([lesson 07](tutorials/07-pid-lift.md)).
 6. The gains and heights are then in the tuning menu as "Lift/...": change them from the gamepad in the
-   PRACTICE profile, then copy the good values back into this file ([tuning guide](guides/tuning.md)).
+   PRACTICE profile, then copy the good values back into this file ([tuning guide](tuning/16-tuning-menu.md)).
    The code is the record.
 7. A servo cannot say where it is, so the claw guesses when it has finished moving from this time: about
    how many seconds the servo takes to move the whole way (0 to 1).
@@ -147,7 +147,7 @@ public AutoDriveConfig auto() {
 ```
 
 1. Mecanum wheels slip sideways, so the robot moves less sideways than the wheels turn. 1.15 makes up
-   for that. The [Drive Tuner](guides/finders.md#drive-tuner-wheel-size-and-strafe-correction) measures
+   for that. The [Drive Tuner](tuning/08-drive-tuner.md) measures
    yours on field tiles.
 2. A safety switch: the autonomous stops in INIT with a message while it is false. A wrong wheel size,
    a reversed motor or a wrong IMU mounting makes an autonomous drive somewhere you did not plan.

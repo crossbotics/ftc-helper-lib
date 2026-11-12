@@ -181,14 +181,14 @@ comments:
   motor's numbers. The feeder roller is a Smart Robot Servo V2 (Balanced) in continuous (CR) mode.
   REV's code spins the flywheel "to the target velocity", but the page does not give the number.
   `speedRpm = 3000` is a guess, and so is the feeder's 0.4 s per piece. Find kF and kP with the
-  [Flywheel Finder](finders.md#flywheel-finder-gains-and-recovery). Then find the speed by watching shots.
+  [Flywheel Finder](../tuning/06-flywheel-finder.md). Then find the speed by watching shots.
 - **Fire all (Y):** the launcher spins up. As soon as the wheel is at speed, it feeds the pieces one by one.
   It uses only the launcher, so the driver can still run the intake. With fewer than 4 pieces, the feeder
   only turns a few more times.
 - **Poker:** a Smart Robot Servo V2 (Balanced) with two spots, as in REV's code. A = `down`: out over a
   FLOWER, to comb POLLEN out of it. B = `up`: folded along the side, the start. REV's page has no
   numbers for them, so both are `MEASURE`. INIT stops until you measure them with the
-  [Servo Finder](finders.md#servo-finder-ends-and-positions) and write them in `Tunables.java`.
+  [Servo Finder](../tuning/03-servo-finder.md) and write them in `Tunables.java`.
   **Why:** a guess could swing the poker into the frame. The simulator's REV robot file has stand-ins
   for them, so it runs before you measure. Nothing moves at INIT, so the code does not fold the poker. Fold
   it by hand before INIT, so the robot fits the 18 in start cube. The poker first moves when A, B or an
@@ -426,7 +426,7 @@ facts are not in the code's comments:
   so 4000 is a starting guess with room to speed up. Tune it by watching shots.
 - **The flap** (`fwActuator`) pushes each piece into the wheels: rest = 0 and push = 0.2, from Studica's
   code (X and A). The flap goes to rest when the OpMode starts (▶). Your servo's horn may sit differently
-  from Studica's, so measure both with the [Servo Finder](finders.md#servo-finder-ends-and-positions)
+  from Studica's, so measure both with the [Servo Finder](../tuning/03-servo-finder.md)
   BEFORE the first TeleOp. The push and return times are guesses.
 - **Fire all (Y):** the launcher spins up. As soon as the wheel is at speed, the flap pushes the pieces in
   one by one. It uses only the launcher, so the driver can still run the intake.

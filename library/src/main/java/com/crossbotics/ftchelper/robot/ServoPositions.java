@@ -218,7 +218,7 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
     @Override
     String toolFor(String field) {
         if (field.equals("travelSec")) return "time a full move (0 to 1)";
-        return "the Servo Finder (a position: P1, P2...), docs/guides/finders.md#servo-finder-ends-and-positions";
+        return "the Servo Finder (a position: P1, P2...), docs/tuning/03-servo-finder.md";
     }
 
     // ----------------------------- commands -----------------------------

@@ -74,7 +74,7 @@ already has one. The message ends with the line to change: move that feature to 
 - or the same for <samp>Arm</samp>, in <samp>deg</samp>
 
 INIT stops on purpose: a lift or arm
-must never use a library default for its safe range. Run the [Motor Finder](guides/finders.md), then
+must never use a library default for its safe range. Run the [Motor Finder](tuning/README.md), then
 write `min` and `max` in that section of `Tunables.java`.
 
 **<samp>Tunables.Lift.max must be a public static number (like "public static double max = 1000;"): ...</samp>**
@@ -137,7 +137,7 @@ robot in five files, run the Drive Tuner, then set `Tunables.Drive.calibrated = 
 | <samp>homing failed: switch not found</samp> (turret) | the switch never closed: wire, magnet gap, or the wrong direction in `home(...)` |
 | <samp>follower encoder not reading: follower switched off</samp> (flywheel) | the second flywheel motor has no encoder cable: plug it in (or use one motor) |
 | <samp>Launcher gave up: flywheel</samp> (or <samp>hood</samp>, <samp>Turret</samp>...) | it was not ready in time: that part is the problem |
-| <samp>Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, ...</samp> | normal on a first run: with no gains written, it starts from the motor's catalog numbers. The wheel gets to speed, but slower after each shot than when tuned: run the [Flywheel Finder](guides/finders.md#flywheel-finder-gains-and-recovery) and write its line ([First run](reference/tunables.md#first-run-what-you-get-before-tuning)) |
+| <samp>Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, ...</samp> | normal on a first run: with no gains written, it starts from the motor's catalog numbers. The wheel gets to speed, but slower after each shot than when tuned: run the [Flywheel Finder](tuning/06-flywheel-finder.md) and write its line ([First run](reference/tunables.md#first-run-what-you-get-before-tuning)) |
 | <samp>Aim odometry: the pose was never set ...</samp> | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended)) |
 | <samp>No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry</samp> | someone held gamepad 1 START 1 s ("set pose here"), but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
 | <samp>Alliance now RED (was BLUE)</samp> | the alliance switch is on (`lib.switchAlliance(...)`) and someone held gamepad 1 START, then BACK, 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](reference/controls.md#controlmap)) |
@@ -177,7 +177,7 @@ Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) o
 **A lift or arm runs past its stop, never stops, or does not move; the flywheel never gets to speed; the robot drives the wrong distance**
 
 The encoder count is wrong: its cable is missing, in another motor's port, or counting backward. Run the
-[Encoder Check](guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port) (Tune and check) with the
+[Encoder Check](tuning/02-wiring-checks.md#encoder-check-each-encoder-cable-in-its-own-port) (Tune and check) with the
 robot on a block. It names the fault for each motor:
 
 | The Encoder Check says | Fix |
@@ -314,7 +314,7 @@ Tune `wheelDiameterIn` and `strafeCorrection`: [Tune AutoDrive](modules/drive.md
 **An autonomous move stops past its end (short moves most, or fast ones)**
 
 A robot slides a little when it brakes, and a faster one slides further. There are two fixes. Run the
-[Drive Tuner](guides/finders.md#drive-tuner-wheel-size-and-strafe-correction) at the power your moves use
+[Drive Tuner](tuning/08-drive-tuner.md) at the power your moves use
 (D-pad left/right on its test list). Also set `Tunables.Drive.slowDownIn = 6`, so every move slows down over
 its last 6 in ([tunables](reference/parts/drive.md#in-tunablesjava)). Then a short move reaches the end as slowly as a long
 one. If it still goes past by the same amount every time, shorten that move by that amount.

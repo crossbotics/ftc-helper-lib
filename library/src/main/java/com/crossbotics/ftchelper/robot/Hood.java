@@ -605,7 +605,7 @@ public final class Hood extends Module<Hood> {
 
     @Override
     String toolFor(String field) {
-        if (field.startsWith("pos") || field.startsWith("angle")) return "the Hood Finder, docs/guides/finders.md#hood-finder";
+        if (field.startsWith("pos") || field.startsWith("angle")) return "the Hood Finder, docs/tuning/04-hood-finder.md";
         return null;
     }
 

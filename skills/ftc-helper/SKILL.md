@@ -28,7 +28,7 @@ but that site shows the newest release, which can be newer than the team's.
 - **One sign convention** (`docs/conventions.md`): forward, strafe right and turn clockwise are +;
   headings and turret angles are counterclockwise +.
 - **Numbers come from the robot.** Positions, speeds and limits go in `Tunables.java`, found with the
-  finders (`docs/guides/finders.md`). Never guess a number to make INIT pass. A `MEASURE` line means "find this
+  finders (`docs/tuning/`). Never guess a number to make INIT pass. A `MEASURE` line means "find this
   with a finder".
 - **Safety stays on.** Never turn off limits, timeouts or jam checks to make something work. Find why
   it stops instead (`docs/troubleshooting.md`).
@@ -58,7 +58,7 @@ Start with the row that matches the question. Paths are inside `ftc-helper-lib/`
 | The five files: Robot.java, Tunables.java, Controls.java, TeleOp, autos | `docs/five-files/` |
 | Buttons, press types, what the drivers see and feel | `docs/controls/` |
 | Autos: steps, more than one auto, the auto builder, odometry, Pedro | `docs/building-autos/` |
-| Finding numbers: the Tune and check menu, each finder, fix by symptom | `docs/guides/finders.md`, `docs/guides/tuning.md` |
+| Finding numbers: the Tune and check menu, each finder, fix by symptom | `docs/tuning/` |
 | One part (lift, arm, claw, intake, turret, launcher...): its lines, numbers, commands, buttons | `docs/reference/parts/<part>.md` |
 | Robot.java, Tunables.java, Controls.java, auto steps, look-up | `docs/reference/` |
 | Every public class and method (code written without the five files) | `docs/modules/<package>.md` |

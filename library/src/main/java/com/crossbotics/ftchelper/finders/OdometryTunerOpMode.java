@@ -38,7 +38,7 @@ import java.util.List;
  * }
  * }</pre>
  *
- * Docs: docs/modules/odometry.md. Guide: docs/guides/finders.md
+ * Docs: docs/modules/odometry.md. Guide: docs/tuning/09-odometry-tuner.md
  */
 public abstract class OdometryTunerOpMode extends FinderOpMode {
     // Numbered: the chooser lists them in name order.

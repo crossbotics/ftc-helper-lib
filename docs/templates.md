@@ -63,7 +63,7 @@ Then build. Check the motor directions with the wheels off the ground
 [Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md).
 
 **Numbers:** every number in `Tunables.java` is a starting value. Find the real ones with the
-[finders](guides/finders.md). The hub saves a number you change live on the robot (in the tuning menu).
+[finders](tuning/README.md). The hub saves a number you change live on the robot (in the tuning menu).
 It keeps using that saved value, even after you edit the number in `Tunables.java`, and another hub does
 not have it. So copy each new value back into `Tunables.java`. INIT lists the values that differ.
 

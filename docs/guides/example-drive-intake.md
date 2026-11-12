@@ -98,5 +98,5 @@ constant at the top of the file, so you can find and change it there.
 - Two drivers: change the intake bindings to `Pad.G2`.
 - Jam protection: add `.jamDetection(80, 0.3, 0.4)` to the intake. It needs the intake motor's encoder cable.
 - To tune the slow speed live, use `static final Tunable SLOW = Tunable.number("Drive/slow", 0.35, 0.05);` and
-  `SLOW.get()` ([tuning guide](tuning.md)).
+  `SLOW.get()` ([tuning guide](../tuning/16-tuning-menu.md)).
 - For slow mode on a trigger instead of a toggle, use `StickShaping.slowScale(gamepad1.left_trigger, 0.35)`.

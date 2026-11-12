@@ -53,7 +53,7 @@ import java.util.List;
  * }</pre>
  * Without one, it uses the servo or motor called {@link #hoodName()} ("hood").
  *
- * Docs: docs/modules/finders.md. Guide: docs/guides/finders.md
+ * Docs: docs/modules/finders.md. Guide: docs/tuning/README.md
  */
 public abstract class HoodFinderOpMode extends FinderOpMode {
 

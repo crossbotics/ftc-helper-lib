@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 724" width="520" height="724" font-family="Helvetica, Arial, sans-serif">
+<rect width="520" height="724" fill="#ffffff"/>
+<text x="16" y="26" font-size="17" fill="#222" text-anchor="start" font-weight="bold">Where the camera sits, and its offset</text>
+<text x="16" y="46" font-size="13" fill="#555" text-anchor="start">Top view. The launcher points at the goal in each one.</text>
+<circle cx="120" cy="92" r="12" fill="#fff" stroke="#2d7a32" stroke-width="3"/><circle cx="120" cy="92" r="4" fill="#2d7a32"/>
+<rect x="60" y="220" width="120" height="50" rx="7" fill="#eef2f8" stroke="#333" stroke-width="2"/>
+<line x1="120" y1="216" x2="120" y2="106" stroke="#1f4e9c" stroke-width="2.5" stroke-dasharray="6 5"/>
+<rect x="111" y="214" width="18" height="22" rx="3" fill="#1f4e9c"/>
+<line x1="80" y1="225" x2="80" y2="92" stroke="#999" stroke-width="2" stroke-dasharray="6 5"/>
+<line x1="80" y1="225" x2="120" y2="92" stroke="#e07b00" stroke-width="2.5"/>
+<path d="M80.0,155.0 A70,70 0 0 1 100.2,158.0" fill="none" stroke="#c0392b" stroke-width="3"/>
+<rect x="69" y="217" width="22" height="16" rx="3" fill="#e07b00"/><circle cx="80" cy="225" r="4" fill="#fff"/>
+<text x="214" y="110" font-size="15" fill="#222" text-anchor="start" font-weight="bold">Camera LEFT of the launcher</text>
+<text x="214" y="136" font-size="13" fill="#222" text-anchor="start">The goal looks RIGHT of the camera's center.</text>
+<text x="214" y="160" font-size="14" fill="#c0392b" text-anchor="start" font-weight="bold">offset is NEGATIVE, like -1.5</text>
+<circle cx="120" cy="302" r="12" fill="#fff" stroke="#2d7a32" stroke-width="3"/><circle cx="120" cy="302" r="4" fill="#2d7a32"/>
+<rect x="60" y="430" width="120" height="50" rx="7" fill="#eef2f8" stroke="#333" stroke-width="2"/>
+<line x1="120" y1="426" x2="120" y2="316" stroke="#1f4e9c" stroke-width="2.5" stroke-dasharray="6 5"/>
+<rect x="111" y="424" width="18" height="22" rx="3" fill="#1f4e9c"/>
+<line x1="160" y1="435" x2="160" y2="302" stroke="#999" stroke-width="2" stroke-dasharray="6 5"/>
+<line x1="160" y1="435" x2="120" y2="302" stroke="#e07b00" stroke-width="2.5"/>
+<path d="M160.0,365.0 A70,70 0 0 0 139.8,368.0" fill="none" stroke="#c0392b" stroke-width="3"/>
+<rect x="149" y="427" width="22" height="16" rx="3" fill="#e07b00"/><circle cx="160" cy="435" r="4" fill="#fff"/>
+<text x="214" y="320" font-size="15" fill="#222" text-anchor="start" font-weight="bold">Camera RIGHT of the launcher</text>
+<text x="214" y="346" font-size="13" fill="#222" text-anchor="start">The goal looks LEFT of the camera's center.</text>
+<text x="214" y="370" font-size="14" fill="#c0392b" text-anchor="start" font-weight="bold">offset is POSITIVE, like +1.5</text>
+<circle cx="120" cy="512" r="12" fill="#fff" stroke="#2d7a32" stroke-width="3"/><circle cx="120" cy="512" r="4" fill="#2d7a32"/>
+<rect x="60" y="640" width="120" height="50" rx="7" fill="#eef2f8" stroke="#333" stroke-width="2"/>
+<line x1="120" y1="636" x2="120" y2="526" stroke="#1f4e9c" stroke-width="2.5" stroke-dasharray="6 5"/>
+<rect x="111" y="634" width="18" height="22" rx="3" fill="#1f4e9c"/>
+<rect x="109" y="660" width="22" height="16" rx="3" fill="#e07b00"/><circle cx="120" cy="668" r="4" fill="#fff"/>
+<text x="214" y="530" font-size="15" fill="#222" text-anchor="start" font-weight="bold">Camera on the launcher's line</text>
+<text x="214" y="556" font-size="13" fill="#222" text-anchor="start">The goal is in the camera's center.</text>
+<text x="214" y="580" font-size="14" fill="#c0392b" text-anchor="start" font-weight="bold">offset is 0, at every distance</text>
+<text x="16" y="708" font-size="13" fill="#555" text-anchor="start">Orange: the camera. Blue: the launcher. Angles drawn bigger than real.</text>
+</svg>

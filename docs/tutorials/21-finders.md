@@ -21,7 +21,7 @@ Check) first.
 and the examples
 [`ExampleShotTuner.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/ExampleShotTuner.java) and
 [`ExampleAimTuner.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/ExampleAimTuner.java).
-**Reference:** [finders.md](../modules/finders.md). Step by step: [Finders guide](../guides/finders.md).
+**Reference:** [finders.md](../modules/finders.md). Step by step: [Finders guide](../tuning/README.md).
 
 ---
 
@@ -90,7 +90,7 @@ are the numbers your TeleOp uses.
 
 Run them in this order: Hardware Check, then the Servo and Motor finders, then Flywheel, then Drive
 Tuner, then Aim Tuner, then Shot Tuner. Each one builds on the one before. For example, the Shot Tuner
-needs a flywheel that holds its speed and a camera that aims straight. The [guide](../guides/finders.md)
+needs a flywheel that holds its speed and a camera that aims straight. The [guide](../tuning/README.md)
 explains each step.
 
 ## If something goes wrong

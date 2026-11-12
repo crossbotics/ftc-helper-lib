@@ -29,7 +29,7 @@ Package: `com.crossbotics.ftchelper.robot`
 | [`ControlMap`](../reference/controls.md#controlmap), [`Pad`](../reference/controls.md#controlmap) | `Controls.java`: the TeleOp and the button map |
 | [`Auto`](../reference/steps.md#auto), [`Steps`](../reference/steps.md#auto) | one autonomous as a list of steps |
 | [`Feature`](../reference/robot-java.md#what-your-robot-can-do) | what the library does by itself for your robot, ready or not (`robot.features()`) |
-| [`EncoderMotor`](../reference/robot-java.md#robotdefinition) | one motor for the [Encoder Check](../guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port) (`robot.encoderMotors()`) |
+| [`EncoderMotor`](../reference/robot-java.md#robotdefinition) | one motor for the [Encoder Check](../tuning/02-wiring-checks.md#encoder-check-each-encoder-cable-in-its-own-port) (`robot.encoderMotors()`) |
 | [`Toggleable`](../reference/controls.md#controlmap) | anything one button switches on and off |
 | [`Motors`](../reference/robot-java.md#motors) | look up the encoder counts and speed of common motors, by catalog id (a part's name in the [parts catalog](../guides/parts-catalog.md), e.g. `"gobilda-5203-312"`) |
 | [`Shape`](../reference/robot-java.md#shapes-and-parts), [`Parts`](../reference/robot-java.md#shapes-and-parts) | how each part looks and where it sits, for the simulator; wheels, rollers and servos by catalog id |

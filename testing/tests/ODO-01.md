@@ -8,7 +8,7 @@ minutes: 45
 needs: [pinpoint|otos|dead-wheels]
 kit_bots: []
 since: v0.16.0
-docs: [guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check, tutorials/start/07-odometry.md#5-the-odometry-tuner]
+docs: [tuning/09-odometry-tuner.md, tutorials/start/07-odometry.md#5-the-odometry-tuner]
 ---
 
 ## Why

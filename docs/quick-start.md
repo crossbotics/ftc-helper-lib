@@ -324,7 +324,7 @@ How:
    [lesson 4, section 5](tutorials/start/04-lift-and-claw.md#5-find-the-real-numbers-with-the-finders)),
    and for a flywheel the **Flywheel Finder** (the same 3 lines, with `FlywheelFinderOpMode`).
    Build and install.
-2. Robot on a block. Run them in this order ([why this order](guides/finders.md#the-order)):
+2. Robot on a block. Run them in this order ([why this order](tuning/README.md#the-tuning-order)):
    - **Servo Finder** for each servo: its safe ends and named positions (`open`, `closed`, `up`...).
    - **Motor Finder** for each lift, arm or turret: `min`, `max` and the named positions.
    - **Flywheel Finder** for each flywheel: `kP` to `kF`. Wear eye protection, and nobody stands in front of it.

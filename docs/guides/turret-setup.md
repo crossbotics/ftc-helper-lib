@@ -141,7 +141,7 @@ Put a hard stop there too, because software is not a hard stop. A servo turret's
 `follows` turns follow mode on at ▶ (operator BACK switches it). With odometry and the goal point,
 the odometry takes over while the camera does not see the goal ([Aim](../reference/parts/aim.md)).
 A camera beside the launcher needs `cameraOffset` (Tunables.Turret): the goal's bearing in the camera's picture when the launcher points
-straight at the goal. Find it with the Aim Tuner ([finders](finders.md)).
+straight at the goal. Find it with the Aim Tuner ([finders](../tuning/README.md)).
 
 ## 5. A hood?
 
@@ -271,10 +271,10 @@ g1.rb.toggle(robot.aimMode()).says("aim at the goal");
 | `min`, `max` | turn the turret by hand to where the wires are tight, both ways. Take a few degrees less |
 | `startAngle` | where your mark or jig holds it (0 = straight forward is the easiest) |
 | `homeAngle` | turn it to the switch and read the angle ([above](#2-how-does-it-know-its-angle)) |
-| `posA`, `posB`, `angleA`, `angleB` (servo) | the [Servo Finder](finders.md): two positions, and the angle at each (a phone angle app) |
+| `posA`, `posB`, `angleA`, `angleB` (servo) | the [Servo Finder](../tuning/README.md): two positions, and the angle at each (a phone angle app) |
 | `travelSec` (servo) | time a move from posA to posB |
-| `kP`, `kD`, `tolerance` | the tuning menu ([tuning](tuning.md)). Copy the values back into `Tunables.java` |
-| `cameraOffset` | the Aim Tuner ([finders](finders.md)) |
+| `kP`, `kD`, `tolerance` | the tuning menu ([tuning](../tuning/16-tuning-menu.md)). Copy the values back into `Tunables.java` |
+| `cameraOffset` | the Aim Tuner ([finders](../tuning/README.md)) |
 | `encoderOffset` | the reading with the turret straight forward |
 
 ## What the INIT screen shows

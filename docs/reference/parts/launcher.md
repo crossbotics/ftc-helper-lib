@@ -27,6 +27,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `.spinAtStart()`, `.spinAtStart(on)` | optional | spins up at ▶ (autonomous and TeleOp), ready for the first shot. `spinAtStart(false)` waits for LB. `spinAtStart` in Tunables wins over both | on with a separate feeder (an indexer or a feed stop): a spinning wheel cannot throw a piece the feeder has not pushed in. Else off |
 | `.hood(Hood)` | optional | the launcher's [hood](hood.md). The launcher takes its angle from the shot table's third column, and waits for it before it feeds | no hood |
 | `.feedStop(servo)` | optional | a [feed stop](#feed-stop): a servo that holds the pieces back until a shot is allowed | no feed stop |
+| `.feedStop(servo, part)` | optional | the same, with the servo's catalog id (`"gobilda-2000-speed"`). The Feed Stop Finder then works out `feedStopMoveSec` | no part: the finder cannot work out the open time |
 | `.pushedBy(intake...)` | optional | the parts that push a piece into the wheel, in order ([piece path](#piece-path)). Add the intake **before** the launcher | nothing pushes |
 | `.feedWheel(Indexer)` | optional | a [feed wheel](#feed-wheel): a CR servo or motor that moves each piece up to the `feeder` (a push arm). It needs `.feeder(...)` too | no feed wheel |
 | `.feedWheelOutWith(intake)` | optional | the feed wheel runs backward while that intake pushes out (`out()`), so the pieces in the feeder come out too. A shot that is being fed wins. It needs `.feedWheel(...)` | - |
@@ -101,8 +102,8 @@ public static class Launcher {                                  // "launcher" in
 | `distanceJumpAgreeIn` | for the jump check: how close each of the 3 pictures must be to the one before | inches | 4 | no | none | a real jump is never used: the camera's numbers jump about more (higher) |
 | `feedStopHold` | with `.feedStop(...)`: the servo position that holds the pieces back | servo position 0-1 | 0 (a guess, INIT says so) | no | Feed Stop Finder | after the Feed Stop Finder |
 | `feedStopRelease` | with `.feedStop(...)`: the servo position that lets a piece through | servo position 0-1 | 0.5 (a guess) | no | Feed Stop Finder | the same |
-| `feedStopMoveSec` | with `.feedStop(...)`: how long it takes to open; the indexer and the pushing parts wait this long | seconds | 0.1 | no | test | a slow servo is still part-closed when the piece comes (more) |
-| `feedStopOpenSec` | with `.feedStop(...)`: the backup time it stays open when the wheel sees no shot | seconds | 0.5 | no | firing stats | pieces get stuck (more) |
+| `feedStopMoveSec` | with `.feedStop(...)`: how long it takes to open; the indexer and the pushing parts wait this long | seconds | 0.1 | no | Feed Stop Finder (with the servo's part) | a slow servo is still part-closed when the piece comes (more) |
+| `feedStopOpenSec` | with `.feedStop(...)`: the backup time it stays open when the wheel sees no shot | seconds | 0.5 | no | Feed Stop Finder (test shots) | pieces get stuck (more) |
 | `assistSec` | with `.pushedBy(...)`: how long the parts push each piece in, at most (less when the wheel sees the shot) | seconds | 0.25 | no | test | pieces do not reach the wheel (more) |
 | `ejectRpm` | `ejectAction()`: the low speed that pushes one piece out | RPM | 600 | no | test | the piece does not clear the robot (more) or flies too far (less) |
 | `ejectSec` | `ejectAction()`: how long the eject lasts | seconds | 1 | no | test | the piece is still in the robot at the end (more) |
@@ -129,7 +130,7 @@ The Driver Station shows `Shot table: POLLEN, 48 in (camera)`. In place of `came
 
 **The first run** ([First run](../tunables.md#first-run-what-you-get-before-tuning)):
 
-- `kP`, `kI`, `kD` and `kF` are the hub's speed control. The [Flywheel Finder](../../guides/finders.md)
+- `kP`, `kI`, `kD` and `kF` are the hub's speed control. The [Flywheel Finder](../../tuning/README.md)
   finds them, and `nominalVolts`, the battery voltage they were found at.
 - The library starts the ones you do not write from the parts catalog, for the motor in
   `Launcher.flywheel(...)`. It does not use the hub's own gains. F = 32767 / its top speed in counts per
@@ -194,6 +195,8 @@ Use them in `Controls.java`, `Actions.java` and autos: `robot.launcher.fire()`.
 | `hood()` | its [hood](hood.md) |
 | `feeder()`, `feedWheel()` | its feeder; its feed wheel |
 | `feedStopName()` | its feed stop's name |
+| `feedStopPart()`, `feedStopMoveSec()` | its feed stop's catalog servo (null if Robot.java gives none); `feedStopMoveSec` as read at INIT |
+| `feedTest(hold, release, moveSec, backupSec)` | for the Feed Stop Finder only: a [test shot](../../modules/finders.md#feedtest) with those numbers |
 | `pushers()` | the parts that push the pieces in |
 | `isEjecting()` | whether it ejects now |
 | `part()` | the plain [launcher](../../modules/launcher.md#launcher) inside |
@@ -229,8 +232,9 @@ Add `.feedStop("feed_stop")` only if the robot has one.
   that is not ready. In SPRAY it stays open until the last piece.
 - A roller or belt indexer (a CR servo, a motor) stops when the stop closes.
 - The launcher sends it a new position only when the position changes.
-- Find `feedStopHold` and `feedStopRelease` with the **Feed Stop Finder** (in
-  [Tune and check](../../guides/finders.md#tune-and-check-all-of-them-in-one-opmode)).
+- Find `feedStopHold`, `feedStopRelease`, `feedStopMoveSec` and `feedStopOpenSec` with the **Feed Stop
+  Finder** (in [Tune and check](../../tuning/01-tune-and-check.md#the-tune-and-check-menu)). For
+  `feedStopMoveSec`, give the servo's part: `.feedStop("feed_stop", "gobilda-2000-speed")`.
 
 ### Piece path
 
@@ -247,7 +251,7 @@ Add `.pushedBy(intake)` only if a part must push the pieces into the wheel.
 ```java
 intake = add(Intake.motor("intake"));   // first: the launcher's pushedBy(...) needs it
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feedStop("feed_stop")             // only if the robot has one
+        .feedStop("feed_stop", "gobilda-2000-speed")   // only if the robot has one; the part is optional
         .pushedBy(intake));                // only if the intake must push the pieces in
 public static double feedStopHold = 0.15, feedStopRelease = 0.55;   // Tunables.Launcher: examples, yours differ (Feed Stop Finder)
 public static boolean sprayEnabled = true;                          // optional: SPRAY at the end

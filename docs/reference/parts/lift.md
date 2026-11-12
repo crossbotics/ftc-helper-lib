@@ -78,7 +78,7 @@ The section's name is the device's name in CamelCase: `lift` reads `Lift`, `lift
 Lift's numbers are in encoder **counts** (the encoder's steps), an [Arm](arm.md)'s in **degrees**. This table is
 for both.
 
-- `min` and `max` must be in `Tunables.java` (from the [Motor Finder](../../guides/finders.md)), or INIT stops.
+- `min` and `max` must be in `Tunables.java` (from the [Motor Finder](../../tuning/README.md)), or INIT stops.
 - Every other number has a default, so the lift works before you tune it.
 - Every number that is not a setting is a named height.
 

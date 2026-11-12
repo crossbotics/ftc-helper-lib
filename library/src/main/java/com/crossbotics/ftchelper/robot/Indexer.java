@@ -418,7 +418,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     @Override
     String toolFor(String field) {
-        if (field.equals("rest") || field.equals("push")) return "the Servo Finder, docs/guides/finders.md#servo-finder-ends-and-positions";
+        if (field.equals("rest") || field.equals("push")) return "the Servo Finder, docs/tuning/03-servo-finder.md";
         return "test it: watch a feed";
     }
 

@@ -1058,7 +1058,7 @@
    "since": "v0.30.0",
    "docs": [
     {
-     "path": "docs/guides/finders.md",
+     "path": "docs/tuning/02-wiring-checks.md",
      "anchor": "motor-direction-check-each-wheel-rolls-forward"
     },
     {
@@ -1133,8 +1133,8 @@
    "since": "v0.33.0",
    "docs": [
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "drive-tuner-wheel-size-and-strafe-correction"
+     "path": "docs/tuning/08-drive-tuner.md",
+     "anchor": ""
     },
     {
      "path": "docs/reference/parts/drive.md",
@@ -1213,8 +1213,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "hood-finder"
+     "path": "docs/tuning/04-hood-finder.md",
+     "anchor": ""
     },
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -1298,8 +1298,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "hood-finder"
+     "path": "docs/tuning/04-hood-finder.md",
+     "anchor": ""
     },
     {
      "path": "docs/reference/parts/hood.md",
@@ -1633,8 +1633,8 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "odometry-tuner-directions-offsets-and-a-loop-check"
+     "path": "docs/tuning/09-odometry-tuner.md",
+     "anchor": ""
     },
     {
      "path": "docs/tutorials/start/07-odometry.md",
@@ -2149,7 +2149,7 @@
    "since": "v0.39.0",
    "docs": [
     {
-     "path": "docs/guides/finders.md",
+     "path": "docs/tuning/02-wiring-checks.md",
      "anchor": "encoder-check-each-encoder-cable-in-its-own-port"
     },
     {
@@ -2237,8 +2237,8 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "flywheel-finder-gains-and-recovery"
+     "path": "docs/tuning/06-flywheel-finder.md",
+     "anchor": ""
     },
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -2412,8 +2412,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "shot-tuner-the-shot-table"
+     "path": "docs/tuning/12-shot-tuner.md",
+     "anchor": ""
     },
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -3482,8 +3482,8 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "aim-tuner-camera-offset"
+     "path": "docs/tuning/11-aim-tuner.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/AIM-04.md",
@@ -3505,7 +3505,7 @@
      {
       "ul": [
        "Flywheel gains found (SHOT-01). A goal you can shoot at, and 10-15 game pieces.",
-       "The Aim Tuner OpMode for your robot ([finders guide](repo:docs/guides/finders.md#before-you-start))."
+       "The Aim Tuner OpMode for your robot ([finders guide](repo:docs/tuning/01-tune-and-check.md#before-you-start))."
       ]
      }
     ],
@@ -4496,8 +4496,8 @@
      "anchor": "a-hood-the-shot-angle"
     },
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "shot-tuner-the-shot-table"
+     "path": "docs/tuning/12-shot-tuner.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/HOOD-03.md",
@@ -4742,8 +4742,8 @@
      "anchor": "full-range"
     },
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "servo-finder-ends-and-positions"
+     "path": "docs/tuning/03-servo-finder.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/MEC-02.md",
@@ -5199,8 +5199,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "piece-tuner-what-each-sensor-sees"
+     "path": "docs/tuning/14-piece-tuner.md",
+     "anchor": ""
     },
     {
      "path": "docs/reference/parts/pieces.md",
@@ -5828,6 +5828,91 @@
     "different": [
      {
       "p": "With odometry, the odometry's distance is used while the camera is still collecting its first 3 pictures: say if you see a jump between the two."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-12",
+   "title": "Feed Stop Finder: the open time and the test shots",
+   "area": "shooter",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 20,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.41.0",
+   "docs": [
+    {
+     "path": "docs/tuning/07-feed-stop-finder.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/reference/parts/launcher.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/SHOT-12.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The Feed Stop Finder now finds the feed stop's two times. It works out `feedStopMoveSec` from the servo's catalog speed, and it times test shots for `feedStopOpenSec`. We want to know that the times it gives are right on a real launcher, and that its warnings make sense to students."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Eye protection for everyone near the robot. Nobody in front of the launcher.",
+       "Fingers away from the feed stop and the wheel while the wheel is on."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with a feed stop servo, `.feedStop(\"feed_stop\", \"<the servo's catalog id>\")` in Robot.java.",
+       "5 pieces.",
+       "A phone that films slow motion (to check the times)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "**Tune and check > Feed Stop Finder.** Find and save hold (X) and release (B).",
+       "Read `Opens in : about ... s`. Film the stop opening in slow motion, and count the real open time.",
+       "Press LB: the wheel spins up. Check that the D-pad, A, X and B do nothing while it is on.",
+       "Do 5 test shots with RB, a piece behind the stop each time. Read `Test shots : ...`.",
+       "Film one test shot in slow motion: count the time from the stop opening to the piece touching the wheel.",
+       "Fire one test shot with no piece. The finder must say `No shot seen in 3 s`.",
+       "If you can, put two pieces tight against each other behind the stop, and fire. Read whether the finder says `2 pieces in one opening`.",
+       "Copy the times line into `Tunables.java`, and fire 5 pieces in TeleOp in the PRACTICE profile. Read `Last feed ended`."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The `Opens in` time is at least the filmed open time (1 of 1), each test shot time is within 0.05 s of the filmed time (1 of 1), step 6 warns (1 of 1), and every TeleOp shot in step 8 says `shot seen` (5 of 5)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the servo's catalog id, hold and release",
+       "`Opens in` and the filmed open time",
+       "the 5 test shot times and the filmed time",
+       "the warnings you saw (steps 6 and 7), and whether students understood them",
+       "the times line, and the `Last feed ended` lines in step 8"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A servo that is not in the catalog: `Opens in` says it is not known. Do the rest, and measure the open time with the video only. A heavy wheel that slows by less than 150 RPM: every test shot may warn `No shot seen` even when the piece fired. Record that, with the wheel's speed drop from the `Shot` debug line."
      }
     ]
    }
@@ -6526,8 +6611,8 @@
      "anchor": "1-what-turns-it"
     },
     {
-     "path": "docs/guides/finders.md",
-     "anchor": "servo-finder-ends-and-positions"
+     "path": "docs/tuning/03-servo-finder.md",
+     "anchor": ""
     },
     {
      "path": "docs/modules/hardware.md",
@@ -6553,7 +6638,7 @@
      {
       "ul": [
        "`Turret.servo(\"turret\")` in `Robot.java` (add `.follows(camera)` to test the aim too).",
-       "`Tunables.Turret`: `posA`, `angleA`, `posB`, `angleB` from the [Servo Finder](repo:docs/guides/finders.md#servo-finder-ends-and-positions) and a phone angle app, and `travelSec` (time a move from posA to posB).",
+       "`Tunables.Turret`: `posA`, `angleA`, `posB`, `angleB` from the [Servo Finder](repo:docs/tuning/03-servo-finder.md) and a phone angle app, and `travelSec` (time a move from posA to posB).",
        "Optional: `.fullRange()` on the line for the servo's whole turn ([MEC-02](repo:testing/tests/MEC-02.md)). Measure posA and posB after turning it on."
       ]
      }

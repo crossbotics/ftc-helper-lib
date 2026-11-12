@@ -5,7 +5,7 @@
 Package: `com.crossbotics.ftchelper.finders`
 
 Learn it hands-on: [21 Find your numbers](../tutorials/21-finders.md). Step by step on the robot:
-[Finders guide](../guides/finders.md). Quick answers: [cookbook: tuning and finders](../cookbook.md#tuning-and-finders).
+[Finders guide](../tuning/README.md). Quick answers: [cookbook: tuning and finders](../cookbook.md#tuning-and-finders).
 
 Finders are ready-made programs. Each one **measures** numbers your code needs (servo ends, lift limits,
 flywheel gains, wheel size, odometry offsets, shot speeds, camera offset). It shows them as **lines of code
@@ -78,7 +78,7 @@ a menu with the Hardware Check and the finders that fit Robot.java. A opens a to
 it, and BACK in the tool's INIT goes back to the menu. It looks for the robot classes in
 `org.firstinspires.ftc.teamcode`. On the robot, it searches the app's classes, the same way the SDK finds
 OpModes. In the simulator, it searches the class path. The menu does not have the Aim Tuner or the
-Characterizer. Steps: [the finders guide](../guides/finders.md#tune-and-check-all-of-them-in-one-opmode).
+Characterizer. Steps: [the finders guide](../tuning/01-tune-and-check.md#the-tune-and-check-menu).
 
 | Member | What it does |
 | --- | --- |
@@ -103,7 +103,7 @@ public class MotorDirectionCheck extends MotorDirectionCheckOpMode {
 }
 ```
 
-Steps: [Motor Direction Check](../guides/finders.md#motor-direction-check-each-wheel-rolls-forward). For a
+Steps: [Motor Direction Check](../tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward). For a
 robot without five files (it has its own `DriveConfig`), copy `examples/.../MotorDirectionCheck.java` instead.
 
 ## EncoderCheckOpMode
@@ -127,7 +127,7 @@ public class EncoderCheck extends EncoderCheckOpMode {
 | --- | --- |
 | `robot()` | your robot (`return new Robot();`): its motors and their directions ([`encoderMotors()`](../reference/robot-java.md#robotdefinition)) |
 
-Steps and what each result means: [Encoder Check](../guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port).
+Steps and what each result means: [Encoder Check](../tuning/02-wiring-checks.md#encoder-check-each-encoder-cable-in-its-own-port).
 
 ## ServoFinderOpMode
 
@@ -266,7 +266,42 @@ voltage. Under 11.5 V, the finder warns you to charge the battery first.
 
 `FeedStopFinderOpMode` finds a launcher's feed stop positions: `Tunables.Launcher: feedStopHold = ...,
 feedStopRelease = ...`. It needs `robot()` (the robot in five files, with a launcher that has
-`.feedStop(...)`). Tune and check adds it by itself. Steps: [Feed Stop Finder](../guides/finders.md#feed-stop-finder).
+`.feedStop(...)`). Tune and check adds it by itself. Steps: [Feed Stop Finder](../tuning/07-feed-stop-finder.md).
+
+With both positions saved, it also finds the two times: `Tunables.Launcher: feedStopMoveSec = ...,
+feedStopOpenSec = ...`.
+
+- `feedStopMoveSec`: from the servo's catalog speed and the angle between hold and release, plus 25% (the
+  seller's speed is with no load), rounded up to 0.05 s. Only with the part in Robot.java:
+  `.feedStop("feed_stop", "gobilda-2000-speed")`.
+- `feedStopOpenSec`: LB spins the wheel up to `speedRpm`, RB fires a test shot. The longest test shot plus
+  0.2 s, rounded up to 0.05 s.
+
+### FeedTest
+
+`FeedTest` is the test shot (`robot.launcher.feedTest(hold, release, moveSec, backupSec)`). It uses the
+launcher's own feed: the stop opens, the indexer and the pushing parts run like a real shot. It is for the
+finder, not for TeleOp or autonomous code.
+
+| Method | What it does |
+| --- | --- |
+| `spin(on)` | spins the wheel up to `speedRpm`, or stops it (a shot on its way is cancelled, the stop holds) |
+| `isSpinning()`, `isReady()` | the wheel is on; it is on and at speed |
+| `rpmNow()`, `targetRpm()` | the wheel's speed now; the speed it spins to (RPM) |
+| `fire()` | one test shot (only when ready and not busy) |
+| `update()` | runs the wheel, the stop, the indexer and the pushers: call it every loop |
+| `isBusy()` | a test shot is on its way, or it still watches for a second piece |
+| `lastSec()` | the last shot's time to the shot, seconds, counted like `feedStopOpenSec` (NaN: no shot seen) |
+| `lastEnd()` | `shot seen` or `backup time` |
+| `lastPieces()` | the speed drops in the last test shot: 1 is right, 2 or more = pieces slipped through |
+
+```java
+FeedTest test = robot.launcher.feedTest(0.150, 0.550, 0.20, 3.0);
+test.spin(true);
+// every loop:
+test.update();
+if (test.isReady() && !test.isBusy() && gamepad1.right_bumper) test.fire();
+```
 
 ## DriveTunerOpMode
 
@@ -355,7 +390,7 @@ Tunables.Odometry: checked = true
 
 For a reversed pod, the result says which name to add to (or take out of) `.reversed(...)`. While a test
 runs, the screen shows the pose and the raw pod counts since the test began. Walk-through:
-[finders guide](../guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
+[finders guide](../tuning/09-odometry-tuner.md).
 
 ## AimTunerOpMode
 

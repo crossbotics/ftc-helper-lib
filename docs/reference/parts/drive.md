@@ -65,7 +65,7 @@ public static class Drive {                                     // a fixed name:
 **`calibrated`:** first tune with the Drive Tuner ([Tune the drive first](../../five-files/05-autos.md#tune-the-drive-first)).
 The Drive Tuner and the Shot Tuner need the whole robot:
 `@Override protected RobotDefinition robot() { return new Robot(); }`. Every finder shows `Tunables.`
-lines for you to copy ([finders](../../guides/finders.md)).
+lines for you to copy ([finders](../../tuning/README.md)).
 
 ## Commands
 

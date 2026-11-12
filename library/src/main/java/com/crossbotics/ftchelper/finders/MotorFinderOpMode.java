@@ -35,7 +35,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
  * In your TeamCode: {@code @TeleOp(name = "Motor Finder", group = "Finders")
  * public class MotorFinder extends MotorFinderOpMode { }}
  *
- * Docs: docs/modules/finders.md. Guide: docs/guides/finders.md
+ * Docs: docs/modules/finders.md. Guide: docs/tuning/05-motor-finder.md
  */
 public abstract class MotorFinderOpMode extends FinderOpMode {
 

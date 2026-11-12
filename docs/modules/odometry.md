@@ -367,7 +367,7 @@ public static class CameraFix {                          // Tunables.java
 ```
 
 **The field directions** are the turn from the Limelight's field frame to ours, a multiple of 90
-degrees. A test finds them: **Camera Fix Check** in [Tune and check](../guides/finders.md#tune-and-check-all-of-them-in-one-opmode).
+degrees. A test finds them: **Camera Fix Check** in [Tune and check](../tuning/01-tune-and-check.md#the-tune-and-check-menu).
 Put the robot on the field facing away from your drivers' wall, with tags in view. The test shows the
 Limelight's own pose, the turn that fits, and the robot's place with that turn. Check the place with a
 tape measure. X saves the turn for BLUE, and B saves it for RED. The Limelight's pipeline (a set of
@@ -780,7 +780,7 @@ need the IMU in the drive line (`drive(...).imu(...)`). Without it, the tuner st
 `the Odometry Tuner's Spin test needs the IMU: add .imu(...) to drive(...)`. Copy the lines (the tuner
 also saves them in `finder-results.txt` at STOP), rebuild, and run Loop. The full walk-through:
 [lesson 7](../tutorials/start/07-odometry.md#5-the-odometry-tuner) and the
-[finders guide](../guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
+[finders guide](../tuning/09-odometry-tuner.md).
 
 ### OTOS turn scale by hand
 

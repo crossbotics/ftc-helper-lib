@@ -79,7 +79,7 @@ public static class Hood {                                      // "hood" in the
 **Calibration.** `posA` and `posB` are the servo positions (encoder ticks for `Hood.motor`) a hair off the
 hood's two hard stops. They are the hood's **hard limits**: the library keeps every angle (a table row, a trim, a
 stick) between them. Both must be in `Tunables.java`, or INIT stops. The
-[Hood Finder](../../guides/finders.md#hood-finder) finds them. Then pick one of these:
+[Hood Finder](../../tuning/04-hood-finder.md) finds them. Then pick one of these:
 
 | You write | The hood's "angle" is | The table's third column holds |
 | --- | --- | --- |

@@ -826,7 +826,7 @@ add(Lift.slide("lift").part("gobilda-5203-435").reversed());
 ```
 
 **Why:** the lift's limits and heights count up as it goes up, so positive power must move it up.
-**More:** [Motor Finder](guides/finders.md#motor-finder-limits-positions-top-speed), [Troubleshooting](troubleshooting.md#robot-behavior).
+**More:** [Motor Finder](tuning/05-motor-finder.md), [Troubleshooting](troubleshooting.md#robot-behavior).
 
 ### My motor isn't in the catalog
 
@@ -1650,7 +1650,7 @@ at ▶:** a plain `speedByDistance` table (named `main`) if there is one. If not
 `nectar` (n before p). To start on POLLEN, add `.startTable("pollen")` to the launcher line in
 `Robot.java` ([like here](#how-do-i-keep-aiming-when-the-camera-loses-the-goal)). The Driver Station's
 `Shot table` line says which one is in use. Fill each table with the
-[Shot Tuner](guides/finders.md#shot-tuner-the-shot-table) ([its file](#how-do-i-build-a-shot-table-speed-for-each-distance)).
+[Shot Tuner](tuning/12-shot-tuner.md) ([its file](#how-do-i-build-a-shot-table-speed-for-each-distance)).
 Press Y until `> Table`, then pick the table you tune with the D-pad. Then copy its line into
 `Tunables.java`. To let the robot pick the table by itself, see
 [the next piece picks it](#how-do-i-let-the-next-piece-pick-the-shot-table).
@@ -2669,7 +2669,7 @@ public class OdometryTuner extends OdometryTunerOpMode {
 **Why:** the tuner checks which way each pod counts, and measures the offsets. Then set `Tunables.Odometry.checked = true`, or `driveTo` does nothing on the robot.
 It is its own small file, because each program in the Driver Station's list is one class. `robot()` makes
 it use your `Robot.java`, so it measures the same odometry line that autonomous uses.
-**More:** [Lesson 7: the Odometry Tuner](tutorials/start/07-odometry.md#5-the-odometry-tuner), [Finders](guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
+**More:** [Lesson 7: the Odometry Tuner](tutorials/start/07-odometry.md#5-the-odometry-tuner), [Finders](tuning/09-odometry-tuner.md).
 
 ### How do I drive to a point on the field?
 
@@ -3141,7 +3141,7 @@ A finder (a program that measures a number on the robot) shows lines like `Tunab
 Copy them into that section, keep the other lines, and give P1 and P2 real names. A number you leave out
 uses the library's default (INIT says which). The exception is a lift's or arm's `min` and `max`: you must write those.
 
-**More:** [Tunables.java](reference/tunables.md), [Finding your numbers](guides/finders.md).
+**More:** [Tunables.java](reference/tunables.md), [Finding your numbers](tuning/README.md).
 
 ### How do I find a servo's open and closed numbers?
 
@@ -3164,7 +3164,7 @@ closed, A (P2). Copy the line it shows (`Tunables.Claw: P1 = 0.210, P2 = 0.770`)
 into `Tunables.java` and rename P1, P2 (`open`, `closed`). For a part with
 [`.fullRange()`](#how-do-i-get-my-servos-full-range) in Robot.java, press Y first, while you choose the servo.
 **Why:** a servo pushed past its end hums, gets hot and breaks. The finder finds the safe numbers.
-**More:** [Servo Finder](guides/finders.md#servo-finder-ends-and-positions), [the order](guides/finders.md#the-order).
+**More:** [Servo Finder](tuning/03-servo-finder.md), [the order](tuning/README.md#the-tuning-order).
 
 ### How do I find a lift's limits and heights?
 
@@ -3184,7 +3184,7 @@ public class MotorFinder extends MotorFinderOpMode {
 Then press A at each height you need. Copy the line it shows (`Tunables.Lift: min = 0, max = 2580, P1 = 1200`)
 into `Tunables.java` and rename P1 (`low`).
 **Why:** a wrong top limit drives the lift into its hard stop. Measured limits keep it safe.
-**More:** [Motor Finder](guides/finders.md#motor-finder-limits-positions-top-speed).
+**More:** [Motor Finder](tuning/05-motor-finder.md).
 
 ### How do I change a number while the robot runs?
 
@@ -3194,7 +3194,7 @@ for 1 second**, and the tuning menu opens. D-pad up/down chooses a number, and r
 `Tunables.java`.** A value saved only on the hub is lost with a new Control Hub, and your teammates cannot see it.
 
 **Why:** you see the effect at once, and you do not have to build and install again.
-**More:** [Tuning](guides/tuning.md#3-use-it), [Lesson 4: tune the lift live](tutorials/start/04-lift-and-claw.md#6-tune-the-lift-live).
+**More:** [Tuning](tuning/16-tuning-menu.md#open-it-and-change-a-number), [Lesson 4: tune the lift live](tutorials/start/04-lift-and-claw.md#6-tune-the-lift-live).
 
 ### How do I tune the drive for autonomous?
 
@@ -3214,7 +3214,7 @@ public class DriveTuner extends DriveTunerOpMode {
 ```
 
 **Why:** the tuner measures the real wheel size and strafe correction. Copy its lines, then set `Tunables.Drive.calibrated = true`.
-**More:** [Tune the drive first](five-files/05-autos.md#tune-the-drive-first), [Drive Tuner](guides/finders.md#drive-tuner-wheel-size-and-strafe-correction).
+**More:** [Tune the drive first](five-files/05-autos.md#tune-the-drive-first), [Drive Tuner](tuning/08-drive-tuner.md).
 
 ### How do I set the flywheel numbers?
 
@@ -3227,11 +3227,11 @@ because its team found them for its own wheel.
 
 **Why:** the right `kP`..`kF` (the gains: how hard the motor pushes toward the target speed) make the
 wheel get back to speed fast after each shot.
-**More:** [Flywheel Finder](guides/finders.md#flywheel-finder-gains-and-recovery).
+**More:** [Flywheel Finder](tuning/06-flywheel-finder.md).
 
 ### How do I build a shot table (speed for each distance)?
 
-**Where:** a new file in TeamCode, `ShotTuner.java`. Run the [Aim Tuner](guides/finders.md#aim-tuner-camera-offset) first.
+**Where:** a new file in TeamCode, `ShotTuner.java`. Run the [Aim Tuner](tuning/11-aim-tuner.md) first.
 Below is the whole file. Its first line is `package org.firstinspires.ftc.teamcode;` (Android Studio writes it
 when you make the file), then:
 
@@ -3258,7 +3258,7 @@ and mark each HIT (A) or MISS (B), all on gamepad 1. A left stick click takes th
 keeps the speed with the best hit ratio (hits out of shots). The tuner fills
 `Tunables.Launcher.speedByDistance` (one line per table to copy), so the launcher picks the speed for
 each distance.
-**More:** [Shot Tuner](guides/finders.md#shot-tuner-the-shot-table).
+**More:** [Shot Tuner](tuning/12-shot-tuner.md).
 
 ### How do I find my hood's stops and angles?
 
@@ -3286,7 +3286,7 @@ public class HoodFinder extends HoodFinderOpMode {
 **Why:** the hood needs its stops and angles. Nudge the hood to each stop, back off a hair, and press X
 and B. The finder writes `Tunables.Hood: posA = ..., posB = ...`. Before X / B, hold LB + D-pad to type
 in the angle you measured (or press A for a point in between, for a linkage). Copy the lines into `Tunables.java`.
-**More:** [Hood Finder](guides/finders.md#hood-finder).
+**More:** [Hood Finder](tuning/04-hood-finder.md).
 
 ## Simulator
 

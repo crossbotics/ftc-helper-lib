@@ -38,58 +38,7 @@ complete: if a part reads a new number, the check fails until the number is on i
 
 ## Find a setting by what you want
 
-Start here when something on the robot is not right. Find what you see. Then change the setting in the
-middle column, in the direction it says. Change one number at a time, test, and copy the good value back
-into `Tunables.java`.
-
-| What you see or want | Setting | Which way |
-| --- | --- | --- |
-| **Driving** | - | - |
-| The robot is too fast for the drivers | [`Drive.maxPower`](parts/drive.md#in-tunablesjava) | less |
-| A brand-new driver needs a slower robot for a day | [`Drive.practiceMaxPower`](parts/drive.md#in-tunablesjava) | less, then back to `DEFAULT` |
-| Fine moves with the slow trigger are too slow or too jumpy | [`Drive.slowSpeed`](parts/drive.md#in-tunablesjava) | more / less |
-| Double taps are missed, or single taps wait too long | [`Buttons.tapGapSec`](controls.md#buttons-in-tunablesjava) | more / less |
-| **Autonomous moves** | - | - |
-| Autonomous does not run ("AUTONOMOUS IS OFF") | [`Drive.calibrated`](parts/drive.md#in-tunablesjava) | `true`, after the Drive Tuner |
-| Sideways moves are short or long (mecanum) | [`Drive.strafeCorrection`](parts/drive.md#in-tunablesjava) | Drive Tuner |
-| Turns stop short | [`Drive.turnKp`](parts/drive.md#in-tunablesjava) | more |
-| Turns wobble or overshoot | [`Drive.turnKp`](parts/drive.md#in-tunablesjava) / [`Drive.turnKd`](parts/drive.md#in-tunablesjava) | less / more |
-| The robot stops just before the end of a move | [`Drive.moveMinPower`](parts/drive.md#in-tunablesjava) | more |
-| Short moves slide past the end | [`Drive.slowDownIn`](parts/drive.md#in-tunablesjava) | more (try 6) |
-| Path steps do not run on the real robot | [`Odometry.checked`](parts/odometry.md#in-tunablesjava) | `true`, after the Odometry Tuner |
-| The odometry's distances are off (OTOS) | [`Odometry.linearScalar`](parts/odometry.md#in-tunablesjava) | Odometry Tuner |
-| **Intake** | - | - |
-| Pieces are thrown or jam on the way in | [`Intake.inPower`](parts/intake.md#in-tunablesjava) | less |
-| Pieces do not come out | [`Intake.outPower`](parts/intake.md#in-tunablesjava) | more |
-| **Lift, arm, servos** | - | - |
-| A lift or arm is slow to arrive, or shakes | [`kP`](parts/lift.md#in-tunablesjava) | more / less |
-| A lift sags | [`kF`](parts/lift.md#in-tunablesjava) | more |
-| A lift or arm slams into its ends | [`slowZone`](parts/lift.md#in-tunablesjava) | more |
-| A claw does not open or close far enough | [positions](parts/claw.md#in-tunablesjava) | Servo Finder |
-| Actions go on before a servo arrives | [`travelSec`](parts/claw.md#in-tunablesjava) | more |
-| **Launcher** | - | - |
-| Shots land short or long | [`speedRpm`](parts/launcher.md#in-tunablesjava) (or the shot table) | Shot Tuner, or more / less |
-| The flywheel is slow to reach speed, or its speed swings | [`kP`, `kF`](parts/launcher.md#in-tunablesjava) | Flywheel Finder |
-| It waits too long before it fires | [`readyBandRpm`](parts/launcher.md#in-tunablesjava) | more |
-| Shots land at different distances | [`readyBandRpm`](parts/launcher.md#in-tunablesjava) | less |
-| The second of two quick shots lands short | [`shotIntervalSec`](parts/launcher.md#in-tunablesjava) | more |
-| The first shot takes too long to spin up | [`idleRpm`](parts/launcher.md#in-tunablesjava) | more (uses more battery) |
-| One D-pad press changes the speed too much or too little | [`stepRpm`](parts/launcher.md#in-tunablesjava) | less / more |
-| **Feeding** | - | - |
-| It feeds two pieces at once | [`feedSec`](parts/indexer.md#in-tunablesjava) | less |
-| It feeds no piece | [`feedSec`](parts/indexer.md#in-tunablesjava) | more |
-| A pusher comes back before the piece is gone | [`pushSec`](parts/indexer.md#in-tunablesjava) | more |
-| **Aiming** | - | - |
-| Aim is slow, or swings past the goal | [`Aim.turnKp`](parts/aim.md#in-tunablesjava) | more / less |
-| Shots miss although it says "AIMED" | [`Aim.toleranceDeg`](parts/aim.md#in-tunablesjava) | less |
-| The robot or turret aims a little to one side | [`cameraOffset`](parts/aim.md#in-tunablesjava) | Aim Tuner |
-| A turret swings too hard | [`Turret.maxPower`](parts/turret.md#in-tunablesjava) | less |
-| The wires allow a turret to turn more or less | [`Turret.min`, `max`](parts/turret.md#in-tunablesjava) | Motor Finder |
-| **Camera and sensors** | - | - |
-| The camera pictures are too dark or noisy | [`Camera.gain`](parts/camera.md#in-tunablesjava) | more / less |
-| A HuskyLens's turn angles are too big or too small | [`Camera.hfovDeg`](parts/camera.md#in-tunablesjava) | measure it |
-| A color sensor sees pieces that are not there | [`nearMm`](parts/pieces.md#in-tunablesjava) | less |
-| A color sensor mixes up kinds of piece | [`hueTolerance`](parts/pieces.md#in-tunablesjava) | less |
+This table moved to [Fix it by what you see](../tuning/17-fix-by-symptom.md) in the Tuning section.
 
 ## When you add a part
 
@@ -162,7 +111,7 @@ A section no part reads, like `Team` with a number your `Controls.java` uses:
 
 - `public static` fields: FTC Dashboard can show them too, **at home and in practice only**. Rule R704.D
   (2026-27) bans tools like FTC Dashboard at events, so take it out of the robot project before one
-  ([tuning guide](../guides/tuning.md#optional-ftc-dashboard-practice-only)). The library's tuning menu is
+  ([tuning guide](../tuning/16-tuning-menu.md#ftc-dashboard-practice-only)). The library's tuning menu is
   allowed.
 - The menu's names ("Lift/kP") are shared by the whole robot app: keep one Robot class per app.
 
@@ -251,7 +200,7 @@ setting is in the file from day one, and the file shows what is still to do. Pic
 **Why positions are `MEASURE`:** the library's guesses (a Positioner's `stowed` 0.0 and `deployed` 0.5)
 are not your servo's. With `DEFAULT` the servo goes to a guess at the first command after ▶ (start on the
 Driver Hub), and a guess can push the part into the frame. With `MEASURE` your TeleOp and autos stop at
-INIT until the [Servo Finder](../guides/finders.md#servo-finder-ends-and-positions) gives the numbers. A
+INIT until the [Servo Finder](../tuning/03-servo-finder.md) gives the numbers. A
 part that is `optional()` and not plugged in does not stop, so the simulator still runs before the servo
 is mounted. A wrong tuning number only makes a part slow or soft, so `DEFAULT` (a starting value from the
 part) is fine there.
@@ -330,13 +279,13 @@ out. **With no part named, or a part whose numbers are not known** (`Motors.unkn
 
 | Part | Not written | What it starts with | Tune it with |
 | --- | --- | --- | --- |
-| Launcher | `kF`, `kP`, `kI`, `kD` | REV's formula with the motor's top speed: F = 32767 / (top RPM x counts per turn / 60), P = F / 10, I = P / 10, D = 0. A goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117. The library does not use the hub's own gains (the numbers the Control Hub uses when the code gives none: P 10, I 3, F 0): with no F, the wheel only creeps up to speed | [Flywheel Finder](../guides/finders.md#flywheel-finder-gains-and-recovery) |
-| Launcher | `speedRpm` | 60% of the motor's top speed, to 10 RPM (6000 RPM motor: 3600). This leaves room above it for the speed control to recover after a shot and on a tired battery, and gives a gentle first shot | [Shot Tuner](../guides/finders.md#shot-tuner-the-shot-table) |
+| Launcher | `kF`, `kP`, `kI`, `kD` | REV's formula with the motor's top speed: F = 32767 / (top RPM x counts per turn / 60), P = F / 10, I = P / 10, D = 0. A goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117. The library does not use the hub's own gains (the numbers the Control Hub uses when the code gives none: P 10, I 3, F 0): with no F, the wheel only creeps up to speed | [Flywheel Finder](../tuning/06-flywheel-finder.md) |
+| Launcher | `speedRpm` | 60% of the motor's top speed, to 10 RPM (6000 RPM motor: 3600). This leaves room above it for the speed control to recover after a shot and on a tired battery, and gives a gentle first shot | [Shot Tuner](../tuning/12-shot-tuner.md) |
 | Lift with `.part(...)` | `kP`, `kD`, `slowZone`, `tolerance` | the plain defaults (made for a goBILDA 312 RPM motor, 537.7 counts a turn) scaled to your motor's counts per turn, so it acts the same per motor turn. A 435 RPM motor: kP 0.0056, kD 0.00028, slowZone 179, tolerance 14 | the tuning menu (lesson 4, step 6) |
 | Claw, Wrist, Positioner with `.part(...)` | `travelSec` | the servo's catalog speed at the hub's 5 V over its whole move (goBILDA 2000 torque: 270 degrees at 0.25 s per 60 = 1.13 s) | time a move and divide by its distance ([how](parts/claw.md#in-tunablesjava)) |
 | Hood, servo Turret with `.part(...)` | `travelSec` | the same, over the move from `posA` to `posB` | time it |
 | servo Indexer with `.part(...)` | `pushSec`, `returnSec` | the same, from `rest` to `push`, at least 0.25 s | watch a feed |
-| Claw, Wrist, Positioner, servo Indexer | every position | the library's guesses, with a note: they are NOT your servo's | [Servo Finder](../guides/finders.md#servo-finder-ends-and-positions) before the first TeleOp |
+| Claw, Wrist, Positioner, servo Indexer | every position | the library's guesses, with a note: they are NOT your servo's | [Servo Finder](../tuning/03-servo-finder.md) before the first TeleOp |
 
 **Never a starting value:** safety numbers stay REQUIRED (a lift's or arm's `min`/`max`, a hood's or servo
 turret's stops, interlock zones, a turret's `homeAngle` with a switch). Battery compensation stays off
@@ -362,7 +311,7 @@ A name that ends in `Sec` is seconds, `Ms` milliseconds, `In` inches, `Mm` milli
 ## The "In tuning menu" column
 
 You can change some numbers while the robot runs. In the PRACTICE profile, after ▶, hold **GUIDE** for 1 s.
-Use the D-pad to choose and change, and **A** to save on the Control Hub ([tuning guide](../guides/tuning.md)). The
+Use the D-pad to choose and change, and **A** to save on the Control Hub ([tuning guide](../tuning/16-tuning-menu.md)). The
 numbers you tune most are [`Tunable`](../modules/tuning.md)s ("Lift/kP").
 
 | In tuning menu says | What it means |
@@ -377,7 +326,7 @@ under "Tuned on this robot (copy into Tunables.java)", for example `Tunables.Lif
 
 ## How to read a finder's lines
 
-The [finders](../guides/finders.md) measure numbers on the robot and show the lines to copy. Each line
+The [finders](../tuning/README.md) measure numbers on the robot and show the lines to copy. Each line
 names the section first:
 
 | The finder shows | Copy into Tunables.java |
@@ -387,13 +336,13 @@ names the section first:
 | `public static double[][] speedByDistance = {{24, 2200}, {48, 2550}};   // in Tunables.Launcher` | the whole line, into `Launcher` (replace the old one) |
 | `Tunables.Odometry: checked = true` | in `Odometry`: `public static boolean checked = true;` |
 
-The finders are: [Servo Finder](../guides/finders.md#servo-finder-ends-and-positions),
-[Motor Finder](../guides/finders.md#motor-finder-limits-positions-top-speed),
-[Flywheel Finder](../guides/finders.md#flywheel-finder-gains-and-recovery),
-[Drive Tuner](../guides/finders.md#drive-tuner-wheel-size-and-strafe-correction),
-[Odometry Tuner](../guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check),
-[Aim Tuner](../guides/finders.md#aim-tuner-camera-offset), [Shot Tuner](../guides/finders.md#shot-tuner-the-shot-table),
-[Hood Finder](../guides/finders.md#hood-finder), [Piece Tuner](../guides/finders.md#piece-tuner-what-each-sensor-sees).
+The finders are: [Servo Finder](../tuning/03-servo-finder.md),
+[Motor Finder](../tuning/05-motor-finder.md),
+[Flywheel Finder](../tuning/06-flywheel-finder.md),
+[Drive Tuner](../tuning/08-drive-tuner.md),
+[Odometry Tuner](../tuning/09-odometry-tuner.md),
+[Aim Tuner](../tuning/11-aim-tuner.md), [Shot Tuner](../tuning/12-shot-tuner.md),
+[Hood Finder](../tuning/04-hood-finder.md), [Piece Tuner](../tuning/14-piece-tuner.md).
 "Test" in the part tables means: try it on the robot and change it by hand.
 
 ## Parts with no Tunables

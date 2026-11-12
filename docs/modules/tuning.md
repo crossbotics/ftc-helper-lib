@@ -4,7 +4,7 @@
 
 Package: `com.crossbotics.ftchelper.tuning`
 
-Learn it hands-on: [15 Telemetry, profiles and tuning](../tutorials/15-telemetry-profiles-tuning.md). Full guide: [Tuning while the robot runs](../guides/tuning.md).
+Learn it hands-on: [15 Telemetry, profiles and tuning](../tutorials/15-telemetry-profiles-tuning.md). Full guide: [Tuning while the robot runs](../tuning/16-tuning-menu.md).
 
 With this module you change numbers from the gamepad while the robot runs, with no rebuild. Use it to tune PID
 gains, positions and speeds fast in the shop. A **tunable** is one number the menu can change.

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 309" width="520" height="309" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="520" height="309" fill="#ffffff"/>
+<text x="16" y="43" font-size="14" fill="#555">Let go of A, then hold it:</text>
+<rect x="217" y="18" width="118" height="42" rx="21" fill="#ffd54d" stroke="#333" stroke-width="2"/>
+<text x="276.0" y="46" text-anchor="middle" font-size="19" font-weight="bold" fill="#222">A (hold)</text>
+<rect x="6" y="70" width="508" height="233" rx="14" fill="#2b2f36"/>
+<text x="22" y="100" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
+<rect x="16" y="114" width="488" height="179" rx="6" fill="#ffffff"/>
+<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Flywheel "launcher"  (BACK = another) ---</text>
+<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Speed : 5590 RPM</text>
+<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Battery : 12.80 V (gains for 12.8 V)</text>
+<rect x="20" y="188" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Top speed : 5600 RPM</text>
+<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">F gain : 12.54 (RB/LB)</text>
+<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Step 2: B = hold a speed. (Or hold A again to ...</text>
+<text x="26" y="266" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
+</svg>

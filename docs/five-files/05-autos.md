@@ -96,7 +96,7 @@ move is a little wrong. The library stops a robot that could drive much too far.
 4. In `Tunables.java`, set `calibrated = true` in the `Drive` section.
 
 Every step, and what each screen shows:
-[the Drive Tuner](../guides/finders.md#drive-tuner-wheel-size-and-strafe-correction).
+[the Drive Tuner](../tuning/08-drive-tuner.md).
 
 **The simulator does not need this.** There, an auto runs before the Drive Tuner, with the warning
 `Drive not tuned: runs in the simulator only`.

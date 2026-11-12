@@ -68,7 +68,7 @@ per auto. Most of last season's files carry over. Change only what the new robot
 3. **`Tunables.java`:** delete the sections of the parts you removed. INIT lists every section a new part
    still needs.
 4. **`Controls.java` and `Actions.java`:** put the new parts on buttons. Each part page has a "Buttons to add".
-5. Run the Hardware Check, then the [finders](finders.md) for each new part.
+5. Run the Hardware Check, then the [finders](../tuning/README.md) for each new part.
 
 ## 5. This game's numbers (in TeamCode)
 
@@ -93,5 +93,7 @@ instead: [Extending the library](extending.md).
 ## 6. Docs and records
 
 - Library: CHANGELOG, the part pages, the lessons that changed, this page's table.
+- The Shot Tuner's field map: change the goal and the spots in `tools/shot_spots.py`, run it, and change
+  the season paragraph in `docs/tuning/12-shot-tuner.md`.
 - Robot project: its own README / design log.
 - AI agents: they read `AGENTS.md` every session. Update it when the rules or the layout change.

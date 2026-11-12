@@ -6,7 +6,7 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASU
  * REV starter bot, file 2 of 5: the numbers, one per line. DEFAULT = the library's default (in
  * brackets). The flywheel speed and poker spots are guesses: measure them with the finders.
  * Tuned a number live? Copy it back here, or it is lost at the next build.
- * more: https://crossbotics.com/ftc-helper/docs/guides/finders/
+ * more: https://crossbotics.com/ftc-helper/docs/tuning/
  */
 public class Tunables {
     /** calibrated: set true after the Drive Tuner (autonomous refuses to run before). */

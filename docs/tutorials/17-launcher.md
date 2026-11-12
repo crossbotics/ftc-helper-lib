@@ -37,7 +37,7 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 The hub holds the speed itself, fast and smooth. It needs four gains for this: P, I, D and F (like
 Tutorial 07). `startingGains()` calculates them from the motor's top speed (`maxRpm`) and `countsPerRev`.
 This is REV's formula, and it works for any motor. Set `maxRpm` to your motor's speed: 6000 for a goBILDA
-6000 RPM motor. Later, the [Flywheel Finder](../guides/finders.md) measures your wheel and gives better
+6000 RPM motor. Later, the [Flywheel Finder](../tuning/README.md) measures your wheel and gives better
 gains. Then put them in `.pidf(p, i, d, f)` in place of `startingGains()`.
 
 "Ready" needs the speed to STAY in the band for 0.15 s. So one lucky reading during spin-up does not count.

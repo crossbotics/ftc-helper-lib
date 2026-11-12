@@ -398,7 +398,7 @@ A motor that runs the wrong way makes the robot drive in circles. Do this check 
 drivetrain. **Put the robot on a block, with the wheels off the ground.**
 
 **With the robot in five files:** you copy nothing. Use **Tune and check > Motor Direction Check**. It reads
-the directions from Robot.java ([steps](../guides/finders.md#motor-direction-check-each-wheel-rolls-forward)).
+the directions from Robot.java ([steps](../tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward)).
 **With your own `DriveConfig`** (no Robot.java):
 
 1. Copy `examples/.../MotorDirectionCheck.java` into TeamCode. Set its `config()` to your `DriveConfig`,

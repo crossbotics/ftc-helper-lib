@@ -1,0 +1,70 @@
+{
+  "pictures": {
+    "characterizer-go-opmode": {
+      "button": "INIT",
+      "where": "Pick it, then press:",
+      "title": "Driver Hub: TeleOp list",
+      "lines": [
+        "--- TeleOp ---",
+        "  ...",
+        "Finders",
+        "*  Characterizer",
+        "  Tune and check",
+        "  ..."
+      ]
+    },
+    "characterizer-go-start": {
+      "button": "▶ (start)",
+      "where": "Press on the Driver Hub:",
+      "lines": [
+        "Battery : 12.8 V",
+        "Characterizer: measures the drive, lifts and flywheels ...",
+        "*!! Drive test: about 5 ft clear in front and behind.",
+        "*Lifts start at the bottom.",
+        "Press ▶ on the Driver Hub.",
+        "GUIDE (center button), or hold START 1 s = help."
+      ]
+    },
+    "characterizer-step-choose": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "Battery : 12.8 V",
+        "--- Characterizer tests ---",
+        "*> Drive (forward and back)",
+        "  Turn in place",
+        "  Lift/arm lift",
+        "  Lift/arm arm",
+        "  Flywheel flywheel",
+        "Choose a test (D-pad), then A."
+      ]
+    },
+    "characterizer-step-stop": {
+      "button": "B",
+      "where": "To stop it now, press:",
+      "lines": [
+        "Battery : 12.6 V",
+        "Time : 3.2 s",
+        "*Drive (forward and back): ramp + (B = stop)",
+        "GUIDE (or hold START) = help"
+      ]
+    },
+    "characterizer-step-again": {
+      "button": "A",
+      "where": "Run it again, press:",
+      "order": "press-first",
+      "lines": [
+        "Battery : 12.6 V (the numbers below are for about ...",
+        "...",
+        "*Drive (forward and back): done. Fit r2 0.981 (good)",
+        "...",
+        "--- Copy into your code ---",
+        "# simulator robot file:",
+        "drive.kS = 0.062",
+        "drive.maxTicksPerSec = 2750",
+        "drive.accelSec = 0.180",
+        "Feedforward driveFf = new Feedforward(0.06200, ..."
+      ]
+    }
+  }
+}

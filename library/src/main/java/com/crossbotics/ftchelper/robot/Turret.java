@@ -636,7 +636,7 @@ public final class Turret extends Module<Turret> {
 
     @Override
     String toolFor(String field) {
-        if (field.equals("cameraOffset")) return "the Aim Tuner, docs/guides/finders.md#aim-tuner-camera-offset";
+        if (field.equals("cameraOffset")) return "the Aim Tuner, docs/tuning/11-aim-tuner.md";
         if (field.startsWith("pos") || field.startsWith("angle")) return "the Servo Finder and a protractor, docs/guides/turret-setup.md";
         if (field.equals("min") || field.equals("max") || field.equals("homeAngle") || field.equals("encoderOffset")) {
             return "measure it: turn the turret by hand and read the angle, docs/guides/turret-setup.md";

@@ -98,6 +98,20 @@ public final class Parts {
         }
 
         /**
+         * About how long a move between two positions takes, from the seller's speed with no load: for
+         * example how long a feed stop takes to open (goBILDA 2000 speed, 0.150 to 0.550 on the normal range:
+         * 108 degrees at 0.11 s per 60 = 0.20 s). A real servo with a load is a little slower: add some time.
+         *
+         * @param from      the position it starts at, 0 to 1
+         * @param to        the position it goes to, 0 to 1
+         * @param fullRange true with {@code .fullRange()} (0 to 1 is the servo's whole turn)
+         * @return seconds, or NaN when the catalog lacks the servo's turn or speed
+         */
+        public double moveSec(double from, double to, boolean fullRange) {
+            return Math.abs(to - from) * fullMoveSec(fullRange);
+        }
+
+        /**
          * The words for the simulator's robot file: {@code part=ID} for a catalog servo; for a custom one
          * its turn over the file's pulse range and its speed ({@code rangeDeg=270, secPer60=0.2}), "" when
          * those are not known.

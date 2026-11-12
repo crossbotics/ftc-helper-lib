@@ -6,6 +6,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Feed Stop Finder: the firing times.** With both positions saved, it also finds `feedStopMoveSec` and
+  `feedStopOpenSec`, and shows a second line to copy. The open time comes from the servo's catalog speed
+  when Robot.java names the part: `.feedStop("feed_stop", "gobilda-2000-speed")` (new). For the backup
+  time, LB spins the wheel up and RB fires a test shot through the launcher's own feed: it times the piece
+  until the wheel sees the shot (the longest of the test shots + 0.2 s), warns when no shot came, and
+  warns when 2 pieces went through one opening. New: `Launcher.feedTest(...)` and `FeedTest` (for the
+  finder), `Parts.ServoPart.moveSec(from, to, fullRange)`. Test: SHOT-12.
+
 - **Ask an AI agent about the library.** The ftc-helper skill (`skills/ftc-helper/SKILL.md`) lets a team's
   coding agent (Claude Code, Codex, Copilot, Cursor) answer "how do I" questions from the docs of the
   team's own library version, and change TeamCode the library's way. One line in the project's `AGENTS.md`
@@ -13,10 +21,20 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   (`llms.txt`, `llms-small.txt`, `llms-full.txt`). Guide: docs/guides/ask-an-ai-agent.md.
   `tools/check_docs.py` checks that the skills name only paths that exist, and that the ftc-helper skill
   lists every docs folder.
-
-- **Docs: Controls** (`docs/controls/`), after the five files: how buttons work, every press type with one
-  line of code, what the drivers see and feel (buzzes, lights, `show`, modes), and moving the library's
-  buttons. They replace guides/buttons.md, which now points to the new pages.
+- **Docs: Controls** (`docs/controls/`), after the five files: how buttons work (one gamepad first,
+  gamepad 2 optional; PlayStation names and a gamepad picture; modes), every press type with one line of
+  code, what the drivers see and feel (buzzes, lights, `show`), and moving the library's buttons. They
+  replace guides/buttons.md, which now points to the new pages.
+- **Docs: Tuning** (`docs/tuning/`): the tuning order with one line on why each tool comes there, one page
+  per finder (when, steps, the numbers to copy, done when), the tuning menu, and "Fix it by what you see"
+  (the symptom table, moved from the Tunables reference). They replace guides/finders.md and
+  guides/tuning.md, which now point to the new pages. Each finder page shows the Driver Hub: how to get to
+  the tool, and a picture under each main step with the button to press and the screen lines that matter
+  (made by `tools/hub_screens.py` from `tools/hub_steps/*.json`). The Servo Finder page also has
+  "Put an arm back on". Every finder page has "Fix a mistake" (the undo buttons, and how to start over).
+  The Aim Tuner page explains the offset with top-view pictures (a camera left, right, or on the
+  launcher's line) and how to see the camera's live picture. The Shot Tuner page explains how to tune from
+  any spot on the field with odometry, with a field map of the spots to test.
 
 - **Odometry measured from the robot's edges.** `.robotSizeMm(length, width)` with
   `.podsFromEdgesMm(forwardPodFromLeft, sidewaysPodFromFront)` (Pinpoint) or
@@ -65,6 +83,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `alliancesOnOneWall()` (default false) is not needed for DECODE; the docs no longer say it is.
 
 ### Fixed
+
+- Flywheel Finder help: it said "Feed a piece by hand". It now says to feed it with the feeder or a stick,
+  never fingers, the same as the docs.
 
 - Auto builder, "Best match": it now counts every device in the robot file (odometry, IMU, cameras, sensors),
   not only motors and servos. Before, with several Robot classes, it could pick one that needs a device the
@@ -128,7 +149,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   the side where it has room (a lift up, a hood toward `posB`). A two-motor lift is pushed with both motors; an
   intake's missing encoder is fine; a port that reads an odometry pod or a CR servo turret's encoder is skipped; a
   read the hub fails says "could not read" instead of a fault. It cannot see a wrong `reversed()`: watch the part. `RobotDefinition.encoderMotors()` lists the motors. The simulator's scenarios can make the faults
-  (`set encoder lift none`, `set encoder lift flywheel`). Guide: [Encoder Check](docs/guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port);
+  (`set encoder lift none`, `set encoder lift flywheel`). Guide: [Encoder Check](docs/tuning/02-wiring-checks.md#encoder-check-each-encoder-cable-in-its-own-port);
   community test SET-04.
 - **goBILDA's StarterBot with mecanum wheels** (on a Strafer chassis), a fifth BIOBUZZ starter bot: the template
   `gobildastraferbot` (five files with goBILDA's own configuration names: `left_front_drive` and the others,
@@ -724,7 +745,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   that fit Robot.java (the Hood Finder only with a hood, the Shot Tuner only with a launcher...). D-pad
   picks, A opens the tool's INIT screen, START runs it; BACK in the tool's INIT goes back to the menu.
   Your own finder files still work. Not in it: the Aim Tuner and the Characterizer (they need your camera
-  or lifts). [Guide](docs/guides/finders.md#tune-and-check-all-of-them-in-one-opmode)
+  or lifts). [Guide](docs/tuning/01-tune-and-check.md#the-tune-and-check-menu)
 - **Three shot modes.** The launcher chooses how strict it is before each piece:
   - CAREFUL: every piece waits until the wheel is at speed (as before).
   - QUICK: the first piece waits; the next ones go a little sooner (`quickBandRpm`, `quickMaxWaitSec`).
@@ -2167,7 +2188,7 @@ uses odometry, and only a project that adds the `pedro` folder gets Pedro Pathin
   [BIOBUZZ field map](docs/images/biobuzz-field-map.svg) in the lesson's frame (made by
   `tools/field_map.py` from the simulator's field file) and the [odometry module](docs/modules/odometry.md); `driveTo` in
   the [autonomous builder](docs/building-autos/05-auto-builder-odometry-and-pedro.md#drive-to-a-point-driveto), the
-  Odometry Tuner in the [finders guide](docs/guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
+  Odometry Tuner in the [finders guide](docs/tuning/09-odometry-tuner.md).
 - Example: `odometrybot` (lesson 8's robot: a Pinpoint, `ToTheGoal` autonomous with `driveTo`, its
   TeleOp and Odometry Tuner), with a simulator test.
 

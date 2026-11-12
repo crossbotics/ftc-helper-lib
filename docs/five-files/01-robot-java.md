@@ -124,7 +124,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
         .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 ```
 
-The Motor Direction Check tells you which ones ([Tune and check](../guides/finders.md)).
+The Motor Direction Check tells you which ones ([Tune and check](../tuning/README.md)).
 
 ## Check it
 

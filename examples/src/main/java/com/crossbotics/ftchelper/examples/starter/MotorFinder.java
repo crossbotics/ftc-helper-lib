@@ -9,7 +9,7 @@ import com.crossbotics.ftchelper.finders.MotorFinderOpMode;
  * STARTER KIT finder: finds a lift's, arm's or turret's limits, positions and top speed.
  * Nothing to fill in: it lists the devices in the robot configuration. It shows the code lines to
  * copy, and saves them on the hub (/sdcard/FIRST/ftc-helper/finder-results.txt) when you press STOP.
- * How to use it: docs/guides/finders.md.
+ * How to use it: docs/tuning/README.md.
  */
 @TeleOp(name = "Motor Finder", group = "Finders")
 // @Disabled hides it from the list. Delete this line in your copy, or you will not see it.

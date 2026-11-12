@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 246" width="520" height="246" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="520" height="246" fill="#ffffff"/>
+<text x="16" y="215" font-size="14" fill="#555">Press on the Driver Hub:</text>
+<rect x="202" y="190" width="129" height="42" rx="21" fill="#ffd54d" stroke="#333" stroke-width="2"/>
+<text x="266.5" y="218" text-anchor="middle" font-size="19" font-weight="bold" fill="#222">▶ (start)</text>
+<rect x="6" y="6" width="508" height="170" rx="14" fill="#2b2f36"/>
+<text x="22" y="36" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
+<rect x="16" y="50" width="488" height="116" rx="6" fill="#ffffff"/>
+<text x="26" y="76" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Flywheel finder: top speed, speed-control gains, ...</text>
+<rect x="20" y="82" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="97" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">!! Hands away from the wheel. Eye protection on.</text>
+<text x="26" y="118" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Press ▶ on the Driver Hub.</text>
+<text x="26" y="139" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">GUIDE (center button), or hold START 1 s = help.</text>
+</svg>

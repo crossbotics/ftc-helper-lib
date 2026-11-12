@@ -66,7 +66,7 @@ flowchart LR
 | `ControlMap`, `Pad`, `Toggleable` | `Controls.java`: the TeleOp and the button map; anything one button switches on and off | [Controls.java](controls.md) |
 | `Auto`, `Steps` | one autonomous as a list of steps | [Steps for autos](steps.md) |
 | `Feature` | what the library does by itself for your robot, ready or not (`robot.features()`) | [below](#what-your-robot-can-do) |
-| `EncoderMotor` | one motor for the [Encoder Check](../guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port) (`robot.encoderMotors()`) | [below](#robotdefinition) |
+| `EncoderMotor` | one motor for the [Encoder Check](../tuning/02-wiring-checks.md#encoder-check-each-encoder-cable-in-its-own-port) (`robot.encoderMotors()`) | [below](#robotdefinition) |
 | `Motors` | the encoder counts and speed of common motors, by catalog id (a part's name in the [parts catalog](../guides/parts-catalog.md), e.g. `"gobilda-5203-312"`) | [below](#motors) |
 | `Shape`, `Parts` | how each part looks and where it sits, for the simulator; wheels, rollers and servos by catalog id | [below](#shapes-and-parts) |
 | `Module`, `MotorPositions`, `ServoPositions`, `Devices` | what the modules share (most code does not use these by name) | [below](#module) |
@@ -131,7 +131,7 @@ public class Robot extends RobotDefinition {
 | `notes()` | INIT notes: missing Tunables sections or fields (the library uses its defaults), parts that are off (not in the configuration) |
 | `checkConfiguration(hardwareMap)` | one line per device Robot.java names that is NOT in the configuration, and what that means ("INIT will stop", or "optional, so the part is off"). The [Hardware Check](../modules/testing.md#hardwarecheckopmode) shows it |
 | `modules()`, `drive()`, `all()` | the parts, the drivetrain, the update group |
-| `encoderMotors()` | every motor Robot.java names, as `EncoderMotor`s for the [Encoder Check](../guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port): the drive first, then each part's. See the `EncoderMotor` table below. No hardware needed |
+| `encoderMotors()` | every motor Robot.java names, as `EncoderMotor`s for the [Encoder Check](../tuning/02-wiring-checks.md#encoder-check-each-encoder-cable-in-its-own-port): the drive first, then each part's. See the `EncoderMotor` table below. No hardware needed |
 | `pose()` | where the robot is now, from the odometry: a [`FieldPose`](../modules/util.md#fieldpose) (x in right, y in away from your wall, heading 0 = away, counterclockwise +). It is a copy, and null with no odometry line |
 | `odometry()`, `odometrySpec()`, `odometryChecked()` | the running [`PoseTracker`](../modules/odometry.md#posetracker) (null before `setup`), the odometry line as written, and `Tunables.Odometry.checked` |
 | `resetPose()` | "set pose here": the pose becomes the reset spot in `Tunables.Odometry` (`resetX`, `resetY` inches, `resetHeading` degrees, as seen from your wall, written for BLUE; RED mirrored like the start spot). It gives false (nothing changed) with no odometry or no spot. TeleOp's G1 START held 1 s calls it ([Set pose here](controls.md#set-pose-here)) |
@@ -360,8 +360,9 @@ its diameter (and width, when the seller gives it). You always give the places y
 
 **A servo's range** is how far positions 0 to 1 turn it. On the hub's normal 600-2400 us, a goBILDA
 2000 servo turns 270 degrees (its seller's 300 needs `.fullRange()`: [Claw](parts/claw.md)). In code:
-`Parts.servoPart(id)` gives `rangeDeg` (the seller's), `pulseMinUs`/`pulseMaxUs`, `sdkRangeDeg()` (270) and
-`degreesOver(lowUs, highUs)`.
+`Parts.servoPart(id)` gives `rangeDeg` (the seller's), `pulseMinUs`/`pulseMaxUs`, `sdkRangeDeg()` (270),
+`degreesOver(lowUs, highUs)`, `fullMoveSec(fullRange)` (the time for 0 to 1) and `moveSec(from, to, fullRange)`
+(the time between two positions, from the seller's speed with no load).
 
 ```java
 drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheel("gobilda-hogback-96")

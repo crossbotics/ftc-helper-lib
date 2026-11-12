@@ -96,7 +96,7 @@ Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
 | --- | --- | --- |
 | every motor | moves with positive power the way you expect, and its encoder counts UP | `.reversed()` on its part in `Robot.java`; check the encoder cable port |
 | drive motors | each wheel rolls FORWARD with positive power | `Drive.mecanum(...).reversed("front_left", ...)` in `Robot.java` |
-| every motor with an encoder | its own port counts, up (the [Encoder Check](finders.md#encoder-check-each-encoder-cable-in-its-own-port) in Tune and check) | the encoder cable in its own motor's port, plugged in |
+| every motor with an encoder | its own port counts, up (the [Encoder Check](../tuning/02-wiring-checks.md#encoder-check-each-encoder-cable-in-its-own-port) in Tune and check) | the encoder cable in its own motor's port, plugged in |
 | a lift or arm on two motors | with the chain or belt OFF, both turn the way that lifts | `alsoMotor` / `alsoMotorReversed` ([two motors](../reference/parts/lift.md#two-motors-on-one-lift-or-arm)) |
 | servos | find and write down each position you need (Servo Finder) | the named positions in `Tunables.java` |
 | CR servos | spin both ways | the configuration must say "Continuous Rotation Servo" |

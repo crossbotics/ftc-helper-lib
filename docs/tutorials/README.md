@@ -65,7 +65,7 @@ You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-idea-you-
 Then: [Controls](../controls/README.md) (every way a button can work),
 [the cookbook](../cookbook.md) (short "how do I...?" answers with code to copy),
 [building autos](../building-autos/README.md) (everything autonomous can do),
-[the finders](../guides/finders.md) (measure your numbers), and the [simulator](../guides/simulator.md).
+[the finders](../tuning/README.md) (measure your numbers), and the [simulator](../guides/simulator.md).
 
 ## Under the hood: how it works
 

@@ -1,0 +1,65 @@
+{
+  "pictures": {
+    "aim-tuner-opmode": {
+      "button": "INIT",
+      "where": "Pick it, then press:",
+      "title": "Driver Hub: TeleOp list",
+      "lines": [
+        "--- TeleOp ---",
+        "  ...",
+        "Finders",
+        "*  Aim Tuner",
+        "  ..."
+      ]
+    },
+    "aim-tuner-go-start": {
+      "button": "▶ (start)",
+      "where": "Press on the Driver Hub:",
+      "lines": [
+        "Aim tuner: finds the camera offset so shots go in the ...",
+        "!! Nobody in the line of fire. Eye protection on.",
+        "Camera : STREAMING 30 fps",
+        "*Press ▶ on the Driver Hub.",
+        "GUIDE (center button), or hold START 1 s = help."
+      ]
+    },
+    "aim-tuner-step-aim": {
+      "button": "hold A",
+      "where": "Press on gamepad 1:",
+      "order": "press-first",
+      "lines": [
+        "--- Aim tuner  (hold A = aim) ---",
+        "Offset : 0.0 deg  (D-pad right/up = aim more to the ...",
+        "Bearing : 0.1 deg (left = +)",
+        "*Still to turn : 0.1 deg",
+        "Distance : 58.5 in",
+        "Launcher : ready",
+        "..."
+      ]
+    },
+    "aim-tuner-step-shoot": {
+      "button": "RB",
+      "where": "Still holding A, press:",
+      "lines": [
+        "--- Aim tuner  (hold A = aim) ---",
+        "...",
+        "Still to turn : 0.1 deg",
+        "*Launcher : ready",
+        "RB = shoot one, LB = flywheel off. Shots go left: ..."
+      ]
+    },
+    "aim-tuner-step-offset": {
+      "button": "D-pad left",
+      "where": "Shots go right, so press:",
+      "order": "press-first",
+      "lines": [
+        "--- Aim tuner  (hold A = aim) ---",
+        "*Offset : -1.5 deg  (D-pad right/up = aim more to the ...",
+        "...",
+        "--- Copy into your code ---",
+        "new AimController(...).offset(-1.5)   // with your aim ...",
+        "*Tunables.Aim: cameraOffset = -1.5   // whole-robot aim ..."
+      ]
+    }
+  }
+}

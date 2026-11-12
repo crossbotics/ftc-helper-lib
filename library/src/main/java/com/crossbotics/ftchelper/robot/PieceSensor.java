@@ -205,7 +205,7 @@ public final class PieceSensor extends Module<PieceSensor> {
 
     @Override
     String toolFor(String field) {
-        return "the Piece Tuner, docs/guides/finders.md#piece-tuner-what-each-sensor-sees";
+        return "the Piece Tuner, docs/tuning/14-piece-tuner.md";
     }
 
     @Override

@@ -48,7 +48,7 @@ import java.util.List;
  *
  * <p>The Drive, Strafe and Turn tests WAIT while the robot moves (like autonomous): STOP still works.
  *
- * Docs: docs/modules/finders.md. Guide: docs/guides/finders.md
+ * Docs: docs/modules/finders.md. Guide: docs/tuning/README.md
  */
 public abstract class DriveTunerOpMode extends FinderOpMode {
 

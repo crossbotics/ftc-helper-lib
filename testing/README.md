@@ -48,7 +48,7 @@ A fail is as useful as a pass. No student names in reports.
    | `needs` | what the robot must have, from `needs` in vocabulary.json: `[flywheel, limelight\|webcam]` (each item is needed; `\|` = either one). `[any]` for any robot |
    | `kit_bots` | the starter bots that have everything in `needs`: `[gobilda, rev]`, or `[]` |
    | `since` | the first release it works with, `v0.16.0`, or `unreleased` |
-   | `docs` | the docs pages it tests, from `docs/`: `[guides/finders.md#hood-finder]` |
+   | `docs` | the docs pages it tests, from `docs/`: `[tuning/04-hood-finder.md]` |
 
 3. Write the sections, each a `## ` heading, in this order:
    - `## Why`: why we need this tested, in 2-3 sentences.

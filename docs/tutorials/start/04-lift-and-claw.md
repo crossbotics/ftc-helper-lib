@@ -219,7 +219,7 @@ public class MotorFinder extends MotorFinderOpMode {
   3. Nudge it with the D-pad to each end, just before it strains. Press X at one end and B at the other.
   4. Press A fully open without straining, and A again fully closed on a game piece.
 
-  Details: [Servo Finder](../../guides/finders.md#servo-finder-ends-and-positions).
+  Details: [Servo Finder](../../tuning/03-servo-finder.md).
 
   **When the servo does not turn far enough:** on the hub's normal signal, a goBILDA 2000 servo turns
   270 degrees over 0 to 1, not the 300 its seller lists. The hub sends a narrower pulse than the servo
@@ -270,7 +270,7 @@ If the Motor Finder also says `Robot.java: add .reversed() to the "lift" part`, 
 motor counts down as the lift goes up. The other lines (`PositionServo.create(...)`) are for the
 building-block classes of the "under the hood" tutorials, not the five files: skip them. The finder also
 saves the lines in `finder-results.txt` on the Control Hub. Steps and
-buttons: [Finding your numbers](../../guides/finders.md#motor-finder-limits-positions-top-speed)
+buttons: [Finding your numbers](../../tuning/05-motor-finder.md)
 and [tutorial 21](../21-finders.md).
 
 ## 6. Tune the lift live
@@ -337,7 +337,7 @@ for the same reason as the lift. Code that copies the position can miss a move, 
 
 - The numbers are in `Tunables.ClawLeft` (the FIRST servo's name). Find `open` and `closed` with **Tune and
   check > Servo Finder** on `claw_left`. `claw_right` moves with it there too, so the fingers never fight.
-  ([A new servo part, step by step](../../guides/finders.md#a-new-servo-part-step-by-step): the direction, the
+  ([A new servo part, step by step](../../tuning/03-servo-finder.md#a-new-servo-part-step-by-step): the direction, the
   ends, and how to line the two up again after a new horn.)
 - **Reversed or not:** servos that face each other (mirror images, the usual way) turn opposite ways for
   "close", so use `alsoServoReversed`. When both face the same way, use `alsoServo`. (No standard says

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 1086" width="520" height="1086" font-family="Helvetica, Arial, sans-serif">
+<rect width="520" height="1086" fill="#ffffff"/>
+<text x="16" y="28" font-size="17" fill="#222" text-anchor="start" font-weight="bold">1. Why the camera needs an offset</text>
+<circle cx="260" cy="70" r="14" fill="#fff" stroke="#2d7a32" stroke-width="3"/><circle cx="260" cy="70" r="4" fill="#2d7a32"/>
+<text x="282" y="75" font-size="14" fill="#2d7a32" text-anchor="start">goal</text>
+<line x1="260" y1="244" x2="260" y2="86" stroke="#1f4e9c" stroke-width="2.5" stroke-dasharray="6 5"/>
+<text x="266" y="130" font-size="13" fill="#1f4e9c" text-anchor="start">the launcher points</text>
+<text x="266" y="146" font-size="13" fill="#1f4e9c" text-anchor="start">at the goal</text>
+<line x1="198" y1="255" x2="198" y2="90" stroke="#999" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="192" y="104" font-size="13" fill="#777" text-anchor="end">the camera's</text>
+<text x="192" y="120" font-size="13" fill="#777" text-anchor="end">center</text>
+<line x1="198" y1="255" x2="260" y2="70" stroke="#e07b00" stroke-width="2.5"/>
+<path d="M198.0,160.0 A95,95 0 0 1 228.2,164.9" fill="none" stroke="#c0392b" stroke-width="3"/>
+<text x="190" y="173" font-size="15" fill="#c0392b" text-anchor="end" font-weight="bold">offset</text>
+<rect x="170" y="250" width="180" height="80" rx="8" fill="#eef2f8" stroke="#333" stroke-width="2"/>
+<rect x="250" y="244" width="20" height="26" rx="3" fill="#1f4e9c"/>
+<rect x="186" y="246" width="24" height="18" rx="3" fill="#e07b00"/>
+<circle cx="198" cy="255" r="5" fill="#fff"/>
+<text x="260" y="316" font-size="13" fill="#555" text-anchor="middle">robot, seen from above</text>
+<text x="286" y="282" font-size="13" fill="#1f4e9c" text-anchor="start">launcher</text>
+<text x="150" y="260" font-size="13" fill="#e07b00" text-anchor="end">camera</text>
+<text x="16" y="368" font-size="14" fill="#222" text-anchor="start">The camera sits LEFT of the launcher. When the launcher points</text>
+<text x="16" y="388" font-size="14" fill="#222" text-anchor="start">at the goal, the camera sees the goal a little to its RIGHT.</text>
+<text x="16" y="408" font-size="14" fill="#222" text-anchor="start">That angle is the offset. (Angles drawn bigger than real.)</text>
+<text x="16" y="468" font-size="17" fill="#222" text-anchor="start" font-weight="bold">2. Why it changes with distance</text>
+<circle cx="260" cy="510" r="14" fill="#fff" stroke="#2d7a32" stroke-width="3"/><circle cx="260" cy="510" r="4" fill="#2d7a32"/>
+<text x="282" y="515" font-size="14" fill="#2d7a32" text-anchor="start">far goal</text>
+<circle cx="260" cy="625" r="14" fill="#fff" stroke="#2d7a32" stroke-width="3"/><circle cx="260" cy="625" r="4" fill="#2d7a32"/>
+<text x="282" y="630" font-size="14" fill="#2d7a32" text-anchor="start">near goal</text>
+<line x1="198" y1="745" x2="198" y2="510" stroke="#999" stroke-width="2" stroke-dasharray="6 5"/>
+<line x1="198" y1="745" x2="260" y2="510" stroke="#e07b00" stroke-width="2.5"/>
+<path d="M198.0,595.0 A150,150 0 0 1 236.3,600.0" fill="none" stroke="#c0392b" stroke-width="3"/>
+<line x1="198" y1="745" x2="260" y2="625" stroke="#e07b00" stroke-width="2.5"/>
+<path d="M198.0,675.0 A70,70 0 0 1 230.1,682.8" fill="none" stroke="#c0392b" stroke-width="3"/>
+<text x="190" y="590" font-size="13" fill="#c0392b" text-anchor="end">far: a</text>
+<text x="190" y="606" font-size="13" fill="#c0392b" text-anchor="end">smaller angle</text>
+<text x="190" y="672" font-size="13" fill="#c0392b" text-anchor="end">near: a</text>
+<text x="190" y="688" font-size="13" fill="#c0392b" text-anchor="end">bigger angle</text>
+<rect x="170" y="740" width="180" height="80" rx="8" fill="#eef2f8" stroke="#333" stroke-width="2"/>
+<rect x="250" y="734" width="20" height="26" rx="3" fill="#1f4e9c"/>
+<rect x="186" y="736" width="24" height="18" rx="3" fill="#e07b00"/>
+<circle cx="198" cy="745" r="5" fill="#fff"/>
+<text x="260" y="806" font-size="13" fill="#555" text-anchor="middle">robot, seen from above</text>
+<text x="286" y="772" font-size="13" fill="#1f4e9c" text-anchor="start">launcher</text>
+<text x="150" y="750" font-size="13" fill="#e07b00" text-anchor="end">camera</text>
+<text x="16" y="858" font-size="14" fill="#222" text-anchor="start">So one offset is right at only one distance. Tune at the distance</text>
+<text x="16" y="878" font-size="14" fill="#222" text-anchor="start">you shoot from most. Or put the camera on the launcher's line:</text>
+<text x="16" y="898" font-size="14" fill="#222" text-anchor="start">then the offset is 0 at every distance.</text>
+<text x="16" y="958" font-size="17" fill="#222" text-anchor="start" font-weight="bold">3. Which way to press</text>
+<rect x="16" y="974" width="488" height="100" rx="10" fill="#fff8e1" stroke="#e0b400"/>
+<text x="32" y="1002" font-size="15" fill="#222" text-anchor="start" font-weight="bold">Shots land LEFT of the middle:</text>
+<text x="32" y="1026" font-size="14" fill="#222" text-anchor="start">press D-pad RIGHT. The robot or turret aims more to the right.</text>
+<text x="32" y="1058" font-size="14" fill="#222" text-anchor="start">Shots land right: press D-pad LEFT.</text>
+</svg>

@@ -8,7 +8,7 @@ minutes: 40
 needs: [flywheel, limelight|webcam]
 kit_bots: []
 since: v0.16.0
-docs: [guides/finders.md#aim-tuner-camera-offset]
+docs: [tuning/11-aim-tuner.md]
 ---
 
 ## Why
@@ -25,7 +25,7 @@ more than one distance.
 ## Setup
 
 - Flywheel gains found (SHOT-01). A goal you can shoot at, and 10-15 game pieces.
-- The Aim Tuner OpMode for your robot ([finders guide](../../docs/guides/finders.md#before-you-start)).
+- The Aim Tuner OpMode for your robot ([finders guide](../../docs/tuning/01-tune-and-check.md#before-you-start)).
 
 ## Steps
 
