@@ -39,6 +39,13 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   tests (`FinderSafetyTest`) run whole OpModes: add one when an OpMode's behavior matters (safety,
   help, buttons). Not part of robot builds. Guide: docs/guides/simulator.md. Parts page:
   docs/guides/parts-catalog.md is made from sim/parts/parts.json by tools/parts_page.py (never edit it by hand).
+- `skills/` instructions for TEAMS' AI agents (they reach them through one line in their project's AGENTS.md:
+  docs/guides/ask-an-ai-agent.md). `tools/check_docs.py` fails when a skill names a path that does not exist.
+- `skills/ftc-helper/` the ftc-helper skill: answers teams' "how do I" questions and changes their TeamCode.
+  Its "Where to look" table is the agent's map of the docs: a new docs/ folder must get a row
+  (`tools/check_docs.py` checks it); a moved page, a new main page (like the cookbook) or a new library rule
+  that teams' code must follow (non-blocking, signs, safety) goes in it too. crossbotics.com/llms*.txt (the
+  docs for AI chats) is made from the docs at every site build: nothing to update by hand.
 - `skills/robot-file/` the robot-file skill (for teams' agents): builds a team's simulator robot file. When
   the robot file format or `:sim:fromConfig` changes, update SKILL.md, interview.md and photos.md too.
   - To check a change to an OpMode yourself, write a scenario file and run
@@ -96,8 +103,8 @@ Every change follows the six steps in `docs/contributing.md`. A change is NOT do
 
 Also keep current when relevant: `docs/troubleshooting.md` (new common problems),
 `docs/from-last-season.md`, `docs/guides/new-season.md` (rules and SDK facts per season),
-`docs/guides/testing.md` (checklists), `docs/starter-kit.md` and its files, and THIS file
-(when the layout or rules change).
+`docs/guides/testing.md` (checklists), `docs/starter-kit.md` and its files, `skills/ftc-helper/SKILL.md`
+(a new docs section, a moved page, a new rule for teams' code), and THIS file (when the layout or rules change).
 
 Code snippets inside Markdown are not compiled (except the cookbook's, checked against
 `examples/.../cookbook/`): when you change a program, update the matching snippets in its page. When

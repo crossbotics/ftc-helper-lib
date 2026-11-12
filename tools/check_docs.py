@@ -18,7 +18,10 @@ It fails (exit 1) when:
      from where the recipe sits in the cookbook's Java;
   7. a recipe that shows a Tunables section (a region named "tunables-...") breaks the section style:
      one number per line with a "//" comment (a table: a comment line above it), and a safety number
-     (min, max, posA, posB, homeAngle, an interlock zone) written as MEASURE, never a number.
+     (min, max, posA, posB, homeAngle, an interlock zone) written as MEASURE, never a number;
+ 10. a skill for teams' agents (skills/*/*.md) names a library path that does not exist, or the
+     ftc-helper skill's "Where to look" table misses a docs/ folder (a new docs section must be added
+     there, so agents find it).
 
 After changing a cookbook Java file, copy its regions into docs/cookbook.md with:
 
@@ -465,7 +468,33 @@ def check_finder_order():
         problems.append(f"{where}: the tool sections must follow the menu's order: {', '.join(expected)} (found {', '.join(sections)})")
 
 
+# Skills (skills/<name>/*.md) are instructions for teams' AI agents. They name library paths; a renamed or
+# moved file would send the agent to nothing, so every path must exist. The ftc-helper skill is the agent's
+# map of the docs: every docs/ folder must be in it.
+SKILL_PATH = re.compile(r"`(?:ftc-helper-lib/)?((?:docs|examples|library|sim|skills|tools|testing)/[^`\s]*)`")
+
+
+def check_skills():
+    for md in sorted((ROOT / "skills").glob("*/*.md")):
+        rel = md.relative_to(ROOT)
+        for path in SKILL_PATH.findall(md.read_text()):
+            if "<" in path or "..." in path or "*" in path:
+                continue   # a pattern (docs/reference/parts/<part>.md), not one file
+            if not (ROOT / path.rstrip("/")).exists():
+                problems.append(f"{rel}: names `{path}`, which does not exist")
+    helper = ROOT / "skills/ftc-helper/SKILL.md"
+    if not helper.exists():
+        problems.append("skills/ftc-helper/SKILL.md is missing (the teams' agents read it)")
+        return
+    text = helper.read_text()
+    for folder in sorted(p.name for p in (ROOT / "docs").iterdir() if p.is_dir() and p.name != "images"):
+        if f"`docs/{folder}/" not in text:
+            problems.append(f"skills/ftc-helper/SKILL.md: add docs/{folder}/ to its \"Where to look\" table")
+
+
+
 check_links()
+check_skills()
 check_classes_documented()
 check_tutorials()
 check_cookbook()

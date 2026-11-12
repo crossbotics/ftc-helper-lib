@@ -6,6 +6,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Ask an AI agent about the library.** The ftc-helper skill (`skills/ftc-helper/SKILL.md`) lets a team's
+  coding agent (Claude Code, Codex, Copilot, Cursor) answer "how do I" questions from the docs of the
+  team's own library version, and change TeamCode the library's way. One line in the project's `AGENTS.md`
+  turns it on, and it updates with the library. For AI chats, crossbotics.com has the docs as text files
+  (`llms.txt`, `llms-small.txt`, `llms-full.txt`). Guide: docs/guides/ask-an-ai-agent.md.
+  `tools/check_docs.py` checks that the skills name only paths that exist, and that the ftc-helper skill
+  lists every docs folder.
+
 - **Docs: Controls** (`docs/controls/`), after the five files: how buttons work, every press type with one
   line of code, what the drivers see and feel (buzzes, lights, `show`, modes), and moving the library's
   buttons. They replace guides/buttons.md, which now points to the new pages.

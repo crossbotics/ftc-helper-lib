@@ -23,6 +23,8 @@ follows the same six steps, so nothing breaks and the docs and tutorials stay tr
    tutorial with its own program (and a row in `docs/tutorials/README.md`). Update the guide that
    covers it (`docs/guides/`), and any diagram that shows it (Mermaid blocks in the pages, SVGs in
    `docs/images/`). A new module gets a row in the README table and a page in `docs/modules/`.
+   A new docs section (a folder in `docs/`), a moved page or a new rule for teams' code also goes in the
+   ftc-helper skill (`skills/ftc-helper/SKILL.md`): teams' AI agents use it as their map of the docs.
 6. **CHANGELOG.md:** add a line under "Unreleased": Added / Changed / Fixed. Start each entry with one plain sentence
    (what it does for a team), then the details. The release's "What's new" comes from those sentences.
 
@@ -46,6 +48,9 @@ A change is not done until all six are done.
   read, and that `TunableFields.java` (the lists INIT uses to stop on a misspelled field) lists exactly
   the fields each part reads. A new number in a module: add its row to the reference and its name to
   `TunableFields.java`.
+- `tools/check_docs.py` also checks the skills for teams' AI agents (`skills/`): every path they name must
+  exist, and the ftc-helper skill must list every `docs/` folder. The website makes its docs files for AI
+  chats (`llms.txt`) from the docs at every build, so they need nothing by hand.
 - The build does not compile code snippets IN the tutorial pages. When you change a program, search its
   tutorial page for the same lines and update them.
 - Before a release, read the changed tutorials once from top to bottom as a student would.

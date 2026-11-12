@@ -23,7 +23,8 @@ flowchart LR
 
 ## Set it up
 
-Do this once, in your robot project.
+Do this once, in your robot project. To turn on this skill and the ftc-helper skill (answers to "how do I"
+questions) together, follow [Ask an AI agent](ask-an-ai-agent.md#set-it-up) instead.
 
 - **Claude Code**: copy (or link) the skill into your robot project:
   ```bash
