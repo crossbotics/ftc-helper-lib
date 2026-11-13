@@ -2,16 +2,15 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
+The five files write the OpMode for you: [The five files](../five-files/README.md).
+Write one by hand here to see the shape that every robot program has inside.
+
 **You will build:** a small program that counts A presses and shows the loop speed on the Driver Station.
-Every other tutorial builds on it. The main track skips these details: [The five files](../five-files/README.md).
 
-**You will learn:** the shape of every program in these tutorials, how to import library classes, why
-some variables are "fields", what `() -> ...` means, and why the programs use `try`/`finally`.
+**You need:** a Control Hub (or a Robot Controller phone), a Driver Station, gamepad 1. You need no motors.
 
-**You need:** a Control Hub (or a Robot Controller phone), a Driver Station, gamepad 1.
-You need no motors.
-
-**Full program:** [`Tut01HelloLibrary.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut01HelloLibrary.java)
+**Full program:** [`Tut01HelloLibrary.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut01HelloLibrary.java).
+To copy a program into TeamCode: [Copy example files into TeamCode](../pick-your-start/04-copy-into-teamcode.md).
 
 ---
 
@@ -40,12 +39,11 @@ public class Tut01HelloLibrary extends LinearOpMode {
 }
 ```
 
-- `@TeleOp(name = ...)` puts it in the TeleOp list. `@Autonomous` puts it in the Autonomous list.
-- `group` sorts the list.
 - `while (opModeIsActive()) { ... }` is a **loop**: the code inside the braces runs again and again
-  while the OpMode runs.
-- The robot cannot react while it sleeps. So never put `sleep()` in a TeleOp loop. The loop must be
-  quick: it reads the gamepads, decides, sets motor powers, and goes around again.
+  while the OpMode runs. Each time, it reads the gamepads, decides, and sets motor powers.
+- The robot cannot react while it sleeps. So never put `sleep()` in a TeleOp loop.
+- Code in `finally` runs when the loop ends **for any reason**: the driver pressed STOP, or your code
+  crashed. So put `drive.stop()` there. Then a bug never leaves a motor running.
 
 ### The top of the file
 
@@ -62,40 +60,23 @@ public class Tut01HelloLibrary extends LinearOpMode { // (3)!
     public void runOpMode() {
 ```
 
-1. `@TeleOp` is a label. Java calls it an "annotation". It puts the program in the Driver Station's
-   TeleOp list, with this name, in the "Tutorials" group.
-2. Every tutorial file has `@Disabled`, so the lists stay short. Delete it in your copy. Without that,
-   your program does not show on the Driver Station.
-3. The class name must match the file name. `extends LinearOpMode` builds the program on the SDK's
-   `LinearOpMode`. The SDK then gives you `hardwareMap`, `gamepad1`, `gamepad2` and `telemetry` (the
-   text on the Driver Station screen).
-4. `private` = only this file can use it. `int` = a whole number. It starts at 0.
-   [Why it is a field](#why-is-presses-a-field).
-5. `@Override` says "this replaces a method the SDK already has". `public void` = any code may call
-   it, and it gives nothing back.
+1. `@TeleOp` puts the program in the Driver Station's TeleOp list, with this name, in the "Tutorials"
+   group. `@Autonomous` puts it in the Autonomous list.
+2. Every tutorial file has `@Disabled`, so the lists stay short. Delete it in your copy, or your program
+   does not show on the Driver Station.
+3. The class name must match the file name. `extends LinearOpMode` gives you `hardwareMap`, `gamepad1`,
+   `gamepad2` and `telemetry` (the text on the Driver Station screen).
+4. `private` = only this file can use it. `int` = a whole number.
+   [Why it is a field](#a-field-for-what-a-button-changes).
+5. `@Override` says "this replaces a method the SDK already has".
 
-### Why `try`/`finally`?
+## 2. Imports
 
-Code in `finally` runs when the loop ends **for any reason**: the driver pressed STOP, or your code
-crashed with an error. So put `drive.stop()` there: then a bug never leaves a motor running.
+`import` lines at the top of the file tell Java where each class lives. `com.qualcomm...` is the FTC SDK.
+`com.crossbotics...` is this helper library. To add one, click the red class name and press
+**Alt+Enter** (Mac: **Option+Enter**).
 
-## 2. Imports: telling Java where a class lives
-
-Library classes live in packages (named folders of classes) like `com.crossbotics.ftchelper.util`.
-At the top of the file, `import` lines tell Java where to find them. `com.qualcomm...` is the FTC SDK
-(from FIRST). `com.crossbotics...` is this helper library. The `package` line above them says which
-folder the file is in. When you copy a file into TeamCode, change that line to your folder. Android
-Studio usually offers to fix it.
-
-```java
-import com.crossbotics.ftchelper.util.LoopTimer;
-import com.crossbotics.ftchelper.telemetry.TelemetryHelper;
-```
-
-You do not need to type these lines. Type the class name (it turns red), click it, press
-**Alt+Enter** (Mac: **Option+Enter**) and choose **Import class**.
-
-`ControllerBindings` has small "inner" names (`Pad`, `Btn`, `Trigger`). Import them too. Then you can
+`ControllerBindings` has small "inner" names (`Pad`, `Btn`, `Trigger`). Import them too, so you can
 write `Pad.G1` instead of `ControllerBindings.Pad.G1`:
 
 ```java
@@ -112,29 +93,16 @@ ControllerBindings controls = new ControllerBindings()
         .bindPress(Pad.G1, Btn.A, () -> presses++);
 ```
 
-- `new` makes a new object from a class. `new LoopTimer()` makes a loop-speed meter.
+- `new LoopTimer()` makes a loop-speed meter.
 - `new ControllerBindings()` makes the button list. `.bindPress(...)` adds one job:
   "when gamepad 1's A goes down, add one to `presses`".
-- The dots on new lines are a **chain**: each `.bind...` returns the same object, so you can keep
-  adding. You use most of the library this way.
+- `() -> presses++` is a **lambda**: a small piece of code you hand over to run LATER, each time the
+  driver presses A. For more than one line, use braces: `() -> { presses++; telemetry.speak("hi"); }`.
 
-### What is `() -> presses++`?
+### A field for what a button changes
 
-It is a **lambda**: a small piece of code you hand over to run LATER. `ControllerBindings` keeps it
-and runs it each time the driver presses A. Read it as "a job with no inputs that does `presses++`".
-
-For more than one line, use braces: `() -> { presses++; telemetry.speak("hi"); }`.
-
-### Why is `presses` a field?
-
-```java
-public class Tut01HelloLibrary extends LinearOpMode {
-    private int presses = 0;      // a FIELD: belongs to the class
-```
-
-Java does not let a lambda change a normal local variable (one made inside `runOpMode`).
-A **method** is a named block of code, like `runOpMode`. A **field** is a variable made inside the class
-but outside any method. A lambda may change a field. Rule of thumb:
+A **field** is a variable made inside the class but outside any method, like `presses`. Java does not
+let a lambda change a variable made inside a method. A lambda may change a field. Rule of thumb:
 *anything a button changes is a field.*
 
 ## 4. The loop
@@ -155,37 +123,37 @@ while (opModeIsActive()) {
 }
 ```
 
-1. `isDown` tells you whether B is held right now (yes or no). It binds no action to B.
+1. `isDown` tells you whether B is held right now. It binds no action to B.
 2. Loops per second (Hz). Higher is better: the robot reacts faster.
 
-- Call `ignoreHeldButtons` right after ▶ (start on the Driver Hub). When someone holds A while they press
-  ▶, A then does not count until they let go. Tutorial 03 explains it.
+- `ignoreHeldButtons`: a button held at ▶ does nothing until the driver lets go
+  ([Tutorial 03](03-buttons.md) explains why).
 - `controls.update(...)` reads the gamepads and runs the jobs. Call it once per loop.
-- For telemetry, add lines, then call `telemetry.update()` **once**, at the end of the loop.
+- Add the telemetry lines, then call `telemetry.update()` **once**, at the end of the loop.
 
 ## Run it
 
-1. INIT: the screen says "Ready".
-2. Press ▶. Press A a few times: the count goes up by exactly one per press, also when you hold A.
+1. INIT: the screen says "Ready". Press ▶.
+2. Press A a few times: the count goes up by exactly one per press, also when you hold A.
 3. Hold B: "B held : yes".
-4. Loop speed: probably 100+ Hz with nothing connected. Hz means "times per second".
+4. Loop speed: probably 100+ Hz with nothing connected.
 
 ## If something goes wrong
 
 | Problem | Fix |
 | --- | --- |
-| Red `LoopTimer` in Android Studio | Import it (Alt+Enter). When Android Studio does not offer the import, the library is missing: [Add the library](../setup/04-add-the-library.md). |
+| Red class name, and Alt+Enter offers no import | The library is missing: [Add the library](../setup/04-add-the-library.md). |
 | "Variable used in lambda expression should be final" | The variable a button changes must be a **field**. Move it out of `runOpMode`. |
 | The OpMode is not on the Driver Station | Delete the `@Disabled` line, build, and install again. |
-| Count goes up many times per press | You used `bindHold` instead of `bindPress`. |
 
 ## Try this
 
 1. Add a binding so B **resets** the count to 0. (Hint: `bindPress(Pad.G1, Btn.B, () -> presses = 0)`.)
 2. Show the loop time in milliseconds with `loopTimer.getAverageMs()`.
-3. Put `sleep(100);` inside the loop. Watch the loop speed, and how fast the program sees an A press.
+3. Put `sleep(100);` inside the loop. Watch the loop speed, and how late the program sees an A press.
    This is why TeleOp loops must never sleep. Take it out again.
 
-## Next
+---
 
-[Tutorial 02: Motors and servos](02-motors-and-servos.md)
+**Next:** [Tutorial 02: Motors and servos](02-motors-and-servos.md).
+**Look it up:** [gamepad.md](../modules/gamepad.md), [telemetry.md](../modules/telemetry.md), [util.md](../modules/util.md).

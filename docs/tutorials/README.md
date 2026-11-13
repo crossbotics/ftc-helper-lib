@@ -1,39 +1,20 @@
-# Tutorials
+# Build it by hand
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
+These tutorials build robot programs by hand, with the library's building blocks, one idea at a time.
+They show how a robot program works inside: what a PID is, what a bulk read is, why software limits do
+not replace hard stops. **They are optional.** The docs sections, from [Set up](../setup/README.md) to
+[Tests](../tests/README.md), are enough to build and run a robot with the five files.
 
-These tutorials build robot programs by hand, with the library's building blocks, one idea at a time
-(**under the hood**). Start with the main track below: it is the docs sections, not tutorials.
-Each tutorial has a **complete program** you can copy into TeamCode and run. A test builds and checks
-those programs every time the library changes.
+Do them when you want to know how the parts work inside, or when you need a part that has no five-files
+module. Each tutorial has a **complete program** you can copy into TeamCode and run. A test builds and
+checks those programs every time the library changes.
 
-The [module pages](../modules/) are the reference: every function, every parameter.
-The tutorials give the "how and why": what to write, in what order, and what to check on the robot.
-
-## Start here: the main track
-
-The main track is now the docs sections, in this order:
-
-1. [Set up](../setup/README.md): Android Studio, GitHub, the library, the configuration.
-2. [Pick your start](../pick-your-start/README.md): a starter bot, a common setup, or a blank slate.
-3. [The five files](../five-files/README.md): `Robot.java`, `Tunables.java`, `Controls.java`,
-   `Actions.java` and the autos. Done when the robot drives and runs a first auto.
-4. [Add to your robot](../add-to-robot/README.md): one page per part.
-5. [Controls](../controls/README.md): every way a button can work.
-6. [Building autos](../building-autos/README.md): steps, field points, Pedro paths, the auto builder.
-7. [Simulator](../simulator/README.md): start it, make it match your robot, watch an autonomous.
-8. [Tuning](../tuning/README.md): find and check every number.
-9. [Tests](../tests/README.md): simulator tests of your code, and checks of the real robot.
+The [module pages](../modules/) are the reference: every class, every method. The tutorials give the
+"how and why": what to write, in what order, and what to check on the robot.
 
 **Used Scratch or Blocks before:** read [From Blocks to Java](../blocks-to-java.md) first.
 
-## Under the hood: how it works
-
-**These tutorials are optional: you can skip them all.** The main track is enough to build and run a
-robot. These tutorials build the same things by hand, with the library's building blocks. Do them to
-learn how a robot program works inside: what a PID is, what a bulk read is, why software limits do not
-replace hard stops. Also do them when you need a part that has no five-files module. Each one has a
-complete program.
+## The tutorials
 
 | # | Tutorial | You learn | Robot needed |
 | --- | --- | --- | --- |

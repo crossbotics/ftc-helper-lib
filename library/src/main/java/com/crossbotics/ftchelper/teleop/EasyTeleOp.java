@@ -267,7 +267,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
     /**
      * Moves or frees the library's own buttons (pause, slow, field-centric, menus...). Default: nothing
      * changes. Example: {@code lib.fieldCentric(Key.g1(Btn.X)).slow(Key.g1(Trigger.RT));}. Two jobs on
-     * one button stop at INIT with the button's name. The table: docs/guides/buttons.md.
+     * one button stop at INIT with the button's name. The table: docs/controls/04-move-library-buttons.md.
      *
      * @param lib the buttons, already at their defaults ({@link LibraryButtons#twoDrivers()})
      */

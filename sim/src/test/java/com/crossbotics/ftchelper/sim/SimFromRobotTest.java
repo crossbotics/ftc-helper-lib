@@ -753,7 +753,7 @@ public class SimFromRobotTest {
                 "Studica Bot TeleOp", "Studica Bot Shoot and Leave");
     }
 
-    // The guide's example (once in docs/guides/autonomous-builder.md): every builder feature runs, and the menu
+    // The guide's example (once in the autonomous builder guide): every builder feature runs, and the menu
     // choice picks the branch.
     @Test public void theAutoCookbookRunsBothBranches() throws Exception {
         try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {

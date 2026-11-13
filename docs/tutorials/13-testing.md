@@ -2,11 +2,13 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
+**In the five files:** simulator tests check your whole robot with no Java to write
+([Run all your tests](../tests/02-run-all-your-tests.md)).
+**Build it by hand** to test one piece of your code in a fraction of a second: small automatic tests
+(JUnit) that run on a laptop. This page is the only one that teaches them.
+
 **You will build:** six small tests that run on a laptop. Most of them test the `LiftHeights` class from
 Tutorial 12.
-
-**You will learn:** how to write small automatic tests (JUnit) for your team's code, how to run them on a
-laptop in seconds, and which parts of robot code you can test this way.
 
 **You need:** Tutorial 12 done (the `LiftHeights` class). You need no robot.
 
@@ -16,11 +18,9 @@ laptop in seconds, and which parts of robot code you can test this way.
 
 ## 1. Why test without a robot?
 
-The whole team shares the robot, the battery runs out, and the build team needs the robot too. Many
-bugs have nothing to do with hardware: a wrong list index, a sign error, a height out of range. A test
-finds those in one second, on any laptop, every time you change the code.
-
-The library itself has over 250 such tests. They found real bugs before any robot moved.
+The whole team shares the robot, and the battery runs out. Many bugs have nothing to do with hardware:
+a wrong list index, a sign error, a height out of range. A test finds those in one second, on any
+laptop, every time you change the code.
 
 ## 2. What you can test
 
@@ -31,8 +31,7 @@ The library itself has over 250 such tests. They found real bugs before any robo
 | button logic (`ControllerBindings` with a pretend `Gamepad`) | whether the driver likes it |
 | limits (`SoftLimits.limit(...)`) | whether the hard stop is in the right place |
 
-**Tip:** keep logic in small classes with no hardware (like `LiftHeights`), and keep hardware in the
-subsystem classes. Then the logic is easy to test.
+**Tip:** keep logic in small classes with no hardware (like `LiftHeights`), so it is easy to test.
 
 ## 3. Set up TeamCode for tests (once)
 
@@ -111,10 +110,9 @@ The third number in `assertEquals(a, b, 1e-9)` is the allowed difference for dec
 
 ### A real lesson from writing this test
 
-The first version jumped one controller from position 0 to 2400 in 20 ms, and expected only the F push.
-It got -1.0 instead: the D part saw a huge, sudden "movement" and pushed back hard. The mistake was in
-the test: no real lift moves that fast. The PID was right. Tests teach you how your code really
-behaves.
+The first version jumped from position 0 to 2400 in 20 ms, and expected only the F push. It got -1.0:
+the D part saw a huge, sudden "movement" and pushed back hard. The PID was right, and the test was
+wrong: no real lift moves that fast. Tests teach you how your code really behaves.
 
 ## 6. Run the tests
 
@@ -128,8 +126,8 @@ behaves.
 ./gradlew :TeamCode:testDebugUnitTest
 ```
 
-A commit is a version of the code that you save in git. Run the tests before every commit, and always
-before an event.
+Run them before every commit (a version of the code that you save in git) and before every event
+([When to run them](../tests/02-run-all-your-tests.md#3-when-to-run-them)).
 
 ## 7. Test your robot in five files
 
@@ -158,8 +156,8 @@ import com.crossbotics.ftchelper.testkit.PretendDevices;
 
 **Why:** a typo in `Tunables.java` stops INIT on the robot. With a test, it fails on the laptop first.
 The test also checks a change to `Robot.java` (a second lift motor, a new interlock rule) in a second.
-The test cannot see how the real robot moves (gravity). For that, use the
-[simulator](../simulator/README.md).
+The test cannot see how the real robot moves (gravity): use a
+[simulator test](../tests/01-record-a-test.md) for that.
 
 **Time passing:** for a test of timing ("the arm pushes 0.2 s after fire"), use a pretend clock. The test
 moves the time by hand. So it does not wait, and a slow laptop cannot make it fail:
@@ -172,9 +170,8 @@ robot.all().update();
 ```
 
 A pretend motor does not speed up by itself. For a flywheel, set `fly.velocity = fly.velocityCommand` in
-each loop. Otherwise the flywheel is never ready ([PretendClock](../modules/testkit.md#pretendclock) has a
-whole example). For a whole robot test, see `examples/src/test/.../v2bot/V2botTest.java`.
-More: [test kit](../modules/testkit.md).
+each loop, or the flywheel is never ready ([PretendClock](../modules/testkit.md#pretendclock)). A whole
+robot test: `examples/src/test/.../v2bot/V2botTest.java`.
 
 ## Run it
 
@@ -199,7 +196,9 @@ More: [test kit](../modules/testkit.md).
    check your counter. The library's `GamepadTest` shows how.
 3. Write a test for a mirror function `double side(boolean red)` from Tutorial 10.
 
-## Next
+---
 
-[Tutorial 14: Mechanism helpers](14-mechanisms.md): the ready-made versions of everything you built
-in tutorials 07-12.
+**Next:** [Tutorial 14: Mechanism helpers](14-mechanisms.md).
+
+**Look it up:** [Test kit](../modules/testkit.md) (`PretendDevices`, `PretendClock`),
+[Control module](../modules/control.md) (`PidController` with a clock).

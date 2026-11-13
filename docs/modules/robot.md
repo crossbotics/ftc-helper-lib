@@ -1,6 +1,6 @@
-# Robot module (moved)
+# Robot module
 
-This page moved to the [Reference](../reference/README.md): one page per part, and pages for
+The classes of the five-files layer. How to use each part is in the [Reference](../reference/README.md): one page per part, and pages for
 [Robot.java](../reference/robot-java.md), [Tunables.java](../reference/tunables.md),
 [Controls.java](../reference/controls.md) and [steps for autos](../reference/steps.md).
 

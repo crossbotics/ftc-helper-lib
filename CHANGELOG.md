@@ -85,6 +85,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   [How the simulator works](docs/guides/how-the-simulator-works.md), and the maintainer notes in
   [Contributing](docs/contributing.md#the-simulator-notes-for-maintainers). The simulator's messages and
   page links point to the new pages.
+- **Docs: Go deeper.** The tutorials are now "Build it by hand": each one starts with what the five files
+  do for you (with a link) and why to build it by hand, repeats of the walkthrough pages became one-line
+  links, and each ends with Next and Look it up. The old "moved" pages (`01-add-to-project.md`,
+  `guides/buttons.md`, `guides/tuning.md`, `guides/finders.md`, `guides/autonomous-builder.md`,
+  `guides/tunables.md`, `guides/autos.md`) are gone; links and code messages point to their new homes.
+  `modules/robot.md` is the robot package's class index again.
 - **The robot-file skill works from photos** (`skills/robot-file/photos.md`): which photos to take and how to
   give them to the agent, reading places from the robot's edges (never its middle), which numbers still need
   a tape measure, the Robot.java line for each kind of part, and a check of the 3D robot against the photos.
@@ -2299,7 +2305,7 @@ Nothing old stops working, with one change: with `oneDriver = true`, your own `g
 - Docs from a "new student" walk-through: a laptop setup box (Java, `local.properties`, Windows), every lesson
   snippet with its imports, which robot you build (your own; the lesson robot is the worked example),
   Java ideas (lambda, `::`, chaining, generics) explained where first used.
-- [The button menu](docs/guides/buttons.md): every way a button can work in `Controls.java`, as a menu
+- [The button menu](docs/controls/README.md): every way a button can work in `Controls.java`, as a menu
   (which button, how it starts, what it does, feedback).
 - Gestures, several on one button: `tap`, `hold` (with other gestures: from 0.3 s), `doubleTap`,
   `tapThenHold` (last season's "spray"), `taps(n, ...)`, `heldFor(sec, ...)`. A job runs at once unless
@@ -2413,7 +2419,7 @@ Nothing old stops working.
 
 ### Added
 
-- Docs: [The autonomous builder](docs/guides/autonomous-builder.md), the complete guide to `Auto` and
+- Docs: [The autonomous builder](docs/building-autos/README.md), the complete guide to `Auto` and
   `Steps`, built on a tested example (`examples/.../gobildabot/autos/AutoCookbook.java`, run by a
   simulator test with each menu choice).
 - `./gradlew :library:reference`: a searchable reference (web pages) of every public class and method
@@ -2777,7 +2783,7 @@ class was removed. Everything under "Simulator" runs only on a laptop, from the 
 - `Turret.cameraOffset(deg)`; `Launcher.getHood()`, `Launcher.hasTable()`; `Flywheel.getMaxRpm()`;
   `PositionServo.getTargetDegrees()`.
 - Starter kit: `ServoFinder`, `MotorFinder`, `FlywheelFinder`, `DriveTuner`. Examples:
-  `ExampleShotTuner`, `ExampleAimTuner`. Tutorial 21 and the [finders guide](docs/guides/finders.md).
+  `ExampleShotTuner`, `ExampleAimTuner`. Tutorial 21 and the [finders guide](docs/tuning/README.md).
 
 ### Changed
 

@@ -19,7 +19,7 @@ import com.crossbotics.ftchelper.gamepad.ControllerBindings.Trigger;
  *
  * <p>Two Keys are equal when they are the same button on the same gamepad.
  *
- * Docs: docs/modules/teleop.md (section "Moving the library's buttons"), docs/guides/buttons.md
+ * Docs: docs/modules/teleop.md (section "Moving the library's buttons"), docs/controls/04-move-library-buttons.md
  */
 public class Key {
     final ControllerBindings.Pad pad;

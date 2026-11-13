@@ -2,20 +2,18 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**You will build:** a lift that goes to three heights on buttons and holds there, with gains you can change from the gamepad.
-In the main track, the lift part has its PID built in: [Add a lift](../add-to-robot/01-lift.md).
+In the five files, the lift part has its PID built in, with its gains in `Tunables.java`: [Add a lift](../add-to-robot/01-lift.md).
+Build it by hand to see what a PID controller does, or to hold a part that has no module.
 
-**You will learn:** what a PID controller does, how to send a lift to a height with `PidController` and
-hold it there, and how to tune it live from the gamepad.
+**You will build:** a lift that goes to three heights on buttons and holds there, with gains you change
+from the gamepad.
 
-**You need:** a lift (slide, elevator or arm) with a motor named `lift` and its encoder cable.
-Positive power must move it UP (Tutorial 02, "Run it", step 2). Do Tutorials 01-03 first.
-**Turn the robot on with the lift at the bottom.**
+**You need:** a lift (slide, elevator or arm) with a motor named `lift` and its encoder cable. Positive
+power must move it UP (Tutorial 02). **Turn the robot on with the lift at the bottom.**
 
 **Full program:** [`Tut07LiftPid.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut07LiftPid.java)
-**Reference:** [control.md](../modules/control.md#pidcontroller)
 
-> This tutorial keeps the power low, but it has no real limits. Tutorial 08 adds them.
+> **Safety:** this program keeps the power low, but it has no software limits. Tutorial 08 adds them.
 > Stay near STOP, and find your hard stops first.
 
 ---
@@ -57,12 +55,11 @@ PidController pid = new PidController(gains[0], gains[1], gains[2], gains[3])   
         .setTolerance(20);            // within 20 ticks counts as "there"
 ```
 
-The output limits stop a bad gain from slamming the lift while you tune. Up gets more power because it
-fights gravity. Without the integral limit, I can build up while the lift is stuck. Then it makes the
-lift shoot past the target. This is "windup".
-
-Make the controller **once**, in INIT. It remembers the last error (for D) and the sum (for I). A new
-controller every loop would forget all of that.
+- **Output limits** stop a bad gain from slamming the lift. Up gets more, because it fights gravity.
+- **Integral limit:** without it, I builds up while the lift is stuck, then shoots it past the target
+  ("windup").
+- Make the controller **once**, in INIT. It remembers the last error (for D) and the sum (for I). A new
+  controller every loop forgets all of that.
 
 ## 3. Use it every loop
 
@@ -91,8 +88,7 @@ give a kick at the start of the new move.
 
 ## 5. Tune it live
 
-Tuning takes about 30 changes. A rebuild and an install for each change is slow. So in this program,
-you change the gains from the gamepad while it runs:
+A rebuild for each of many small changes is slow. So this program changes the gains from the gamepad:
 
 ```java
 .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> selected = (selected + 1) % gains.length)   // next gain
@@ -102,48 +98,31 @@ you change the gains from the gamepad while it runs:
 pid.setGains(gains[0], gains[1], gains[2], gains[3]);
 ```
 
-Telemetry shows a `>` next to the gain you are changing. Each press multiplies it by 1.25 (up) or 0.8
-(down). So small and large gains both change by a sensible amount. 0 x 1.25 is still 0, so a gain at 0
-first jumps to a small value (0.001 for P, 0.0001 for I and D). F goes in plain steps of 0.01 and never
-goes below 0, because a negative F would push the lift down. `%` in `(selected + 1) % gains.length` is the
-remainder after dividing. So after the last gain, the choice wraps round to the first.
-`setGains` does not reset the controller.
+- Each press multiplies the gain by 1.25 (up) or 0.8 (down), so small and large gains both change by a
+  sensible amount. A gain at 0 first jumps to a small value (0.001 for P, 0.0001 for I and D).
+- F goes in steps of 0.01 and never below 0, because a negative F pushes the lift down.
+- `%` is the remainder after dividing, so after the last gain the choice wraps round to the first.
 
-**Write the final numbers down.** The program loses them when the OpMode stops. Put them into your real
-program.
+**Write the final numbers down.** The program loses them when the OpMode stops.
 
 ## 6. The tuning recipe
 
-Do these steps in order. After each change, switch between targets with A, X and Y, and watch.
-
-1. **P only.** Start at kP 0.002. kP is already selected at the start, so press D-pad up to raise it.
-   Stop when the lift moves quickly to each height. When it shakes or bounces around the target, go back
-   down one or two steps.
-2. **D.** When the lift overshoots (goes past and comes back), select kD. Raise it from 0.0001 until the
-   overshoot is gone. Too much D makes the lift sluggish or buzzy.
-3. **F.** When the lift stops a little below the target and sags, select kF. Raise it until the lift
-   holds its height with almost no error. F is about the power that holds the lift still in mid-air.
-4. **I (only if needed).** When a small error still stays, add a very small kI. The integral limit
-   keeps it from building up too much.
-
-A good result: the lift reaches each height in under a second, overshoots by less than ~1%, and holds
-still.
+Tune in the order kP, kD, kF, then kI only if needed. The steps are in
+[Add a lift: tune it](../add-to-robot/01-lift.md#4-check-it-then-tune-it). In this program, kP is
+selected at the start (0.002), and A, X and Y switch between targets after each change.
 
 ## Run it
 
 1. Put the lift at the bottom. Press ▶ (start on the Driver Hub). Position shows 0.
-2. Press X: the lift goes toward MIDDLE. With the starting kP, it may be slow or stop short. That is
-   normal: now tune it.
-3. Follow the recipe. Watch "Error" and "At target" on telemetry.
+2. Press X: the lift goes toward MIDDLE. With the starting kP, it may stop short. Now tune it, and watch
+   "Error" and "At target".
 
 ## If something goes wrong
 
 | Problem | Fix |
 | --- | --- |
 | Lift goes the wrong way and hits the end | Press STOP first. Positive power moves the lift down: add `.reversed()` to the motor (Tutorial 02). |
-| Shakes around the target | kP is too big, or kD is too big. Lower them. |
-| Overshoots then comes back | Add kD. |
-| Stops short and stays there | Add kF (lift) or a small kI. |
+| Shakes, overshoots or sags | See the PID table in section 1, or [Add a lift: fix a problem](../add-to-robot/01-lift.md#fix-a-problem). |
 | Drops when the OpMode stops | This is normal: the motor gets no power after STOP. `.brake()` slows the drop. |
 
 ## Try this
@@ -153,6 +132,8 @@ still.
 2. Show `pid.getLastError()` as a bar of `#` characters, so you can see it shrink.
 3. Tune once with an empty lift and once with a game piece on it. Check whether the same gains work.
 
-## Next
+---
 
-[Tutorial 08: A lift that cannot hurt itself](08-safe-lift.md)
+**Next:** [Tutorial 08: A lift that cannot hurt itself](08-safe-lift.md)
+
+**Look it up:** [control.md: PidController](../modules/control.md#pidcontroller)

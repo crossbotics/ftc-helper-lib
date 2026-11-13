@@ -189,7 +189,7 @@ final class ButtonPlan {
         if (old != null && TEAM.equals(old.source) && old.kind == Kind.SHIFT && e.kind == Kind.SHIFT) return old;
         if (old != null && old.kind == Kind.RESERVED) {
             throw new IllegalStateException("Controls.java: " + input + " is the library's \"" + old.says
-                    + "\" button. Pick another button, or move the library's job (libraryButtons, docs/guides/buttons.md)."
+                    + "\" button. Pick another button, or move the library's job (libraryButtons, docs/controls/04-move-library-buttons.md)."
                     + (oneDriver ? " One driver: your g2 lines are on gamepad 1 too, where the library drives." : ""));
         }
         if (old != null && TEAM.equals(old.source) && old.kind != Kind.FREE && e.kind != Kind.FREE

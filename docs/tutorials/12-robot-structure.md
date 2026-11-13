@@ -2,11 +2,12 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**You will build:** a whole robot program (drive, lift, claw) split into small classes, with a TeleOp and an autonomous that share them.
-The main track gives you this structure ready-made: [The five files](../five-files/README.md).
+**In the five files:** `Robot.java` lists the parts, and the library makes, updates and stops them for
+you ([The five files](../five-files/README.md)).
+**Build it by hand** to see what that structure does inside: a `Robot` class and one class per mechanism
+(a "subsystem"), shared by TeleOp and autonomous.
 
-**You will learn:** how to split a real robot program into a `Robot` class and one class per mechanism
-(a "subsystem"). Then TeleOp and autonomous share the same code and stay short.
+**You will build:** a whole robot program (drive, lift, claw) split into small classes, with a TeleOp and an autonomous that share them.
 
 **You need:** Tutorials 08-10 done. A drivetrain, a lift (`lift`, optional `lift_bottom`) and a claw
 servo (`claw`).
@@ -18,9 +19,9 @@ servo (`claw`).
 
 ## 1. Why organize?
 
-By now one OpMode has: drive setup, IMU setup, lift motor, limits, PID, set heights, claw servo, button
-bindings, telemetry. Then autonomous needs most of it AGAIN. Copies drift apart: someone fixes the lift
-limit in TeleOp and forgets autonomous.
+By now one OpMode has the drive, the IMU, the lift with its limits and PID, the claw, the buttons and
+telemetry. Autonomous needs most of it AGAIN. Copies drift apart: someone fixes the lift limit in TeleOp
+and forgets autonomous.
 
 The fix: **each mechanism gets its own class that knows everything about it.** OpModes only say WHAT to
 do ("lift to HIGH", "open the claw"), never HOW.
@@ -51,10 +52,10 @@ public enum LiftHeights {
 }
 ```
 
-An **enum** is a fixed list of named values. Names like `LiftHeights.HIGH` are much clearer than `2400`
-all over the code, and the numbers live in ONE place. `up()`/`down()` step through the list (the D-pad
-list from Tutorial 03, done properly). `ordinal()` is a value's place in the list (BOTTOM = 0,
-LOW = 1, ...), and `values()` is the whole list. The enum uses no hardware, so Tutorial 13 can test it.
+An **enum** is a fixed list of named values. `LiftHeights.HIGH` is clearer than `2400` all over the
+code, and the numbers live in ONE place. `up()`/`down()` step through the list. `ordinal()` is a value's
+place in the list (BOTTOM = 0, LOW = 1, ...), and `values()` is the whole list. The enum uses no
+hardware, so Tutorial 13 can test it.
 
 ## 3. A subsystem: `Lift`
 
@@ -89,16 +90,13 @@ public class Lift {
 
 The real file adds these:
 
-- `MAX_TICKS = 2600` is the highest the software lets the lift go. It is above HIGH (2400) and below the
-  real top. So the lift never runs into its physical stop under power.
+- `MAX_TICKS = 2600` is above HIGH (2400) and below the real top, so the lift never runs into its
+  physical stop under power.
 - The constructor resets the encoder, so turn the robot on with the lift DOWN. Nothing moves in a
   constructor, so it is safe in INIT.
-- The bottom switch is optional (`Hw.tryGet`). Until the lift presses it once, the lift only goes down,
-  slowly (Tutorial 08).
 - `update()` runs `moveTo` every loop, also at the target: that holds the lift up against gravity.
-  Before homing, the zero is not known, so `update()` cancels a set height.
-- `stepUp()` steps from the target. When the driver moved the lift by hand, it steps from the set height
-  closest to where the lift is now (`LiftHeights.closestTo`).
+  Before homing (Tutorial 08), the zero is not known, so `update()` cancels a set height.
+- After hand control, `stepUp()` steps from the set height closest to the lift (`LiftHeights.closestTo`).
 - `stop()` also forgets the target and the hand power, so the next `update()` does not start the lift
   again.
 
@@ -112,7 +110,7 @@ The pattern for every subsystem:
 
 `Claw` is the same idea, smaller: `open()`, `close()`, `toggle()`, `isOpen()`. Its servo is `private`,
 so no other class can send it a wrong position. A servo cannot report where it is, so `Claw` remembers
-what it last told the servo. The servo does not move until your code calls `open()` or `close()`.
+what it last told the servo.
 
 ## 4. The whole robot: `Robot`
 
@@ -140,8 +138,6 @@ public class Robot {
 
 The drivetrain is NOT in `Robot`: TeleOp drives with `MecanumDrive`, and autonomous with `AutoDrive`.
 Both read `RobotSettings.drive()`, so they still match. Only the lift needs `update()`, for its PID.
-The claw is a servo, and it goes where the code tells it. The IMU setup makes the way the robot faces
-now heading 0.
 
 ## 5. TeleOp becomes short
 
@@ -158,12 +154,9 @@ ControllerBindings controls = new ControllerBindings()
         .bindPress(Pad.G2, Btn.RB, robot.claw::toggle);
 ```
 
-Read the button list out loud: it IS the driver's control sheet. Print it for the drive team.
-
-`robot.lift::stepUp` is short for `() -> robot.lift.stepUp()`.
+The button list IS the driver's control sheet. `robot.lift::stepUp` is short for `() -> robot.lift.stepUp()`.
 
 The loop runs `controls.update`, `robot.lift.manual(stick)`, `robot.update()`, the drive and telemetry.
-The lift stick has a deadband of 0.1, so a bumped stick does not cancel a set height.
 
 ## 6. Autonomous uses the same classes
 
@@ -180,22 +173,19 @@ robot.claw.open();
 pause(0.3);                        // let the piece fall
 ```
 
-`robot::update` is a method reference: the loop hook runs `robot.update()` again and again during every
-move. Without it, the lift gets no updates (no PID) while the robot drives.
+The loop hook runs `robot.update()` again and again during every move. Without it, the lift gets no
+updates (no PID) while the robot drives.
 
-`waitForLift` and `pause` keep calling `robot.update()` while they wait (Tutorial 10, section 7). So the
-lift keeps holding its height. **Do not use `sleep()` while a mechanism must hold position:** `sleep`
-stops all your code, including the lift's PID.
+`waitForLift` and `pause` keep calling `robot.update()` while they wait (Tutorial 10), so the lift keeps
+holding its height. **Do not use `sleep()` while a mechanism must hold position:** `sleep` stops all
+your code, including the lift's PID.
 
 ## 7. Hand-over from autonomous
 
-`MainAuto` saves its heading with `PoseStore.save(...)` in `finally`. `MainTeleOp` makes a
-`DriverHeading` in INIT, and the `DriverHeading` takes that heading. TeleOp sets up the IMU again, and
-that makes "0" the way the robot faces now. So `DriverHeading` adds the saved heading back. Then
-field-centric "forward" (Y turns it on) is right from the start of TeleOp, without a reset. The robot
-must start autonomous facing straight away from the driver. After ▶ (start on the Driver Hub),
-`heading.forgetSaved()` stops a later TeleOp run from using the same saved heading again. See
-[DriverHeading](../modules/drive.md#driverheading).
+TeleOp sets up the IMU again, and that makes "0" the way the robot faces now. So `MainAuto` saves its
+heading with `PoseStore.save(...)` in `finally`, and `MainTeleOp`'s `DriverHeading` adds it back. Then
+field-centric "forward" is right from the start of TeleOp. Start autonomous with the robot facing
+straight away from the driver ([DriverHeading](../modules/drive.md#driverheading)).
 
 ## Run it
 
@@ -216,11 +206,13 @@ must start autonomous facing straight away from the driver. After ▶ (start on 
 
 ## Try this
 
-1. Add an `Intake` subsystem (a motor that runs in, out, or stops) with `in()`, `out()`, `stop()`.
-   Bind it on gamepad 2.
+1. Add an `Intake` subsystem with `in()`, `out()`, `stop()`. Bind it on gamepad 2.
 2. Give `Lift` a `scoreHeightFor(...)` that picks a height from the game situation.
 3. Make `Robot.addTelemetry` show only the lines the driver needs. Add a `debug` flag for the rest.
 
-## Next
+---
 
-[Tutorial 13: Test your code without a robot](13-testing.md)
+**Next:** [Tutorial 13: Test your code without a robot](13-testing.md).
+
+**Look it up:** [Safety module](../modules/safety.md) (`SafeMotor`), [Control module](../modules/control.md),
+[Drive module: DriverHeading](../modules/drive.md#driverheading), [Auto module](../modules/auto.md) (`AutoDrive`).

@@ -2,16 +2,14 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**You will build:** only small OpModes that start the library's ready-made finders. The finders measure
-your robot and print the code lines to copy.
-The main track uses the same finders: [Add a lift](../add-to-robot/01-lift.md).
+With the five files, every finder is already in the **Tune and check** menu: [Tuning](../tuning/README.md).
+Build the finders by hand here to see how a finder OpMode is made, or to run one as its own OpMode on a
+robot without the five files.
 
-**You will learn:** how to measure the numbers your code needs (servo ends, lift limits, flywheel gains,
-wheel size, camera offset, shot table), and how to move the results into your code. You measure with
-the **finders**: library OpModes that measure one kind of number each.
+**You will build:** small OpModes that start the library's ready-made finders. A **finder** is a library
+OpMode that measures one kind of number on your robot and prints the code lines to copy.
 
-**You need:** a robot with the parts you want to measure. Do Tutorials 14 (mechanisms) and 19 (Hardware
-Check) first.
+**You need:** a robot with the parts you want to measure.
 
 **Programs:** the starter kit's
 [`ServoFinder.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/starter/ServoFinder.java),
@@ -21,7 +19,6 @@ Check) first.
 and the examples
 [`ExampleShotTuner.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/ExampleShotTuner.java) and
 [`ExampleAimTuner.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/ExampleAimTuner.java).
-**Reference:** [finders.md](../modules/finders.md). Step by step: [Finders guide](../tuning/README.md).
 
 ---
 
@@ -46,15 +43,8 @@ button and the steps.
 
 ## 3. Use the Servo Finder
 
-1. Run the Servo Finder. Choose the claw servo with the D-pad, and press A. Choose a start point near
-   where the claw sits now (D-pad up/down; nothing moves yet). Press A: the servo moves there.
-2. Nudge the servo with D-pad up/down until the claw is fully open without straining. Press **X**.
-   D-pad left/right changes the step (shown on the screen). Start big (0.05) to get close. Then go down
-   to 0.005 or 0.001 for the exact spot.
-3. Nudge the servo to fully closed (on a game piece). Press **B**.
-4. Nudge it to "open just enough" and press **A**. The finder saves it as P1 ("position 1").
-
-The screen shows:
+The steps, button by button: [Servo Finder](../tuning/03-servo-finder.md). At the end, the screen shows
+the lines to copy:
 
 ```java
 PositionServo.create(hardwareMap, "claw").limits(0.180, 0.770)
@@ -63,9 +53,9 @@ Tunables.Claw: P1 = 0.210
     // rename P1, P2... (open, closed); keep them between 0.180 and 0.770
 ```
 
-Copy it into your code and rename P1 to "OPEN". With the [robot in five files](../five-files/README.md),
-copy the `Tunables.Claw` line instead: `open = 0.210` in `Tunables.Claw`. When you press STOP, the finder
-saves the same lines in `/sdcard/FIRST/ftc-helper/finder-results.txt` on the hub.
+Without the five files, copy the first two lines into your code and rename P1 to "OPEN". With the five
+files, copy the `Tunables.Claw` line instead: `open = 0.210` in `Tunables.Claw`. When you press STOP, the
+finder saves the same lines in `/sdcard/FIRST/ftc-helper/finder-results.txt` on the hub.
 
 ## 4. The finders that need your code
 
@@ -88,10 +78,8 @@ are the numbers your TeleOp uses.
 
 ## 5. The order
 
-Run them in this order: Hardware Check, then the Servo and Motor finders, then Flywheel, then Drive
-Tuner, then Aim Tuner, then Shot Tuner. Each one builds on the one before. For example, the Shot Tuner
-needs a flywheel that holds its speed and a camera that aims straight. The [guide](../tuning/README.md)
-explains each step.
+Each finder builds on the ones before it. For example, the Shot Tuner needs a flywheel that holds its
+speed and a camera that aims straight. The order, and one page per finder: [Tuning](../tuning/README.md).
 
 ## If something goes wrong
 
@@ -99,12 +87,10 @@ explains each step.
 | --- | --- |
 | The list is empty | The robot configuration has no devices of that kind. Check the Driver Station configuration. |
 | The servo jumps when it first moves | The start point was far from where the servo sat. Choose a start point near its real position before you press A. |
-| The motor does not move past a mark | Hold LB to move past, then mark again. |
-| "Speed test" does nothing | Mark both ends first (X and B). |
 | Drive Tuner: "counts went DOWN" | A wheel motor direction is wrong. Fix it in `RobotSettings` (Hardware Check). |
 | Shot Tuner: "no target" | The camera does not see the target. Check its status in INIT, the light, and the tag in view. |
-| Shot Tuner: "No shot to mark" | A (HIT) and B (MISS) mark shots already fired. Shoot first (RB). |
-| Shot Tuner: "the flywheel ... sagged" | The feeder pushed the piece in while the flywheel was slow. Wait for Ready, charge the battery, and check the Flywheel Finder gains. |
+
+Each finder's own problems: the "Fix a mistake" table on its page in [Tuning](../tuning/README.md).
 
 ## Try this
 
@@ -112,6 +98,8 @@ explains each step.
    the measured ones.
 2. Run the Flywheel Finder twice, with a full and a half-charged battery. Compare the top speeds.
 
-## Next
+---
 
-The [starter kit](../starter-kit.md): put the numbers you found into a whole robot program.
+**Next:** this is the last tutorial. Back to [the tutorials](README.md), or put the numbers into a whole
+robot program with the [starter kit](../starter-kit.md).
+**Look it up:** [finders.md](../modules/finders.md)

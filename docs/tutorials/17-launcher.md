@@ -2,17 +2,16 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**You will build:** a shooter that spins a flywheel, sets the hood angle from the distance, and feeds a piece only when everything is ready.
-The main track builds a shooter with less code: [Add a launcher](../add-to-robot/05-launcher.md).
+With the five files, the `Launcher` module builds all of this from `Tunables.java`: [Add a launcher](../add-to-robot/05-launcher.md).
+Build it by hand here to see how a flywheel shooter works inside, or for a shooter the module does not fit.
 
-**You will learn:** how the code controls a flywheel shooter (speed, ready, feeding), how to build a
-shot table from real shots, and how `Launcher` feeds a piece only when everything is ready.
+**You will build:** a shooter that spins a flywheel, sets the hood angle from the distance, and feeds a
+piece only when everything is ready.
 
-**You need:** motor `flywheel` (with its encoder cable), servo `hood`, motor `feeder`. Do Tutorials 03 and
-14 first. Wear safety glasses: a flywheel throws things.
+**You need:** motor `flywheel` (with its encoder cable), servo `hood`, motor `feeder`. Wear safety
+glasses: a flywheel throws things.
 
 **Full program:** [`Tut17Launcher.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut17Launcher.java)
-**Reference:** [launcher.md](../modules/launcher.md)
 
 ---
 
@@ -34,11 +33,9 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
         .settleTime(0.15);      // ...for 0.15 s
 ```
 
-The hub holds the speed itself, fast and smooth. It needs four gains for this: P, I, D and F (like
-Tutorial 07). `startingGains()` calculates them from the motor's top speed (`maxRpm`) and `countsPerRev`.
-This is REV's formula, and it works for any motor. Set `maxRpm` to your motor's speed: 6000 for a goBILDA
-6000 RPM motor. Later, the [Flywheel Finder](../tuning/README.md) measures your wheel and gives better
-gains. Then put them in `.pidf(p, i, d, f)` in place of `startingGains()`.
+The hub holds the speed itself with four gains: P, I, D and F (like Tutorial 07). `startingGains()`
+calculates them from `maxRpm` and `countsPerRev` with REV's formula. The
+[Flywheel Finder](../tuning/06-flywheel-finder.md) measures better gains for `.pidf(p, i, d, f)`.
 
 "Ready" needs the speed to STAY in the band for 0.15 s. So one lucky reading during spin-up does not count.
 
@@ -66,16 +63,10 @@ MotorFeeder feeder = MotorFeeder.create(hardwareMap, "feeder").power(1.0).feedTi
    uses this number to know when the hood has arrived.
 3. Full power (1.0) for 0.25 seconds pushes one piece into the flywheel.
 
-To measure the hood, move the servo with the Hardware Check. Write down the raw position at the lowest
-and the highest angle. Then measure those angles (a phone level app works). Any part that goes to an
-angle can be the hood (an [`AngleDevice`](../modules/mechanism.md#angledevice)). In the robot in five
-files, the [`Hood`](../reference/parts/hood.md) module does all this from `Tunables.Hood`, for a servo or
-a motor, with a Hood Finder ([Add a launcher](../add-to-robot/05-launcher.md#a-hood-the-shot-angle)).
+Any part that goes to an angle can be the hood (an [`AngleDevice`](../modules/mechanism.md#angledevice)).
+To measure the two points: [Hood Finder](../tuning/04-hood-finder.md).
 
 ## 4. Fill the shot table
-
-Measure these numbers with the **Shot Tuner**, and the flywheel gains with the **Flywheel Finder**
-([tutorial 21](21-finders.md)). The Shot Tuner shows the `new ShotTable()` lines to copy.
 
 ```java
 ShotTable table = new ShotTable()
@@ -84,16 +75,17 @@ ShotTable table = new ShotTable()
         .add(72, 3700, 21);
 ```
 
-To get YOUR numbers:
+Each row is a distance (in), an rpm and a hood angle (degrees). Between the rows, the table draws
+straight lines. Outside them, it uses the nearest end, so it never guesses past what you tested.
+
+To find the numbers by hand with this program:
 
 1. Press X on gamepad 1: **manual rpm** mode. D-pad left/right = rpm -/+ 100.
-2. Put the robot 24 in from the target. Use a tape measure, to the same point on the robot every time.
+2. Put the robot 24 in from the target. Measure with a tape, to the same edge of the robot every time.
 3. Find the rpm and hood angle where 5 shots in a row score. Write them down.
 4. Repeat at 3-5 distances, across the area you will shoot from.
-5. Put the points in the table. Between them, the table draws straight lines (36 in is halfway between
-   24 and 48). Outside them, it uses the nearest end. So it never guesses past what you tested, and
-   telemetry says "(outside the table)".
 
+The **Shot Tuner** does the same and prints the `new ShotTable()` lines: [Shot Tuner](../tuning/13-shot-tuner.md).
 Different game pieces (2026-27: POLLEN and NECTAR) may need their own tables.
 
 ## 5. The launcher
@@ -116,9 +108,9 @@ launcher.update();
 .bindPress(Pad.G2, Btn.B, launcher::idle)
 ```
 
-`shoot()` does not wait: it only asks for shots. `launcher.update()` feeds each piece when everything is
-ready, so the robot keeps driving in the meantime. `shotInterval(0.3)` gives the flywheel 0.3 s to get
-back to speed between pieces. `shoot(3)` does these steps:
+`shoot()` does not wait, so the robot keeps driving. `launcher.update()` feeds each piece when
+everything is ready. `shotInterval(0.3)` gives the flywheel 0.3 s to get back to speed between pieces.
+`shoot(3)` does these steps:
 
 1. Spin up, when the flywheel is not spinning yet.
 2. Wait until the flywheel is ready AND the hood has arrived (AND any `requireReady` checks, like an
@@ -131,9 +123,8 @@ When it is not ready within `readyTimeout`, it gives up and says why: "gave up: 
 ## Run it
 
 1. Put on safety glasses. Start with no game piece. Press ▶ (start on the Driver Hub).
-2. Press A: the flywheel spins up, and telemetry shows about "2850 / 2850 rpm READY". The program starts
-   at 36 in, halfway between the 24 and 48 in rows of the table.
-3. Press RB without a piece: the feeder runs once. Press LB: it runs three times, 0.3 s apart.
+2. Press A: telemetry shows about "2850 / 2850 rpm READY" (the program starts at 36 in).
+3. Press RB without a piece: the feeder runs once. LB: three times, 0.3 s apart.
 4. With pieces, D-pad up/down changes the distance, and the hood moves. Shoot.
 5. Stop the OpMode and unplug the flywheel's encoder cable. Run again and `shoot(1)`. The flywheel can
    never read "ready", so the launcher waits, then shows "gave up: flywheel". That is the safety rule at
@@ -156,6 +147,7 @@ When it is not ready within `readyTimeout`, it gives up and says why: "gave up: 
 2. Add `.idleRpm(1500)`: a slow idle makes spin-up faster. Measure the difference.
 3. Add a second table for another game piece, and switch tables with a button.
 
-## Next
+---
 
-[Tutorial 18: Vision aiming](18-vision-aim.md)
+**Next:** [Tutorial 18: Vision aiming](18-vision-aim.md)
+**Look it up:** [launcher.md](../modules/launcher.md)

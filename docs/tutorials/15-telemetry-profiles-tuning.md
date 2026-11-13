@@ -2,24 +2,24 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**You will build:** a lift program with a hideable debug screen, a practice/competition switch, a tuning menu and a match timer.
-The main track uses the same tuning menu: [Add a lift](../add-to-robot/01-lift.md).
+**In the five files:** the screen, the profile, the tuning menu and the match buzz are ready with no code
+([What the drivers see and feel](../controls/03-see-and-feel.md), [Live tuning](../tuning/16-live-tuning.md)).
+**Build it by hand** to see how each one works inside, or to add them to a program without the five files.
 
-**You will learn:** telemetry with a driver level and a debug level, the practice/competition profile,
-how to change numbers live with the tuning menu, and the match timer.
+**You will build:** a lift program with a hideable debug screen, a practice/competition switch, a tuning
+menu and a match timer.
 
 **You need:** a motor `lift` (tutorial 08). Do Tutorial 14 first.
 
 **Full program:** [`Tut15TelemetryTuning.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut15TelemetryTuning.java)
-**Reference:** [telemetry.md](../modules/telemetry.md), [core.md: Profile](../modules/core.md#profile), [tuning.md](../modules/tuning.md), [match.md: MatchTimer](../modules/match.md#matchtimer)
 
 ---
 
 ## 1. Two kinds of telemetry reader
 
-During a match, the **driver** looks at the screen for half a second. The driver needs modes, targets,
-"READY". The **programmer** at the bench needs powers, errors, raw sensor values. When the screen shows
-both all the time, the driver's lines get lost. `RobotTelemetry` keeps them apart:
+In a match, the **driver** glances at the screen and needs modes, targets, "READY". The **programmer** at
+the bench needs powers, errors, raw sensor values. When the screen shows both, the driver's lines get
+lost. `RobotTelemetry` keeps them apart:
 
 ```java
 RobotTelemetry t = new RobotTelemetry(telemetry);
@@ -44,9 +44,9 @@ lift.maxPower(Math.min(LIFT_MAX_POWER.get(), Profile.pick(0.5, 1.0)));
 ```
 
 `Profile.pick(practice, competition)` gives one value or the other. `Math.min` takes the smaller of the
-two. So the lift's top power is never more than the profile allows, whatever the tuned value is. The
-Control Hub saves the profile choice. Use the profile for comfort (speeds, extra screens), never to turn
-safety off. Guide: [Profiles](../guides/profiles.md).
+two, so the lift's top power is never more than the profile allows, whatever the tuned value is. Use
+the profile for comfort (speeds, extra screens), never to turn safety off
+([Profiles](../guides/profiles.md)).
 
 ## 3. Live tuning
 
@@ -69,22 +69,18 @@ tuning.update();
 if (!tuning.isOpen()) driver.update(gamepad1, gamepad2);   // gamepad 1 belongs to the menu while it is open (3)!
 ```
 
-1. "Lift/maxPower" is its name in the menu (group "Lift"). 0.8 is the value in the code. 0.05 is how
-   much one D-pad press changes it. `range(0.1, 1.0)`: the menu cannot take it outside 0.1 to 1.0. So
-   nobody can tune the lift to full reverse by mistake.
-2. The menu does not open in the COMPETITION profile. So a driver cannot change numbers by accident at
-   an event.
-3. The real program also remembers whether the menu was open last loop. When the menu closes, the
-   program calls `driver.ignoreHeldButtons(...)`. Then a button still held from the menu does not fire.
+1. "Lift/maxPower" is its name in the menu (group "Lift"). 0.8 is the code value, and 0.05 is one D-pad
+   step. `range(0.1, 1.0)` stops anyone from tuning the lift to full reverse by mistake.
+2. The menu stays closed in COMPETITION, so a driver cannot change numbers by accident at an event.
+3. When the menu closes, the real program calls `driver.ignoreHeldButtons(...)`, so a button still held
+   from the menu does not fire.
 
-**Three button lists:** the menu uses gamepad 1's D-pad, bumpers, A, B, X and Y. If the driver's
+**Why three button lists:** the menu uses gamepad 1's D-pad, bumpers, A, B, X and Y. If the driver's
 gamepad-1 buttons kept working, Y for "reset all" would also run whatever Y does for the robot. The lift
 buttons are on gamepad 2, so a second person can test each change while you tune.
 
-In PRACTICE, press GUIDE (the center button): a menu lists every tunable. D-pad up/down chooses,
-right/left changes, A saves on the hub. Read the value **every loop** (`LIFT_MAX_POWER.get()`), so that a
-change acts at once. When a number is right, copy it into the code and press Y (reset all).
-Guide: [Tuning while the robot runs](../tuning/16-live-tuning.md).
+Read the value **every loop** (`LIFT_MAX_POWER.get()`), so that a change acts at once. The menu's buttons,
+and how to copy a number back into the code: [Live tuning](../tuning/16-live-tuning.md).
 
 ## 4. The match timer
 
@@ -96,8 +92,8 @@ timer.update();         // every loop: runs the cues
 t.line("Time", timer.format());
 ```
 
-2026-27: the field signals 1:00 (FLOWER ownership unlocks) and 0:20 (final 20 seconds). Drivers often
-cannot look up, so a buzz at those times helps them.
+Drivers often cannot look up, so a buzz at a set time helps them. In 2026-27 the field signals 1:00
+(FLOWER ownership unlocks) and 0:20 (final 20 seconds).
 
 ## 5. The INIT warning
 
@@ -106,8 +102,7 @@ if (Tunable.countChanged() > 0) t.warn(Tunable.countChanged() + " tuned value(s)
 ```
 
 Saved tuning values come back after a restart. This warning stops the team from forgetting them at an
-event. Copy them into the code or reset them, so the robot does what the code says. `EasyAuto` shows the
-warning for you.
+event. `EasyAuto` shows it for you.
 
 ## Run it
 
@@ -133,6 +128,9 @@ warning for you.
 2. Use `setMinIntervalMs(100)`. Compare the loop speed (debug "Loop") with it and without it.
 3. Add a 1:00 cue that shows a warning line for 3 seconds.
 
-## Next
+---
 
-[Tutorial 16: Easy autonomous](16-easy-autos.md)
+**Next:** [Tutorial 16: Easy autonomous](16-easy-autos.md).
+
+**Look it up:** [Telemetry module](../modules/telemetry.md), [Core module: Profile](../modules/core.md#profile),
+[Tuning module](../modules/tuning.md), [Match module: MatchTimer](../modules/match.md#matchtimer).
