@@ -38,7 +38,7 @@ complete: if a part reads a new number, the check fails until the number is on i
 
 ## Find a setting by what you want
 
-This table moved to [Fix it by what you see](../tuning/17-fix-by-symptom.md) in the Tuning section.
+This table moved to [Fix it by what you see](../tuning/16-fix-by-symptom.md) in the Tuning section.
 
 ## When you add a part
 
@@ -111,7 +111,7 @@ A section no part reads, like `Team` with a number your `Controls.java` uses:
 
 - `public static` fields: FTC Dashboard can show them too, **at home and in practice only**. Rule R704.D
   (2026-27) bans tools like FTC Dashboard at events, so take it out of the robot project before one
-  ([tuning guide](../tuning/16-tuning-menu.md#ftc-dashboard-practice-only)). The library's tuning menu is
+  ([tuning guide](../tuning/15-tuning-menu.md#ftc-dashboard-practice-only)). The library's tuning menu is
   allowed.
 - The menu's names ("Lift/kP") are shared by the whole robot app: keep one Robot class per app.
 
@@ -311,7 +311,7 @@ A name that ends in `Sec` is seconds, `Ms` milliseconds, `In` inches, `Mm` milli
 ## The "In tuning menu" column
 
 You can change some numbers while the robot runs. In the PRACTICE profile, after ▶, hold **GUIDE** for 1 s.
-Use the D-pad to choose and change, and **A** to save on the Control Hub ([tuning guide](../tuning/16-tuning-menu.md)). The
+Use the D-pad to choose and change, and **A** to save on the Control Hub ([tuning guide](../tuning/15-tuning-menu.md)). The
 numbers you tune most are [`Tunable`](../modules/tuning.md)s ("Lift/kP").
 
 | In tuning menu says | What it means |
@@ -342,7 +342,7 @@ The finders are: [Servo Finder](../tuning/03-servo-finder.md),
 [Drive Tuner](../tuning/08-drive-tuner.md),
 [Odometry Tuner](../tuning/09-odometry-tuner.md),
 [Aim Tuner](../tuning/11-aim-tuner.md), [Shot Tuner](../tuning/12-shot-tuner.md),
-[Hood Finder](../tuning/04-hood-finder.md), [Piece Tuner](../tuning/14-piece-tuner.md).
+[Hood Finder](../tuning/04-hood-finder.md), [Piece Tuner](../tuning/13-piece-tuner.md).
 "Test" in the part tables means: try it on the robot and change it by hand.
 
 ## Parts with no Tunables

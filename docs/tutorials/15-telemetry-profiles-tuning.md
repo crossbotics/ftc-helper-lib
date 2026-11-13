@@ -84,7 +84,7 @@ buttons are on gamepad 2, so a second person can test each change while you tune
 In PRACTICE, press GUIDE (the center button): a menu lists every tunable. D-pad up/down chooses,
 right/left changes, A saves on the hub. Read the value **every loop** (`LIFT_MAX_POWER.get()`), so that a
 change acts at once. When a number is right, copy it into the code and press Y (reset all).
-Guide: [Tuning while the robot runs](../tuning/16-tuning-menu.md).
+Guide: [Tuning while the robot runs](../tuning/15-tuning-menu.md).
 
 ## 4. The match timer
 

@@ -305,11 +305,9 @@ public class TuneAndCheckOpMode extends LinearOpMode {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
-        if (robot != null && robot.hasCameraFix()) {
-            out.add(new Tool("Camera Fix Check", "ALPHA: the camera fix's turn", () -> new CameraFixCheckOpMode() {
-                @Override protected RobotDefinition robot() { return fresh.get(); }
-            }));
-        }
+        // The Camera Fix Check (alpha) is not in the menu: the camera fix is untested and cannot work in
+        // BIOBUZZ (its tags move with the HIVEs). A team that tests it runs CameraFixCheckOpMode from its
+        // own file (docs/modules/odometry.md, "Camera fix (alpha)"). Look again each new season.
         if (any(modules, PieceSensor.class)) {
             out.add(new Tool("Piece Tuner", "what each piece sensor sees", () -> new PieceTunerOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }

@@ -3194,7 +3194,7 @@ for 1 second**, and the tuning menu opens. D-pad up/down chooses a number, and r
 `Tunables.java`.** A value saved only on the hub is lost with a new Control Hub, and your teammates cannot see it.
 
 **Why:** you see the effect at once, and you do not have to build and install again.
-**More:** [Tuning](tuning/16-tuning-menu.md#open-it-and-change-a-number), [Lesson 4: tune the lift live](tutorials/start/04-lift-and-claw.md#6-tune-the-lift-live).
+**More:** [Tuning](tuning/15-tuning-menu.md#open-it-and-change-a-number), [Lesson 4: tune the lift live](tutorials/start/04-lift-and-claw.md#6-tune-the-lift-live).
 
 ### How do I tune the drive for autonomous?
 

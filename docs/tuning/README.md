@@ -30,7 +30,7 @@ flowchart TB
     end
     subgraph G5["Scoring"]
         direction LR
-        L["Camera lighting<br/>a setup, not a tool"] --> A["Aim Tuner<br/>camera offset"] --> T["Shot Tuner<br/>shot table"] --> CF["Camera Fix Check<br/>alpha"]
+        L["Camera lighting<br/>a setup, not a tool"] --> A["Aim Tuner<br/>camera offset"] --> T["Shot Tuner<br/>shot table"]
     end
     subgraph G6["Last"]
         direction LR
@@ -53,14 +53,13 @@ flowchart TB
 | 10 | [Camera lighting](10-camera-lighting.md) (a setup, not a tool) | the camera setting for each kind of light | the camera must see the tags well before you aim or tune shots |
 | 11 | [Aim Tuner (own file)](11-aim-tuner.md) | camera offset | aim first, so you build the shot table with straight shots |
 | 12 | [Shot Tuner](12-shot-tuner.md) | the shot table | it needs a steady wheel, straight aim and a true distance: everything above |
-| 13 | [Camera Fix Check (alpha)](13-camera-fix-check.md) | the camera's turn | only with a `cameraFix(camera)` line |
-| 14 | [Piece Tuner](14-piece-tuner.md) | what each sensor sees | nothing moves, so it can also come earlier |
-| 15 | [Characterizer (own file)](15-characterizer.md) | how the motors really move | it needs a robot that drives and lifts that work, so it comes last |
+| 13 | [Piece Tuner](13-piece-tuner.md) | what each sensor sees | nothing moves, so it can also come earlier |
+| 14 | [Characterizer (own file)](14-characterizer.md) | how the motors really move | it needs a robot that drives and lifts that work, so it comes last |
 
 **After the finders:**
 
-- [The tuning menu](16-tuning-menu.md): change a number while the robot runs, from the gamepad.
-- [Fix it by what you see](17-fix-by-symptom.md): "the lift sags" -> which number to change, and which way.
+- [The tuning menu](15-tuning-menu.md): change a number while the robot runs, from the gamepad.
+- [Fix it by what you see](16-fix-by-symptom.md): "the lift sags" -> which number to change, and which way.
 
 ---
 

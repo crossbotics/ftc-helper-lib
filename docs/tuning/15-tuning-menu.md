@@ -148,6 +148,6 @@ without a laptop.
 
 ---
 
-**Next:** [Fix it by what you see](17-fix-by-symptom.md).
+**Next:** [Fix it by what you see](16-fix-by-symptom.md).
 
 **Look it up:** [Tunable](../modules/tuning.md), [Tunables.java](../reference/tunables.md).

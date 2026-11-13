@@ -779,7 +779,7 @@ pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
 Each piece the intake sensor sees counts one in. Each feed counts one out, once the piece has gone.
 `robot.pieces.next()` says `"POLLEN"`, `"UNKNOWN"` or `"NONE"`. `robot.pieces.isFull()` is true at 4
 (rule G407). Each kind's color goes in Tunables. Measure it with the Piece Tuner
-([finders guide](../../tuning/14-piece-tuner.md)). Until a kind is tuned,
+([finders guide](../../tuning/13-piece-tuner.md)). Until a kind is tuned,
 the sensor reads it as `"UNKNOWN"`, and INIT says which kinds are missing. An UNKNOWN piece keeps the
 shot table in use.
 

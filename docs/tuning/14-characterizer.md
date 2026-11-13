@@ -66,6 +66,6 @@ each test ran 2-3 times and the numbers agree.
 
 ---
 
-**Next:** [The tuning menu](16-tuning-menu.md).
+**Next:** [The tuning menu](15-tuning-menu.md).
 
 **Look it up:** [CharacterizerOpMode](../modules/finders.md#characterizeropmode).

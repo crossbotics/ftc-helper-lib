@@ -16,6 +16,6 @@ This page moved to [Tuning](../tuning/README.md), one page per tool:
 | Odometry Tuner | [Odometry Tuner](../tuning/09-odometry-tuner.md) |
 | Aim Tuner | [Aim Tuner](../tuning/11-aim-tuner.md) |
 | Shot Tuner | [Shot Tuner](../tuning/12-shot-tuner.md) |
-| Camera Fix Check | [Camera Fix Check](../tuning/13-camera-fix-check.md) |
-| Piece Tuner | [Piece Tuner](../tuning/14-piece-tuner.md) |
-| Characterizer | [Characterizer](../tuning/15-characterizer.md) |
+| Camera Fix Check | not in Tune and check now (alpha, not for BIOBUZZ): [Camera fix](../modules/odometry.md#camera-fix-alpha) |
+| Piece Tuner | [Piece Tuner](../tuning/13-piece-tuner.md) |
+| Characterizer | [Characterizer](../tuning/14-characterizer.md) |

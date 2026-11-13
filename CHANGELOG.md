@@ -62,6 +62,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **The Camera Fix Check is not in Tune and check now.** The camera fix is alpha, untested, and cannot work in
+  BIOBUZZ (its tags move with the HIVEs). The check and `cameraFix(camera)` stay in the code: run the check
+  from a file of your own ([Camera fix](docs/modules/odometry.md#camera-fix-alpha)). We look again each season.
+
 - **Flywheel starting gains:** tutorial 17, the module page and the Shot and Aim tuner examples use
   `.maxRpm(6000).startingGains()` (REV's formula, right for any motor) in place of the hand-picked
   `.pidf(10, 3, 0, 12)`.

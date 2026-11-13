@@ -5,7 +5,7 @@ Something on the robot is not right. Find what you see, and change one number.
 **You need:** the finders done for the part ([the tuning order](README.md)).
 
 Find what you see in the first column. Change the setting in the middle column, in the direction it says.
-Change one number at a time, and test after each change. The [tuning menu](16-tuning-menu.md) changes most
+Change one number at a time, and test after each change. The [tuning menu](15-tuning-menu.md) changes most
 of them while the robot runs. Then copy the good value back into `Tunables.java`.
 
 When the last column names a finder, run that finder again: a guess is worse than a measurement.

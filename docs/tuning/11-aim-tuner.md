@@ -31,7 +31,7 @@ The sign of the offset depends on where the camera sits:
 ![Three top views: a camera left of the launcher gives a negative offset, a camera right of it gives a positive offset, and a camera on the launcher's line gives 0](../images/aim-offset-examples.svg)
 
 The Aim Tuner finds this angle by test shots. It does not change how fast or how smoothly the robot turns
-(for the whole robot, that is `turnKp` and `turnKd` in `Tunables.Aim`: [Fix it by what you see](17-fix-by-symptom.md)).
+(for the whole robot, that is `turnKp` and `turnKd` in `Tunables.Aim`: [Fix it by what you see](16-fix-by-symptom.md)).
 
 ## See what the camera sees
 

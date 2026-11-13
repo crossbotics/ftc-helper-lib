@@ -101,7 +101,7 @@ You find most numbers on the robot, with a finder or by testing. Two ways give y
   `Tunables.Drive: strafeCorrection = 1.210`. The finders: [Tune and check](../tuning/README.md).
 - **The tuning menu** changes a number while the robot runs. In the PRACTICE profile, after ▶, hold
   **GUIDE** for 1 second. Use the D-pad to choose and change a number, and press **A** to save
-  ([tuning menu](../tuning/16-tuning-menu.md)).
+  ([tuning menu](../tuning/15-tuning-menu.md)).
 
 **Copy every number back into `Tunables.java`, then build and install.** The next INIT lists the numbers
 saved on the hub under "Tuned on this robot (copy into Tunables.java)".
@@ -199,4 +199,4 @@ Every launcher and feeder number: [Launcher](../reference/parts/launcher.md#in-t
 
 **Next:** [Controls.java](03-controls-java.md).
 **Look it up:** [every number of every part](../reference/tunables.md). **Go deeper:**
-[the finders](../tuning/README.md) and [the tuning menu](../tuning/16-tuning-menu.md).
+[the finders](../tuning/README.md) and [the tuning menu](../tuning/15-tuning-menu.md).

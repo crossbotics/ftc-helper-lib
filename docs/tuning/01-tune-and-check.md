@@ -34,11 +34,10 @@ The menu lists only the tools that fit your robot. It finds Robot.java by itself
 | Drive Tuner | there is a Robot.java |
 | Odometry Tuner | Robot.java has an `odometry(...)` line |
 | Shot Tuner | the robot has a launcher |
-| Camera Fix Check (**alpha**) | Robot.java has `cameraFix(camera)` ([camera fix](../modules/odometry.md#camera-fix-alpha)). BIOBUZZ teams: ignore it |
 | Piece Tuner | the robot has a piece sensor |
 
 Two tools are not in the menu: the **Aim Tuner** and the **Characterizer**. They need your camera or your
-lifts, so they keep their own file ([Aim Tuner](11-aim-tuner.md), [Characterizer](15-characterizer.md)). Your own finder files still work: keep them or delete them.
+lifts, so they keep their own file ([Aim Tuner](11-aim-tuner.md), [Characterizer](14-characterizer.md)). Your own finder files still work: keep them or delete them.
 
 ## Before you start
 

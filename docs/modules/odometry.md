@@ -367,7 +367,18 @@ public static class CameraFix {                          // Tunables.java
 ```
 
 **The field directions** are the turn from the Limelight's field frame to ours, a multiple of 90
-degrees. A test finds them: **Camera Fix Check** in [Tune and check](../tuning/01-tune-and-check.md#the-tune-and-check-menu).
+degrees. A test finds them: the **Camera Fix Check**. It is not in Tune and check (the camera fix is
+alpha, and not for BIOBUZZ), so run it from a file of your own.
+
+**Where:** a new file in TeamCode, next to Robot.java.
+
+```java title="CameraFixCheck.java"
+@TeleOp(name = "Camera Fix Check", group = "Finders")
+public class CameraFixCheck extends CameraFixCheckOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
 Put the robot on the field facing away from your drivers' wall, with tags in view. The test shows the
 Limelight's own pose, the turn that fits, and the robot's place with that turn. Check the place with a
 tape measure. X saves the turn for BLUE, and B saves it for RED. The Limelight's pipeline (a set of

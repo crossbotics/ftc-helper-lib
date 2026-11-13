@@ -68,6 +68,6 @@ The robot uses `Tunables.java` and `Robot.java`, not the finder's screen. Copy e
 
 ---
 
-**Next:** [Characterizer: how the robot really moves](15-characterizer.md).
+**Next:** [Characterizer: how the robot really moves](14-characterizer.md).
 
 **Look it up:** [Pieces and PieceSensor](../reference/parts/pieces.md).

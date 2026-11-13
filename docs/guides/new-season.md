@@ -93,6 +93,8 @@ instead: [Extending the library](extending.md).
 ## 6. Docs and records
 
 - Library: CHANGELOG, the part pages, the lessons that changed, this page's table.
+- The camera fix (alpha): look again when the field has fixed tags on the walls
+  ([Possible later work](../design/possible-work.md)).
 - The Shot Tuner's field map: change the goal and the spots in `tools/shot_spots.py`, run it, and change
   the season paragraph in `docs/tuning/12-shot-tuner.md`.
 - Robot project: its own README / design log.

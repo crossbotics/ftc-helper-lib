@@ -21,6 +21,15 @@ import java.util.Locale;
  * robot's heading, and the robot's place in our frame with that turn. X saves the turn for BLUE, B for
  * RED (stand at the RED wall for that one).
  *
+ * <p>It is not in "Tune and check" (the camera fix is untested, and not for BIOBUZZ). Run it from a file
+ * of your own:
+ * <pre>{@code
+ * @TeleOp(name = "Camera Fix Check", group = "Finders")
+ * public class CameraFixCheck extends CameraFixCheckOpMode {
+ *     @Override protected RobotDefinition robot() { return new Robot(); }
+ * }
+ * }</pre>
+ *
  * Docs: docs/modules/odometry.md, "Camera fix (alpha)"
  */
 public abstract class CameraFixCheckOpMode extends FinderOpMode {
