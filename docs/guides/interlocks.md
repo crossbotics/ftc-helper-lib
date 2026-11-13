@@ -255,7 +255,7 @@ The robot, part by part:
   two-finger claw. The wrist is a servo on an 8 mm axle across the slide. It swings the claw out the back,
   0 to 145 degrees between hard stops (a stop collar and a pin).
 
-Run its TeleOp in the [simulator](simulator.md). With the wrist folded, turn the turret toward the back
+Run its TeleOp in the [simulator](../simulator/README.md). With the wrist folded, turn the turret toward the back
 with the stick: it stops at the edge. Then score in a FLOWER (G2 Y). While the wrist is out, the turret is
 free to turn to the back. At the end, the action folds the wrist again, and the rule is back on. A turret
 at the back then holds the wrist out: the wrist waits until the turret turns away.

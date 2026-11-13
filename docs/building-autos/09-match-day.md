@@ -154,4 +154,4 @@ Change the number in the step, test it, and commit.
 **Next:** [Tuning](../tuning/README.md): find and check every number.
 
 **Look it up:** [every step](../reference/steps.md#auto). **Go deeper:**
-[test an auto with a scenario file](../guides/simulator.md#scenario-files-test-without-a-browser).
+[test an auto with a scenario file](../reference/scenario-files.md).

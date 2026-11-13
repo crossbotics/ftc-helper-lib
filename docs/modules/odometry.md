@@ -748,7 +748,7 @@ The tools also turn a Pinpoint or OTOS in the robot configuration XML into an od
 TODO). `./gradlew :sim:newRobot` writes the `odometry(...)` line in `Robot.java` and a
 `Tunables.Odometry` section with `checked = false`. They use only the first one they find. An
 `Odometry.custom(...)` line has no pretend device: `:sim:fromRobot` writes only a comment for it.
-Details: [simulator guide](../guides/simulator.md#every-setting).
+Details: [simulator guide](../reference/robot-file.md#every-setting).
 
 ---
 

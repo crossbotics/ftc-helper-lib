@@ -8,7 +8,7 @@ minutes: 15
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.18.3
-docs: [guides/simulator.md#measure-in-the-simulator, reference/tunables.md#default-and-measure]
+docs: [simulator/02-your-robot-file.md#5-measure-numbers-and-missing-parts, reference/tunables.md#default-and-measure]
 ---
 
 ## Why

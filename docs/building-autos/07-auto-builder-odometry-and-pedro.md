@@ -59,4 +59,4 @@ The settings for the path and each part:
 
 **Next:** [Advanced autos](08-advanced-autos.md): beyond the auto builder.
 
-**Look it up:** [the auto builder, every detail](../guides/simulator.md#the-auto-builder).
+**Look it up:** [the auto builder, every detail](06-auto-builder-steps.md).

@@ -3312,7 +3312,7 @@ Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, 
 simulator, click the red **Stop** button (or press Ctrl+C in the terminal).
 
 **Why:** you can try buttons and autonomous routes before the robot is built.
-**More:** [Simulator: start it](guides/simulator.md#start-it).
+**More:** [Simulator: start it](simulator/01-start-and-drive.md).
 
 ### How do I see my own robot in the simulator?
 
@@ -3322,7 +3322,7 @@ from Robot.java: simulator/robot.properties`.
 
 **Why:** the robot file then always matches your code. The simulator keeps your own lines in it. When
 you change the code, stop the simulator and start it again.
-**More:** [A robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava), [Your own robot code](guides/simulator.md#your-own-robot-code).
+**More:** [A robot file from Robot.java](simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava), [Your own robot code](reference/robot-file.md#the-commands).
 
 ### How do I make the simulator draw my part?
 
@@ -3364,7 +3364,7 @@ cube, 29 in tall) is right. Pieces also touch the intake where the real one is. 
 the simulator's **Edit robot** mode. Drag and size each part on the 3D robot, then copy the
 `.looks(...)` lines it shows into `Robot.java`. After a change, stop the simulator and start it again.
 **More:** [Shapes and parts](reference/robot-java.md#shapes-and-parts) (every shape and setting),
-[A robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava).
+[A robot file from Robot.java](simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava).
 
 ### How do I test my code with a script?
 
@@ -3396,7 +3396,7 @@ It runs your own code (`../TeamCode`, next to the library in your robot project)
 A scenario uses the FTC button names, which can differ from the Java names. `g2.rt`, `g2.lb`, `g2.a` are
 the same, but `g2.dpadUp` is `g2.dpad_up` and `g2.leftStickY` is `g2.left_stick_y`.
 
-**More:** [Record a test](tests/01-record-a-test.md), [Scenario files](guides/simulator.md#scenario-files-test-without-a-browser) (every command and button name).
+**More:** [Record a test](tests/01-record-a-test.md), [Scenario files](reference/scenario-files.md) (every command and button name).
 
 ## Not here?
 

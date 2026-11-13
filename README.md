@@ -82,7 +82,7 @@ In Android Studio, pick **Simulator** in the list next to the green Run button a
 ./gradlew :sim:run
 ```
 
-Then open http://localhost:8780. Everything else: [the simulator guide](docs/guides/simulator.md) and
+Then open http://localhost:8780. Everything else: [the simulator guide](docs/simulator/README.md) and
 the [four BIOBUZZ starter bots](docs/guides/starter-bots.md) to try.
 
 ## How it is made: experience plus AI
@@ -118,7 +118,7 @@ replacement for learning.
 3. [Quick start](docs/quick-start.md): add the library, get five files, and drive.
 4. [The five files](docs/five-files/README.md): what each file is for.
 5. [Add to your robot](docs/add-to-robot/README.md): one page per part (a lift, a launcher, odometry, ...).
-   Then [Controls](docs/controls/README.md), [Building autos](docs/building-autos/README.md) and [Tuning](docs/tuning/README.md).
+   Then [Controls](docs/controls/README.md), [Building autos](docs/building-autos/README.md), [Simulator](docs/simulator/README.md) and [Tuning](docs/tuning/README.md).
 
 **For a question like "how do I add a lift?":** the [Cookbook](docs/cookbook.md) has more than 100
 short answers, each with code to copy. The build tests that code with every change.
@@ -155,7 +155,7 @@ Everything else, by what you want to do:
 | **Set up a Limelight's pipelines for bright, normal and dim light (the lighting test at INIT)** | [Setting up Limelight lighting pipelines](docs/guides/limelight-lighting.md) |
 | Keep two parts from hitting each other (a turret and a lift) | [Interlocks](docs/guides/interlocks.md) |
 | Test the robot (checklists) | [Checks before practice and matches](docs/tests/03-checks-before-practice-and-matches.md) |
-| **Try OpModes without a robot (pretend Control Hub + Driver Hub, field in 3D)** | [Simulator](docs/guides/simulator.md) |
+| **Try OpModes without a robot (pretend Control Hub + Driver Hub, field in 3D)** | [Simulator](docs/simulator/README.md) |
 | Motors and servos the simulator knows (and how to add your own) | [Parts catalog](docs/guides/parts-catalog.md) |
 | **Ask an AI agent (Claude Code, Codex, a chat) about the library, with answers from these docs** | [Ask an AI agent](docs/guides/ask-an-ai-agent.md) |
 | Your real robot in the simulator, with an AI agent's help | [Robot-file skill](docs/guides/robot-file-skill.md) |

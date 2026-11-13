@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** a team with one of these starter bots (roads 1 and 2 of the [Quick start](../quick-start.md#pick-your-road)),
-or anyone who wants a ready robot to try in the [simulator](simulator.md). For each starter bot, you find
+or anyone who wants a ready robot to try in the [simulator](../simulator/README.md). For each starter bot, you find
 its [configuration names](#the-configuration-names) and what its code does differently. At the end:
 [what to change when you changed the robot](#you-changed-your-starter-bot).
 
@@ -486,7 +486,7 @@ robot file and the notes on this page all use them.
 
 The robot code does not change, unless a servo's positions changed. Then run the Servo Finder again. Only
 the simulator's robot file changes: the part's place and size
-([Edit robot](simulator.md#edit-robot-shape-your-robot) in the simulator page, or `looks(...)` in
+([Edit robot](../simulator/03-make-it-match-your-robot.md#3-shape-the-parts-with-edit-robot) in the simulator page, or `looks(...)` in
 `Robot.java`: [shapes](../reference/robot-java.md#shapes-and-parts)).
 
 ### The simulator's robot file
@@ -494,7 +494,7 @@ the simulator's robot file changes: the part's place and size
 Start from your starter bot's measured file: copy `sim/robots/starter-bot-<seller>.properties` to
 `simulator/robot.properties` in your robot project. After each change, run `./gradlew :sim:fromRobot`
 from the `ftc-helper-lib` folder. It adds a line for each new part, marked `TODO measure`
-([a robot file from Robot.java](simulator.md#a-robot-file-from-robotjava)). The lines of the copied file
+([a robot file from Robot.java](../simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava)). The lines of the copied file
 are yours, so it does not delete them. For a part you took off, delete its lines (and its `shape.` lines)
 by hand. When a line in the file and your code disagree, the tool stops and says why: fix that line by
 hand. Then measure the robot and write the real sizes on the `TODO` lines.

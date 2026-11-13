@@ -3,8 +3,8 @@
 Use this when the team has CAD of the whole robot (a STEP file, or Onshape / Fusion that can export one). The CAD
 gives exact sizes, places, spin axes and seller part numbers. It does not say which configuration name drives
 which part: you guess that from clues and ask the team when you are not sure. The result is the same robot file
-as the interview makes, plus CAD models for the 3D view and the size rules ("CAD models of the parts" in
-`docs/guides/simulator.md`).
+as the interview makes, plus CAD models for the 3D view and the size rules ("CAD models" in
+`docs/simulator/03-make-it-match-your-robot.md`; every CAD line in `docs/reference/robot-file.md`).
 
 **CAD from a seller belongs to the seller.** Keep the STEP and the STL files with the team (their own repository
 or computer), never in a public repository. Commit only `cad-work/cad/*.stl` and the JSON files you write; add

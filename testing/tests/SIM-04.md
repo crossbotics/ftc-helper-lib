@@ -8,7 +8,7 @@ minutes: 40
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.1
-docs: [tests/01-record-a-test.md, guides/simulator.md#record-a-test]
+docs: [tests/01-record-a-test.md, reference/scenario-files.md#the-recorder]
 ---
 
 ## Why

@@ -25,7 +25,7 @@ a bounce): we want to know how often.
 
 - PCS-01 done (each kind tuned).
 - `pieces = add(Pieces.kinds(...).comingIn(...).max(4))` before the launcher line; for the table, `.tableFrom(pieces.nextKind())` on the launcher.
-- Simulator: sensor lines in your robot file (`color.NAME = at=intake`, see [game pieces](../../docs/guides/simulator.md#game-pieces)).
+- Simulator: sensor lines in your robot file (`color.NAME = at=intake`, see [game pieces](../../docs/reference/robot-file.md#game-pieces)).
 
 ## Steps
 

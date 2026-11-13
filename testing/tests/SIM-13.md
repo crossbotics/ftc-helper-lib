@@ -8,7 +8,7 @@ minutes: 10
 needs: []
 kit_bots: [gobilda, gobilda-strafer]
 since: v0.41.0
-docs: [guides/simulator.md#game-rules-and-the-score, reference/parts/intake.md#in-robotjava]
+docs: [guides/how-the-simulator-works.md#game-rules-and-the-score, reference/parts/intake.md#in-robotjava]
 ---
 
 ## Why

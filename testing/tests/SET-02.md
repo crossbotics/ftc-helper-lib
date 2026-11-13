@@ -8,7 +8,7 @@ minutes: 25
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
-docs: [reference/robot-java.md#parts-not-on-the-robot-yet, guides/simulator.md#a-part-not-on-the-robot-yet]
+docs: [reference/robot-java.md#parts-not-on-the-robot-yet, simulator/02-your-robot-file.md#5-measure-numbers-and-missing-parts]
 ---
 
 ## Why

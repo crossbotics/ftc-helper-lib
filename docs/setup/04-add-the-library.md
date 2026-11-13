@@ -117,7 +117,7 @@ In GitHub Desktop: tick those four, type the message, click **Commit to main**, 
 
 At each Gradle sync, the library adds three entries to the run list ([the buttons](06-build-and-install.md#the-buttons)):
 
-- **Simulator:** a pretend robot on your laptop, in your browser ([the simulator](../guides/simulator.md)).
+- **Simulator:** a pretend robot on your laptop, in your browser ([the simulator](../simulator/README.md)).
 - **Simulator tests:** runs your project's simulator tests.
 - **Update library:** gets the newest library version ([Keep it up to date](../02-keep-up-to-date.md#update-the-update-library-button)).
 
@@ -130,4 +130,4 @@ The test build passed, you deleted `HelperCheck.java`, and you pushed the change
 
 **Next:** [Update the hubs](05-update-the-hubs.md).
 
-**Look it up:** [Keep the library up to date](../02-keep-up-to-date.md) and [The simulator](../guides/simulator.md).
+**Look it up:** [Keep the library up to date](../02-keep-up-to-date.md) and [The simulator](../simulator/README.md).

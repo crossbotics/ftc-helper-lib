@@ -1,6 +1,6 @@
 // The simulator's auto builder: its logic with no page code (the page is builder.js; the node test is
 // tools/check_builder.mjs). The plan model, the checks, the Java and the scenario are the web builder's
-// own (stepscore.js and pathcore.js, shared with crossbotics.com's path builder: see docs/guides/simulator.md,
+// own (stepscore.js and pathcore.js, shared with crossbotics.com's path builder: see docs/simulator/README.md,
 // "The auto builder"). This file adds only what a simulator run needs:
 //   - the field file with neutral names ("Your LOADING ZONE"), as the web builder's copy has them;
 //   - the plan as the Built Auto reads it (toProgram): the same Steps calls the Java makes;

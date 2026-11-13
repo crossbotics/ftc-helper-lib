@@ -668,7 +668,7 @@ kS=0.041, maxTicksPerSec=2792, accelSec=0.087, gravity=0.060
 The Characterizer saves each test's log in the results folder as `characterizer/<test>[-<motor>]-<yyyyMMdd-HHmmss>.csv`
 (for example `lift-lift-20261021-101500.csv`). A test stopped early saves its log too, marked "(stopped
 early)". The simulator's fit tool reads the logs and writes the robot file for you
-(`./gradlew :sim:fit -Plog=... -Pwrite`, see the [simulator guide](../guides/simulator.md#real-numbers-the-characterizer)).
+(`./gradlew :sim:fit -Plog=... -Pwrite`, see the [simulator guide](../simulator/03-make-it-match-your-robot.md#6-real-speeds-optional)).
 Run each test 2-3 times on a charged battery. The fit tool fits the logs of the same test together. It also
 gives r2, a score from 0 to 1 for how well the numbers match the measurements. Below 0.9 it says "poor: run it
 again"; below 0.5 it says "Could not fit". The Characterizer measures arms like lifts: it takes the pull of

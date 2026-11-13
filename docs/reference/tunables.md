@@ -252,7 +252,7 @@ Servo Finder still run: they do not read `Tunables.java`. For a lift's `min` and
 - A part that is `optional()` and not on the robot does not stop on `MEASURE`.
 - **In the simulator,** INIT does not stop. `./gradlew :sim:fromRobot` writes a stand-in for each
   `MEASURE` in the simulator's robot file (`tunable.IntakeDeploy.deployed = 0.5`), and the simulator uses
-  it in place of `MEASURE` ([MEASURE in the simulator](../guides/simulator.md#measure-in-the-simulator)).
+  it in place of `MEASURE` ([MEASURE in the simulator](../simulator/02-your-robot-file.md#5-measure-numbers-and-missing-parts)).
   The real robot never reads that file, so it still stops.
 - `:sim:newRobot` writes every part's settings this way.
 - For a part not in the catalog, [describe it in Robot.java](robot-java.md#parts-not-in-the-catalog).

@@ -18,7 +18,7 @@ commands and what the docs say you will see are right on your laptop. No robot n
 
 ## Setup
 
-- A laptop with the library and the simulator set up ([laptop setup](../../docs/guides/simulator.md#laptop-setup-once)).
+- A laptop with the library and the simulator set up ([laptop setup](../../docs/simulator/01-start-and-drive.md#laptop-setup-once)).
 - A terminal in the `ftc-helper-lib` folder.
 
 ## Steps

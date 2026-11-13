@@ -8,7 +8,7 @@ minutes: 40
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
-docs: [guides/simulator.md#a-robot-file-from-robotjava, guides/simulator.md#start-it]
+docs: [simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava, simulator/01-start-and-drive.md]
 ---
 
 ## Why
@@ -28,7 +28,7 @@ so this is where we learn which parts the simulator gets wrong or cannot draw.
 3. `./gradlew :sim:run -PteamCode=../TeamCode`, open http://localhost:8780.
 4. INIT your TeleOp, read the button map, START, drive, and use every part.
 5. Run your autonomous. Read the report at the end.
-6. Draw your parts with `looks(...)` shapes ([how](../../docs/guides/simulator.md#a-robot-file-from-robotjava)) if you want pieces to be picked up and shot.
+6. Draw your parts with `looks(...)` shapes ([how](../../docs/simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava)) if you want pieces to be picked up and shot.
 
 ## Pass rule
 
@@ -46,4 +46,4 @@ so this is where we learn which parts the simulator gets wrong or cannot draw.
 
 That is the point of this test: describe what is unusual (a part the library has no module for, a
 custom `Module`, odd device names). Things the simulator cannot do are listed in the
-[simulator guide](../../docs/guides/simulator.md#not-simulated): say if you hit one.
+[simulator guide](../../docs/guides/how-the-simulator-works.md#not-simulated): say if you hit one.

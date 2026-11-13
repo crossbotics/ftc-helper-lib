@@ -21,8 +21,9 @@ The main track is now the docs sections, in this order:
 4. [Add to your robot](../add-to-robot/README.md): one page per part.
 5. [Controls](../controls/README.md): every way a button can work.
 6. [Building autos](../building-autos/README.md): steps, field points, Pedro paths, the auto builder.
-7. [Tuning](../tuning/README.md): find and check every number.
-8. [Tests](../tests/README.md): simulator tests of your code, and checks of the real robot.
+7. [Simulator](../simulator/README.md): start it, make it match your robot, watch an autonomous.
+8. [Tuning](../tuning/README.md): find and check every number.
+9. [Tests](../tests/README.md): simulator tests of your code, and checks of the real robot.
 
 **Used Scratch or Blocks before:** read [From Blocks to Java](../blocks-to-java.md) first.
 

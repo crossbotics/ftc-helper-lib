@@ -74,7 +74,7 @@ Write each distance in the step: `12`, not a name from `Tunables.java`.
 **Why:**
 
 - Each auto has its own numbers. When you change one auto, the others do not change.
-- The [auto builder](../guides/simulator.md#the-auto-builder) can read the auto, change a number, and
+- The [auto builder](../building-autos/06-auto-builder-steps.md) can read the auto, change a number, and
   give you the new file.
 
 `Tunables.java` keeps the **robot's** numbers: speeds, positions and gains. They are the same in

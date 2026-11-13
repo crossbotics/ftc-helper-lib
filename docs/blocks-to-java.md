@@ -193,7 +193,7 @@ when it ends (at INIT), and Java does not let a job change it. A field stays as 
 
 **Check it in a simulator test** ([Record a test](tests/01-record-a-test.md)): a `show(...)` line is on the screen as `Label : value`. So
 after one press of X, check `expect screen has "Count : 1"`. Check a `true`/`false` value the same way:
-`expect screen has "Intake on : true"` ([Scenario files](guides/simulator.md#scenario-files-test-without-a-browser)).
+`expect screen has "Intake on : true"` ([Scenario files](reference/scenario-files.md)).
 
 ## Java punctuation: a short guide
 

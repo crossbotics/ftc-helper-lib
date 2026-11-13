@@ -80,7 +80,7 @@ answer can name something your version does not have. The skill does not have th
 
 ## When the answer is wrong
 
-An AI agent can be wrong. Build the code, and try it in the [simulator](simulator.md) before you try it on
+An AI agent can be wrong. Build the code, and try it in the [simulator](../simulator/README.md) before you try it on
 the robot. When the agent gives an answer that does not match these docs, or the docs do not answer your
 question, [tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose). We fix the docs, and
 the next answer is better for every team.

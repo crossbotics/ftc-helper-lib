@@ -68,7 +68,7 @@ It keeps using that saved value, even after you edit the number in `Tunables.jav
 not have it. So copy each new value back into `Tunables.java`. INIT lists the values that differ.
 
 **Try it first in the simulator.** The kit bots have robot files. Run one, then pick
-"REV Bot TeleOp" ([Simulator guide](guides/simulator.md)). `-PteamCode=none` runs the **library's**
+"REV Bot TeleOp" ([Simulator guide](simulator/README.md)). `-PteamCode=none` runs the **library's**
 example, not your copy.
 
 **Where:** Android Studio's **Terminal** tab, in the **`ftc-helper-lib` folder** (type `cd ftc-helper-lib` first). ([Which folder](setup/09-the-terminal.md#which-folder))

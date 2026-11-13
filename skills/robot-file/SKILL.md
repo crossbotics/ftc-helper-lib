@@ -9,7 +9,7 @@ You help a team describe their real robot for the ftc-helper-lib simulator, so i
 scores like theirs. You talk to students: plain words, short questions, a few at a time, and say why a
 number matters ("the size check needs the lift's real top height").
 
-The robot file format is in `ftc-helper-lib/docs/guides/simulator.md` (robot file, robot shapes, game
+The robot file format is in `ftc-helper-lib/docs/reference/robot-file.md` (robot file, robot shapes, game
 pieces, cameras, real numbers). Read it first. The parts catalog is `ftc-helper-lib/docs/guides/parts-catalog.md`;
 what this skill is for, for people: `ftc-helper-lib/docs/guides/robot-file-skill.md`.
 
@@ -29,6 +29,9 @@ project (`ftc-helper-lib/` next to `TeamCode/`) the robot file is `../simulator/
   `# estimate: not measured`. No photos? Ask for a hand sketch with a few dimensions.
 - **Heights are to the middle** of a part (a wheel's center, a roller's center) unless you say otherwise:
   ask that way ("floor to the middle of the wheel").
+- **Measure from the edges, never from the robot's middle.** Ask "from the front edge" and "from the
+  left edge" (bumpers off), and work out the file's forward/left numbers yourself:
+  forward = length / 2 - (from the front edge), left = width / 2 - (from the left edge).
 - **Names come from the configuration**, exactly (case and spaces). A wrong name makes the OpMode stop
   with "Unable to find a hardware device".
 - **Photos stay with the team.** Do not upload or commit them anywhere.
@@ -47,8 +50,10 @@ Ask for these, and use whatever the team has:
    Read it yourself: `RobotSettings`/`Robot.java` (motor names, directions, limits), the
    `hardwareMap.get(...)` calls, any `Characterizer`/finder results (`finder-results.txt`).
 3. **Parts list**: the motors (seller part numbers, gear ratios), servos, wheels.
-4. **Photos**: front, side, top, and each mechanism at both ends of its travel (lift down and up, arm
-   folded and out, claw open and closed). See `photos.md`.
+4. **Photos**: side, top, front, and each mechanism at both ends of its travel (lift down and up, arm
+   folded and out, claw open and closed), with a field tile or a tape measure in view. With no CAD,
+   photos plus a few tape measurements are the main path: follow `photos.md` (how to get the photos,
+   read them, which numbers still need a tape measure, and how to check the result against them).
 5. **CAD of the whole robot**, if they have it (a STEP file, or Onshape / Fusion that can export one):
    it gives exact sizes, places, spin axes and seller part numbers, and draws the real parts. Follow
    `cad.md`: it reads the CAD, you guess which motor drives what from its clues and ask only when
@@ -65,7 +70,7 @@ and the shapes' positions are in that range, and a goBILDA 2000 servo turns 300 
 
 ## 2. Make the draft
 
-**TeamCode in five files** (a `Robot.java` that `extends RobotDefinition`, docs/modules/robot.md)? Make
+**TeamCode in five files** (a `Robot.java` that `extends RobotDefinition`, docs/reference/robot-java.md)? Make
 the draft from the code instead: it knows each device's module, the drive, the stops and the claw's
 positions.
 
@@ -111,7 +116,7 @@ team the lines you changed.
 
 **TeamCode in five files (a `Robot.java` that `extends RobotDefinition`)?** Put the answers in Robot.java,
 not in the robot file: each part's catalog id (`part(...)`, `Drive.wheel(...)`), its shapes
-(`looks(Shape...)`), `chassisMm`, `heightMm`, `fixed(...)` (docs/modules/robot.md "Shapes and parts"),
+(`looks(Shape...)`), `chassisMm`, `heightMm`, `fixed(...)` (docs/reference/robot-java.md "Shapes and parts"),
 then run `./gradlew :sim:fromRobot` (it also prints the Tunables name checks INIT runs: pass any problem on
 to the team). A lift or arm on two motors is `alsoMotor`/`alsoMotorReversed` in Robot.java; the
 generator writes the second motor's `with=` line. Every moving part takes `looks(...)` (intake, lift, arm, turret, claw,
@@ -120,13 +125,15 @@ wrist, servo with positions, launcher, hood) and `fixed(...)` draws the parts th
 `model=`: see `cad.md`). Why: the generator keeps every
 unmarked line, so a hand-written `shape.intake` would win over Robot.java's for good (it prints "kept
 your shape.intake" each run); if one exists from before, delete it once Robot.java draws that part.
-Then show the team the simulator's **Edit robot** mode (docs/guides/simulator.md): they can drag and size
+Then show the team the simulator's **Edit robot** mode (docs/simulator/03-make-it-match-your-robot.md): they can drag and size
 any part on the 3D robot and copy the `.looks(...)` lines it prints into Robot.java. Use it yourself to
 check your shapes with them: it shows the 18 in start cube and the 29 in line.
 
-Otherwise, use `photos.md` to turn the mechanisms into robot shapes (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel`),
-then the game-piece lines (`collect.`, `shoot.`, `grab.`, and piece sensors `color.`/`distance.`) and the cameras. Mount points (`at=`) and sizes
-(`size=`) in inches from the robot's center on the floor: forward, left, up.
+For the places and sizes, use `photos.md`: it gives the Robot.java line and the robot file line for each
+kind of part. **No Robot.java?** Write robot shapes in the robot file (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel`),
+then the game-piece lines (`collect.`, `shoot.`, `grab.`, and piece sensors `color.`/`distance.`) and the
+cameras. Mount points (`at=`) and sizes (`size=`) are in inches from the robot's center on the floor:
+forward, left, up. Work them out from the edge measurements.
 
 ## 5. Check it
 
@@ -161,8 +168,9 @@ stop
 3. **Names match.** `init` of the team's OpModes gives no error (every configured name is in the file).
    An OpMode that uses a device the simulator does not have (a color sensor) stops there: tell
    the team which OpModes those are.
-4. **It looks right.** Show the 3D view (`./gradlew :sim:run`, http://localhost:8780) next to a photo; ask
-   the team: "does this look like your robot?" Fix what they point at.
+4. **It looks right.** Show the 3D view (`./gradlew :sim:run`, http://localhost:8780, **Edit robot**)
+   next to each photo, from the same side; ask the team: "does this look like your robot?" Fix what they
+   point at (`photos.md` step 5).
 5. Leave the scenario in `simulator/scenarios/`: it now runs with every test.
 
 ## 6. Real numbers next

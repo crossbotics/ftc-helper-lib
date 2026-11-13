@@ -8,7 +8,7 @@ minutes: 40
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
-docs: [add-to-robot/07-camera.md#shooting-while-moving, guides/simulator.md#clean-shots-scatter-and-the-hit-rate]
+docs: [add-to-robot/07-camera.md#shooting-while-moving, guides/how-the-simulator-works.md#clean-shots-scatter-and-the-hit-rate]
 ---
 
 ## Why

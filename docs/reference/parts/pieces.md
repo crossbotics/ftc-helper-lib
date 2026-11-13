@@ -229,7 +229,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 
 - The count does not carry over from the autonomous into the TeleOp. The TeleOp starts with
   `startsWith(...)`. A ready sensor corrects an empty count.
-- The simulator ([robot file](../../guides/simulator.md#game-pieces): `color.NAME = at=ready`,
+- The simulator ([robot file](../robot-file.md#game-pieces): `color.NAME = at=ready`,
   `distance.NAME = at=intake, acrossMm=150`) simulates color and distance sensors. It does not simulate the camera.
 
 ## Buttons to add

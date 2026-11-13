@@ -617,7 +617,7 @@
     </div>
     <div class="tab" data-tab="match">
     <h3 style="margin-top:0">Match</h3>
-    <div id="matchOff" class="muted">No rules file for this field: no score or clock (docs/guides/simulator.md, "Game rules and the score").</div>
+    <div id="matchOff" class="muted">No rules file for this field: no score or clock (docs/guides/how-the-simulator-works.md#game-rules-and-the-score).</div>
     <div id="matchOn" hidden>
       <div class="scoreRow">
         <button class="side red" id="scoreRed" aria-expanded="false" title="Where red's points come from">RED <b>0</b></button>
@@ -683,7 +683,7 @@
           <label><input type="checkbox" data-layer="trails"> Ball trails</label>
           <label><input type="checkbox" data-layer="paths"> Path lines (plan and where it went)</label>
           <label><input type="checkbox" data-layer="size"> Robot size box (and the 18 in start cube)</label>
-          <div class="muted">What each line means: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/simulator.md#layers" target="_blank" rel="noopener">the simulator guide, "Layers"</a>.</div>
+          <div class="muted">What each line means: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/how-the-simulator-works.md#layers" target="_blank" rel="noopener">How the simulator works: Layers</a>.</div>
         </div></span>
       <span class="tools"><span class="dropdown"><button id="testsBtn" aria-haspopup="true" aria-expanded="false" title="Record a test of your code, run it, and update it after a planned change">Tests<span class="caret" aria-hidden="true">&#9662;</span></button>
         <div id="testsMenu" class="menu" hidden>
@@ -1563,7 +1563,7 @@ function update3dPaths(s) {
   }
 }
 // ---------------------------------------------------------------- Match: score, clock, FLOWERs, shots, fouls
-// From the field's rules file (docs/guides/simulator.md, "Game rules and the score"). The stream sends the game
+// From the field's rules file (docs/guides/how-the-simulator-works.md#game-rules-and-the-score). The stream sends the game
 // on its own ("g") only when it changes; /state carries it as "game".
 let game = null;
 const seenShot = { id: 0, first: true }, seenFoul = { t: -1, first: true };
@@ -2366,7 +2366,7 @@ function update3d(r, cams) {
 }
 
 // ---------------------------------------------------------------- Layers (the menu over the 3D view)
-// Each is a choice remembered in this browser. What each line means is in docs/guides/simulator.md, "Layers".
+// Each is a choice remembered in this browser. What each line means is in docs/guides/how-the-simulator-works.md#layers.
 const layers = SimView.prefs("simLayers", { sight: true, cone: true, seemap: false, seemapAny: false, arc: true, trails: true, paths: true, size: false });
 function setLayer(name, on) {
   layers[name] = on; layers.save();

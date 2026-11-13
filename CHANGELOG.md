@@ -77,6 +77,20 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **Docs: a Simulator section** (`docs/simulator/`), after Building autos: start it and drive, your robot
+  file, make it match your robot (with worked examples for the common setups), and watch an autonomous. The
+  big simulator guide (`docs/guides/simulator.md`) is gone: every robot file line is in
+  [The robot file](docs/reference/robot-file.md), the test language in
+  [Scenario files](docs/reference/scenario-files.md), the inside in
+  [How the simulator works](docs/guides/how-the-simulator-works.md), and the maintainer notes in
+  [Contributing](docs/contributing.md#the-simulator-notes-for-maintainers). The simulator's messages and
+  page links point to the new pages.
+- **The robot-file skill works from photos** (`skills/robot-file/photos.md`): which photos to take and how to
+  give them to the agent, reading places from the robot's edges (never its middle), which numbers still need
+  a tape measure, the Robot.java line for each kind of part, and a check of the 3D robot against the photos.
+  The interview asks for measurements from the edges too. [Make it match your robot](docs/simulator/03-make-it-match-your-robot.md)
+  offers the skill.
+
 - **The Camera Fix Check is not in Tune and check now.** The camera fix is alpha, untested, and cannot work in
   BIOBUZZ (its tags move with the HIVEs). The check and `cameraFix(camera)` stay in the code: run the check
   from a file of your own ([Camera fix](docs/modules/odometry.md#camera-fix-alpha)). We look again each season.
@@ -632,7 +646,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 - **Simulator, Edit robot: the shot angle.** Change each launcher's angle in the panel: the arrow follows it,
   **Try it** shoots with it, and the panel gives the `.shotAngle(...)` line to copy into `Robot.java`.
-  [Edit robot](docs/guides/simulator.md#edit-robot-shape-your-robot)
+  [Edit robot](docs/simulator/03-make-it-match-your-robot.md#3-shape-the-parts-with-edit-robot)
 - **Simulator, Control Hub: move the robot with numbers.** x, y, heading, the Face buttons and Snap, the same
   as the auto builder's start spot.
 
@@ -650,7 +664,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   this (`robot.NAME = true, false or a number`) are now kept, run and written back. Other lines in `steps()`
   and overrides such as `atInit()` are listed after Load as not carried over, and the note counts the comments
   inside `steps()` that are not kept. After Load, the copy list starts on **only the steps**.
-  [The auto builder](docs/guides/simulator.md#the-auto-builder)
+  [The auto builder](docs/building-autos/06-auto-builder-steps.md)
 
 ## v0.21.1 - 2026-10-29
 
@@ -1202,7 +1216,7 @@ now start with numbers worked out from the motor: see "Changed".
 
 ### Added
 
-- **Record a test in the simulator** (docs/guides/simulator.md#record-a-test): **Tests > Record a test** over
+- **Record a test in the simulator** (docs/reference/scenario-files.md#the-recorder): **Tests > Record a test** over
   the 3D view writes down what you do on the page (the OpMode, INIT, the alliance, every button and stick from
   any gamepad source, the waits, the robot or a piece moved by hand) as a scenario file. **Stop recording**
   suggests the checks from what the simulator sees: goal checks ticked (the autonomous finishes, its steps are
@@ -1296,7 +1310,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
 - `RobotTelemetry.warnFirst(text)`; `launcher.Turret.servoStartAngle()`, `addWarnings(t)`;
   `MatchMemory.setPlacement(pose, note, asWritten)`, `placementAsWritten()`; `Tunable.forgetAllForTests()`.
 
-- **Simulator: the auto builder** (docs/guides/simulator.md#the-auto-builder), the "Auto builder" button over
+- **Simulator: the auto builder** (docs/building-autos/06-auto-builder-steps.md), the "Auto builder" button over
   the 3D view: build an autonomous on the field, as Simple steps (any drive) or a Pedro path (follow or
   driveTo steps, with PathAt), edit it on a field map or in the 3D view, and press Run. The simulator runs it
   with the team's real code (their Robot class, parts and Actions, the real `Auto`/`Steps` and Pedro follower)
@@ -1311,7 +1325,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
   their source; `node tools/check_builder.mjs` (in CI) checks the output against the web builder's and the
   site's copies when it finds them.
 
-- **Simulator: Layers over the 3D view** (docs/guides/simulator.md#layers): camera sight lines to the tags,
+- **Simulator: Layers over the 3D view** (docs/guides/how-the-simulator-works.md#layers): camera sight lines to the tags,
   each with the reason it is not seen (out of view, too slanted, too small, lighting setting, and
   "blocked?" when a field part is in the way of a tag the camera model sees); a floor map of where the
   camera can see tags (the robot as it faces now, or turned any way; `GET /seemap`); the predicted shot
@@ -2637,7 +2651,7 @@ class was removed. Everything under "Simulator" runs only on a laptop, from the 
   IMU and battery, and a robot on the season's field. The page fits one laptop screen: Driver Hub,
   the field in 3D with the gamepads under it, and the Control Hub in tabs. Gamepads: on-screen,
   keyboard, a real USB or Bluetooth controller, or a phone on the same WiFi (`-Plan`).
-  Guide: [docs/guides/simulator.md](docs/guides/simulator.md).
+  Guide: [docs/guides/simulator.md](docs/simulator/README.md).
 - Simulator physics (ode4j): the robot is a solid body pushed by its wheels as hard as their grip
   allows; it stops at and slides along walls and field parts, its wheels slip while it pushes, and its
   parts hit things too. `physics = simple` keeps a plain "a bump stops the move" rule. `robot.massKg`,

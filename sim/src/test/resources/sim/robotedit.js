@@ -1,4 +1,4 @@
-// The simulator page's Edit robot mode (docs/guides/simulator.md, "Edit robot: shape your robot"): move and size
+// The simulator page's Edit robot mode (docs/simulator/03-make-it-match-your-robot.md#3-shape-the-parts-with-edit-robot): move and size
 // the robot's shapes in the 3D view, check them against the size rules in every pose, and copy the .looks(...)
 // Java into Robot.java. The simulator does the shapes and the Java (SimRobotEdit); this file is the 3D view of
 // the robot alone, the panel and the drag. Nothing here writes a file: the student copies the Java.

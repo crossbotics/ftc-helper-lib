@@ -39,7 +39,7 @@ looks like "the robot spins for no reason".
 Run all your simulator tests, and your JUnit tests if you have them
 ([Run all your tests](02-run-all-your-tests.md)). They need no robot.
 
-**Without tests:** run the OpMode in the [simulator](../guides/simulator.md) first. It shows many
+**Without tests:** run the OpMode in the [simulator](../simulator/README.md) first. It shows many
 problems before you touch the robot: a crash at INIT, a wrong button, a screen that does not fit. The
 simulator builds its robot from your code, so it cannot find a wrong wire or a motor that turns the
 wrong way. Only the real robot can.

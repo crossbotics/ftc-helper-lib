@@ -389,7 +389,7 @@ The red **Stop** button stops it.
 
 Then open http://localhost:8780, pick your TeleOp, INIT, ▶, set gamepad 1's list to "Keyboard", and drive with the keyboard
 (W A S D, arrows). The simulator builds the robot from your code, so it cannot find a wrong motor direction: only
-the real robot can. ([Simulator guide](guides/simulator.md).)
+the real robot can. ([Simulator guide](simulator/README.md).)
 
 The simulator builds your TeamCode first, so it is also a quick check that your code builds, on a
 laptop, with no Control Hub. (`run` is a Gradle **task**: one job Gradle can run. `:sim:` says it is in
@@ -413,10 +413,10 @@ servos, and how they look. The names and the drive come from `Robot.java`. The s
   shapes. A file made from `Robot.java` guesses an 18 x 18 in robot. A copied file has no "made from"
   line at the top, so the simulator does not change it when it starts. **Road 2:** after each change,
   run `./gradlew :sim:fromRobot` in the `ftc-helper-lib` folder. It adds the lines for your new parts to the file
-  ([a robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava)). When a line in the
+  ([a robot file from Robot.java](simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava)). When a line in the
   file and your code disagree, it stops and says why. Then fix that line by hand.
 - **`MEASURE` numbers:** the simulator uses a stand-in for each one, so it runs before you measure. The
-  real robot still stops at INIT ([MEASURE in the simulator](guides/simulator.md#measure-in-the-simulator)).
+  real robot still stops at INIT ([MEASURE in the simulator](simulator/02-your-robot-file.md#5-measure-numbers-and-missing-parts)).
 - **Simulator tests**, the second button, runs your saved tests. That comes later:
   [Record a test](tests/01-record-a-test.md).
 

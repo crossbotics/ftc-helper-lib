@@ -2,13 +2,13 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**For:** teams that want the [simulator](simulator.md) to act like their own robot. **You need:** an AI
+**For:** teams that want the [simulator](../simulator/README.md) to act like their own robot. **You need:** an AI
 coding agent (Claude Code, Codex or similar), your robot project with ftc-helper-lib in it, and a tape
 measure.
 
 The simulator moves like YOUR robot only when its robot file (`simulator/robot.properties` in your robot
 project) describes your robot: every device name, the motors and servos, the size, the mechanisms and
-cameras. You can write it by hand ([simulator guide](simulator.md)). An AI coding agent can do most of
+cameras. You can write it by hand ([simulator guide](../simulator/README.md)). An AI coding agent can do most of
 it for you with the **robot-file skill**. A skill is a set of written instructions that the agent follows.
 This one is in `ftc-helper-lib/skills/robot-file/`.
 
@@ -41,7 +41,12 @@ questions) together, follow [Ask an AI agent](ask-an-ai-agent.md#set-it-up) inst
 2. Reads your **TeamCode** (motor names, directions, limits, finder results).
 3. **Asks you** the rest, a few questions at a time: sizes (bring a tape measure), which motors and
    servos, the lift's and arm's hard stops (from the Motor Finder), where the cameras are, how the robot
-   picks up and scores pieces. Photos of the robot help it draw the mechanisms.
+   picks up and scores pieces.
+   **With photos and a tape measure (no CAD):** give it photos of the robot from the side, the top and
+   the front, and of each moving part at both ends of its travel, with a field tile or a tape measure in
+   view. It reads where each part sits from the photos, then asks you for the few numbers that decide a
+   rule (measured from the robot's edges and the floor). It checks its 3D robot against your photos with
+   you. Photos stay on your computer (`skills/robot-file/photos.md`).
    **With CAD of the whole robot:** give it the STEP file. It reads the exact sizes, places, spin axes and
    seller part numbers from it. It guesses which motor drives which part, and asks you only when it is not
    sure. It draws your real parts in the 3D view (`skills/robot-file/cad.md`, tools in `tools/cad/`).

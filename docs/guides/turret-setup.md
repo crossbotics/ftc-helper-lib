@@ -313,4 +313,4 @@ g1.rb.toggle(robot.aimMode()).says("aim at the goal");
 - a servo turret (a `turret` shape on the servo);
 - a CR servo turret. Its encoder is a `motor.... drivenBy=turret` line that the CR servo turns. An absolute encoder is `analog.turret_pos = ...`.
 
-See the [simulator guide](simulator.md).
+See the [simulator guide](../simulator/README.md).

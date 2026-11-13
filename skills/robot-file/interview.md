@@ -1,7 +1,10 @@
 # Interview: the questions, in order
 
 Ask 3-5 at a time. Each answer becomes a line in the robot file (shown after the arrow). Units: inches,
-degrees, encoder counts. "Forward/left/up" is from the robot's center on the floor.
+degrees, encoder counts. The file's "forward/left/up" numbers are from the robot's center on the floor, but
+**never ask a student to measure from the center:** ask from the front edge, the left edge and the floor
+(bumpers off), and work the numbers out yourself: forward = length / 2 - (from the front edge), left =
+width / 2 - (from the left edge). Students cannot find the center on a real robot.
 
 ## Size and start
 
@@ -52,8 +55,8 @@ Check: a starting robot must fit an 18 in cube. A frame longer than 18 in is a m
     `ticksPerIn=` = (top count - bottom count) / travel (negative if the counts go down as it rises). Use `spoolIn=` only for a one-stage lift
     pulled straight by its spool: a cascade (multi-stage slide where each stage pulls the next) moves its
     top faster than its string.
-14. Lift shape: how tall is one stage, and where does its bottom sit (forward/left/up from the robot's
-    center)? -> `size=` (ONE stage) and `at=`. A part riding on the lift: `on=lift`, `at=0,0,<stage height>`
+14. Lift shape: how tall is one stage, and where does its bottom sit (from the front edge, from the left
+    edge, and up from the floor)? -> `size=` (ONE stage) and `at=`. A part riding on the lift: `on=lift`, `at=0,0,<stage height>`
     is the top of the moving stage.
 15. Arm: what angle is it at the bottom stop, and at the top stop? Angles: 0 = level and pointing
     forward, +90 = straight up, -90 = straight down. -> `start=` (the angle at the `min=` count, usually the bottom stop), and either
@@ -89,7 +92,8 @@ need hard stops), then make sure the shapes are right before blaming the robot.
 
 ## Cameras
 
-20. Each webcam / Limelight: where is its lens (forward, left, up from the robot's center, inches),
+20. Each webcam / Limelight: where is its lens (from the front edge, from the left edge, and up from the floor, inches; you work out
+    forward and left),
     turned left or right (yaw: + = left), tilted up or down (pitch: + = up, so "15 down" = -15)? ->
     `camera.KEY = name=..., forward=, left=, up=, yaw=, pitch=` or `limelight.KEY = ...` (KEY is any short
     word; `name=` must be the configuration name). Use the same tilt as `pitchDeg` in the camera's

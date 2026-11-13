@@ -8,7 +8,7 @@ minutes: 30
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
-docs: [guides/simulator.md#start-it, guides/starter-bots.md]
+docs: [simulator/01-start-and-drive.md, guides/starter-bots.md]
 ---
 
 ## Why
@@ -19,7 +19,7 @@ Chromebooks, with the laptop setup as written. This is the best first test for a
 ## Setup
 
 - A laptop with Android Studio (it brings Java). The library folder (in your robot project, or cloned on its own).
-- The [laptop setup](../../docs/guides/simulator.md#laptop-setup-once) done once.
+- The [laptop setup](../../docs/simulator/01-start-and-drive.md#laptop-setup-once) done once.
 
 ## Steps
 

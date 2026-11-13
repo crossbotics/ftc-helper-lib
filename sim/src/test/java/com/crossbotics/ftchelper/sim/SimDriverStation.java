@@ -244,7 +244,7 @@ final class SimDriverStation {
     synchronized void init(String name, com.crossbotics.ftchelper.match.Alliance alliance) {
         initCount++;
         // A new program: its own alliance and start spot (not the last program's). A plain OpMode never sets
-        // them, and the simulator places the robot from them. (A real robot keeps both: docs/guides/simulator.md.)
+        // them, and the simulator places the robot from them. (A real robot keeps both: docs/simulator/README.md.)
         com.crossbotics.ftchelper.match.MatchMemory.setChosen(null);
         com.crossbotics.ftchelper.match.MatchMemory.setPlacement(null, null);
         // The INIT menu's alliance line starts on the remembered alliance (InitMenu.alliance()).
@@ -336,7 +336,7 @@ final class SimDriverStation {
             + "made from Robot.java at each start. A device your code asks for itself (hardwareMap.get, not in Robot.java) "
             + "needs its own line there: motor.NAME =, servo.NAME =, crservo.NAME =... Started with -Probot=FILE or "
             + "-PnoFromRobot? That file is used as it is: start with the Simulator button instead. "
-            + "More: docs/guides/simulator.md, \"The robot file\".";
+            + "More: docs/simulator/02-your-robot-file.md.";
 
     // The error, with CONFIG_HINT after its first line when it is a device the robot file does not have
     // ("Check ... the active configuration on the Driver Station" does not apply in the simulator).

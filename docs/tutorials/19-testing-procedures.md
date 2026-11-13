@@ -83,7 +83,7 @@ The simulator lists the Hardware Check with the library's examples.
 Open http://localhost:8780 and choose "Tutorial 19: Hardware Check". Press INIT, then ▶ (start on the
 Driver Hub). Pick `lift` with the D-pad, and push gamepad 1's right stick up: the lift rises and its
 count goes up. Pick `claw` and step it with the D-pad. **For your own robot:** run
-`./gradlew :sim:run -PteamCode=../TeamCode` with your `HardwareCheck.java` in TeamCode ([the simulator guide](../guides/simulator.md#a-robot-file-from-robotjava) shows
+`./gradlew :sim:run -PteamCode=../TeamCode` with your `HardwareCheck.java` in TeamCode ([the simulator guide](../simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava) shows
 how to make its robot file). The simulator builds its robot from your code. So it cannot find a wrong
 wire or a motor that turns the wrong way: only the real robot can.
 

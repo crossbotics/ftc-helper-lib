@@ -26,7 +26,7 @@ import java.util.Set;
  * (POST /auto), and the simulator INITs this OpMode and presses START. The plan's Java (the page's
  * "Copy Java") makes the same Steps calls, so a run here is a run of that file.
  *
- * <p>Docs: docs/guides/simulator.md, "The auto builder".
+ * <p>Docs: docs/building-autos/06-auto-builder-steps.md.
  */
 public class BuiltAuto extends Auto<RobotDefinition> {
     /** Its name in the Driver Hub's list. */

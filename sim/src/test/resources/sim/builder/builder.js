@@ -1,6 +1,6 @@
 // The simulator page's auto builder: build an autonomous on the field (Simple steps, or a Pedro path),
 // press Run, and the simulator runs it with the team's real code (the Built Auto). Then copy the Java, save
-// a scenario, print the setup card. Docs: docs/guides/simulator.md, "The auto builder".
+// a scenario, print the setup card. Docs: docs/building-autos/06-auto-builder-steps.md.
 //
 // The plan, its checks, the Java and the scenario come from the web builder's own files (stepscore.js,
 // pathcore.js, mapdraw.js, setupcard.js: the same files as crossbotics.com's path builder), so the Java is
@@ -165,7 +165,7 @@ panel.innerHTML = `
   <button id="bClose" class="b-x" title="Close the auto builder" aria-label="Close">&times;</button>
 </div>
 <p class="muted b-intro">Build an autonomous on the field, press <b>Run</b>: the simulator runs it with your real code
-  (the <i>Built Auto</i>). Then copy the Java. <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/simulator.md#the-auto-builder" target="_blank" rel="noopener">Guide</a></p>
+  (the <i>Built Auto</i>). Then copy the Java. <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/building-autos/06-auto-builder-steps.md" target="_blank" rel="noopener">Guide</a></p>
 <div class="b-sec b-load" id="bFromRow"><div class="row"><b>Load an existing auto</b> <select id="bFrom" aria-label="Your autonomous"></select><button id="bFromGo">Load</button></div>
   <ul class="b-checks" id="bFromNote"></ul></div>
 <details class="b-sec" open><summary>Robot and alliance</summary>

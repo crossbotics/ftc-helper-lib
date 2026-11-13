@@ -97,7 +97,7 @@ The spot in `start(where, xIn, yIn, headingDeg)` is seen from your wall and writ
 - Until `Tunables.Drive.calibrated` is true, it says "AUTONOMOUS IS OFF" and does nothing. In the
   simulator it runs anyway, with a warning.
 - `newRobot()` makes the robot from `extends Auto<Robot>`. You never need it. It is `protected` so the
-  simulator's [auto builder](../guides/simulator.md#the-auto-builder) (its "Built Auto") can run a plan
+  simulator's [auto builder](../building-autos/06-auto-builder-steps.md) (its "Built Auto") can run a plan
   with whichever Robot class your project has.
 
 ## Keep time to park

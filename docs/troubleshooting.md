@@ -344,7 +344,7 @@ where the robot must stand. Read the menu and the note out loud before ▶:
 
 **An INIT menu option does nothing**
 The option is spelled differently in `menuChoice(...)` and in `onlyIf(...)` (capitals count). Test each
-option in the simulator: [Scenario files](guides/simulator.md#scenario-files-test-without-a-browser).
+option in the simulator: [Scenario files](reference/scenario-files.md).
 
 **<samp>modified: ftc-helper-lib (new commits)</samp> in `git status`**
 

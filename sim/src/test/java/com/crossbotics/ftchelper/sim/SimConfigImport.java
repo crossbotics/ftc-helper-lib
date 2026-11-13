@@ -194,7 +194,7 @@ public final class SimConfigImport {
         StringBuilder b = new StringBuilder();
         b.append("# Robot file made by SimConfigImport from the robot configuration \"").append(configName).append("\".\n");
         b.append("# Every device has its configuration name. Lines marked TODO still need an answer (the robot-file\n");
-        b.append("# skill asks them). Guide: docs/guides/simulator.md and docs/guides/robot-file-skill.md.\n\n");
+        b.append("# skill asks them). Guide: docs/simulator/README.md and docs/guides/robot-file-skill.md.\n\n");
         b.append("battery = 12.8\n");
         b.append("field = ").append(field).append("\n\n");
         b.append("# ---- Size and start (TODO: measure the robot) ----\n");

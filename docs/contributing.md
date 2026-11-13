@@ -129,6 +129,89 @@ https://crossbotics.com/ftc-helper/testing/ and send the result with the "Test r
 test: copy a file in `testing/tests/`, change it, and run `python3 tools/check_tests.py --fix`
 ([how](../testing/README.md#add-a-test)).
 
+## The simulator: notes for maintainers
+
+Teams use the simulator from [Simulator](simulator/README.md). These notes are for people who change it.
+
+### Fields: one file per season
+
+`sim/fields/<season>.json` holds a season's field: solid elements (the robot bumps into them), floor
+zones and tape lines, things overhead, and the AprilTags with their position and the way they face. The
+robot file picks one (`field = biobuzz-2026`). The page draws the field. When the robot bumps into an
+element, the robot turns red and the panel names the element. When the robot file loads, the simulator
+refuses a start position that overlaps a wall or an element. A new season is a new file. A script made the
+BIOBUZZ file from the official field CAD. The script is not in this library yet (ask the maintainer). The
+same kind of script works for the next CAD.
+
+Game pieces in the field file: `pieceTypes` (name, `diameterIn`, `massG`, `color`, `bounce`), `pieces`
+(where each starts: type, x, y, z), `goals` (name, x, y, the opening's height `z`, `radiusIn`) and
+`preload` (how many of each type a robot starts with).
+
+A season's rules go in `sim/fields/<season>.rules.json`, next to the field file (see
+[Game rules and the score](guides/how-the-simulator-works.md#game-rules-and-the-score)). The rules are the points, match times, which pieces
+and zones are each alliance's, FLOWER heights, the HIVE's tip time and the clean-shot rules. Someone types
+them from the manual, section by section, so a re-made field file never loses them. For a field file given
+by path, the simulator looks for the rules file in the same folder, with the same name.
+
+The 3D view uses a field's 3D model: a `.glb` file in the same frame, in inches, z up. It sits next to the
+field file, with the same name. `sim/fields/biobuzz-2026.glb` is BIOBUZZ's, made from FIRST's official
+field CAD, and every robot file with `field = biobuzz-2026` uses it. A robot file can name another model
+with `field.model` (a path from the robot file). Without a model, the 3D view builds the field from the
+field file.
+
+### The auto builder's shared files
+
+**Shared with the web builder.** The plan, its checks, the Java, the scenario, the start note, the
+setup card and the auto sheet come from the same files as the web builder: `pathcore.js`, `stepscore.js`,
+`mapdraw.js` and `setupcard.js` in `sim/src/test/resources/sim/builder/`. **The library is their source**:
+change them here, and release them. The web site's `scripts/sync-path-builder.mjs` copies them, with the
+field file, from the release. `node tools/check_builder.mjs` does three checks:
+
+- The Java and the scenario for a set of plans must be letter for letter what the shared files wrote when
+  the fixtures were made (`sim/src/test/resources/builder/fixtures.json`;
+  `--write-fixtures sim/src/test/resources/sim/builder` makes them again after an intended change).
+- It checks the simulator-only part (`simcore.js`).
+- When it finds a checkout of the site, it fails when the site's copies differ from the release that the
+  site names.
+
+The fixtures are a snapshot: they find a change, but not a first answer that was wrong. So one small plan
+has its numbers worked out by hand. The site copies these files and the field from that release, never
+from your working folder.
+
+### The page's helpers
+
+The page's helpers (gliding between updates, the striped ball, the labels) are in `sim/.../simview.js`.
+It is a small file with no other library in it, so another page (like a team's own shot simulator) can
+load it too.
+
+### Automatic tests
+
+`sim/src/test/.../FinderSafetyTest.java` runs whole OpModes with scripted button presses, on every
+push. For example, it checks that help stops the motors, and that a stick held through help does not
+count. It checks that the Drive Tuner's push test finds the real wheel size. It also runs every example
+with the sticks and a trigger held, and checks that no motor stays on by itself at STOP. It looks before
+the simulator switches the motors off. Its first run found a real bug: every finder crashed at INIT in
+v0.7.2.
+
+**Where:** Android Studio's **Terminal** tab, in the **`ftc-helper-lib` folder** (type `cd ftc-helper-lib` first).
+
+```bash
+./gradlew :sim:testDebugUnitTest
+```
+
+`SimRecorderTest` plays a recording session the way the page sends it, and saves the test. It replays the
+test (PASSED), changes the robot (FAILED), updates the test from a measuring run, and replays it (PASSED).
+
+`BuiltAutoTest` runs the [auto builder](building-autos/06-auto-builder-steps.md)'s plans with the example robots (a Simple steps
+plan on goBILDA's starter bot, a Pedro path on the Pedro robot). It checks that they end near the plan.
+The builder's page code has its own check (Node.js), also on every push:
+
+**Where:** Android Studio's **Terminal** tab, in the **`ftc-helper-lib` folder** (type `cd ftc-helper-lib` first).
+
+```bash
+node tools/check_builder.mjs
+```
+
 ## When to release
 
 - **Once a week:** the code changes made that week go out together in one release, with one set of

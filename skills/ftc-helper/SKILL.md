@@ -65,7 +65,8 @@ Start with the row that matches the question. Paths are inside `ftc-helper-lib/`
 | Every public class and method (code written without the five files) | `docs/modules/<package>.md` |
 | Testing: record and run simulator tests, checks before practice and every match | `docs/tests/` |
 | Learning step by step | The walkthrough is the sections: setup, pick-your-start, five-files, add-to-robot, controls, building-autos, tuning, tests. `docs/tutorials/` builds the same things by hand ("under the hood") |
-| The simulator, the parts catalog, profiles, interlocks, testing, a new season | `docs/guides/` |
+| The simulator: start it, the robot file, make it match the robot, watch an autonomous | `docs/simulator/` (every robot file line: `docs/reference/robot-file.md`; the test language: `docs/reference/scenario-files.md`; the inside: `docs/guides/how-the-simulator-works.md`) |
+| The parts catalog, profiles, interlocks, a new season | `docs/guides/` |
 | How a design was chosen (rarely needed) | `docs/design/` |
 | Coming from Blocks, or from last season | `docs/blocks-to-java.md`, `docs/from-last-season.md` |
 | A full working robot to copy | `docs/templates.md`, and its code in `examples/src/main/java/com/crossbotics/ftchelper/examples/` |
@@ -93,7 +94,7 @@ a guide is not always compiled: when the two differ, trust the example and the l
    ```
 
 3. When the change moves something (a part, a button, an auto), try it in the simulator
-   (`docs/guides/simulator.md`). It needs a robot file; the `robot-file` skill
+   (`docs/simulator/README.md`). It needs a robot file; the `robot-file` skill
    (`skills/robot-file/SKILL.md`) makes one. To check it again later, write a scenario file.
 4. Tell the team what to check on the real robot, and which finder to run for any new number.
 

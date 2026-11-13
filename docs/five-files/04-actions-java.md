@@ -135,7 +135,7 @@ s.start("Against our wall, facing the field", 0)
 **Why write it once:** fix the action in `Actions.java`, and TeleOp and every autonomous get the fix.
 
 The simulator's **auto builder** lists your `Actions.java` actions too, next to the ready-made ones
-([the auto builder](../guides/simulator.md#the-auto-builder)).
+([the auto builder](../building-autos/06-auto-builder-steps.md)).
 
 ## The rules every action follows
 

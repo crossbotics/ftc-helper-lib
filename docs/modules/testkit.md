@@ -55,7 +55,7 @@ With the robot: `robot.setup(devices)` (INIT), `robot.startForTests()` (what ▶
 
 **What it cannot do:** move anything. A pretend motor's encoder stays where your test puts it. Time does
 not pass by itself, so an action's `waitSeconds` never ends in a test. There is no camera picture. For
-these, use the [simulator](../guides/simulator.md). A scenario file is a test too.
+these, use the [simulator](../simulator/README.md). A scenario file is a test too.
 
 ## PretendMotor, PretendServo, PretendCRServo
 

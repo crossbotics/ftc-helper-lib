@@ -134,7 +134,7 @@ With no robot project yet, try the recorder and the runner with goBILDA's starte
 
 **Next:** [Checks before practice and matches](03-checks-before-practice-and-matches.md).
 
-**Look it up:** [Scenario files](../guides/simulator.md#scenario-files-test-without-a-browser): every
+**Look it up:** [Scenario files](../reference/scenario-files.md): every
 command, check and flag.
 
 **Go deeper:** [Tutorial 13: Testing](../tutorials/13-testing.md): JUnit tests on the laptop.

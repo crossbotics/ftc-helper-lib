@@ -34,7 +34,7 @@ intake = add(Intake.motor("intake").part("gobilda-5203-117")
 - The simulator uses it, and so does [Pieces](pieces.md): the robot is "full" at this number.
 - INIT warns when it is above the game's limit. BIOBUZZ: no more than 4 at a time (G407).
 - The simulator takes as many as you write, also above the limit. Then it gives the G407 foul: 6 at once, or 5
-  for more than 3 s twice ([the simulator's rules](../../guides/simulator.md#game-rules-and-the-score)).
+  for more than 3 s twice ([the simulator's rules](../../guides/how-the-simulator-works.md#game-rules-and-the-score)).
 - It does not stop the real intake by itself. To stop at a count, use [Pieces](pieces.md) and
   `.stopsWhen(...)` ([cookbook](../../cookbook.md#how-do-i-stop-the-intake-when-the-robot-is-full)).
 - A name matches every kind that has it in its name: "NECTAR" is red and blue NECTAR.

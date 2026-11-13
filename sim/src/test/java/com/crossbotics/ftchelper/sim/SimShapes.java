@@ -12,7 +12,7 @@ import java.util.Map;
  *
  * Robot frame: inches from the robot's center on the floor; f = forward, l = left, u = up.
  *
- * Types (see docs/guides/simulator.md, "Robot shapes"):
+ * Types (see docs/reference/robot-file.md#robot-shapes):
  *   box      a part that does not move
  *   slide    moves in a straight line along "axis" (lift, extension); children ride on its moving stage
  *   arm      turns about a hinge ("axis" = the hinge line); its box reaches forward from the hinge

@@ -8,7 +8,7 @@ minutes: 10
 needs: [flywheel]
 kit_bots: [gobilda, gobilda-strafer]
 since: v0.28.0
-docs: [guides/simulator.md#the-auto-builder, building-autos/02-put-steps-together.md#start-something-or-wait-for-it]
+docs: [building-autos/06-auto-builder-steps.md, building-autos/02-put-steps-together.md#start-something-or-wait-for-it]
 ---
 
 ## Why

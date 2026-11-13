@@ -8,7 +8,7 @@ minutes: 15
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.18.2
-docs: [tests/01-record-a-test.md, guides/simulator.md#scenario-files-test-without-a-browser]
+docs: [tests/01-record-a-test.md, reference/scenario-files.md]
 ---
 
 ## Why

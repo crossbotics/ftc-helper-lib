@@ -255,7 +255,7 @@ the distance.
   NECTAR table is example numbers, so expect misses.
 - **Whole-robot aim:** do the same with `flywheelbot` (`-ProbotClass=com.crossbotics.ftchelper.examples.flywheelbot.Robot -Pout=build/flywheelbot.properties`).
   Choose "FlywheelBot TeleOp", drive until the goal is in view, and press RB on gamepad 1.
-- Your own robot: [Simulator](../guides/simulator.md).
+- Your own robot: [Simulator](../simulator/README.md).
 
 ## Fix a problem
 

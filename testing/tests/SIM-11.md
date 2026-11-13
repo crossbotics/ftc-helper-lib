@@ -8,7 +8,7 @@ minutes: 10
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.28.0
-docs: [guides/simulator.md#the-auto-builder]
+docs: [building-autos/06-auto-builder-steps.md]
 ---
 
 ## Why

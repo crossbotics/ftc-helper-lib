@@ -101,7 +101,7 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     public M looks(Shape... shapes) {
         if (!drawsLooks()) {
             throw new UnsupportedOperationException("Robot.java: " + name() + " cannot take shapes (the parts that move can: Intake, Positioner, Lift, "
-                    + "Arm, Wrist, Claw, Turret, Launcher, Hood and Indexer). Draw it in the simulator robot file instead (docs/guides/simulator.md).");
+                    + "Arm, Wrist, Claw, Turret, Launcher, Hood and Indexer). Draw it in the simulator robot file instead (docs/simulator/README.md).");
         }
         for (Shape s : shapes) {
             if (s.owner != null && s.owner != this) {

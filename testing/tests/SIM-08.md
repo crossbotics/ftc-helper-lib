@@ -8,7 +8,7 @@ minutes: 15
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.22.0
-docs: [guides/simulator.md#edit-robot-shape-your-robot, guides/simulator.md#the-page]
+docs: [simulator/03-make-it-match-your-robot.md#3-shape-the-parts-with-edit-robot, simulator/01-start-and-drive.md#3-read-the-page]
 ---
 
 ## Why

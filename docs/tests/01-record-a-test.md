@@ -7,7 +7,7 @@ after every change.
 
 - A robot that drives and has an autonomous ([The autos](../five-files/05-autos.md)).
 - Your robot project with the simulator running your code: the **Simulator** button in Android Studio,
-  or `./gradlew :sim:run` ([the simulator guide](../guides/simulator.md#start-it)).
+  or `./gradlew :sim:run` ([the simulator guide](../simulator/01-start-and-drive.md)).
 - No project yet? Try it first with goBILDA's starter bot
   ([Run all your tests: try it](02-run-all-your-tests.md#try-it-with-gobildas-starter-bot)).
 
@@ -184,7 +184,7 @@ expect servo claw target = 0.75 0.01
 **A number you have not measured yet.** A `MEASURE` in `Tunables.java` stops INIT on the robot, but not in
 the simulator. When the simulator starts, it puts a stand-in for it in the robot file
 (`tunable.IntakeDeploy.deployed = 0.5`), and the simulator uses that
-([MEASURE in the simulator](../guides/simulator.md#measure-in-the-simulator)). So most tests need nothing
+([MEASURE in the simulator](../simulator/02-your-robot-file.md#5-measure-numbers-and-missing-parts)). So most tests need nothing
 for it.
 
 For another number, put this line before `init`. The test then uses 0.6, for this file only, and your
@@ -206,7 +206,7 @@ set tunable IntakeDeploy.deployed 0.6
 | It fails now and then, then passes | The same cause: the check is too strict. A test you cannot trust is worse than no test |
 | `true only after 5.3 s` | It happens, but later than `within` allows. If the robot is slower on purpose, update the test ([section 7](#7-after-a-planned-change-update-the-test)) |
 | `waited 3 s: the OpMode shows nothing in INIT` | The OpMode sends no telemetry in INIT, so the test cannot count its loops. It still runs |
-| `unknown command`, or a check says `too short` | A line typed by hand has a mistake. The report names it. See [Scenario files](../guides/simulator.md#scenario-files-test-without-a-browser) |
+| `unknown command`, or a check says `too short` | A line typed by hand has a mistake. The report names it. See [Scenario files](../reference/scenario-files.md) |
 | The page says `a test is running` | A test drives the robot. Wait for it, or press **Stop the test** in the blue bar |
 | Save says `no robot project` | The simulator was started with `-PteamCode=none`. Press **Download**, and put the file in your robot project's `simulator/scenarios` folder |
 | The auto builder's Run is not in the test | A test runs your own OpModes. Copy the builder's plan into your code (its Code tab), then record that autonomous |
@@ -221,5 +221,5 @@ set tunable IntakeDeploy.deployed 0.6
 
 **Next:** [Run all your tests](02-run-all-your-tests.md).
 
-**Look it up:** [Scenario files](../guides/simulator.md#scenario-files-test-without-a-browser): every
-command and check. [Record a test](../guides/simulator.md#record-a-test): the recorder.
+**Look it up:** [Scenario files](../reference/scenario-files.md): every
+command and check. [Record a test](../reference/scenario-files.md#the-recorder): the recorder.

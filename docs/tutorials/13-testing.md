@@ -159,7 +159,7 @@ import com.crossbotics.ftchelper.testkit.PretendDevices;
 **Why:** a typo in `Tunables.java` stops INIT on the robot. With a test, it fails on the laptop first.
 The test also checks a change to `Robot.java` (a second lift motor, a new interlock rule) in a second.
 The test cannot see how the real robot moves (gravity). For that, use the
-[simulator](../guides/simulator.md).
+[simulator](../simulator/README.md).
 
 **Time passing:** for a test of timing ("the arm pushes 0.2 s after fire"), use a pretend clock. The test
 moves the time by hand. So it does not wait, and a slow laptop cannot make it fail:

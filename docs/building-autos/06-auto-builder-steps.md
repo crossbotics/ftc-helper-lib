@@ -182,7 +182,7 @@ stops rolling before it turns. Press **Run** again to check.
   then runs every time. Put them back in your file by hand.
 - **Save the scenario:** a test file that checks the note, the start spot, that each step is `done`, and
   where the robot ends. Tick **with the end from the last run** to check the end your robot reached in
-  the run. ([Scenario files](../guides/simulator.md#scenario-files-test-without-a-browser).)
+  the run. ([Scenario files](../reference/scenario-files.md).)
 
 Then stop the simulator (the red Stop button, or **Ctrl+C** in the Terminal) and start it again. Your new
 auto is in the Driver Hub list, like any auto.
@@ -198,7 +198,12 @@ The builder keeps your plan in this browser.
   auto made from them.
 - `routeTo` ([page 4](04-drive-to-points.md#go-around-field-parts-routeto)).
 - A command that is not a part's method or an action, like two calls in one. Write it as a method in
-  `Robot.java` or `Actions.java`, and pick that method.
+  `Robot.java` or `Actions.java`, and pick that method. The builder reads only these shapes:
+  `robot.part::method`, `robot::method`, `() -> robot.part.method(...)`, `() -> robot.method(...)`,
+  `Actions.name(robot, ...)` and `robot.part.method(...)` that gives an Action, with plain values (text,
+  numbers, true/false, `robot`). **Why:** nothing else in your code or on the laptop can be reached from
+  the page, and nothing runs as a script. INIT checks every name before the first step, and names the
+  parts there are when one is wrong.
 
 **Why learn the file too:** you change autos at events, often in a hurry, and the builder does not do
 everything.
@@ -223,4 +228,4 @@ everything.
 
 **Next:** [The auto builder: odometry and Pedro](07-auto-builder-odometry-and-pedro.md).
 
-**Look it up:** [the auto builder, every detail](../guides/simulator.md#the-auto-builder).
+**Look it up:** [the auto builder, every detail](06-auto-builder-steps.md).

@@ -317,7 +317,7 @@ What "off" means, everywhere:
 | [Interlock](parts/interlock.md) rules | a rule with it is off (nothing to hit), and needs no Tunables section: INIT says `Interlock TurretLift: off (Lift is not on the robot)` |
 | [Aim](parts/aim.md) | a following turret that is off does not aim: you may use whole-robot aim (`robot.aimMode()`) |
 | Tunables | its section may be missing or unfinished: no stop. Wrong numbers (max below min) give only a note: `Fix its Tunables before adding it: ...`. Its numbers are **hidden from the tuning menu** (it says `Not on the robot (hidden): IntakeDeploy`): changing them would do nothing. Saved values are kept, and they come back the day the part is there |
-| Simulator | `:sim:fromRobot` still writes it. Leave it out of the simulated configuration with `missing = intake_deploy` in the robot file, or `set device intake_deploy missing` in a scenario ([simulator guide](../guides/simulator.md#a-part-not-on-the-robot-yet)) |
+| Simulator | `:sim:fromRobot` still writes it. Leave it out of the simulated configuration with `missing = intake_deploy` in the robot file, or `set device intake_deploy missing` in a scenario ([simulator guide](../simulator/02-your-robot-file.md#5-measure-numbers-and-missing-parts)) |
 | [Hardware Check](../modules/testing.md#hardwarecheckopmode), finders | the check lists it as `optional, so the part is off (fine)`; the Hood Finder and Shot Tuner say it is not in the configuration; the Piece Tuner leaves its sensors out |
 
 - **Several devices** (a lift with a switch, a two-servo intake, a launcher with its feeder and hood):
@@ -352,7 +352,7 @@ example: [`flywheelbot/Robot.java`](../../examples/src/main/java/com/crossbotics
 A lift with a wrist and a claw riding on it: [`v2bot/Robot.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java).
 
 Typing the numbers is hard. Shape the robot with the mouse in the simulator, and copy the Java it prints
-([Edit robot: shape your robot](../guides/simulator.md#edit-robot-shape-your-robot)).
+([Edit robot: shape your robot](../simulator/03-make-it-match-your-robot.md#3-shape-the-parts-with-edit-robot)).
 
 **Name the part, give only what is not known.** A part in the [parts catalog](../guides/parts-catalog.md)
 brings its numbers: a motor its speed and encoder counts, a servo its speed and range, a wheel or roller
@@ -399,13 +399,13 @@ fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 - The names are only for your code (camelCase, like any Java variable). The shape's name in the simulator
   is `name("intake_arm")`, or the part's name when you do not give one.
 - Each `Shape` belongs to one part. Make a new one for each part, even when two look the same.
-- The simulator's [Edit robot](../guides/simulator.md#edit-robot-shape-your-robot) mode prints shapes the
+- The simulator's [Edit robot](../simulator/03-make-it-match-your-robot.md#3-shape-the-parts-with-edit-robot) mode prints shapes the
   same way: one shape inline, several as named shapes.
 
 | On a part | What it does |
 | --- | --- |
 | `part(id)` | the main motor's or servo's catalog id (a typo stops with the list of ids). A launcher's motor is in `Launcher.flywheel(name, id)`, the drive's in [`Drive.motor(id)`](parts/drive.md). On a CR servo the id is only a note (the simulator turns every CR servo at one speed) |
-| `looks(Shape...)` | how it looks. Every part that moves takes shapes: Intake, Positioner, Launcher, Indexer, Lift, Arm, Wrist, Claw, Turret and Hood. A part with no `looks(...)` gets a guessed shape marked TODO (from the chassis, the other parts and the catalog: [simulator guide](../guides/simulator.md#a-robot-file-from-robotjava)) |
+| `looks(Shape...)` | how it looks. Every part that moves takes shapes: Intake, Positioner, Launcher, Indexer, Lift, Arm, Wrist, Claw, Turret and Hood. A part with no `looks(...)` gets a guessed shape marked TODO (from the chassis, the other parts and the catalog: [simulator guide](../simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava)) |
 
 | `Shape` | What it is | Moved by |
 | --- | --- | --- |
@@ -451,7 +451,7 @@ fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 A part without `looks(...)` gets a guessed shape marked `TODO measure`. It starts from the chassis
 (`chassisMm`), the height (`heightMm`), the other parts (a claw on the end of the lift, arm or wrist) and
 the catalog, and keeps the robot inside the size rules
-([simulator guide](../guides/simulator.md#a-robot-file-from-robotjava)).
+([simulator guide](../simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava)).
 
 ## Motors
 
@@ -525,7 +525,7 @@ It writes (or refreshes) `simulator/robot.properties` from Robot.java and Tunabl
 name, the drive, each module's lines (from its part and shapes when Robot.java gives them,
 [Shapes](#shapes-and-parts)). Lines it writes end with `# from Robot.java`. It keeps your own lines (measured,
 from photos or CAD). It stops if the file describes a device differently from the code. See
-the [simulator guide](../guides/simulator.md#a-robot-file-from-robotjava).
+the [simulator guide](../simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava).
 
 ---
 

@@ -1,6 +1,6 @@
 // The simulator: a pretend Control Hub and Driver Hub on a laptop. Only in the standalone build
 // (like examples/): robot projects never include it. Start it with:  ./gradlew :sim:run
-// then open http://localhost:8780 . Docs: docs/guides/simulator.md
+// then open http://localhost:8780 . Docs: docs/simulator/README.md
 //
 // Why the code is in src/test: the FTC SDK only ships as Android libraries. The unit-test set-up of
 // an Android module already runs them on a laptop's Java, so the simulator runs there too.
@@ -14,7 +14,7 @@ def ftcSdkVersion = '12.0.0'
 // When this library sits inside a robot project (ftc-helper-lib/ next to TeamCode/), the simulator also
 // builds that TeamCode and lists only its OpModes. -PteamCode=<folder> picks another TeamCode folder;
 // -PteamCode=none turns it off. Libraries TeamCode needs (Road Runner, Pedro, FTC Dashboard...) go in
-// <robot project>/simulator/sim-dependencies.gradle (see docs/guides/simulator.md).
+// <robot project>/simulator/sim-dependencies.gradle (see docs/reference/robot-file.md#the-commands).
 def teamCodeProp = project.findProperty('teamCode')
 // An explicit path is read from the library's folder (where you run ./gradlew), like -Probot and -Pfile.
 def teamCodeDir = teamCodeProp == 'none' ? null
@@ -148,7 +148,7 @@ tasks.register('run', JavaExec) {
 // In a robot project, with no -Pfile: every test in simulator/scenarios (docs/tests/02-run-all-your-tests.md).
 tasks.register('scenario', JavaExec) {
     group = 'verification'
-    description = 'Runs simulator scenario files (see docs/guides/simulator.md).'
+    description = 'Runs simulator scenario files (see docs/reference/scenario-files.md).'
     def unitTest = tasks.named('testDebugUnitTest')
     dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
     classpath = files({ unitTest.get().classpath })

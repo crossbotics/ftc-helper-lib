@@ -22,7 +22,7 @@ Run the **Characterizer** last, when the robot drives and its lifts work. It mea
 behaves: the power to start moving, the power per speed, how fast it speeds up, and for a lift the power
 that holds it against gravity. You use these numbers in two places: for feedforward in your code (see
 [Feedforward](../modules/control.md#feedforward)), and as real numbers for the
-[simulator](../guides/simulator.md#real-numbers-the-characterizer).
+[simulator](../simulator/03-make-it-match-your-robot.md#6-real-speeds-optional).
 
 1. In `Characterizer.java`, list your lifts/arms with soft limits a little inside the hard stops
    (counts from the bottom), and your flywheels.
@@ -59,7 +59,7 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 | The finder shows | Put it in |
 | --- | --- |
 | the feedforward numbers | your code ([Feedforward](../modules/control.md#feedforward)) |
-| the motor numbers | the simulator's robot file ([real numbers](../guides/simulator.md#real-numbers-the-characterizer)) |
+| the motor numbers | the simulator's robot file ([real numbers](../simulator/03-make-it-match-your-robot.md#6-real-speeds-optional)) |
 
 ## Done when
 

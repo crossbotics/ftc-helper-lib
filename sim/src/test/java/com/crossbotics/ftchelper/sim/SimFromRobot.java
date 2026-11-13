@@ -95,7 +95,7 @@ public final class SimFromRobot {
             System.out.println("  kept your " + k + (k.contains(" = ") ? "" : " (it is not marked " + MARK + ")"));
         }
         printChanged(r, file);
-        if (r.text.contains("TODO")) System.out.println("  Lines with TODO are guesses: measure them (docs/guides/simulator.md).");
+        if (r.text.contains("TODO")) System.out.println("  Lines with TODO are guesses: measure them (docs/simulator/03-make-it-match-your-robot.md).");
         int standIns = 0;
         for (String line : r.text.split("\n")) if (line.startsWith("tunable.")) standIns++;
         if (standIns > 0) {
@@ -169,7 +169,7 @@ public final class SimFromRobot {
             }
             System.out.println("Robot file NOT made from " + javaFile + ": it and " + shown + " disagree:");
             for (String p : r.problems) System.out.println("  " + p);
-            System.out.println("  The simulator uses " + shown + " as it is. Fix one of them (docs/guides/simulator.md).");
+            System.out.println("  The simulator uses " + shown + " as it is. Fix one of them (docs/simulator/02-your-robot-file.md).");
         } catch (Exception | LinkageError e) {
             System.out.println("Robot file NOT made from " + javaFile + " (" + e + "). The simulator uses " + shown + " as it is.");
         }
@@ -312,7 +312,7 @@ public final class SimFromRobot {
             sb.append("# The simulator's robot, made from ").append(robotName).append(" (again at each start of the simulator).\n");
             sb.append("# Lines marked \"").append(MARK).append("\" come from the code and are rewritten each time.\n");
             sb.append("# Change any other line (or unmark a generated one to keep your own value): measure the\n");
-            sb.append("# robot, or ask the robot-file skill (skills/robot-file). See docs/guides/simulator.md.\n\n");
+            sb.append("# robot, or ask the robot-file skill (skills/robot-file). See docs/simulator/02-your-robot-file.md.\n\n");
             sb.append("battery = 12.8\n");
             sb.append("field = ").append(field).append("\n");
             // The size and start lines, unless the code gives them (then they come with the code's lines).

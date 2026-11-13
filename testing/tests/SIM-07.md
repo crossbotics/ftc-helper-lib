@@ -8,7 +8,7 @@ minutes: 20
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.18.3
-docs: [setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing, guides/simulator.md#start-it]
+docs: [setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing, simulator/01-start-and-drive.md]
 ---
 
 ## Why

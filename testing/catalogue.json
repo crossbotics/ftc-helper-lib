@@ -2149,8 +2149,8 @@
      "anchor": "parts-not-on-the-robot-yet"
     },
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "a-part-not-on-the-robot-yet"
+     "path": "docs/simulator/02-your-robot-file.md",
+     "anchor": "5-measure-numbers-and-missing-parts"
     }
    ],
    "file": "testing/tests/SET-02.md",
@@ -2841,8 +2841,8 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "start-it"
+     "path": "docs/simulator/01-start-and-drive.md",
+     "anchor": ""
     },
     {
      "path": "docs/guides/starter-bots.md",
@@ -2860,7 +2860,7 @@
      {
       "ul": [
        "A laptop with Android Studio (it brings Java). The library folder (in your robot project, or cloned on its own).",
-       "The [laptop setup](repo:docs/guides/simulator.md#laptop-setup-once) done once."
+       "The [laptop setup](repo:docs/simulator/01-start-and-drive.md#laptop-setup-once) done once."
       ]
      }
     ],
@@ -2917,12 +2917,12 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "a-robot-file-from-robotjava"
+     "path": "docs/simulator/02-your-robot-file.md",
+     "anchor": "2-the-simulator-makes-it-from-robotjava"
     },
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "start-it"
+     "path": "docs/simulator/01-start-and-drive.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/SIM-02.md",
@@ -2948,7 +2948,7 @@
        "`./gradlew :sim:run -PteamCode=../TeamCode`, open http://localhost:8780.",
        "INIT your TeleOp, read the button map, START, drive, and use every part.",
        "Run your autonomous. Read the report at the end.",
-       "Draw your parts with `looks(...)` shapes ([how](repo:docs/guides/simulator.md#a-robot-file-from-robotjava)) if you want pieces to be picked up and shot."
+       "Draw your parts with `looks(...)` shapes ([how](repo:docs/simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava)) if you want pieces to be picked up and shot."
       ]
      }
     ],
@@ -2969,7 +2969,7 @@
     ],
     "different": [
      {
-      "p": "That is the point of this test: describe what is unusual (a part the library has no module for, a custom `Module`, odd device names). Things the simulator cannot do are listed in the [simulator guide](repo:docs/guides/simulator.md#not-simulated): say if you hit one."
+      "p": "That is the point of this test: describe what is unusual (a part the library has no module for, a custom `Module`, odd device names). Things the simulator cannot do are listed in the [simulator guide](repo:docs/guides/how-the-simulator-works.md#not-simulated): say if you hit one."
      }
     ]
    }
@@ -2992,12 +2992,12 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "the-auto-builder"
+     "path": "docs/building-autos/06-auto-builder-steps.md",
+     "anchor": ""
     },
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "scenario-files-test-without-a-browser"
+     "path": "docs/reference/scenario-files.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/SIM-03.md",
@@ -3074,8 +3074,8 @@
      "anchor": ""
     },
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "record-a-test"
+     "path": "docs/reference/scenario-files.md",
+     "anchor": "the-recorder"
     }
    ],
    "file": "testing/tests/SIM-04.md",
@@ -3153,8 +3153,8 @@
      "anchor": "the-simulator-buttons-you-do-nothing"
     },
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "start-it"
+     "path": "docs/simulator/01-start-and-drive.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/SIM-07.md",
@@ -5158,7 +5158,7 @@
     "setup": [
      {
       "ul": [
-       "A laptop with the library and the simulator set up ([laptop setup](repo:docs/guides/simulator.md#laptop-setup-once)).",
+       "A laptop with the library and the simulator set up ([laptop setup](repo:docs/simulator/01-start-and-drive.md#laptop-setup-once)).",
        "A terminal in the `ftc-helper-lib` folder."
       ]
      }
@@ -5396,7 +5396,7 @@
       "ul": [
        "PCS-01 done (each kind tuned).",
        "`pieces = add(Pieces.kinds(...).comingIn(...).max(4))` before the launcher line; for the table, `.tableFrom(pieces.nextKind())` on the launcher.",
-       "Simulator: sensor lines in your robot file (`color.NAME = at=intake`, see [game pieces](repo:docs/guides/simulator.md#game-pieces))."
+       "Simulator: sensor lines in your robot file (`color.NAME = at=intake`, see [game pieces](repo:docs/reference/robot-file.md#game-pieces))."
       ]
      }
     ],
@@ -6024,8 +6024,8 @@
      "anchor": ""
     },
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "scenario-files-test-without-a-browser"
+     "path": "docs/reference/scenario-files.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/SIM-05.md",
@@ -6093,8 +6093,8 @@
    "since": "v0.18.3",
    "docs": [
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "measure-in-the-simulator"
+     "path": "docs/simulator/02-your-robot-file.md",
+     "anchor": "5-measure-numbers-and-missing-parts"
     },
     {
      "path": "docs/reference/tunables.md",
@@ -6165,12 +6165,12 @@
    "since": "v0.22.0",
    "docs": [
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "edit-robot-shape-your-robot"
+     "path": "docs/simulator/03-make-it-match-your-robot.md",
+     "anchor": "3-shape-the-parts-with-edit-robot"
     },
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "the-page"
+     "path": "docs/simulator/01-start-and-drive.md",
+     "anchor": "3-read-the-page"
     }
    ],
    "file": "testing/tests/SIM-08.md",
@@ -6240,8 +6240,8 @@
    "since": "v0.27.0",
    "docs": [
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "the-auto-builder"
+     "path": "docs/building-autos/06-auto-builder-steps.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/SIM-09.md",
@@ -6320,8 +6320,8 @@
    "since": "v0.27.0",
    "docs": [
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "the-auto-builder"
+     "path": "docs/building-autos/06-auto-builder-steps.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/SIM-10.md",
@@ -6393,8 +6393,8 @@
    "since": "v0.28.0",
    "docs": [
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "the-auto-builder"
+     "path": "docs/building-autos/06-auto-builder-steps.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/SIM-11.md",
@@ -6464,8 +6464,8 @@
    "since": "v0.28.0",
    "docs": [
     {
-     "path": "docs/guides/simulator.md",
-     "anchor": "the-auto-builder"
+     "path": "docs/building-autos/06-auto-builder-steps.md",
+     "anchor": ""
     },
     {
      "path": "docs/building-autos/02-put-steps-together.md",
@@ -6540,7 +6540,7 @@
      "anchor": "shooting-while-moving"
     },
     {
-     "path": "docs/guides/simulator.md",
+     "path": "docs/guides/how-the-simulator-works.md",
      "anchor": "clean-shots-scatter-and-the-hit-rate"
     }
    ],
@@ -6857,7 +6857,7 @@
    "since": "v0.41.0",
    "docs": [
     {
-     "path": "docs/guides/simulator.md",
+     "path": "docs/guides/how-the-simulator-works.md",
      "anchor": "game-rules-and-the-score"
     },
     {
