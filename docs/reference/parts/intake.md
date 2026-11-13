@@ -8,7 +8,7 @@ servos, or on both. Learn it step by step: [Robot.java, add a part](../../five-f
 ```java title="Robot.java"
 intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
 intake = add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
-intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-speed").reversed("right_intake"));
+intake = add(Intake.crServos("intake", "intake_right").part("gobilda-2000-speed").reversed("intake_right"));
 intake = add(Intake.motor("intake").part("gobilda-5203-117")
         .withCrServos("left_wheel", "right_wheel").reversed("right_wheel"));
 ```

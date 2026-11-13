@@ -754,10 +754,10 @@ A CR (continuous rotation) servo spins all the way round, like a small motor, in
 <!-- recipe: intake-cr-servos -->
 ```java title="Robot.java"
 // Two continuous-rotation (CR) servos. The one that spins the wrong way is reversed. (1)!
-// "left_intake", "right_intake" = the servos' names in the robot configuration. Numbers: Tunables.Intake.
+// "intake", "intake_right" = the servos' names in the robot configuration. Numbers: Tunables.Intake (the 1st name).
 // .part(...): which servo it is (optional, recommended).
-intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-speed")
-        .reversed("right_intake"));
+intake = add(Intake.crServos("intake", "intake_right").part("gobilda-2000-speed")
+        .reversed("intake_right"));
 ```
 
 1. Also add the field at the top of the class: `public Intake intake;`. The two servos face each other, so one must turn the other way. `.reversed(...)` names that servo.
@@ -2275,7 +2275,7 @@ s.start("Against our wall, facing the field", 0)
 ```
 
 **Why:** one file covers several plans, and the drivers choose in INIT with the D-pad. The alliance and start delay choices come with it, with no code.
-**More:** [The INIT menu](building-autos/06-advanced-autos.md#add-choices-to-the-init-menu), [Branches: onlyIf](building-autos/06-advanced-autos.md#add-choices-to-the-init-menu).
+**More:** [The INIT menu](building-autos/08-advanced-autos.md#add-choices-to-the-init-menu), [Branches: onlyIf](building-autos/08-advanced-autos.md#add-choices-to-the-init-menu).
 
 ### How do I make sure there is time to park?
 
@@ -2310,7 +2310,7 @@ s.start("Against our wall, facing the field", 0)
 ```
 
 **Why:** `run` starts a part and goes on at once. `waitUntil` waits only when the next step needs it.
-**More:** [Mechanisms: run and wait](building-autos/02-put-steps-together.md#start-something-or-wait-for-it). For whole actions while driving, use `alongside(...)` ([write each piece once](building-autos/06-advanced-autos.md#routes)).
+**More:** [Mechanisms: run and wait](building-autos/02-put-steps-together.md#start-something-or-wait-for-it). For whole actions while driving, use `alongside(...)` ([write each piece once](building-autos/08-advanced-autos.md#routes)).
 
 ### How do I wait for my alliance partner?
 
@@ -2325,7 +2325,7 @@ s.menuYesNo("Wait for partner", false)
 ```
 
 **Why:** the drivers decide in INIT. For a wait before the first step, the menu already has a start delay.
-**More:** [Write each piece once](building-autos/06-advanced-autos.md#routes).
+**More:** [Write each piece once](building-autos/08-advanced-autos.md#routes).
 
 ### How do I write a step the list cannot say?
 
@@ -2342,7 +2342,7 @@ s.step("Clear the intake", ctx -> {
 ```
 
 **Why:** `ctx.waitFor` keeps every part updating and the timer working. `sleep()` would freeze them.
-**More:** [Your own steps](building-autos/06-advanced-autos.md#write-your-own-step).
+**More:** [Your own steps](building-autos/08-advanced-autos.md#write-your-own-step).
 
 ### How do I change a distance in an autonomous?
 
@@ -2372,7 +2372,7 @@ static Steps scorePreload(Steps s, Robot robot) {
 ```
 
 **Why:** when you fix the opening once, every autonomous gets the fix.
-**More:** [Write each piece once](building-autos/06-advanced-autos.md#routes).
+**More:** [Write each piece once](building-autos/08-advanced-autos.md#routes).
 
 ### How do I make the start delay shorter, or use a different number on RED?
 
@@ -2406,7 +2406,7 @@ s.start("Against our wall, facing the field", 0)
 
 **Why:** the start delay waits before the first step, so a partner can go first. 10 s is a lot to scroll
 through. `alliance().pick(blue, red)` works for any kind of value: a number, a name, an AprilTag id.
-**More:** [What the INIT menu can choose](building-autos/06-advanced-autos.md#add-choices-to-the-init-menu).
+**More:** [What the INIT menu can choose](building-autos/08-advanced-autos.md#add-choices-to-the-init-menu).
 
 ## Several autos and choosing one
 
@@ -2460,7 +2460,7 @@ public class Routes {
 **Why:** you write each piece once, so a fix (or a new number in it) reaches every autonomous.
 `public static Steps scorePreload(Steps s, Robot robot)` is a method that any file can call
 (`public static`). It adds its steps to the list `s` and hands the list back (`return`).
-**More:** [Build them from shared steps](building-autos/06-advanced-autos.md#routes).
+**More:** [Build them from shared steps](building-autos/08-advanced-autos.md#routes).
 
 ### How do I make two autos that differ by one piece?
 
@@ -2531,7 +2531,7 @@ public class NearCycle extends Auto<Robot> {
 
 **Why:** the Driver Station shows two lines, named after the start spot and the plan, so the drivers pick fast.
 Each line in `steps(...)` calls a piece, and the piece adds its steps to the same list `s`.
-**More:** [Write each piece once](building-autos/06-advanced-autos.md#routes), [names and groups](building-autos/03-multiple-autos.md#names-on-the-driver-station).
+**More:** [Write each piece once](building-autos/08-advanced-autos.md#routes), [names and groups](building-autos/03-multiple-autos.md#names-on-the-driver-station).
 
 ### How do I let the drivers choose the start spot and the plan in INIT?
 
@@ -2594,7 +2594,7 @@ is the default, so make it your safest plan. Your lines come after the library's
 wall first, because the FLOWER on your wall stands between the two start spots. A few Java words:
 `String plan` keeps a text. `plan.equals("Park only")` is true when the two texts are the same. `!`
 means "not".
-**More:** [One file, the drivers choose in INIT](building-autos/06-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose), [what the menu can choose](building-autos/06-advanced-autos.md#add-choices-to-the-init-menu).
+**More:** [One file, the drivers choose in INIT](building-autos/08-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose), [what the menu can choose](building-autos/08-advanced-autos.md#add-choices-to-the-init-menu).
 
 ## Odometry and driveTo
 
@@ -2688,7 +2688,7 @@ s.start("Against our wall, in the left corner tile, facing the field", -56, -61,
 It replaces `.move(...)`: you give a place on the field, not a distance.
 **Why:** `driveTo` keeps checking where the robot is. So a bump or a wheel slip does not matter, and the robot ends on the point.
 On the robot, it works only after the [Odometry Tuner](#how-do-i-tune-the-odometry) and `checked = true` in `Tunables.java`, section `Odometry`.
-**More:** [Lesson 7: drive to field points](tutorials/start/07-odometry.md#6-drive-to-field-points), [driveTo](building-autos/05-auto-builder-odometry-and-pedro.md#drive-to-a-point-driveto).
+**More:** [Lesson 7: drive to field points](tutorials/start/07-odometry.md#6-drive-to-field-points), [driveTo](building-autos/04-drive-to-points.md#drive-to-a-point-driveto).
 
 ### How do I get around field elements on the way to a spot?
 
@@ -2817,7 +2817,7 @@ field number in your code.
 
 ## Pedro paths
 
-Pedro Pathing drives smooth curves. It needs the `pedro` folder in your project ([add Pedro](tutorials/start/08-paths-with-pedro.md#3-add-pedro-to-your-project)),
+Pedro Pathing drives smooth curves. It needs the `pedro` folder in your project ([add Pedro](building-autos/05-pedro-paths.md#your-project-add-the-pedro-add-on-once)),
 a mecanum drive and tuned odometry. Paths use the same field numbers as `driveTo`.
 
 ### How do I add Pedro Pathing to Robot.java?
@@ -2833,7 +2833,7 @@ follower(Pedro.follower(PedroConstants.foresight));
 ```
 
 **Why:** Pedro uses your drive and odometry lines, so you describe the robot only once.
-**More:** [Lesson 8: Robot.java](tutorials/start/08-paths-with-pedro.md#4-robotjava-one-line-and-pedros-numbers), [Tuning Pedro](modules/pedro.md#tuning-pedro).
+**More:** [Add Pedro paths: Robot.java](building-autos/05-pedro-paths.md#robotjava-one-line-and-pedros-numbers-file), [Tuning Pedro](modules/pedro.md#tuning-pedro).
 
 ### How do I make a straight path and a curve?
 
@@ -2984,7 +2984,7 @@ s.step("Spin up", ctx -> {
 ```
 
 **Why:** `ctx.loop()` keeps the robot running inside your loop. The time limit makes sure that the loop ends.
-**More:** [Your own steps](building-autos/06-advanced-autos.md#write-your-own-step), [The report](building-autos/07-match-day.md#after-the-match-read-the-report).
+**More:** [Your own steps](building-autos/08-advanced-autos.md#write-your-own-step), [The report](building-autos/09-match-day.md#after-the-match-read-the-report).
 
 ## Lights
 

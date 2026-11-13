@@ -17,7 +17,7 @@ folder. It has one file for each autonomous, so a robot with three autos has sev
 
 You can also see a few small files next to these, for example a finder (a small program that measures
 one number for you), or `Routes.java` for routes that several autos share
-([Advanced autos](../building-autos/06-advanced-autos.md)). They do not hold any of the robot's
+([Advanced autos](../building-autos/08-advanced-autos.md)). They do not hold any of the robot's
 parts, numbers or buttons. Those always stay in the four files and the `autos/` folder.
 
 ## Start small, then add

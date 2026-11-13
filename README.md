@@ -138,7 +138,7 @@ Everything else, by what you want to do:
 | **Every way a button can work: tap, hold, double-tap, tap then hold, pairs, buzzes** | [Controls](docs/controls/README.md) |
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
 | **Write autonomous modes with the builder (every feature, with a tested example)** | [Building autos](docs/building-autos/README.md) |
-| **Several autos, and choosing one at the field (one file per plan, names, INIT menu choices)** | [Having multiple autos](docs/building-autos/03-multiple-autos.md), [Advanced autos](docs/building-autos/06-advanced-autos.md) |
+| **Several autos, and choosing one at the field (one file per plan, names, INIT menu choices)** | [Having multiple autos](docs/building-autos/03-multiple-autos.md), [Advanced autos](docs/building-autos/08-advanced-autos.md) |
 | **Know where the robot is on the field** (odometry: goBILDA Pinpoint, SparkFun OTOS, dead wheels) and drive to field points | [Lesson 7](docs/tutorials/start/07-odometry.md), [odometry module](docs/modules/odometry.md) |
 | **Smooth paths with Pedro Pathing support**, in the same field numbers (mecanum drives) | [Lesson 8](docs/tutorials/start/08-paths-with-pedro.md), [pedro module](docs/modules/pedro.md) |
 | Make autonomous modes the older way (EasyAuto) | [Easy autonomous modes](docs/guides/easy-autos.md) |

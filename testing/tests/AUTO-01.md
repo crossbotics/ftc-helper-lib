@@ -8,7 +8,7 @@ minutes: 30
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
-docs: [building-autos/06-advanced-autos.md#add-choices-to-the-init-menu, building-autos/06-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose]
+docs: [building-autos/08-advanced-autos.md#add-choices-to-the-init-menu, building-autos/08-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose]
 ---
 
 ## Why
@@ -24,7 +24,7 @@ puts the robot in the wrong place.
 
 ## Setup
 
-- An autonomous with a menu line and a `start(...)` for each option, like [example 2](../../docs/building-autos/06-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose): `s.menuChoice("Start", "Near", "Far")`, then `s.onlyIf("Start", "Near").start("NEAR: ...", ...)...end()` and the same for "Far".
+- An autonomous with a menu line and a `start(...)` for each option, like [example 2](../../docs/building-autos/08-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose): `s.menuChoice("Start", "Near", "Far")`, then `s.onlyIf("Start", "Near").start("NEAR: ...", ...)...end()` and the same for "Far".
 - Simulator: your robot from `Robot.java` (`./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then `./gradlew :sim:run -PteamCode=../TeamCode`).
 
 ## Steps

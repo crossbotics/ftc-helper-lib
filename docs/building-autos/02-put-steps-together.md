@@ -4,7 +4,7 @@ Make parts work while the robot drives, keep time to park, and drive
 the right way for red and blue.
 
 > **The auto builder writes everything on this page:** `run`, `action`, `alongside`, `parkWithSeconds`
-> and `mirrorForRed()`. [Advanced autos](06-advanced-autos.md) covers what it cannot write (menus, your own
+> and `mirrorForRed()`. [Advanced autos](08-advanced-autos.md) covers what it cannot write (menus, your own
 > steps, ...).
 
 ## The example
@@ -66,7 +66,7 @@ You can use a part in three ways. To pick one, decide whether **the next step mu
 
 **Start early, wait late.** Start a slow part with `run` as early as you can. The robot then does two
 things at once. That saves time in a 30-second match. To wait for the part right before you need it, use
-`waitUntil` ([Advanced autos](06-advanced-autos.md#wait-until-a-part-is-ready)).
+`waitUntil` ([Advanced autos](08-advanced-autos.md#wait-until-a-part-is-ready)).
 
 ## Keep time to park
 
@@ -99,7 +99,7 @@ a line, D-pad left/right changes it.
 **The menu remembers:** Alliance starts at the last auto's alliance, and the hub saves the Profile.
 A longer start delay: [`maxStartDelaySec()`](../cookbook.md#autonomous).
 
-**Your own lines** (park or stay, near or far): [Advanced autos](06-advanced-autos.md#add-choices-to-the-init-menu).
+**Your own lines** (park or stay, near or far): [Advanced autos](08-advanced-autos.md#add-choices-to-the-init-menu).
 Or make one auto file per plan: [Having multiple autos](03-multiple-autos.md).
 
 ## Red and blue
@@ -120,14 +120,14 @@ You write the auto **for BLUE**. The library changes it for RED. How it changes 
 
 **Write `mirrorForRed()` in every auto.** Without it, the auto uses the robot's setting:
 `mirrorForRed` in `Tunables.Aim`, else in `Tunables.Odometry`, else `true`. That setting is easy to miss.
-The auto builder writes `mirrorForRed()` for you (**Red's side** in [step 1](04-auto-builder-steps.md#1-robot-and-alliance)).
+The auto builder writes `mirrorForRed()` for you (**Red's side** in [step 1](06-auto-builder-steps.md#1-robot-and-alliance)).
 
 **Where the drivers stand.** In BIOBUZZ and in DECODE, each alliance's drivers stand at their own wall.
 You need nothing more. A field where both alliances' drivers stand at one wall needs one more method:
 [`alliancesOnOneWall()`](../modules/auto.md).
 
 **One number different on RED** (a wait, a distance): `alliance().pick(blue, red)`, on
-[Advanced autos](06-advanced-autos.md#a-different-number-for-red).
+[Advanced autos](08-advanced-autos.md#a-different-number-for-red).
 
 ## The first run on the robot
 
@@ -152,7 +152,7 @@ You need nothing more. A field where both alliances' drivers stand at one wall n
 | RED drives into a wall | `mirrorForRed()` is wrong for this field. Check the field drawing. |
 | The park did not run | It was before `parkWithSeconds(...)`. Put the park steps after it. |
 
-**What each word in the report means** (`done`, `STALLED`, ...): [Match day](07-match-day.md#after-the-match-read-the-report).
+**What each word in the report means** (`done`, `STALLED`, ...): [Match day](09-match-day.md#after-the-match-read-the-report).
 
 ---
 

@@ -376,11 +376,11 @@ between `{` and `}` are your code:
 | `cannot find symbol: Routes` | `Routes.java` must be in the same `autos` folder, with the same `package` line. |
 | The builder's **Load** cannot read the file | It reads only plain steps. Load the plain copy, or change this file by hand. |
 
-**What each word in the report means** (`done`, `STALLED`, ...): [Match day](07-match-day.md#after-the-match-read-the-report).
+**What each word in the report means** (`done`, `STALLED`, ...): [Match day](09-match-day.md#after-the-match-read-the-report).
 
 ---
 
-**Next:** [Match day](07-match-day.md).
+**Next:** [Match day](09-match-day.md).
 
 **Look it up:** [every step](../reference/steps.md#auto). **Go deeper:**
 [cookbook: several autos and choosing one](../cookbook.md#several-autos-and-choosing-one),

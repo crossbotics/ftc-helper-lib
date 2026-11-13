@@ -121,10 +121,10 @@ public class MechanismRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: intake-cr-servos
             // Two continuous-rotation (CR) servos. The one that spins the wrong way is reversed.
-            // "left_intake", "right_intake" = the servos' names in the robot configuration. Numbers: Tunables.Intake.
+            // "intake", "intake_right" = the servos' names in the robot configuration. Numbers: Tunables.Intake (the 1st name).
             // .part(...): which servo it is (optional, recommended).
-            intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-speed")
-                    .reversed("right_intake"));
+            intake = add(Intake.crServos("intake", "intake_right").part("gobilda-2000-speed")
+                    .reversed("intake_right"));
             // end recipe
         }
     }

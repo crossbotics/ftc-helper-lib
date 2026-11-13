@@ -32,7 +32,7 @@ What `Steps` can do:
 | `start(where, headingDeg)` | where to place the robot (shown in INIT) and which way it faces |
 | `start(where, xIn, yIn, headingDeg)` | the same, plus the spot in inches. The simulator puts the robot there in INIT ([The start spot](#the-start-spot)) |
 | `menuYesNo(label, yes)`, `menuChoice(label, options...)` | a choice for the drivers in INIT |
-| `onlyIf(label)` / `onlyIf(label, option)` ... `end()` | the steps in between run only for that choice. A `start(...)` or `parkWithSeconds(...)` in between is used only for that choice, and the INIT note follows the menu ([choose the start in INIT](../building-autos/06-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose)) |
+| `onlyIf(label)` / `onlyIf(label, option)` ... `end()` | the steps in between run only for that choice. A `start(...)` or `parkWithSeconds(...)` in between is used only for that choice, and the INIT note follows the menu ([choose the start in INIT](../building-autos/08-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose)) |
 | `isYes(label)`, `choice(label)` | reads a choice |
 | `forward(label, inches, power)`, `back(...)` | drive forward / backward |
 | `left(label, inches, power)`, `right(...)` | slide to the robot's left / right, still facing the same way (mecanum only) |
@@ -46,7 +46,7 @@ What `Steps` can do:
 | `waitForGoal(label, timeoutSec)` | the same, but at most `timeoutSec`: then it goes on anyway, and the report says "not seen in 10 s: went on" (or "seen, never still") |
 | `rememberHeading(label)`, `turnBack(label, maxPower)` | save the heading now; later turn back to it (without odometry pods it uses the IMU: better than nothing). The same as `AutoRoutine`'s `rememberHeading` / `returnToHeading` |
 | `readyToLaunch(label, timeoutSec)` | spin the launcher up and WAIT until it is ready to fire, then go on. The speed keeps following the distance in the next steps ([Launcher](parts/launcher.md)). To spin up while the next step drives instead: `.run("Spin up", robot.launcher::spinUp)` |
-| `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn][, PathAt...])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../building-autos/05-auto-builder-odometry-and-pedro.md#drive-to-a-point-driveto)). [`PathAt`](parts/path-follower.md) starts things on the way |
+| `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn][, PathAt...])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../building-autos/04-drive-to-points.md#drive-to-a-point-driveto)). [`PathAt`](parts/path-follower.md) starts things on the way |
 | `routeTo(label, xIn, yIn, headingDeg, power[, toleranceIn])` | `driveTo`, but around the boxes of `fieldMap(...)`, from wherever the robot is when the step starts ([routes](../modules/odometry.md#keep-out-boxes-and-routes)) |
 | `follow(label, path[, timeoutSec][, PathAt...])` | follow a path with the robot's [path follower](parts/path-follower.md) ([pedro](../modules/pedro.md)). [`PathAt`](parts/path-follower.md) starts things along it |
 | `run(label, command)` | start something and go on at once |
@@ -87,7 +87,7 @@ The spot in `start(where, xIn, yIn, headingDeg)` is seen from your wall and writ
 
 - The library reads the steps in INIT (for the menu, the start position and the park time; nothing runs).
 - It reads them again in INIT whenever a menu choice changes. So a `start(...)` inside an `onlyIf`
-  follows the menu ([one file, the drivers choose in INIT](../building-autos/06-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose)).
+  follows the menu ([one file, the drivers choose in INIT](../building-autos/08-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose)).
 - They run after ▶.
 - [`EasyAuto`](../modules/auto.md#easyauto) does everything else: the alliance and delay menu, mirroring for
   RED, the timer, stopping everything, the report.

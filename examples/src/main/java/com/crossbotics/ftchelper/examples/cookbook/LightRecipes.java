@@ -60,6 +60,58 @@ public class LightRecipes {
         }
     }
 
+    /** Two lights that always show the same: one part, its rules written once. */
+    public static class SyncedLightsRobot extends RobotDefinition {
+        public Lights lights;
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            // recipe: light-two-synced
+            // "light" and "light_right" = the two lights' names in the robot configuration (the same kind).
+            // Both show the same color, blinking and flashes. Write the rules once, for robot.lights.
+            lights = add(Lights.gobilda("light").alsoLight("light_right"));
+            // end recipe
+        }
+    }
+
+    /** Two lights that show different things: two parts, each with its own rules. */
+    public static class TwoLightsRobot extends RobotDefinition {
+        public Intake intake;
+        public Launcher launcher;
+        public Lights leftLight, rightLight;
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            intake = add(Intake.motor("intake"));
+            launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer")));
+            // recipe: light-two-separate
+            // At the top of the class: public Lights leftLight, rightLight;   Here in define():
+            leftLight = add(Lights.gobilda("light_left"));
+            rightLight = add(Lights.gobilda("light_right"));
+            // end recipe
+        }
+    }
+
+    /** Each of the two lights has its own rules. */
+    @TeleOp(name = "Cookbook Two Lights", group = "Cookbook")
+    @Disabled
+    public static class TwoLightsControls extends ControlMap<TwoLightsRobot> {
+        public static boolean oneDriver = false;
+
+        @Override
+        protected void buttons(TwoLightsRobot robot, Pad g1, Pad g2) {
+            // recipe: light-two-rules
+            // The left light: the launcher. The right light: the intake.
+            robot.leftLight.show(LightColor.GREEN).when(robot.launcher::isReady);
+            robot.leftLight.otherwise(LightColor.OFF);
+            robot.rightLight.show(LightColor.YELLOW).when(robot.intake::isRunning);
+            robot.rightLight.otherwise(LightColor.OFF);
+            // end recipe
+        }
+    }
+
     /** One action that flashes the light when it is done. */
     public static class Actions {
         // recipe: light-action

@@ -3,7 +3,7 @@
 A **PathFollower** is a small plug that a path-following add-on fills in. With it, the core library never
 needs that other library. The [pedro module](../../modules/pedro.md) is one add-on. **PathAt** starts things
 along a path while the robot drives. Learn it step by step:
-[Follow a curved path: Pedro](../../building-autos/05-auto-builder-odometry-and-pedro.md#follow-a-curved-path-pedro).
+[Follow a curved path: Pedro](../../building-autos/05-pedro-paths.md).
 
 ## In Robot.java
 

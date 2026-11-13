@@ -173,8 +173,9 @@ so change them in the file.
 
 ## 3. The buttons it brings
 
-You write nothing in `Controls.java` for these. They are on the operator's gamepad (gamepad 2), or on
-gamepad 1 with `oneDriver = true`, as in the goBILDA bot:
+A part has no buttons until you add its lines to `Controls.java`. The lines are in
+[Add a launcher: Controls.java](../../add-to-robot/05-launcher.md#controlsjava-its-buttons). They put these jobs
+on the operator's gamepad (gamepad 2), or on gamepad 1 with `oneDriver = true`, as in the goBILDA bot:
 
 | Button | Does |
 | --- | --- |
@@ -190,12 +191,9 @@ Spinning up early with LB saves time, because the wheel is ready when the shot i
 adds one job of its own, Y to fire all four: `g1.y.press(Actions.fireAll(robot)).says("fire all");`. The
 library's ready action does the same with no `Actions.java`: `g1.y.press(robot.launcher.fireAllAction())`.
 
-**Check that LB and RB are still free.** A job of yours in `Controls.java` on one of these buttons takes it from
-the launcher. If you followed lesson 5, your actions are on gamepad 2's RB and LB, so the launcher gets
-no spin-up and no fire button. INIT says so, for example
-`Launcher fire one; hold: keep firing: no button (G2 RB is your "score high" in Controls.java)`.
-Move your own jobs to free buttons (INIT lists them: `G2 free: ...`), so the launcher gets its
-buttons back.
+**Check that LB and RB are still free.** Two jobs cannot share one button. If you followed lesson 5, your
+actions are on gamepad 2's RB and LB. Move your own jobs to free buttons (INIT lists them: `G2 free: ...`),
+or put the launcher's lines on other buttons. INIT also names a part's usual buttons that have no line yet.
 
 **Spin up at ▶.** A launcher with a feeder of its own (an indexer, as here, or a feed stop) spins
 up right after ▶, in autonomous and TeleOp, so the first shot does not wait. That is safe, because a

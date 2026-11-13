@@ -15,6 +15,7 @@ lights = add(Lights.blinkin("blinkin"));    // or a REV Blinkin LED Driver and i
 | --- | --- | --- | --- |
 | `Lights.gobilda(name)` | **yes**, one of the two | a goBILDA RGB Indicator Light. In the configuration it is a "Servo" | - |
 | `Lights.blinkin(name)` | **yes**, one of the two | a REV Blinkin LED Driver and its LED strip. In the configuration: "REV Blinkin LED Driver" | - |
+| `.alsoLight(names...)` | optional | more lights of the same kind that always show the same as this one (the same color, blinking and flashes). Lights that show different things: two `add(...)` lines instead | one light |
 | `.optional()` | optional | the part may not be on the robot yet ([Parts not on the robot yet](../robot-java.md#parts-not-on-the-robot-yet)) | INIT stops when its device is missing |
 | `.tunables("Name")` | optional | read another `Tunables` section | the device's name in CamelCase |
 

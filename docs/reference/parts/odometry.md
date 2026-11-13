@@ -1,7 +1,7 @@
 # Odometry
 
 The sensor that knows where the robot is on the field: a goBILDA Pinpoint, a SparkFun OTOS, or dead wheels
-(free-turning wheels with encoders that roll on the floor). Learn it step by step: [Drive to a point](../../building-autos/05-auto-builder-odometry-and-pedro.md#drive-to-a-point-driveto),
+(free-turning wheels with encoders that roll on the floor). Learn it step by step: [Drive to a point](../../building-autos/04-drive-to-points.md#drive-to-a-point-driveto),
 and [lesson 7](../../tutorials/start/07-odometry.md). The [odometry module](../../modules/odometry.md) has
 everything, with sketches of the offsets.
 

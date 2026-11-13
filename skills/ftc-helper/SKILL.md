@@ -56,6 +56,7 @@ Start with the row that matches the question. Paths are inside `ftc-helper-lib/`
 | Getting the project and the library set up | `docs/setup/` (in order, each page ends with "Done when") |
 | Which way to start (a starter bot, a common setup, a blank slate) | `docs/pick-your-start/` |
 | The five files: Robot.java, Tunables.java, Controls.java, TeleOp, autos | `docs/five-files/` |
+| Adding one part to the robot (a lift...), step by step | `docs/add-to-robot/` |
 | Buttons, press types, what the drivers see and feel | `docs/controls/` |
 | Autos: steps, more than one auto, the auto builder, odometry, Pedro | `docs/building-autos/` |
 | Finding numbers: the Tune and check menu, each finder, fix by symptom | `docs/tuning/` |

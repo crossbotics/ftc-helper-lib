@@ -340,7 +340,7 @@ for every later test. Fix: put `PretendClock.stopUsing()` in that test class's `
 **The robot ran the wrong autonomous plan, or started in the wrong place**
 The first option of each INIT menu line runs when nobody changes it, and the "Place robot" note says
 where the robot must stand. Read the menu and the note out loud before ▶:
-[match day checklist](building-autos/07-match-day.md).
+[match day checklist](building-autos/09-match-day.md).
 
 **An INIT menu option does nothing**
 The option is spelled differently in `menuChoice(...)` and in `onlyIf(...)` (capitals count). Test each

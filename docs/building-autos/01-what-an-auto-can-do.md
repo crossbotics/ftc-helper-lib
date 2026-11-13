@@ -43,7 +43,7 @@ headings all count this way. The words (`left`, `turnRight`) need no angle.
 **In each group below,** the code comes first. The comment at the end of a line names the numbers in
 order. Then a table says what each step does.
 
-**The auto builder** ([page 4](04-auto-builder-steps.md)) makes every step on this page, except the ones
+**The auto builder** ([page 6](06-auto-builder-steps.md)) makes every step on this page, except the ones
 marked "not in the builder".
 
 ## Where the robot starts
@@ -73,7 +73,7 @@ The spot is in **inches on the field**, seen from your drivers' wall, written fo
 `driveTo` and Pedro paths use the same numbers ([below](#drive-to-a-point-on-the-field)).
 
 **Find the numbers:** in the simulator, drag the robot on the field map before ▶. The numbers are under the
-map. Or let the auto builder write them ([page 4](04-auto-builder-steps.md#4-the-start-spot-and-the-note)).
+map. Or let the auto builder write them ([page 6](06-auto-builder-steps.md#4-the-start-spot-and-the-note)).
 
 ## Drive
 
@@ -208,12 +208,12 @@ For a robot with a launcher (a flywheel shooter) or a camera.
 To spin up while the robot drives, start it and go on: `.run("Spin up", robot.launcher::spinUp)`.
 
 The auto builder lists the ones your robot can do under **What this robot can do**
-([page 4](04-auto-builder-steps.md#1-robot-and-alliance)).
+([page 6](06-auto-builder-steps.md#1-robot-and-alliance)).
 
 ## Drive to a point on the field
 
 For a robot with **odometry** (sensors that track where the robot is on the field).
-Page 5 explains them: [the auto builder: odometry and Pedro](05-auto-builder-odometry-and-pedro.md).
+Page 4 explains them: [Drive to points on the field](04-drive-to-points.md).
 The numbers are [field numbers](#field-numbers), like the start spot.
 
 ```java
@@ -240,7 +240,7 @@ The numbers are [field numbers](#field-numbers), like the start spot.
 | `step` | Your own code, for what no other step can say. **Not in the builder.** | your code |
 | `parkWithSeconds` | Not a move. The steps after it always get the last seconds of the 30. | - |
 
-`step`: [Advanced autos](06-advanced-autos.md#write-your-own-step). `parkWithSeconds`: [page 2](02-put-steps-together.md#keep-time-to-park).
+`step`: [Advanced autos](08-advanced-autos.md#write-your-own-step). `parkWithSeconds`: [page 2](02-put-steps-together.md#keep-time-to-park).
 
 ## Try it
 
@@ -271,7 +271,7 @@ The robot drives, turns left, waits, and turns back. The report at the end says 
 | `';' expected` | A step line is missing its dot, or the `;` is not after the last step. |
 | A step says `timed out` | A wait or an action ran out of time. The list went on. Give it more seconds, or check the part. |
 
-**What each word in the report means** (`done`, `STALLED`, ...): [Match day](07-match-day.md#after-the-match-read-the-report).
+**What each word in the report means** (`done`, `STALLED`, ...): [Match day](09-match-day.md#after-the-match-read-the-report).
 
 ---
 

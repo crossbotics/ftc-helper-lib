@@ -25,7 +25,7 @@ at an event are not code mistakes. These checks stop them.
 
 Before each match you plan the auto with your alliance partner. They need to know **exactly** what your
 robot does in auto: where it starts, where it drives, what it scores, and when. Then the two robots do not
-crash, and they do not go for the same pieces. The auto builder ([page 4](04-auto-builder-steps.md)) makes
+crash, and they do not go for the same pieces. The auto builder ([page 6](06-auto-builder-steps.md)) makes
 the pages for this. Print them before the event.
 
 - **Auto sheet (PDF): for your partner teams.** One page per auto: the start spot, the whole route on the
@@ -151,7 +151,7 @@ Change the number in the step, test it, and commit.
 
 ---
 
-**Next:** add parts to your robot, one at a time: [Robot.java, add a part](../five-files/01-robot-java.md#add-a-part).
+**Next:** [Tuning](../tuning/README.md): find and check every number.
 
 **Look it up:** [every step](../reference/steps.md#auto). **Go deeper:**
 [test an auto with a scenario file](../guides/simulator.md#scenario-files-test-without-a-browser).

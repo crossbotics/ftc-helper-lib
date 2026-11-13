@@ -97,56 +97,18 @@ simulator, which shows where the robot really drove.
 
 ## 3. Add Pedro to your project
 
-Pedro is a separate library, and you add it once. Do these steps on the computer with Android Studio.
-
-1. Open `settings.gradle` (in the project folder, not in TeamCode). Under the two `ftc-helper-lib`
-   lines, add:
-
-   ```groovy
-   include ':ftc-helper-lib-pedro'
-   project(':ftc-helper-lib-pedro').projectDir = new File(rootDir, 'ftc-helper-lib/pedro')
-   ```
-
-   **Why:** these lines tell Gradle (the tool that builds your app) that the Pedro add-on is in the
-   `pedro` folder of the library.
-
-2. Open `TeamCode/build.gradle`. In `dependencies { ... }`, under the `ftc-helper-lib` line, add:
-
-   ```groovy
-   implementation project(':ftc-helper-lib-pedro')
-   ```
-
-   **Why:** this line lets your TeamCode use the add-on. Gradle downloads Pedro itself for you.
-
-3. Click **Sync Now** (or **File > Sync Project with Gradle Files**). Wait for it to finish with no red
-   errors.
+Add the Pedro add-on once, with two lines in the Gradle files:
+[Add Pedro paths: your project](../../building-autos/05-pedro-paths.md#your-project-add-the-pedro-add-on-once).
 
 ---
 
 ## 4. Robot.java: one line, and Pedro's numbers
 
-Add one line to `define()`, **after** the `odometry(...)` line:
+Add the `follower(...)` line after your `odometry(...)` line, and copy `PedroConstants.java` into
+TeamCode: [Add Pedro paths: Robot.java](../../building-autos/05-pedro-paths.md#robotjava-one-line-and-pedros-numbers-file).
 
-```java
-odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
-follower(Pedro.follower(PedroConstants.foresight));
-```
-
-Android Studio shows `Pedro` in red. Click it and press **Alt+Enter** to add the `import` line.
-
-**What this line does:** Pedro gets the drive motors from your `drive(...)` line and the robot's place
-from your `odometry(...)` line. You do not set them up again.
-
-Now copy [`PedroConstants.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/PedroConstants.java)
-from the example into your TeamCode folder, next to `Robot.java`. Then make its first line (the one
-that starts with `package`) **the same as the first line of your `Robot.java`**: copy that line over.
-
-**You do not need to read or understand this file.** Copy it as it is. The tuner fills it in, in
-section 7.
-
-**Its numbers are not for your robot.** They come from the simulated example robot: how fast it
-goes, how it brakes, how hard it corrects. They are good enough for the simulator. On your robot, Pedro's
-tuner measures your own numbers (section 7). Until then, do not trust a path on the real robot.
+**The numbers in `PedroConstants.java` are not for your robot.** They come from the simulated example robot.
+They are good enough for the simulator. On your robot, Pedro's tuner measures your own numbers (section 7).
 
 ---
 

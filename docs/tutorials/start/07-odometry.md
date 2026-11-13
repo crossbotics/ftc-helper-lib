@@ -378,7 +378,7 @@ the wrong place.
 **RED:** with `mirrorForRed()` false (BIOBUZZ), RED uses the same numbers, seen from the red wall. On a
 mirrored field (`mirrorForRed()` true), RED flips x and the heading. More, and the tolerance option
 (`driveTo(label, x, y, heading, power, inches)`):
-[driveTo](../../building-autos/05-auto-builder-odometry-and-pedro.md#drive-to-a-point-driveto).
+[driveTo](../../building-autos/04-drive-to-points.md#drive-to-a-point-driveto).
 
 ### Go around things on the way
 

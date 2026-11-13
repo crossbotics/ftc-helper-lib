@@ -118,7 +118,7 @@ step.
 6. **Write it for me:** writes the note from the spot.
 7. The pages to print: the setup card and the auto sheet.
 
-The auto sheet (for your partner teams) and the setup card (for your drive team): [Match day](07-match-day.md#show-your-partners-what-your-robot-does).
+The auto sheet (for your partner teams) and the setup card (for your drive team): [Match day](09-match-day.md#show-your-partners-what-your-robot-does).
 
 ## 5. Read the checks
 
@@ -191,12 +191,12 @@ The builder keeps your plan in this browser.
 
 ## What it cannot do
 
-- Menus: `menuChoice`, `menuYesNo`, `onlyIf` ([Advanced autos](06-advanced-autos.md#add-choices-to-the-init-menu)).
-- A number that differs for RED, `alliance().pick` ([Advanced autos](06-advanced-autos.md#a-different-number-for-red)).
-- `waitUntil` and your own steps, `step(...)` ([Advanced autos](06-advanced-autos.md#wait-until-a-part-is-ready)).
-- Pieces in `Routes.java` ([Advanced autos](06-advanced-autos.md#routes)). **Load** cannot read an
+- Menus: `menuChoice`, `menuYesNo`, `onlyIf` ([Advanced autos](08-advanced-autos.md#add-choices-to-the-init-menu)).
+- A number that differs for RED, `alliance().pick` ([Advanced autos](08-advanced-autos.md#a-different-number-for-red)).
+- `waitUntil` and your own steps, `step(...)` ([Advanced autos](08-advanced-autos.md#wait-until-a-part-is-ready)).
+- Pieces in `Routes.java` ([Advanced autos](08-advanced-autos.md#routes)). **Load** cannot read an
   auto made from them.
-- `routeTo` ([page 5](05-auto-builder-odometry-and-pedro.md#go-around-field-parts-routeto)).
+- `routeTo` ([page 4](04-drive-to-points.md#go-around-field-parts-routeto)).
 - A command that is not a part's method or an action, like two calls in one. Write it as a method in
   `Robot.java` or `Actions.java`, and pick that method.
 
@@ -221,6 +221,6 @@ everything.
 
 ---
 
-**Next:** [The auto builder: odometry and Pedro](05-auto-builder-odometry-and-pedro.md).
+**Next:** [The auto builder: odometry and Pedro](07-auto-builder-odometry-and-pedro.md).
 
 **Look it up:** [the auto builder, every detail](../guides/simulator.md#the-auto-builder).

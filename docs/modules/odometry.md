@@ -599,7 +599,7 @@ change to one step does not shift the steps after it.
 heading 90. But `driveTo(..., 0, ...)` faces away from your wall. **With odometry, give headings in
 `driveTo`** (field numbers, like the points). If you also use `turnTo`, remember that its 0 is the start.
 
-Every step: [driveTo](../building-autos/05-auto-builder-odometry-and-pedro.md#drive-to-a-point-driveto).
+Every step: [driveTo](../building-autos/04-drive-to-points.md#drive-to-a-point-driveto).
 
 ---
 

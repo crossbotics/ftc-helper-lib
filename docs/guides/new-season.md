@@ -79,7 +79,7 @@ choices go in TeamCode:
 | --- | --- |
 | Start spots, routes, field points | each auto's steps ([Building autos](../building-autos/README.md)) |
 | A field that is TURNED for red, not mirrored | `mirrorForRed()` returns `false` in each auto ([how](../building-autos/02-put-steps-together.md)). BIOBUZZ 2026-27 is turned: in its field CAD, each red part's twin is turned half a turn about the center. Also `Tunables.Odometry.mirrorForRed` for the reset spot |
-| Which AprilTag is the target, a number that differs for red | `alliance().pick(blue, red)` ([Advanced autos](../building-autos/06-advanced-autos.md#a-different-number-for-red)) |
+| Which AprilTag is the target, a number that differs for red | `alliance().pick(blue, red)` ([Advanced autos](../building-autos/08-advanced-autos.md#a-different-number-for-red)) |
 | Scoring heights, positions, the shot table | `Tunables.java`, found with the tuning menu and the finders |
 | Something at a set time in TeleOp (park, a buzz) | `atSecondsLeft(seconds, job)` in `Controls.java` |
 

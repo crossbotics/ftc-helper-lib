@@ -26,7 +26,7 @@ separate library that drives curved paths.
 More detail on each one: [Pick your template](../templates.md#your-robot-looks-like-this-start-from-that).
 
 **`pedrobot`:** add Pedro to the project first
-([lesson 8, section 3](../tutorials/start/08-paths-with-pedro.md#3-add-pedro-to-your-project)).
+([Add Pedro paths](../building-autos/05-pedro-paths.md#your-project-add-the-pedro-add-on-once)).
 
 **Some have extra files.** Copy them with the rest:
 
@@ -105,7 +105,7 @@ In Android Studio, click **Build > Make Project**.
 | --- | --- |
 | A line is red: `cannot find symbol` | A `package` or `import` line still names the example folder ([Copy example files, step 3](04-copy-into-teamcode.md#3-change-the-imports)). Or the line uses a part you deleted: delete the line. |
 | INIT stops: a name is not found | A name in `Robot.java` is not the name in the configuration. INIT lists the real names. |
-| `pedrobot` does not build: `com.pedropathing` not found | Pedro is not in the project yet ([lesson 8, section 3](../tutorials/start/08-paths-with-pedro.md#3-add-pedro-to-your-project)). |
+| `pedrobot` does not build: `com.pedropathing` not found | Pedro is not in the project yet ([Add Pedro paths](../building-autos/05-pedro-paths.md#your-project-add-the-pedro-add-on-once)). |
 
 ---
 

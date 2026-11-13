@@ -6,6 +6,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Two lights in sync: `Lights.alsoLight(...)`.** One Lights part drives more lights of the same kind
+  (goBILDA lights or Blinkins): the same color, blinking and flashes, with the rules written once.
+  `lights = add(Lights.gobilda("light").alsoLight("light_right"));`. Two lights that show different
+  things still use two `add(...)` lines. Docs: docs/add-to-robot/08-lights.md "Two lights".
 - **Move Tuner** (in Tune and check, after the Odometry Tuner): it measures how exactly autonomous moves
   stop and turns end, and suggests the numbers. Five tests: Creep (`moveMinPower`), Stops (`slowDownIn`:
   it tries 0 to 12 until moves slide 0.5 in or less), Turns (`turnMinPower`, `turnKp`, `turnKd` or
@@ -2202,7 +2206,7 @@ uses odometry, and only a project that adds the `pedro` folder gets Pedro Pathin
   tuner, `driveTo`, TeleOp hand-off), a labeled
   [BIOBUZZ field map](docs/images/biobuzz-field-map.svg) in the lesson's frame (made by
   `tools/field_map.py` from the simulator's field file) and the [odometry module](docs/modules/odometry.md); `driveTo` in
-  the [autonomous builder](docs/building-autos/05-auto-builder-odometry-and-pedro.md#drive-to-a-point-driveto), the
+  the [autonomous builder](docs/building-autos/04-drive-to-points.md#drive-to-a-point-driveto), the
   Odometry Tuner in the [finders guide](docs/tuning/09-odometry-tuner.md).
 - Example: `odometrybot` (lesson 8's robot: a Pinpoint, `ToTheGoal` autonomous with `driveTo`, its
   TeleOp and Odometry Tuner), with a simulator test.
