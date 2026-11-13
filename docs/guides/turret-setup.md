@@ -273,7 +273,7 @@ g1.rb.toggle(robot.aimMode()).says("aim at the goal");
 | `homeAngle` | turn it to the switch and read the angle ([above](#2-how-does-it-know-its-angle)) |
 | `posA`, `posB`, `angleA`, `angleB` (servo) | the [Servo Finder](../tuning/README.md): two positions, and the angle at each (a phone angle app) |
 | `travelSec` (servo) | time a move from posA to posB |
-| `kP`, `kD`, `tolerance` | the tuning menu ([tuning](../tuning/15-tuning-menu.md)). Copy the values back into `Tunables.java` |
+| `kP`, `kD`, `tolerance` | the tuning menu ([tuning](../tuning/15-live-tuning.md)). Copy the values back into `Tunables.java` |
 | `cameraOffset` | the Aim Tuner ([finders](../tuning/README.md)) |
 | `encoderOffset` | the reading with the turret straight forward |
 

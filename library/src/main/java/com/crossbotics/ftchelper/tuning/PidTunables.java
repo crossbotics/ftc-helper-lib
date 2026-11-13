@@ -16,7 +16,7 @@ import com.crossbotics.ftchelper.control.PidController;
  *
  * <p>What the four gains do: see {@link PidController} and Tutorial 07 (docs/tutorials/07-pid-lift.md).
  *
- * Docs: docs/tuning/15-tuning-menu.md
+ * Docs: docs/tuning/15-live-tuning.md
  */
 public final class PidTunables {
     /** The four gains, each one changeable from the {@link TuningMenu}. "final": set once, never replaced. */

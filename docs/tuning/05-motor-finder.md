@@ -66,9 +66,10 @@ Watch the current (amps). A high number while the part does not move means it is
 
 **Start over:** press STOP, then INIT, and open the tool again. It starts empty: nothing carries over. The lines saved at STOP stay in the results file, the newest at the end.
 
-## Copy the numbers
+## Put the numbers in your code
 
-The robot uses `Tunables.java` and `Robot.java`, not the finder's screen. Copy each line:
+The robot uses `Tunables.java` and `Robot.java`, not the finder's screen. Take a photo of the screen,
+and type each line into the file. Or copy it from the [results file](01-tune-and-check.md#get-the-results-file-on-the-laptop):
 
 | The finder shows | Put it in |
 | --- | --- |

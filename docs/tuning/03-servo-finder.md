@@ -63,7 +63,7 @@ servo, the servo's catalog part).
    ![At the other end, press B: the arm moved across to just before the other frame, and the Driver Hub shows End B : 0.880](../images/hub-servo-finder-step-end-b.svg)
 
 7. **Save each position you need** (open, closed, rest, push...): move there and press **A**. Then copy the
-   lines into `Tunables.java` ([Copy the numbers](#copy-the-numbers)).
+   lines into `Tunables.java` ([Put the numbers in your code](#put-the-numbers-in-your-code)).
 
    ![Press A at each position: the Driver Hub shows Tunables.Claw: P1 = 0.210, P2 = 0.770 under Copy into your code](../images/hub-servo-finder-step-positions.svg)
 
@@ -126,14 +126,15 @@ take the other side's arm off first, or unplug the second servo's wire.
 
 **Start over:** press STOP, then INIT, and open the tool again. It starts empty: nothing carries over. The lines saved at STOP stay in the results file, the newest at the end.
 
-## Copy the numbers
+## Put the numbers in your code
 
 When both ends and your positions are saved, the screen looks like this. The marked lines are the ones for
 the robot in five files. The `PositionServo.create(...)` lines above them are for the older helpers.
 
 ![The Driver Hub with both ends marked (0.120 and 0.880), two saved positions, and the lines to copy: Tunables.Claw: P1 = 0.210, P2 = 0.770](../images/hub-servo-finder-done.svg)
 
-The robot uses `Tunables.java` and `Robot.java`, not the finder's screen. Copy each line:
+The robot uses `Tunables.java` and `Robot.java`, not the finder's screen. Take a photo of the screen,
+and type each line into the file. Or copy it from the [results file](01-tune-and-check.md#get-the-results-file-on-the-laptop):
 
 | The finder shows | Put it in |
 | --- | --- |

@@ -4,7 +4,7 @@ This page moved to [Tuning](../tuning/README.md), one page per tool:
 
 | Was here | Now |
 | --- | --- |
-| Tune and check, Before you start, Help on the robot, The results file | [Before you tune: Tune and check](../tuning/01-tune-and-check.md) |
+| Tune and check, Before you start, Help on the robot, The results file | [Before you tune: the Tune and check OpMode](../tuning/01-tune-and-check.md) |
 | The order | [Tuning: the tuning order](../tuning/README.md#the-tuning-order) |
 | Motor Direction Check, Encoder Check | [Wiring checks](../tuning/02-wiring-checks.md) |
 | Servo Finder | [Servo Finder](../tuning/03-servo-finder.md) |

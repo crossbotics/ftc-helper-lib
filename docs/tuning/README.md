@@ -41,7 +41,7 @@ flowchart TB
 
 | # | Page | It finds | Why it comes here |
 | --- | --- | --- | --- |
-| 1 | [Before you tune: Tune and check](01-tune-and-check.md) | nothing: the menu, safety, help | read it once |
+| 1 | [Before you tune: the Tune and check OpMode](01-tune-and-check.md) | nothing: the menu, safety, help | read it once |
 | 2 | [Wiring checks](02-wiring-checks.md) | Hardware Check, Motor Direction, Encoder | every other number trusts the wiring, so it comes first |
 | 3 | [Servo Finder](03-servo-finder.md) | ends and positions | a servo pushed past its end breaks, so find the ends before code moves it |
 | 4 | [Hood Finder](04-hood-finder.md) | a hood's two stops | the Shot Tuner writes hood positions, so the hood needs its stops first |
@@ -58,9 +58,9 @@ flowchart TB
 
 **After the finders:**
 
-- [The tuning menu](15-tuning-menu.md): change a number while the robot runs, from the gamepad.
+- [Live tuning](15-live-tuning.md): change a number from the gamepad while your TeleOp runs (the tuning menu in TeleOp, not Tune and check).
 - [Fix it by what you see](16-fix-by-symptom.md): "the lift sags" -> which number to change, and which way.
 
 ---
 
-**Next:** [Before you tune: Tune and check](01-tune-and-check.md).
+**Next:** [Before you tune: the Tune and check OpMode](01-tune-and-check.md).

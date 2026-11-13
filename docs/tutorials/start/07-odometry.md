@@ -266,7 +266,7 @@ and end it with **B**. Each test starts the pose at 0.
    When it is off by more, run Forward, Left and Spin again, copy their lines, rebuild, and try Loop again.
 
 When you press STOP, the tuner also saves the lines in `finder-results.txt` on the Control Hub
-([the results file](../../tuning/01-tune-and-check.md#the-results-file)). An OTOS's Forward test gives
+([the results file](../../tuning/01-tune-and-check.md#get-the-results-file-on-the-laptop)). An OTOS's Forward test gives
 `Tunables.Odometry: linearScalar = ...` to copy instead. You
 [measure its turn scale by hand](../../modules/odometry.md#otos-turn-scale-by-hand).
 

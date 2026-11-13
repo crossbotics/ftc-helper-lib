@@ -1,4 +1,4 @@
-# Before you tune: Tune and check
+# Before you tune: the Tune and check OpMode
 
 One OpMode holds every tool. Read this page once before your first finder.
 
@@ -75,9 +75,18 @@ The screens show the button names on YOUR controller (× ○ □ △ on a PlaySt
 use the Logitech names ([every name](../controls/01-how-buttons-work.md#the-buttons)). **▶** on a screen is
 always the Driver Hub's start button, never a gamepad button.
 
-## Copy the lines it shows
+## Put the lines into your code
 
-Every finder ends with lines to copy. The robot uses the files, not the finder's screen.
+Every finder ends with lines for your code. The robot uses the files, not the finder's screen. You cannot
+copy and paste from the Driver Hub, so there are two ways:
+
+- **Type them.** First take a photo of the Driver Hub's screen with a phone. Then type each line from the
+  photo into the file on the laptop. The photo keeps the numbers after you press STOP, and you can zoom in
+  to read each digit. This is fine for a few numbers. Check each digit twice.
+- **Copy them from the results file.** When you press STOP, the finder saves its lines on the Control Hub.
+  Get that file on the laptop, then copy and paste
+  ([Get the results file on the laptop](#get-the-results-file-on-the-laptop)). This is best for long lines,
+  like a shot table.
 
 Each finder shows two kinds of lines. Use the kind that fits your code:
 
@@ -91,11 +100,16 @@ The section is the device's name in CamelCase (each word starts with a capital, 
 `.tunables("Name")` in Robot.java, copy the numbers into that section instead.
 The finders call positions P1, P2...: give them real names (`low`, `high`, `open`, `closed`).
 
-## The results file
+### Get the results file on the laptop
 
 When you press STOP, every finder adds its lines to `/sdcard/FIRST/ftc-helper/finder-results.txt` on the
-Control Hub, with the date. The Driver Station says whether it worked. Get the file with the REV Hardware
-Client (file manager) or Android Studio's Device Explorer. The newest results are at the end.
+Control Hub, with the date. The Driver Station says whether it worked. The newest results are at the end.
+
+1. Connect the laptop to the Control Hub: a USB cable, or the robot's Wi-Fi.
+2. Open the file with one of these:
+   - the **REV Hardware Client**: its file manager, in the folder `FIRST/ftc-helper/`
+   - **Android Studio**: **View > Tool Windows > Device Explorer**, then `sdcard/FIRST/ftc-helper/`
+3. Copy the lines you need into `Tunables.java` or `Robot.java`.
 
 ## Done when
 

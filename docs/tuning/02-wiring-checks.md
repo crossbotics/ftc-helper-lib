@@ -116,7 +116,7 @@ Run it on every new robot, and again after you change any motor or cable.
 
 **Start over:** press STOP, then INIT, and open the tool again. It starts empty: nothing carries over. The lines saved at STOP stay in the results file, the newest at the end.
 
-## Copy the numbers
+## Put the numbers in your code
 
 These checks give no numbers to copy. You fix what they find in two places:
 

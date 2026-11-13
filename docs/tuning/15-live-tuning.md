@@ -1,6 +1,7 @@
-# The tuning menu
+# Live tuning: change numbers while the robot runs
 
-Change a number while the robot runs, from the gamepad, then copy it back into `Tunables.java`.
+Change a number from the gamepad while your TeleOp runs, then copy it back into `Tunables.java`. This is
+the **tuning menu** inside your TeleOp, not the Tune and check OpMode.
 
 **You need:** a robot whose parts work, and the PRACTICE [profile](../guides/profiles.md) (the menu stays
 closed in COMPETITION).

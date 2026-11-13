@@ -54,7 +54,7 @@ flowchart LR
    field-centric on. Check every button in [the list](#the-buttons). Print that list for the
    drive team.
 7. **Tune** the lift with the tuning menu (GUIDE button, PRACTICE profile), then copy the numbers into
-   `Robot.java` ([tuning guide](tuning/15-tuning-menu.md)).
+   `Robot.java` ([tuning guide](tuning/15-live-tuning.md)).
 8. **Autonomous**: tune the drivetrain with the **Drive Tuner** finder, set `calibrationConfirmed = true`,
    then change `AutoScoreAndPark`'s steps for your game ([easy autos](guides/easy-autos.md)).
 9. **Before the event**: pick the COMPETITION profile, and go through the [testing checklist](guides/testing.md).
@@ -113,7 +113,7 @@ all = new Subsystems().add(lift, claw, intake); // (8)!
    D = 0.0002 calms it so it does not overshoot, F = 0.05 is a small steady push up that holds it
    against gravity. These are starting values: tune yours ([lesson 07](tutorials/07-pid-lift.md)).
 6. The gains and heights are then in the tuning menu as "Lift/...": change them from the gamepad in the
-   PRACTICE profile, then copy the good values back into this file ([tuning guide](tuning/15-tuning-menu.md)).
+   PRACTICE profile, then copy the good values back into this file ([tuning guide](tuning/15-live-tuning.md)).
    The code is the record.
 7. A servo cannot say where it is, so the claw guesses when it has finished moving from this time: about
    how many seconds the servo takes to move the whole way (0 to 1).

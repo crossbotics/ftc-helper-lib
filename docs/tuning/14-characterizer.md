@@ -51,9 +51,10 @@ Details: [finders module](../modules/finders.md#characterizeropmode).
 
 **Start over:** press STOP, then INIT, and open the tool again. It starts empty: nothing carries over. The lines saved at STOP stay in the results file, the newest at the end.
 
-## Copy the numbers
+## Put the numbers in your code
 
-The robot uses `Tunables.java` and `Robot.java`, not the finder's screen. Copy each line:
+The robot uses `Tunables.java` and `Robot.java`, not the finder's screen. Take a photo of the screen,
+and type each line into the file. Or copy it from the [results file](01-tune-and-check.md#get-the-results-file-on-the-laptop):
 
 | The finder shows | Put it in |
 | --- | --- |
@@ -66,6 +67,6 @@ each test ran 2-3 times and the numbers agree.
 
 ---
 
-**Next:** [The tuning menu](15-tuning-menu.md).
+**Next:** [Live tuning: change numbers while the robot runs](15-live-tuning.md).
 
 **Look it up:** [CharacterizerOpMode](../modules/finders.md#characterizeropmode).

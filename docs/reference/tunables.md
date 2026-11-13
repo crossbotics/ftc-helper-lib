@@ -111,7 +111,7 @@ A section no part reads, like `Team` with a number your `Controls.java` uses:
 
 - `public static` fields: FTC Dashboard can show them too, **at home and in practice only**. Rule R704.D
   (2026-27) bans tools like FTC Dashboard at events, so take it out of the robot project before one
-  ([tuning guide](../tuning/15-tuning-menu.md#ftc-dashboard-practice-only)). The library's tuning menu is
+  ([tuning guide](../tuning/15-live-tuning.md#ftc-dashboard-practice-only)). The library's tuning menu is
   allowed.
 - The menu's names ("Lift/kP") are shared by the whole robot app: keep one Robot class per app.
 
@@ -311,7 +311,7 @@ A name that ends in `Sec` is seconds, `Ms` milliseconds, `In` inches, `Mm` milli
 ## The "In tuning menu" column
 
 You can change some numbers while the robot runs. In the PRACTICE profile, after ▶, hold **GUIDE** for 1 s.
-Use the D-pad to choose and change, and **A** to save on the Control Hub ([tuning guide](../tuning/15-tuning-menu.md)). The
+Use the D-pad to choose and change, and **A** to save on the Control Hub ([tuning guide](../tuning/15-live-tuning.md)). The
 numbers you tune most are [`Tunable`](../modules/tuning.md)s ("Lift/kP").
 
 | In tuning menu says | What it means |
