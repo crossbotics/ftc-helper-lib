@@ -5,7 +5,7 @@
 Package: `com.crossbotics.ftchelper.pedro`, in the **`pedro`** folder. It is an optional add-on: the core
 library never needs it. The step that uses it, `follow(...)`, is in `Steps`.
 
-New to path following: start with [Lesson 8: Paths with Pedro Pathing](../tutorials/start/08-paths-with-pedro.md).
+New to path following: start with [Add Pedro paths](../building-autos/05-pedro-paths.md).
 Quick answers with code to copy: [cookbook: Pedro paths](../cookbook.md#pedro-paths).
 Worked example: [`examples/.../pedrobot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot).
 Pedro needs a working, checked odometry, so read [the odometry module](odometry.md) first.
@@ -18,7 +18,7 @@ brakes at the end. `driveTo` goes to one point. Pedro follows a whole path, curv
 >
 > **Odometry:** Pedro steers by the robot's real place on the field, every loop. Only the
 > `odometry(...)` line gives that: a Pinpoint, an OTOS or dead wheels, set up and checked
-> ([odometry](odometry.md), [lesson 7](../tutorials/start/07-odometry.md)). Drive-wheel encoders slip,
+> ([odometry](odometry.md), [Add odometry](../add-to-robot/09-odometry.md)). Drive-wheel encoders slip,
 > so they are not enough. With no odometry line, INIT stops. Until you check the odometry, the robot
 > skips the `follow` steps.
 
@@ -305,7 +305,7 @@ do it for you. `PedroPath` uses them, so you only need them for Pedro's own path
 
 Tune in this order. Each step needs the one before it.
 
-1. **The drive:** motor directions and the drive check (lesson 2).
+1. **The drive:** motor directions and the drive check ([Drive Tuner](../tuning/08-drive-tuner.md)).
 2. **The odometry:** the library's Odometry Tuner, then `Tunables.Odometry.checked = true`
    ([odometry](odometry.md#the-odometry-tuner)).
 3. **Pedro's Foresight tuner**, which fills `PedroConstants`. Set it up once:

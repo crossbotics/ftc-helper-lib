@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** anyone writing TeleOp or autonomous code. **You need:** a first OpMode
-([lesson 2](../tutorials/start/02-drive.md) or [tutorial 01](../tutorials/01-opmode-basics.md)).
+([Robot.java](../five-files/01-robot-java.md) or [tutorial 01](../tutorials/01-opmode-basics.md)).
 
 A robot program is ONE loop that runs 50-200 times per second. Every part of the robot gets a turn
 in every loop. When any one piece of code **waits** (sleeps, loops until something happens, waits for

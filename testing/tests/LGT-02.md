@@ -8,7 +8,7 @@ minutes: 15
 needs: [lights]
 kit_bots: []
 since: v0.17.0
-docs: [reference/parts/lights.md#the-alliance-at-init, tutorials/start/09-shooter-and-camera.md#13-a-light-for-the-drivers]
+docs: [reference/parts/lights.md#the-alliance-at-init, add-to-robot/08-lights.md#controlsjava-the-rules]
 ---
 
 ## Why
@@ -24,7 +24,7 @@ shows the alliance. We want to know it is easy to read on real lights, from the 
 ## Setup
 
 - A light in `Robot.java` (`Lights.gobilda("light")` or `Lights.blinkin("blinkin")`), with no `allianceAtInit` line in its Tunables section.
-- Your own rules in `Controls.java` (any, for example lesson 9 section 13's).
+- Your own rules in `Controls.java` (any, for example the ones in [Add lights](../../docs/add-to-robot/08-lights.md#controlsjava-the-rules)).
 - Simulator: the light is a dot on the robot (V2 example robot, or your own robot from `Robot.java`).
 
 ## Steps

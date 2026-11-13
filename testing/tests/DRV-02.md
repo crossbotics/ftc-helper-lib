@@ -8,7 +8,7 @@ minutes: 15
 needs: [mecanum]
 kit_bots: [gobilda-strafer]
 since: v0.16.0
-docs: [tutorials/start/02-drive.md#6-the-driving-you-get-for-free, controls/04-move-library-buttons.md]
+docs: [controls/01-how-buttons-work.md#the-librarys-own-buttons, controls/04-move-library-buttons.md]
 ---
 
 ## Why

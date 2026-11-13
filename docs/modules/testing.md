@@ -4,7 +4,7 @@
 
 Package: `com.crossbotics.ftchelper.testing`
 
-Learn it hands-on: [Check the hardware (lesson 2b, tutorial 19)](../tutorials/19-testing-procedures.md). Full guide: [Testing procedures](../guides/testing.md).
+Learn it hands-on: [Check the hardware (tutorial 19)](../tutorials/19-testing-procedures.md). Full guide: [Checks before practice and matches](../tests/03-checks-before-practice-and-matches.md).
 
 The hardware check tests that every motor, servo and sensor is wired and named right, before you write robot
 code. Run it on a new robot, after you rewire, and whenever a part acts strangely. It needs no code from

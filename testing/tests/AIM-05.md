@@ -26,8 +26,8 @@ We want to know it works with real tags, with each camera, and after a tip.
 ## Setup
 
 - A robot with `goal("BLUE SCORING", "RED SCORING")` on its camera. Its TeleOp.
-- A HIVE (or its two CELL tag groups, tags 30-37 for red), or the simulator: lesson 9's turret robot
-  ([the commands](../../docs/tutorials/start/09-shooter-and-camera.md#try-it-in-the-simulator)).
+- A HIVE (or its two CELL tag groups, tags 30-37 for red), or the simulator: the turret robot `turretbot`
+  ([the commands](../../docs/add-to-robot/07-camera.md#try-it-in-the-simulator)).
 
 ## Steps
 

@@ -4,7 +4,7 @@
 
 Package: `com.crossbotics.ftchelper.testkit`
 
-Learn it hands-on: [13 Testing](../tutorials/13-testing.md#7-test-your-robot-in-five-files). Guide: [Testing procedures](../guides/testing.md#test-your-robotjava-with-pretend-devices).
+Learn it hands-on: [13 Testing](../tutorials/13-testing.md#7-test-your-robot-in-five-files). Guide: [Run all your tests: laptop tests](../tests/02-run-all-your-tests.md#4-for-programmers-laptop-tests-in-java-optional).
 
 The test kit gives you pretend motors, servos and switches for **JUnit tests on a laptop**. Your `Robot.java`
 (the robot in five files) runs on them instead of the real hardware. A test sets the robot up (INIT), presses ▶

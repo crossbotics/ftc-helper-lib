@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** an autonomous that raises the lift while it drives, with alliance and start delay chosen on the gamepad in INIT.
-The main track does this with steps and actions: [Actions](start/05-actions.md) and [Your first autonomous](start/06-first-autonomous.md).
+The main track does this with steps and actions: [Actions.java](../five-files/04-actions-java.md) and [The autos](../five-files/05-autos.md).
 
 **You will learn:**
 

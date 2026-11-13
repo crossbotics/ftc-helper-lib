@@ -19,7 +19,7 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 - `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), one program per
   tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and robots in five files (the five kit bots
   `gobildabot/`, `gobildastraferbot/`, `revbot/`, `andymarkbot/`, `studicabot/`, and `lessonbot/`, `flywheelbot/`, `turretbot/`,
-  `v2bot/` (turret + lift with wrist and claw + an interlock rule), `odometrybot/`, `pedrobot/`, `quickstart/`; docs/templates.md lists them; main-track lesson 1 explains them; `SimFromRobotTest` runs them), and the cookbook's recipes (`cookbook/`, one file per topic,
+  `v2bot/` (turret + lift with wrist and claw + an interlock rule), `odometrybot/`, `pedrobot/`, `quickstart/`; docs/templates.md lists them; docs/five-files/ explains them; `SimFromRobotTest` runs them), and the cookbook's recipes (`cookbook/`, one file per topic,
   shown in `docs/cookbook.md`; `CookbookTest` in `sim/` INITs and runs every cookbook OpMode).
 - `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new
   module: extend `Module` (or `MotorPositions`/`ServoPositions`), read numbers through `TunableSection`,
@@ -52,8 +52,8 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
     `./gradlew :sim:scenario -Pfile=...` (report: each check ok/FAIL with the value seen; each file starts
     fresh: SimFresh). The page's test recorder (`SimRecorder`, `SimTests`, page code `tests.js`) writes
     scenario files from what a person does; it must only write commands `SimScenario` reads (`SimRecorderTest`).
-  - Lessons: the simulator itself is taught from the start ("Try it in the simulator" in every lesson);
-    simulator TESTS (scenario files, the recorder) only in start lesson 10 (advanced). Early lessons point to it.
+  - Walkthrough pages: the simulator itself is taught from the start ("Try it in the simulator" where it helps);
+    simulator TESTS (scenario files, the recorder) only in docs/tests/. Early pages point to it.
   - `sim/parts/parts.json`: motors and servos with seller-page numbers and the date checked; add a
     part the same way (never from memory). `sim/fields/<season>.json`: one per season, made from the
     official field CAD by a script, not typed by hand. `sim/fields/<season>.rules.json` next to it: the game's rules
@@ -62,7 +62,7 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
     simulator's judge() checked by SimCellJudgeTest).
 - `docs/` `setup/` (one page per setup step, in order, each ending with "Done when"), `pick-your-start/` (the three starts: a starter bot, a common setup, a blank slate; each ends with the five files in TeamCode), `reference/` (look-up pages: one per part in `reference/parts/`, each with "In Robot.java", "In Tunables.java", "Commands" and "Buttons to add"; and Robot.java, Tunables.java, Controls.java, steps; `modules/robot.md` and `guides/tunables.md` are "moved" pages), `add-to-robot/` (one walkthrough page per part, after the five files, each with the same five steps; its code is cookbook recipes with `<!-- recipe: name -->` markers), `controls/` (four walkthrough pages after the five files: how buttons work, press types, what the drivers see and feel, moving the library's buttons; `guides/buttons.md` is a "moved" page), `tuning/` (the tuning order, then one page per finder in the Tune and check menu's order, the tuning menu, and fix it by what you see; `guides/finders.md` and `guides/tuning.md` are "moved" pages; `tools/check_docs.py` checks the order), `building-autos/` (seven walkthrough pages after the five files: the steps, putting them together, multiple autos, the auto builder, odometry and Pedro, advanced autos (what the builder cannot write), match day; route numbers stay plain numbers in each auto's steps, not `Tunables.Auto`), `five-files/` (one walkthrough
   page per robot file; each page's code is a compiled program in `examples/.../firstrobot/` or a cookbook recipe,
-  shown with a `<!-- recipe: name -->` marker and kept the same by `tools/check_docs.py`), `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
+  shown with a `<!-- recipe: name -->` marker and kept the same by `tools/check_docs.py`), `modules/` (reference: every public class and method), `tests/` (record and run simulator tests; checks before practice and matches), `tutorials/` (the "under the hood" tutorials),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
 - `testing/` the community test list: one file per test in `testing/tests/`, words in `vocabulary.json`,
   `catalogue.json` made by `python3 tools/check_tests.py --fix` (crossbotics.com reads it). A new
@@ -103,7 +103,7 @@ Every change follows the six steps in `docs/contributing.md`. A change is NOT do
 
 Also keep current when relevant: `docs/troubleshooting.md` (new common problems),
 `docs/from-last-season.md`, `docs/guides/new-season.md` (rules and SDK facts per season),
-`docs/guides/testing.md` (checklists), `docs/starter-kit.md` and its files, `skills/ftc-helper/SKILL.md`
+`docs/tests/03-checks-before-practice-and-matches.md` (checklists), `docs/starter-kit.md` and its files, `skills/ftc-helper/SKILL.md`
 (a new docs section, a moved page, a new rule for teams' code), and THIS file (when the layout or rules change).
 
 Code snippets inside Markdown are not compiled (except the cookbook's, checked against

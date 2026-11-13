@@ -15,7 +15,7 @@ A sensor that knows where the robot is on the field, so autonomous can drive to 
   - **dead wheels:** three pods (or two and the Control Hub's IMU), each in a motor port's encoder
     connector.
 
-Which one to buy, and how to mount and wire it: [lesson 7, sections 2 and 3](../tutorials/start/07-odometry.md#2-which-one-to-buy).
+Which one to get, and how to mount and wire it: step 1.
 
 ## 1. What it is
 
@@ -25,7 +25,7 @@ Which one to buy, and how to mount and wire it: [lesson 7, sections 2 and 3](../
   forward and back (the **X pod**), one rolls sideways (the **Y pod**).
 - **Field numbers are inches, seen from your own drivers' wall**, whatever your alliance. x = inches right of
   the center line. y = inches away from your wall (negative = your half). Heading 0 = facing away from you,
-  and a turn to the left is +. See the [field map](../tutorials/start/07-odometry.md#1-why-odometry).
+  and a turn to the left is +. See the [field numbers](../building-autos/01-what-an-auto-can-do.md#field-numbers).
 - **It must know where its pods sit.** When the robot turns in place, a pod away from the turn point rolls
   too. The library takes that roll away.
 - **It must be checked before it drives.** `driveTo` steps do nothing on the robot until
@@ -34,6 +34,52 @@ Which one to buy, and how to mount and wire it: [lesson 7, sections 2 and 3](../
 
 With odometry, `driveTo` goes to a field point and ends on it, even after a bump or a wheel slip. TeleOp
 starts where autonomous ended.
+
+### Why odometry
+
+The drive wheels slip: they spin when another robot pushes yours, and they skid when the robot speeds up.
+After a bump, a drive by distance (`forward(...)`) is off, and every later step is off too. The robot does
+not know it.
+
+The pods carry no weight and drive nothing, so they do not slip. They only roll and count. The robot adds
+up every small move, many times a second. So it knows its real pose.
+
+**Why not AprilTags in BIOBUZZ:** the tags are on the HIVE cells, and the cells move. A tag tells you where
+you are compared with the tag, not with the field. So in BIOBUZZ, odometry says where the robot is, and the
+camera is for aiming.
+
+### Which one to get
+
+| Choice | What it is | Parts and price (checked 2026-10-21) |
+| --- | --- | --- |
+| **goBILDA Pinpoint + 2 pods** (recommended) | a small odometry computer with its own IMU. Two pods plug into it, and it plugs into an I2C port | Pinpoint Odometry Computer V2, goBILDA 3110-0002-0002, $79.99. Two 4-bar odometry pods, goBILDA 3110-0001-0002, about $99.99 each (not checked on goBILDA's page: check it before you order) |
+| **SparkFun OTOS** | an optical sensor under the robot that watches the floor, like a computer mouse. No pods | SparkFun SEN-24904, $84.95 |
+| **Dead wheels** | three pods (or two and the Control Hub's IMU), each plugged into a motor port's encoder connector. No extra computer | the pods only. They use three (or two) encoder ports |
+
+- **I2C port:** the small 4-pin ports on the Control Hub (I2C 0 to 3). Sensors that send numbers, like the
+  Pinpoint and the OTOS, plug in there.
+- **4-bar and swingarm pods:** goBILDA's two pod designs. They give a different number of encoder counts
+  per mm. The library expects 4-bar pods. Swingarm pods need `.podsSwingarm()` in the odometry line.
+- **Why the Pinpoint is recommended:** it does the math itself about 1500 times a second, and the robot
+  reads the answer once per loop. So the loop speed does not change how good the pose is. It also uses no
+  encoder ports.
+
+### Mount it, wire it, name it
+
+1. **Mount the two pods** under the robot, with the springs pressing the wheels onto the tiles. One rolls
+   **forward and back** (the X pod). One rolls **sideways** (the Y pod). They can sit anywhere: step 2 says
+   how to give their places, and the tuner measures them.
+2. **Mount the Pinpoint** flat, anywhere on the robot.
+3. **Plug the X pod into the Pinpoint's X port, and the Y pod into its Y port.** **Why:** the Pinpoint
+   takes X as forward. With the pods swapped, the robot takes forward as sideways.
+4. **Plug the Pinpoint into an I2C port** on the Control Hub. Port 0 has the hub's own IMU, so use port 1.
+5. **Add it to the robot configuration** on the Driver Hub: Configure Robot, edit your configuration,
+   Control Hub, the I2C bus you used (for example I2C Bus 1), Add. Choose the type **goBILDA® Pinpoint
+   Odometry Computer** and name it `pinpoint`. Save, and restart the robot.
+
+An OTOS goes on an I2C port the same way: type **SparkFun OTOS**, name `otos`. Mount it 10 to 12 mm above
+the tiles. For dead wheels, plug each pod's encoder cable into a motor port's encoder connector. The pod's
+name is that motor port's configuration name.
 
 ## 2. Add it to the five files
 
@@ -136,6 +182,35 @@ public static class Odometry {                                  // a fixed name:
   1 s. Here the spot is your left corner tile, facing the field.
 - `mirrorForRed = false` is for BIOBUZZ: its field is turned half a turn, so RED uses the same numbers from
   its own wall.
+
+### TeleOp starts where autonomous ended
+
+You write nothing for this:
+
+- When autonomous ends, its pose goes to TeleOp. TeleOp's INIT starts the odometry there, if autonomous
+  ran in the last 5 minutes. A Pinpoint still calibrates right after INIT: the library keeps the pose and
+  gives it to the Pinpoint when it is ready.
+- Field-centric "forward" comes from the odometry's heading. Hold BACK to make "forward" the way the robot
+  faces now. This is for the driver only: the pose does not change, so aiming at a field point stays right.
+
+**With no autonomous, or one stopped early,** set the pose with the reset spot: put the robot on it, let go
+of the sticks, and hold gamepad 1 **START** (OPTIONS on a PlayStation gamepad) for 1 s. Do it in INIT if
+you can. Gamepad 1 buzzes twice, and the Driver Station says `Pose set: x -56, y -61 in, heading 0 (BLUE)`.
+While the robot drives, it says `Pose NOT set: stop first`. START held with A or B pairs a gamepad, so it
+never sets the pose. From code or an action: `robot.resetPose()` (the reset spot) or
+`robot.resetPose(x, y, heading)`. To move the button: `lib.setPose(...)`
+([Move the library's buttons](../controls/04-move-library-buttons.md)).
+
+**One mirror setting for the whole robot.** The autos' start spots, the reset spot and the aim's goal point
+all use one answer to "is RED a mirror image of BLUE?". The robot takes the first one it finds:
+`Tunables.Aim.mirrorForRed`, then `Tunables.Odometry.mirrorForRed`, then the autonomous's `mirrorForRed()`,
+else `true`. Write it in `Tunables.Odometry`, so a TeleOp with no autonomous before it gets it right too.
+INIT shows the one it uses: `Reset spot for RED: ...`.
+
+**The autonomous ran with the wrong alliance:** with the alliance switch in `Controls.java`
+(`lib.switchAlliance(g1.start, g1.back)`), hold START, then BACK, for 1.5 s. On a mirrored field, the
+library mirrors the pose too. On BIOBUZZ's turned field it cannot: set the pose here again
+([Switching the alliance in TeleOp](../controls/04-move-library-buttons.md#switching-the-alliance-in-teleop)).
 
 ### Controls.java: show the pose
 
@@ -274,8 +349,15 @@ numbers change at the next INIT. Then write the number in `Tunables.Drive`.
 | It drives to the mirror spot on RED | BIOBUZZ: `mirrorForRed = false` |
 | It circles the point or stops just short | Run the [Move Tuner](../tuning/10-move-tuner.md) |
 | The report says `NO_ODOMETRY` | The odometry stopped during a `driveTo`. Check the pod and I2C cables |
+| `OTOS: not answering` | The I2C cable, or the configuration name or type |
+| INIT stops: `odometry .reversed("...")` | A name in `.reversed(...)` that is not a pod. A Pinpoint's pods are `"x"` and `"y"` |
+| The tuner stops at INIT: `needs the IMU` | Dead wheels or an OTOS: add `.imu(...)` to `drive(...)` |
+| TeleOp's field-centric is wrong after autonomous | The heading in `s.start(...)` is wrong |
+| `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` | The reset spot is missing in `Tunables.Odometry` |
+| After "set pose here", the pose is mirrored the wrong way on RED | BIOBUZZ: add `mirrorForRed = false` to `Tunables.Odometry`. INIT's `Reset spot for RED` line shows which is used |
+| `Pose NOT set: stop first` | The robot was driving (or aiming by itself). Stop, then hold START 1 s again |
 
-More: [lesson 7, If something goes wrong](../tutorials/start/07-odometry.md#if-something-goes-wrong).
+More, for `driveTo` reports (`STALLED`, `TIMED_OUT`): [Drive to points: problems](../building-autos/04-drive-to-points.md#problems).
 
 ## Done when
 

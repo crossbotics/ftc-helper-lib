@@ -354,7 +354,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 ```
 
 **Why:** the names must match the configuration, and the wheel size makes autonomous distances right.
-**More:** [Lesson 2: Drive](tutorials/start/02-drive.md), [Drive](reference/parts/drive.md).
+**More:** [Robot.java](five-files/01-robot-java.md), [Drive](reference/parts/drive.md).
 
 ### How do I set up a tank (standard) drive?
 
@@ -370,7 +370,7 @@ drive(Drive.tank("left_drive", "right_drive")
 
 **Why:** the motors on the two sides face opposite ways, so one side runs backward. List that side's
 motors in `.reversed(...)`. With two motors per side, name all four: `Drive.tank("front_left", "front_right", "back_left", "back_right")`.
-**More:** [Lesson 2](tutorials/start/02-drive.md#1-pick-the-drive-type-and-name-the-motors), [Drive](reference/parts/drive.md).
+**More:** [Robot.java](five-files/01-robot-java.md#your-motor-names), [Drive](reference/parts/drive.md).
 
 ### A wheel turns the wrong way. How do I fix it?
 
@@ -386,7 +386,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 ```
 
 **Why:** the motors on the two sides face opposite ways. So one side must run reversed, or the robot does not go straight.
-**More:** [Lesson 2: check the motor directions](tutorials/start/02-drive.md#7-check-the-motor-directions), [Troubleshooting](troubleshooting.md#robot-behavior).
+**More:** [Wiring checks: check the motor directions](tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward), [Troubleshooting](troubleshooting.md#robot-behavior).
 
 ### How do I tell the robot how the Control Hub is mounted?
 
@@ -401,7 +401,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 ```
 
 **Why:** the IMU (the hub's turn sensor) must know which way is up. If it does not, turns and field-centric driving go wrong.
-**More:** [Lesson 2: the IMU](tutorials/start/02-drive.md#4-say-how-the-control-hub-is-mounted-the-imu).
+**More:** [Robot.java: the IMU](five-files/01-robot-java.md#how-your-control-hub-is-mounted).
 
 ### How do I make the robot slower (or faster)?
 
@@ -424,7 +424,7 @@ public static class Drive {                                     // a fixed name:
 **Why:** `maxPower` is the top power in both profiles, so the drivers practice at match speed. Lower it
 for the first drives, then set it back. To set a lower top power for PRACTICE only, use
 `practiceMaxPower`, for example on a new driver's first day.
-**More:** [Lesson 2: the numbers](tutorials/start/02-drive.md#5-the-numbers-tunablesdrive), [Profiles](guides/profiles.md).
+**More:** [Tunables.java: the numbers](five-files/02-tunables-java.md#the-drives-numbers), [Profiles](guides/profiles.md).
 
 ### How do I let one driver do everything?
 
@@ -437,7 +437,7 @@ public static boolean oneDriver = true;
 ```
 
 **Why:** with one driver, the operator's buttons move to gamepad 1, and the stick clicks switch slow mode and field-centric.
-**More:** [Lesson 3: one driver or two](tutorials/start/03-buttons.md#3-one-driver-or-two).
+**More:** [How buttons work: one driver or two](controls/01-how-buttons-work.md#one-gamepad-and-a-second-one-when-you-want-it).
 
 ### How do I put slow mode on a trigger?
 
@@ -461,7 +461,7 @@ You write no code for these. With `Controls.java` (two drivers):
 - **Pause:** tap gamepad 1 **BACK**, and everything stops on brake. Tap again to go on.
 - **Reset "forward":** turn the robot to face away from you, then hold gamepad 1 **BACK** for 1 second.
 
-**More:** [Lesson 2: the driving you get for free](tutorials/start/02-drive.md#6-the-driving-you-get-for-free), [the standard map](reference/controls.md#controlmap).
+**More:** [How buttons work: the driving you get for free](controls/01-how-buttons-work.md#the-librarys-own-buttons), [the standard map](reference/controls.md#controlmap).
 
 ## Buttons and gestures
 
@@ -487,7 +487,7 @@ g2.x.press(() -> robot.lift.goTo("low")).says("lift to low");
 ```
 
 **Why:** `press` runs the job once per press, the moment the button goes down.
-**More:** [Lesson 3: add your own jobs](tutorials/start/03-buttons.md#4-add-your-own-jobs), [Press types](controls/02-press-types.md#every-press-type).
+**More:** [Controls.java: add your own jobs](five-files/03-controls-java.md#add-your-own-button), [Press types](controls/02-press-types.md#every-press-type).
 
 ### How do I run something only while a button is held?
 
@@ -600,7 +600,7 @@ g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
 ```
 
 **Why:** a part's buttons are your own lines. Put its jobs on the buttons you want, and leave its usual buttons free.
-**More:** [Lesson 3: the buttons the parts bring](tutorials/start/03-buttons.md#2-the-parts-buttons-written-out).
+**More:** [How buttons work: the buttons the parts bring](controls/01-how-buttons-work.md#a-parts-buttons).
 
 ### How do I put the launcher's fire button on another button?
 
@@ -714,7 +714,7 @@ BACK alone is the pause, so BACK first only pauses the robot. The 1.5 s hold mea
   same and the debug lines turn on or off.
 - **Set pose here** (robots with odometry): put the robot on the reset spot, let go of the sticks, and hold gamepad 1 **START** for 1 s. This works in INIT or in the match ([below](#how-do-i-set-the-pose-when-autonomous-did-not-run)).
 
-**More:** [Lesson 3: the button map](tutorials/start/03-buttons.md#6-the-button-map-init-and-guide).
+**More:** [What the drivers see and feel: the button map](controls/03-see-and-feel.md#the-button-map-and-the-teleops-init-screen).
 
 ## Mechanisms
 
@@ -743,7 +743,7 @@ public static class Intake {                                    // "intake" in t
 ```
 
 **Why:** the intake reads its numbers from `Tunables.Intake`. Its buttons are lines in `Controls.java`: [Intake: buttons to add](reference/parts/intake.md#buttons-to-add).
-**More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#1-three-lines-in-robotjava), [Intake](reference/parts/intake.md).
+**More:** [Add a lift](add-to-robot/01-lift.md#robotjava-one-line), [Intake](reference/parts/intake.md).
 
 ### How do I add an intake on CR servos?
 
@@ -811,8 +811,8 @@ public static class Lift {                                      // "lift" in the
 **Why:** the lift never goes past `min` and `max`, so it cannot break itself. INIT stops if they are missing.
 `MEASURE` stops INIT until you write the real number. Find yours with the [Motor Finder](#how-do-i-find-a-lifts-limits-and-heights).
 `"lift"` must be the motor's name in your configuration. To send the lift to a height, see [from a button](#how-do-i-send-a-part-to-a-position-from-a-button).
-**More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#2-their-numbers-in-tunablesjava), [Lift](reference/parts/lift.md),
-[why the bottom switch matters](tutorials/start/04-lift-and-claw.md#4-why-the-bottom-switch-matters-homing).
+**More:** [Add a lift](add-to-robot/01-lift.md#tunablesjava-its-numbers), [Lift](reference/parts/lift.md),
+[why the bottom switch matters](add-to-robot/01-lift.md#1-what-it-is).
 
 ### My lift goes down when it should go up. How do I fix it?
 
@@ -953,7 +953,7 @@ public static class Claw {                                      // "claw" in the
 ```
 
 **Why:** a claw needs two numbers, open and closed, and the Servo Finder gives them. Its button is a line in `Controls.java`: [Claw: buttons to add](reference/parts/claw.md#buttons-to-add).
-**More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#1-three-lines-in-robotjava), [Claw](reference/parts/claw.md).
+**More:** [Add a lift](add-to-robot/01-lift.md#robotjava-one-line), [Claw](reference/parts/claw.md).
 
 ### How do I run a claw on two servos?
 
@@ -1181,7 +1181,7 @@ public static class Indexer {                                   // "indexer" in 
 ```
 
 **Why:** the launcher feeds a piece only when the wheel is at speed, so every shot flies the same way.
-**More:** [Lesson 9](tutorials/start/09-shooter-and-camera.md#1-a-flywheel-and-its-feeder), [Launcher](reference/parts/launcher.md).
+**More:** [Add a launcher](add-to-robot/05-launcher.md#robotjava-one-line), [Launcher](reference/parts/launcher.md).
 
 ### How do I add a turret that follows the goal?
 
@@ -1211,7 +1211,7 @@ public static class Turret {                                    // "turret" in t
 ```
 
 **Why:** the turret aims for the driver, and its limits keep the wires from twisting.
-**More:** [Lesson 9: the turret](tutorials/start/09-shooter-and-camera.md#6-a-turret-that-follows-it), [Turret](reference/parts/turret.md), [Camera](reference/parts/camera.md).
+**More:** [Add a turret: the turret](add-to-robot/06-turret.md), [Turret](reference/parts/turret.md), [Camera](reference/parts/camera.md).
 
 ### How do I fire only when aimed, at the right speed?
 
@@ -1230,7 +1230,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 
 **Why:** a shot fired before the turret is on target, or at the wrong speed, is a lost piece. For a
 turret that follows the goal, `isAimed()` means on the goal NOW. When the camera loses the goal, it is false.
-**More:** [Lesson 9](tutorials/start/09-shooter-and-camera.md#7-speed-from-distance-and-fire-only-when-aimed).
+**More:** [Add a camera](add-to-robot/07-camera.md#robotjava-one-line).
 
 ## Game pieces
 
@@ -1365,7 +1365,7 @@ table needs no line (`POLLEN` uses `pollen`). `tableFor` puts both NECTAR colors
 `NONE` and `UNKNOWN` (a kind not tuned yet) never change the table. `startTable` is the table before the
 robot knows the first piece. A button (D-pad right) can still pick another table until the next piece
 changes.
-**More:** [Launcher: shot tables](reference/parts/launcher.md), [Lesson 9: the next piece picks the table](tutorials/start/09-shooter-and-camera.md#12-extra-know-which-piece-fires-next).
+**More:** [Launcher: shot tables](reference/parts/launcher.md), [Add a launcher: the next piece picks the table](add-to-robot/05-launcher.md#know-which-piece-fires-next).
 
 ### How do I tune the piece sensors?
 
@@ -1402,7 +1402,7 @@ the robot tracks its own position on the field.
 ### How do I make the whole robot aim at the goal (no turret)?
 
 **Where:** `Controls.java`, inside `buttons(...)` (and `Tunables.java` for the numbers, below). The
-robot needs a camera with a [`goal(...)`](tutorials/start/09-shooter-and-camera.md#5-a-camera-that-knows-the-goal)
+robot needs a camera with a [`goal(...)`](add-to-robot/07-camera.md)
 (or odometry with a goal point). Do not use it with a turret that follows the goal. Turret-following and
 whole-robot aim are separate modes, so INIT stops with a message if both are there.
 
@@ -1420,7 +1420,7 @@ g1.rb.hold(robot.aimMode()::on, robot.aimMode()::off).says("hold: aim the robot 
 **Why:** the driver drives, and the robot keeps itself pointed at the goal. Start with hold-to-aim. When
 you let go, the robot stops turning by itself, so it never surprises anyone. The stick always wins, so
 the driver can take over at once. The toggle (commented out) keeps aiming after you let go.
-**More:** [Lesson 9: aim the whole robot](tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot).
+**More:** [Add a camera: aim the whole robot](add-to-robot/07-camera.md#controlsjava-its-buttons).
 
 ### How do I make the gamepad buzz when the aim is on target?
 
@@ -1434,7 +1434,7 @@ g2.rumbleWhenAimed();
 ```
 
 **Why:** the driver who fires watches the field, not the screen. The buzz tells the driver "now".
-**More:** [Lesson 9: feel the aim](tutorials/start/09-shooter-and-camera.md#11-feel-the-aim-a-buzz-when-on-target).
+**More:** [Add a camera: feel the aim](add-to-robot/07-camera.md#controlsjava-its-buttons).
 
 ### How do I keep aiming when the camera loses the goal?
 
@@ -1485,7 +1485,7 @@ takes the first one it finds of `Tunables.Aim.mirrorForRed`, `Tunables.Odometry.
 autonomous's `mirrorForRed()`. If it finds none, it uses `true` (a mirrored field). BIOBUZZ's turned
 field needs `false`: write it once, here. INIT shows the alliance and this choice. The numbers in
 `Tunables.Aim` are in the tuning menu too, so copy tuned values back into `Tunables.java`.
-**More:** [Lesson 9: when the camera loses the goal](tutorials/start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry), [Lesson 7: odometry](tutorials/start/07-odometry.md).
+**More:** [Add a camera: when the camera loses the goal](add-to-robot/07-camera.md#when-the-camera-loses-the-goal-the-odometry), [Add odometry](add-to-robot/09-odometry.md).
 
 ### How do I aim with the odometry only (no camera)?
 
@@ -1610,7 +1610,7 @@ to now, because the robot turned and moved since the camera took it. It works wi
 whole-robot aim, with a camera on the turret or on the body, or with the odometry alone. Tell it where
 the shooter and the camera are. The Driver Station says `Aim : moving shot: lead 12.3 deg, 18 in` while
 it leads.
-**More:** [Lesson 9: shooting while moving](tutorials/start/09-shooter-and-camera.md#14-extra-shooting-while-moving), [Aim](reference/parts/aim.md).
+**More:** [Add a camera: shooting while moving](add-to-robot/07-camera.md#shooting-while-moving), [Aim](reference/parts/aim.md).
 
 ### How do I use one shot table per game piece?
 
@@ -1654,7 +1654,7 @@ at ▶:** a plain `speedByDistance` table (named `main`) if there is one. If not
 Press Y until `> Table`, then pick the table you tune with the D-pad. Then copy its line into
 `Tunables.java`. To let the robot pick the table by itself, see
 [the next piece picks it](#how-do-i-let-the-next-piece-pick-the-shot-table).
-**More:** [Lesson 9: two shot tables](tutorials/start/09-shooter-and-camera.md#8-two-game-pieces-two-shot-tables), [Launcher](reference/parts/launcher.md).
+**More:** [Add a launcher: two shot tables](add-to-robot/05-launcher.md#two-kinds-of-pieces-two-shot-tables), [Launcher](reference/parts/launcher.md).
 
 ### Every shot is a bit short today. How do I trim the speed (a low battery)?
 
@@ -1706,7 +1706,7 @@ F x 1.10). Nobody has proven it on a real robot yet, so it is off: the box write
 When you need a trim every match, with a charged battery, the cause is the wheel or the balls, and the
 table is off. Make the trim part of the table (+3%: every speed x 1.03, `{48, 2550}` becomes
 `{48, 2627}`). Copy the lines into `Tunables.java`, and trim back to 0.
-**More:** [Lesson 9: speed trim and a low battery](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery), [Launcher](reference/parts/launcher.md#speed-trim-and-battery-compensation).
+**More:** [Add a launcher: speed trim and a low battery](add-to-robot/05-launcher.md#speed-trim-and-a-low-battery), [Launcher](reference/parts/launcher.md#speed-trim-and-battery-compensation).
 
 ### How do I add a hood to my launcher?
 
@@ -1818,7 +1818,7 @@ always see what it does. Double-tap D-pad down to clear both trims. A lift bring
 (gamepad 2 left Y). With a hood AND a lift, give one of them another stick
 ([move a button](#how-do-i-move-a-parts-button-to-another-button)). INIT says which part has it. Find the stops with the [Hood Finder](#how-do-i-find-my-hoods-stops-and-angles),
 then fill the table with the [Shot Tuner](#how-do-i-build-a-shot-table-speed-for-each-distance) (press Y until `> Hood`).
-**More:** [Lesson 9: a hood](tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle), [Hood](reference/parts/hood.md).
+**More:** [Add a launcher: a hood](add-to-robot/05-launcher.md#a-hood-the-shot-angle), [Hood](reference/parts/hood.md).
 
 ## Turrets and interlocks
 
@@ -2015,7 +2015,7 @@ public static Action scoreHigh(Robot r) {
 ```
 
 **Why:** each step starts when the one before it is done, and the driver can still drive the whole time.
-**More:** [Lesson 5: scoreHigh](tutorials/start/05-actions.md#2-scorehigh-line-by-line), [Action](reference/steps.md#action).
+**More:** [Actions.java: scoreHigh](five-files/04-actions-java.md#your-first-action), [Action](reference/steps.md#action).
 
 ### How do I repeat steps several times?
 
@@ -2055,7 +2055,7 @@ public static Action grabAndLift(Robot r) {
 ```
 
 **Why:** `then(a, b)` starts both parts in the same loop, so neither waits for the other.
-**More:** [Lesson 5: grabAndLift](tutorials/start/05-actions.md#3-grabandlift).
+**More:** [Actions.java: grabAndLift](five-files/04-actions-java.md#the-steps).
 
 ### How do I wait half a second (like sleep in Blocks)?
 
@@ -2084,7 +2084,7 @@ s.run("Open the claw", robot.claw::open)
 ```
 
 **Why:** `sleep()` stops the whole robot: no driving, and no other part moves. `waitSeconds` waits while everything keeps running.
-**More:** [Lesson 5: the rules](tutorials/start/05-actions.md#5-the-rules-every-action-follows), [Non-blocking code](guides/non-blocking.md).
+**More:** [Actions.java: the rules](five-files/04-actions-java.md#the-rules-every-action-follows), [Non-blocking code](guides/non-blocking.md).
 
 ### How do I wait until something is true?
 
@@ -2103,7 +2103,7 @@ public static Action lowerAndRelease(Robot r) {
 ```
 
 **Why:** every wait has a time limit, so a stuck part cannot freeze the action forever.
-**More:** [Lesson 5: the rules](tutorials/start/05-actions.md#5-the-rules-every-action-follows).
+**More:** [Actions.java: the rules](five-files/04-actions-java.md#the-rules-every-action-follows).
 
 ### How do I start an action from a button?
 
@@ -2117,7 +2117,7 @@ g2.x.press(Actions.grabAndLift(robot)).says("grab and lift");
 ```
 
 **Why:** the same button cancels it. A stick or button that moves the same part also stops it, so the driver always wins.
-**More:** [Lesson 5: start it from a button](tutorials/start/05-actions.md#4-start-it-from-a-button).
+**More:** [Actions.java: start it from a button](five-files/04-actions-java.md#start-it-from-a-button).
 
 ### How do I stop every running action?
 
@@ -2156,7 +2156,7 @@ public static Action deployIntake(Robot r) {
 **Why:** the library never moves anything in INIT, so a fold-out waits for ▶. This is the library's
 safety choice, because people are still next to the robot. The game rules would allow it (R103.B), but
 the robot must be still once INIT is done (G304.H).
-**More:** [Lesson 5: an action at ▶](tutorials/start/05-actions.md#7-an-action-when-the-opmode-starts).
+**More:** [Actions.java: an action at ▶](five-files/04-actions-java.md#an-action-when-the-opmode-starts).
 
 ### How do I use the same action in an autonomous?
 
@@ -2171,7 +2171,7 @@ s.start("Against our wall, facing the field", 0)
 ```
 
 **Why:** you write the move once, and use it in TeleOp and autonomous. The report says if it timed out.
-**More:** [Lesson 5: in an autonomous](tutorials/start/05-actions.md#6-the-same-action-in-an-autonomous).
+**More:** [Actions.java: in an autonomous](five-files/04-actions-java.md#use-it-in-an-autonomous).
 
 ## Autonomous
 
@@ -2603,7 +2603,7 @@ line, and y = inches away from your wall (negative = your half). Heading 0 = fac
 counterclockwise (left) is +. **Every number in your code is seen from your own drivers' wall**, whatever
 your alliance: start spots, `driveTo`, the goal point, the reset spot. Only the simulator's map and its
 scenario checks (`expect robot x ...`) use one fixed view, from the red wall. See the
-[field map](tutorials/start/07-odometry.md#1-why-odometry).
+[field map](add-to-robot/09-odometry.md#why-odometry).
 
 ### How do I add a goBILDA Pinpoint?
 
@@ -2619,7 +2619,7 @@ odometry(Odometry.pinpoint("pinpoint").robotSizeMm(430, 400).podsFromEdgesMm(284
 1. Measure with a tape across the frame, bumpers off. The library finds the robot's center from the size. Here it works out `offsetsMm(-84, -168)`: the forward pod is 84 mm right of the center, and the sideways pod is 168 mm behind it. The Odometry Tuner then measures the exact offsets, and you write `.offsetsMm(...)` in place of `.podsFromEdgesMm(...)`.
 
 **Why:** the Pinpoint must know where the pods are, so a turn on the spot does not look like a move.
-**More:** [Lesson 7: one line in Robot.java](tutorials/start/07-odometry.md#4-one-line-in-robotjava), [Pinpoint](modules/odometry.md#pinpoint).
+**More:** [Add odometry: one line in Robot.java](add-to-robot/09-odometry.md#robotjava-one-line), [Pinpoint](modules/odometry.md#pinpoint).
 
 ### How do I add a SparkFun OTOS?
 
@@ -2669,7 +2669,7 @@ public class OdometryTuner extends OdometryTunerOpMode {
 **Why:** the tuner checks which way each pod counts, and measures the offsets. Then set `Tunables.Odometry.checked = true`, or `driveTo` does nothing on the robot.
 It is its own small file, because each program in the Driver Station's list is one class. `robot()` makes
 it use your `Robot.java`, so it measures the same odometry line that autonomous uses.
-**More:** [Lesson 7: the Odometry Tuner](tutorials/start/07-odometry.md#5-the-odometry-tuner), [Finders](tuning/09-odometry-tuner.md).
+**More:** [Odometry Tuner: the Odometry Tuner](tuning/09-odometry-tuner.md), [Finders](tuning/09-odometry-tuner.md).
 
 ### How do I drive to a point on the field?
 
@@ -2688,7 +2688,7 @@ s.start("Against our wall, in the left corner tile, facing the field", -56, -61,
 It replaces `.move(...)`: you give a place on the field, not a distance.
 **Why:** `driveTo` keeps checking where the robot is. So a bump or a wheel slip does not matter, and the robot ends on the point.
 On the robot, it works only after the [Odometry Tuner](#how-do-i-tune-the-odometry) and `checked = true` in `Tunables.java`, section `Odometry`.
-**More:** [Lesson 7: drive to field points](tutorials/start/07-odometry.md#6-drive-to-field-points), [driveTo](building-autos/04-drive-to-points.md#drive-to-a-point-driveto).
+**More:** [Drive to points on the field: drive to field points](building-autos/04-drive-to-points.md#drive-to-a-point-driveto), [driveTo](building-autos/04-drive-to-points.md#drive-to-a-point-driveto).
 
 ### How do I get around field elements on the way to a spot?
 
@@ -2738,7 +2738,7 @@ show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in, heading %.0f",
 ```
 
 **Why:** to check the odometry, push the robot by hand and watch the numbers.
-**More:** [robot.pose()](modules/odometry.md#robotpose). (TeleOp also starts where autonomous ended: [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended).)
+**More:** [robot.pose()](modules/odometry.md#robotpose). (TeleOp also starts where autonomous ended: [Add odometry](add-to-robot/09-odometry.md#teleop-starts-where-autonomous-ended).)
 
 ### How do I use the robot's position in an action?
 
@@ -2813,7 +2813,7 @@ public static Action poseHereThenIntake(Robot r) {
 **Why:** with a pose, the aim's odometry backup and field-centric "forward" work again. The 1 s hold
 means a bump of the button does nothing. Write all the spots from your own drivers' wall, like every
 field number in your code.
-**More:** [Lesson 7: TeleOp starts where autonomous ended](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended), [resetPose()](reference/robot-java.md#robotdefinition).
+**More:** [Add odometry: TeleOp starts where autonomous ended](add-to-robot/09-odometry.md#teleop-starts-where-autonomous-ended), [resetPose()](reference/robot-java.md#robotdefinition).
 
 ## Pedro paths
 
@@ -2866,7 +2866,7 @@ s.start("Against our wall, in the left corner tile, facing the field", -56, -61,
 ```
 
 **Why:** each `follow` brakes to a stop at its end. Start the next path where the last one ended.
-**More:** [Lesson 8: your first path](tutorials/start/08-paths-with-pedro.md#5-write-your-first-path), [follow](modules/pedro.md#follow-the-autonomous-step).
+**More:** [Add Pedro paths: your first path](building-autos/05-pedro-paths.md#actionsjava-and-autos-make-paths-then-follow-them), [follow](modules/pedro.md#follow-the-autonomous-step).
 
 ### How do I drive two paths with no stop, slow down, or hold at the end?
 
@@ -3050,7 +3050,7 @@ robot.lights.otherwise(LightColor.OFF);                                         
 - your own test (`() -> robot.lift.position() > 1000`, if your robot has a lift)
 
 Blinking is at most 5 times a second, and the light never changes faster than every 0.1 s (FTC rule R202 J).
-**More:** [Lights](reference/parts/lights.md), [lambdas](tutorials/start/05-actions.md).
+**More:** [Lights](reference/parts/lights.md), [lambdas](five-files/04-actions-java.md).
 
 ### How do I show the alliance on the light before the match?
 
@@ -3194,7 +3194,7 @@ for 1 second**, and the tuning menu opens. D-pad up/down chooses a number, and r
 `Tunables.java`.** A value saved only on the hub is lost with a new Control Hub, and your teammates cannot see it.
 
 **Why:** you see the effect at once, and you do not have to build and install again.
-**More:** [Tuning](tuning/16-live-tuning.md#open-it-and-change-a-number), [Lesson 4: tune the lift live](tutorials/start/04-lift-and-claw.md#6-tune-the-lift-live).
+**More:** [Tuning](tuning/16-live-tuning.md#open-it-and-change-a-number), [Add a lift: tune the lift live](add-to-robot/01-lift.md#4-check-it-then-tune-it).
 
 ### How do I tune the drive for autonomous?
 
@@ -3371,7 +3371,7 @@ the simulator's **Edit robot** mode. Drag and size each part on the 3D robot, th
 A script (a scenario file) presses buttons and checks the robot for you. The easy way is to **record**
 it. In the simulator, click **Tests > Record a test**, drive, and click **Stop recording**. Keep the
 ticked checks and click **Save**. The simulator then writes `simulator/scenarios/NAME.sim` for you
-([start lesson 10](tutorials/start/10-test-your-robot-code.md)). Or write one by hand, for example
+([Record a test](tests/01-record-a-test.md)). Or write one by hand, for example
 `simulator/scenarios/intake.sim` (the library runs this same file as a test: `sim/scenarios/cookbook-intake.sim`):
 
 ```text
@@ -3396,11 +3396,11 @@ It runs your own code (`../TeamCode`, next to the library in your robot project)
 A scenario uses the FTC button names, which can differ from the Java names. `g2.rt`, `g2.lb`, `g2.a` are
 the same, but `g2.dpadUp` is `g2.dpad_up` and `g2.leftStickY` is `g2.left_stick_y`.
 
-**More:** [Start lesson 10: Test your robot code](tutorials/start/10-test-your-robot-code.md), [Scenario files](guides/simulator.md#scenario-files-test-without-a-browser) (every command and button name).
+**More:** [Record a test](tests/01-record-a-test.md), [Scenario files](guides/simulator.md#scenario-files-test-without-a-browser) (every command and button name).
 
 ## Not here?
 
 - Every class and method: the [reference](reference/README.md) and the [module pages](../README.md#what-is-inside).
 - Something goes wrong: [Troubleshooting](troubleshooting.md).
-- Learn it step by step: the [lessons](tutorials/README.md).
+- Learn it step by step: [The five files](five-files/README.md), then [Add to your robot](add-to-robot/README.md).
 - A question this page does not answer: [tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).

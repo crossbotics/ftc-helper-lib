@@ -8,7 +8,7 @@ minutes: 10
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.28.0
-docs: [tutorials/start/03-buttons.md#6-the-button-map-init-and-guide]
+docs: [controls/03-see-and-feel.md#the-button-map-and-the-teleops-init-screen]
 ---
 
 ## Why

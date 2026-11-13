@@ -63,7 +63,8 @@ Start with the row that matches the question. Paths are inside `ftc-helper-lib/`
 | One part (lift, arm, claw, intake, turret, launcher...): its lines, numbers, commands, buttons | `docs/reference/parts/<part>.md` |
 | Robot.java, Tunables.java, Controls.java, auto steps, look-up | `docs/reference/` |
 | Every public class and method (code written without the five files) | `docs/modules/<package>.md` |
-| Learning step by step | `docs/tutorials/` (`start/` is the main track; the numbered ones go "under the hood") |
+| Testing: record and run simulator tests, checks before practice and every match | `docs/tests/` |
+| Learning step by step | The walkthrough is the sections: setup, pick-your-start, five-files, add-to-robot, controls, building-autos, tuning, tests. `docs/tutorials/` builds the same things by hand ("under the hood") |
 | The simulator, the parts catalog, profiles, interlocks, testing, a new season | `docs/guides/` |
 | How a design was chosen (rarely needed) | `docs/design/` |
 | Coming from Blocks, or from last season | `docs/blocks-to-java.md`, `docs/from-last-season.md` |

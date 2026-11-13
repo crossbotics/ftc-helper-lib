@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a drive program that shows its loop speed, with buttons to turn bulk reads and debug telemetry on and off.
-The main track does bulk reads for you. This lesson shows how they work inside.
+The main track does bulk reads for you. This tutorial shows how they work inside.
 
 **You will learn:** how to measure your loop speed, how bulk reads make it faster, and how to lay out
 telemetry so drivers find what they need.

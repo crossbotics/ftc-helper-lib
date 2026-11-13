@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a lift that goes to three heights on buttons and holds there, with gains you can change from the gamepad.
-In the main track, the lift part has its PID built in: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+In the main track, the lift part has its PID built in: [Add a lift](../add-to-robot/01-lift.md).
 
 **You will learn:** what a PID controller does, how to send a lift to a height with `PidController` and
 hold it there, and how to tune it live from the gamepad.

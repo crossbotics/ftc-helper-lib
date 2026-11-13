@@ -22,7 +22,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
  */
 public class PedroRecipes {
 
-    /** Lesson 7's odometry robot plus the follower line (lesson 8). */
+    /** The odometry robot (docs: Add odometry) plus the follower line (docs: Add Pedro paths). */
     public static class Robot extends RobotDefinition {
         public Intake intake;
 

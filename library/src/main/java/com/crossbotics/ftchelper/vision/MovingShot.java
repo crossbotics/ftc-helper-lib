@@ -42,7 +42,7 @@ import java.util.Locale;
  * <p>What it leaves out (small for an FTC robot): the turret's own turn during the picture's age, air
  * drag on the piece, and a change of the robot's speed during the flight.
  *
- * Docs: docs/modules/vision.md (section "MovingShot"), docs/tutorials/start/09-shooter-and-camera.md
+ * Docs: docs/modules/vision.md (section "MovingShot"), docs/add-to-robot/05-launcher.md
  */
 public final class MovingShot {
     // Where the shooter is from the robot's center (inches, forward and left), and whether a turret aims.

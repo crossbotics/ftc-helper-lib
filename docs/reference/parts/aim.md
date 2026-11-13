@@ -3,7 +3,7 @@
 The part that says where the goal is, for everything that aims: `robot.aim()`. **It uses the camera first,
 and the odometry as a backup.**
 A following turret, a launcher's speed from distance, whole-robot aim and the aim buzz all use it. Learn it
-step by step: [lesson 9, the shooter and the camera](../../tutorials/start/09-shooter-and-camera.md).
+step by step: [Add a camera](../../add-to-robot/07-camera.md).
 
 ## In Robot.java
 
@@ -216,7 +216,7 @@ For a robot with no turret, with aim mode off:
 ## Shooting on the move
 
 Turn it on with `shootOnMove = true`. **It is off by default: tune it on the real robot first**
-([lesson 9, section 14](../../tutorials/start/09-shooter-and-camera.md#14-extra-shooting-while-moving)).
+([Add a camera: Shooting while moving](../../add-to-robot/07-camera.md#shooting-while-moving)).
 
 - A piece keeps the robot's speed. So the goal every part gets (`goal()`, the turret, `isAimed()`, the
   launcher's distance) becomes the **virtual goal**: the goal - the shooter's speed x `flightSec`

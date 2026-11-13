@@ -185,7 +185,7 @@ Do these in order. Each one catches a different kind of problem.
    To run one file: `./gradlew :sim:scenario -Pfile=../simulator/scenarios/main-teleop.sim`. The command
    first remakes the simulator robot file from `Robot.java` (the robot file format can change with the
    library). With no tests yet, run each autonomous in the simulator by hand (the **Simulator** button, or
-   `./gradlew :sim:run`) and read its report. Or record a test ([start lesson 10](tutorials/start/10-test-your-robot-code.md)).
+   `./gradlew :sim:run`) and read its report. Or record a test ([Record a test](tests/01-record-a-test.md)).
 4. **New simulator buttons:** a new library version can bring new ones. The Gradle sync after the update
    adds the ones you do not have yet (it never replaces yours).
 5. **Install the app on the robot** (the green Run button, with the Control Hub connected).

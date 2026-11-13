@@ -10,7 +10,7 @@ import java.util.Locale;
 /**
  * The Pedro bot's TeleOp: the intake's own buttons and the robot's place on the field on the Driver
  * Station. The same as the Odometry Bot's, without its park drive.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/07-odometry/#7-teleop-starts-where-autonomous-ended
+ * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/09-odometry/#teleop-starts-where-autonomous-ended
  */
 @TeleOp(name = "Pedro Bot TeleOp", group = "Examples")
 @Disabled

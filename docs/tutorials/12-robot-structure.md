@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a whole robot program (drive, lift, claw) split into small classes, with a TeleOp and an autonomous that share them.
-The main track gives you this structure ready-made: [The robot in five files](start/01-robot-in-five-files.md).
+The main track gives you this structure ready-made: [The five files](../five-files/README.md).
 
 **You will learn:** how to split a real robot program into a `Robot` class and one class per mechanism
 (a "subsystem"). Then TeleOp and autonomous share the same code and stay short.

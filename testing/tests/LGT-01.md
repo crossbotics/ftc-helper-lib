@@ -8,7 +8,7 @@ minutes: 20
 needs: [lights]
 kit_bots: []
 since: v0.17.0
-docs: [tutorials/start/09-shooter-and-camera.md#13-a-light-for-the-drivers, reference/parts/lights.md]
+docs: [add-to-robot/08-lights.md#controlsjava-the-rules, reference/parts/lights.md]
 ---
 
 ## Why
@@ -24,7 +24,7 @@ rule R202 J).
 ## Setup
 
 - `lights = add(Lights.gobilda("light"));` or `Lights.blinkin("blinkin")` in `Robot.java`.
-- Rules in `Controls.java`, for example the five lines in lesson 9 section 13.
+- Rules in `Controls.java`, for example the rules in [Add lights: the rules](../../docs/add-to-robot/08-lights.md#controlsjava-the-rules).
 - Simulator: the light is a dot on the robot.
 
 ## Steps

@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a program that moves an arm with the stick and opens and closes a claw with buttons.
-The main track sets up motors and servos for you: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+The main track sets up motors and servos for you: [Add a lift](../add-to-robot/01-lift.md).
 
 **You will learn:** how to get a motor and a servo from the robot configuration, how to set them up in
 one readable chain, how to read an encoder, how to limit a servo to a safe range, and what to do with a

@@ -8,9 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.Locale;
 
 /**
- * Lesson 7's TeleOp: the intake's own buttons, the robot's place on the field on the Driver Station, and
+ * The odometry robot's TeleOp: the intake's own buttons, the robot's place on the field on the Driver Station, and
  * a drive to the park spot by itself.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/07-odometry/#7-teleop-starts-where-autonomous-ended
+ * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/09-odometry/#teleop-starts-where-autonomous-ended
  */
 @TeleOp(name = "Odometry Bot TeleOp", group = "Examples")
 @Disabled

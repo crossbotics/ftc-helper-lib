@@ -124,7 +124,7 @@ public final class SimNewRobot {
         }
         System.out.println("Next: read the TODO lines in Robot.java, then try it in the simulator: in Android Studio, pick "
                 + "Simulator in the list next to the green Run button and click Run (or ./gradlew :sim:run). "
-                + "Tutorial: docs/tutorials/start/01-robot-in-five-files.md");
+                + "Tutorial: docs/five-files/README.md");
     }
 
     /**
@@ -458,7 +458,7 @@ public final class SimNewRobot {
         }
         sb.append(");\n");
         if (odometry != null) {
-            sb.append("        // TODO the Odometry Tuner (lesson 7) measures where the pods / sensor sit, then set\n");
+            sb.append("        // TODO the Odometry Tuner (Tune and check) measures where the pods / sensor sit, then set\n");
             sb.append("        //      Tunables.Odometry.checked = true\n");
             sb.append("        odometry(").append(odometry).append(");\n");
         }

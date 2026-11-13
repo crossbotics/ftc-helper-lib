@@ -4,12 +4,12 @@
 
 Read this page if you have made programs with blocks (Scratch, FTC Blocks, or similar) but not
 with Java. Each block you know has a place in the robot's five files. Come back to this page with
-[Lesson 3: Buttons](tutorials/start/03-buttons.md).
+[Controls.java](five-files/03-controls-java.md).
 
 **Before this:** [Set up](setup/README.md) (if you are new to Android Studio). Read this
 page **before** the [Quick start](quick-start.md): the Quick start gives you the five files this page
 talks about. **The reading order:** [Set up](setup/README.md), [Read Java and make your first edit](start-from-zero.md), then this page, then the Quick start, then
-[Lesson 1](tutorials/start/01-robot-in-five-files.md) and lessons 2 to 6 (then the lessons your robot needs).
+[The five files](five-files/README.md), then [Add to your robot](add-to-robot/README.md) (only the parts your robot needs).
 
 ## The key idea: you never write the loop
 
@@ -37,8 +37,8 @@ protected void buttons(Robot robot, Pad g1, Pad g2) {
 
 **Why it is built this way:** in one loop, many jobs share the robot. If one job stops to wait, the
 whole robot stops: no driving, no other button. So **a job must never wait.** Waits happen only inside
-an **Action** (a list of steps that runs a little every loop, [lesson 5](tutorials/start/05-actions.md))
-and in **autonomous steps** ([lesson 6](tutorials/start/06-first-autonomous.md)).
+an **Action** (a list of steps that runs a little every loop, [Actions.java](five-files/04-actions-java.md))
+and in **autonomous steps** ([The autos](five-files/05-autos.md)).
 
 ## The map: block to Java
 
@@ -60,7 +60,7 @@ and in **autonomous steps** ([lesson 6](tutorials/start/06-first-autonomous.md))
 | `joystick` (a reporter block) | `g2.leftStickY.use(robot.lift::manual);` (the stick's value, -1 to 1, every loop) | `Controls.java` |
 | `if <sensor> then rumble` | `g2.rumbleWhen(robot.intake::isRunning);` (a buzz each time it becomes true) | `Controls.java` |
 | `say` / `show variable` | `show("Lift ticks", robot.lift::position);` (the value on the Driver Station, every loop) | `Controls.java`, in `buttons(...)` |
-| `x position` / `y position` / `direction` (where am I?) | `robot.pose()`: `.x`, `.y` (inches) and `.headingDeg`, from the odometry; show it with `show("Where", robot::pose);` ([Lesson 7](tutorials/start/07-odometry.md)) | `Controls.java`, autonomous |
+| `x position` / `y position` / `direction` (where am I?) | `robot.pose()`: `.x`, `.y` (inches) and `.headingDeg`, from the odometry; show it with `show("Where", robot::pose);` ([Add odometry](add-to-robot/09-odometry.md)) | `Controls.java`, autonomous |
 | `go to x: y:` | `s.driveTo("To the goal", -30, -30, 45, 0.6)` (x, y, heading, power), with odometry | `autos/` |
 | `if <sensor> then ...` | not an `if`. Pick one: `g2.rumbleWhen(...)` (a buzz when it becomes true), `.waitUntil(...)` in an Action (wait for it, then go on), or a `hold(...)` (runs while a button is held) | `Controls.java`, `Actions.java` |
 | `if ... else` inside an action | **not yet** in an Action. Use two actions on two buttons, one for each case | `Actions.java`, `Controls.java` |
@@ -77,7 +77,7 @@ Notes on the table:
 - **Sticks give numbers.** Up and right are `+`, from -1 to 1. `robot.lift::manual` gets that number
   every loop.
 - **You can change a number in `Tunables.java` live:** in the PRACTICE profile, hold GUIDE for 1 s to
-  open the tuning menu ([Lesson 1](tutorials/start/01-robot-in-five-files.md#2-tunablesjava-the-numbers)).
+  open the tuning menu ([Tunables.java](five-files/02-tunables-java.md)).
   Then copy the good value back into `Tunables.java`.
 - `atStart(...)` comes from the example robot
   [`flywheelbot/Robot.java`](../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java):
@@ -95,7 +95,7 @@ The FTC Blocks editor has blocks for the robot itself. Each one has a place in J
 | `repeat while opModeIsActive` | nothing: the library's loop | |
 | `telemetry.addData("key", value)` and `telemetry.update` | `show("Lift ticks", robot.lift::position);` once, in `buttons(...)`. The library shows it every loop as `Lift ticks : 350`. You need no `update` | `Controls.java` |
 | `gamepad1.left_stick_y` (and the other sticks) | driving is built in. For your own part: `g2.leftStickY.use(robot.lift::manual);` | `Controls.java` |
-| `if gamepad2.y then ...` | `g2.y.press(...)`, one line, once ([lesson 3](tutorials/start/03-buttons.md)) | `Controls.java` |
+| `if gamepad2.y then ...` | `g2.y.press(...)`, one line, once ([Controls.java](five-files/03-controls-java.md)) | `Controls.java` |
 | `set servo.Position to 0.75` | a named position in `Tunables.java` (`open = 0.20, closed = 0.75` in `Tunables.Claw`), then `robot.claw.close()`; any servo: `robot.intakeDeploy.goTo("deployed")` | `Tunables.java`, then `Controls.java` or `Actions.java` |
 | `set motor.Direction to REVERSE` | drive motors: `.reversed("front_left", "back_left")` in the `drive(...)` line; a part: `.reversed()` on its line | `Robot.java` |
 | `set motor.Power to 1` | a command of the part: `robot.intake.in()`, `robot.lift.goTo("high")` | `Controls.java`, `Actions.java` |
@@ -123,7 +123,7 @@ other button, no safety checks. A `while (...) { }` loop in a job does the same,
 Driver Station then shows a warning like this:
 
 ```text
-G2:DPAD_LEFT button job took 512 ms: the whole robot stopped that long. No sleep() or while loop in a button job: use an Action with waitSeconds (lesson 5)
+G2:DPAD_LEFT button job took 512 ms: the whole robot stopped that long. No sleep() or while loop in a button job: use an Action with waitSeconds (docs: Actions.java)
 ```
 
 (The warning starts with the button, `G2:DPAD_LEFT` here. For a job on a gesture or a "buzz when", it
@@ -191,7 +191,7 @@ show("Count", () -> count);       // the Driver Station shows "Count : 3"
 **Why a field, not a variable inside `buttons(...)`:** a variable made inside `buttons(...)` is gone
 when it ends (at INIT), and Java does not let a job change it. A field stays as long as the TeleOp runs.
 
-**Check it in a simulator test** ([start lesson 10](tutorials/start/10-test-your-robot-code.md)): a `show(...)` line is on the screen as `Label : value`. So
+**Check it in a simulator test** ([Record a test](tests/01-record-a-test.md)): a `show(...)` line is on the screen as `Label : value`. So
 after one press of X, check `expect screen has "Count : 1"`. Check a `true`/`false` value the same way:
 `expect screen has "Intake on : true"` ([Scenario files](guides/simulator.md#scenario-files-test-without-a-browser)).
 
@@ -227,7 +227,7 @@ after one press of X, check `expect screen has "Count : 1"`. Check a `true`/`fal
 ## Next
 
 - [Quick start](quick-start.md), if you have not done it yet: get the five files and drive. Then
-  [Lesson 1](tutorials/start/01-robot-in-five-files.md).
-- [Lesson 3: Buttons](tutorials/start/03-buttons.md): every kind of button job.
-- [Lesson 5: Actions](tutorials/start/05-actions.md): steps that wait, safely.
+  [The five files](five-files/README.md).
+- [Controls.java](five-files/03-controls-java.md): every kind of button job.
+- [Actions.java](five-files/04-actions-java.md): steps that wait, safely.
 - [Controls](controls/README.md): every way a button can work.

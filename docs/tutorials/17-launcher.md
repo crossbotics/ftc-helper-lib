@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a shooter that spins a flywheel, sets the hood angle from the distance, and feeds a piece only when everything is ready.
-The main track builds a shooter with less code: [A shooter, a camera and a turret](start/09-shooter-and-camera.md).
+The main track builds a shooter with less code: [Add a launcher](../add-to-robot/05-launcher.md).
 
 **You will learn:** how the code controls a flywheel shooter (speed, ready, feeding), how to build a
 shot table from real shots, and how `Launcher` feeds a piece only when everything is ready.
@@ -70,7 +70,7 @@ To measure the hood, move the servo with the Hardware Check. Write down the raw 
 and the highest angle. Then measure those angles (a phone level app works). Any part that goes to an
 angle can be the hood (an [`AngleDevice`](../modules/mechanism.md#angledevice)). In the robot in five
 files, the [`Hood`](../reference/parts/hood.md) module does all this from `Tunables.Hood`, for a servo or
-a motor, with a Hood Finder ([lesson 9](start/09-shooter-and-camera.md#a-hood-the-shot-angle)).
+a motor, with a Hood Finder ([Add a launcher](../add-to-robot/05-launcher.md#a-hood-the-shot-angle)).
 
 ## 4. Fill the shot table
 

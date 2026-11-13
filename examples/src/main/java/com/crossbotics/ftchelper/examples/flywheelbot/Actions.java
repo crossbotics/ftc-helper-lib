@@ -5,7 +5,7 @@ import com.crossbotics.ftchelper.robot.Action;
 /**
  * Example robot 1, file 4 of 5: steps that use parts together, used by a button, an autonomous,
  * or at ▶.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/05-actions/
+ * more: https://crossbotics.com/ftc-helper/docs/five-files/04-actions-java/
  */
 public class Actions {
 

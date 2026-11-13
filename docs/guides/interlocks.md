@@ -315,7 +315,7 @@ per turn: 3.2 counts per mm (the lifter design log).
 - `stowed` 44 (13.7 mm): the folded claw clears the tiles.
 - `flower` 1330 (415.1 mm): the ball over the FLOWER's top opening (wrist at 122.8 degrees).
 - `max` 1350: a little under the hard stop at 425.1 mm (1362). `min` 0: the bottom stop.
-- `kP` to `tolerance`: examples. Tune your own ([lesson 4](../tutorials/start/04-lift-and-claw.md)).
+- `kP` to `tolerance`: examples. Tune your own ([Add a lift](../add-to-robot/01-lift.md)).
 
 **The wrist** (`Tunables.Wrist`) uses servo positions. The goBILDA 2000 servo turns 0.15 degrees per
 microsecond of signal (300 degrees over 500-2500 us). The hub's normal signal is 600-2400 us, so 0 to 1
@@ -335,8 +335,8 @@ geared together. The fingers turn 1.2 times the servo's angle. Open: fingers at 
 Closed on a POLLEN: -10 degrees (servo -8). A NECTAR stops them at 0. The positions around 0.50 are
 examples: find yours with the Servo Finder.
 
-**The hood** works like the turret robot's ([lesson 9](../tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle)).
-[Lesson 9, section 9](../tutorials/start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry)
+**The hood** works like the turret robot's ([Add a launcher](../add-to-robot/05-launcher.md#a-hood-the-shot-angle)).
+[Add a camera](../add-to-robot/07-camera.md#when-the-camera-loses-the-goal-the-odometry)
 explains the aim's goal point (`goalX`, `goalY`). `shooterForwardIn = 1`: the turret's axis is 1 in
 forward of the robot's center (turret v8.1GB). It matters only when the robot shoots on the move, which is
 off until someone tests it on the real robot.

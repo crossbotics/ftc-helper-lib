@@ -85,7 +85,7 @@ public static class Launcher {                                  // "launcher" in
 | `kD` | the hub's speed control: brakes changes | hub units | 0 | no | Flywheel Finder | the same |
 | `kF` | the hub's speed control: the steady power for a speed | hub units | from the parts catalog: 32767 / the motor's top speed in counts per second (6000 RPM motor: 11.7) | no | Flywheel Finder | the same |
 | `nominalVolts` | the battery voltage the gains were found at (battery compensation), 9 to 14 | volts | 12.8 (INIT notes that it assumes this) | no | Flywheel Finder | after the Flywheel Finder |
-| `batteryCompensation` | with a written `kF`: scales F by the battery voltage (nobody has proven it on a real robot yet). Without your own `kF` it stays off, with a note | true/false | false | no | none | to try it: `true`, then the 4-shot test (lesson 9) |
+| `batteryCompensation` | with a written `kF`: scales F by the battery voltage (nobody has proven it on a real robot yet). Without your own `kF` it stays off, with a note | true/false | false | no | none | to try it: `true`, then the 4-shot test ([below](#speed-trim-and-battery-compensation)) |
 | `trimStepPercent` | one speed trim step | percent | 1 | no | none | the drivers want bigger steps |
 | `trimMaxPercent` | the most speed trim, at most 50 | percent | 15 | no | none | you need more trim (better: fix the table) |
 | `redTrimPercent` | makes every shot speed this much faster on the RED alliance (the field halves differ a little) | percent | 0 | no | test, at an event | shots on one half land short or long |

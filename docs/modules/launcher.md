@@ -10,7 +10,7 @@ Parts for a robot that shoots game pieces: a **flywheel** (a fast-spinning wheel
 piece), a **hood** (a curved plate a servo tilts to set the shot angle), a **feeder** (it pushes one
 piece into the flywheel) and a **turret** (it turns the shooter to aim). Each part works alone. The
 `Launcher` joins them. The [robot in five files](../reference/parts/launcher.md) builds its `Launcher` on
-these parts, so start there ([lesson 9](../tutorials/start/09-shooter-and-camera.md)). Use this
+these parts, so start there ([Add a launcher](../add-to-robot/05-launcher.md)). Use this
 page to build a shooter by hand (tutorial 17). Speeds are in **RPM** (turns per minute).
 
 | Class | Use it to |

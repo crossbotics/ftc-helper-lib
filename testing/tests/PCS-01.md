@@ -23,7 +23,7 @@ many mounts.
 
 ## Setup
 
-- A `Pieces` or `PieceSensor` line in `Robot.java` ([lesson 9 section 12](../../docs/tutorials/start/09-shooter-and-camera.md#12-extra-know-which-piece-fires-next)).
+- A `Pieces` or `PieceSensor` line in `Robot.java` ([Add a launcher: know which piece fires next](../../docs/add-to-robot/05-launcher.md#know-which-piece-fires-next)).
 - The Piece Tuner file for your robot ([recipe](../../docs/cookbook.md#how-do-i-tune-the-piece-sensors)).
 - One of each game piece.
 

@@ -14,7 +14,7 @@ The folders are in the library, in
 | Your robot has | Start from | What is in it |
 | --- | --- | --- |
 | a mecanum drive and an intake | [`quickstart`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/quickstart) | the smallest robot with a part. A `// STEP` mark on each line to change |
-| a mecanum drive, an intake, a lift and a claw | [`lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot) | the robot of the main-track lessons, and its Drive Tuner |
+| a mecanum drive, an intake, a lift and a claw | [`lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot) | the example robot of The five files and Add to your robot, and its Drive Tuner |
 | a tank drive and a flywheel shooter | [`flywheelbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot) | an intake, a deploy servo, a flywheel, a servo feeder and a webcam that aims the whole robot |
 | a mecanum drive with a turret and a camera | [`turretbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot) | a Limelight that the turret follows, a hood, a folding claw, and two finders |
 | a mecanum drive with odometry (Pinpoint, OTOS or dead wheels) | [`odometrybot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot) | autos that drive to field points, and the Odometry Tuner |

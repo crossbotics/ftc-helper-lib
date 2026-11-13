@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
- * The lesson robot, file 5 of 5: an autonomous. Hold the piece, drive to the goal, score, and
+ * The example robot (lessonbot), file 5 of 5: an autonomous. Hold the piece, drive to the goal, score, and
  * always park in the last 3 seconds.
  * more: https://crossbotics.com/ftc-helper/docs/building-autos/02-put-steps-together/
  */

@@ -43,7 +43,7 @@ import java.util.function.Supplier;
  *
  * <p>Nothing moves in INIT: the modules make their hardware then, and move only after START.
  *
- * Docs: docs/reference/robot-java.md. Tutorial: docs/tutorials/start/01-robot-in-five-files.md
+ * Docs: docs/reference/robot-java.md. Tutorial: docs/five-files/README.md
  */
 public abstract class RobotDefinition {
     private Drive drive = null;

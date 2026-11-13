@@ -5,7 +5,7 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT
 /**
  * goBILDA starter bot, file 2 of 5: the numbers, one per line. The launcher's come from goBILDA's
  * code. DEFAULT = the library's default (in brackets).
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/01-robot-in-five-files/#2-tunablesjava-the-numbers
+ * more: https://crossbotics.com/ftc-helper/docs/five-files/02-tunables-java/
  */
 public class Tunables {
     public static class Drive {

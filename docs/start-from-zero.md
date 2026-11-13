@@ -60,7 +60,7 @@ twenty more errors below it, and they all go away with the first fix.
 
 ### Java words
 
-You meet these words in the code, in these docs, and again in the lessons.
+You meet these words in the code, and again in these docs.
 
 - **variable:** a name that holds a value, like a box with a label. `maxPower` holds `0.4`.
 - **`double`:** a kind of variable that holds a number with a decimal point (`0.4`, `96`).

@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a test program that shows every kind of button job on telemetry.
-The main track puts buttons in one file for you: [Buttons](start/03-buttons.md).
+The main track puts buttons in one file for you: [Controls.java](../five-files/03-controls-java.md).
 
 **You will learn:** every kind of button job (press, hold, release, toggle, triggers), how to give the
 driver feedback with rumble, and how to step through a list with the D-pad. You also learn why the

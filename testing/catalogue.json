@@ -300,12 +300,12 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "6-a-turret-that-follows-it"
+     "path": "docs/add-to-robot/06-turret.md",
+     "anchor": ""
     },
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "check-it-on-the-robot"
+     "path": "docs/add-to-robot/05-launcher.md",
+     "anchor": "4-check-it-then-tune-it"
     }
    ],
    "file": "testing/tests/AIM-01.md",
@@ -330,7 +330,7 @@
        "`Turret.motor(...).gearRatio(...).follows(camera)` in `Robot.java`, `Tunables.Turret` with `min`, `max`.",
        "A goal tag (AprilTag) you can see: the field, or a printed tag at the right height.",
        "The turret at its `startAngle` before INIT (by default 0 = straight forward; a mark or a jig helps), unless it has a home switch ([TUR-01](repo:testing/tests/TUR-01.md)) or an absolute encoder. TeleOp started within 5 minutes of another program starts from the angle that program ended at.",
-       "Simulator: lesson 9's turret robot (`turretbot`) commands, then \"TurretBot TeleOp\"."
+       "Simulator: the turret robot (`turretbot`) commands ([Add a camera: Try it in the simulator](repo:docs/add-to-robot/07-camera.md#try-it-in-the-simulator)), then \"TurretBot TeleOp\"."
       ]
      }
     ],
@@ -393,8 +393,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "9-when-the-camera-loses-the-goal-the-odometry"
+     "path": "docs/add-to-robot/07-camera.md",
+     "anchor": "when-the-camera-loses-the-goal-the-odometry"
     }
    ],
    "file": "testing/tests/AIM-02.md",
@@ -474,8 +474,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "10-no-turret-aim-the-whole-robot"
+     "path": "docs/add-to-robot/07-camera.md",
+     "anchor": "controlsjava-its-buttons"
     }
    ],
    "file": "testing/tests/AIM-03.md",
@@ -498,7 +498,7 @@
       "ul": [
        "A camera with `.goal(...)`, or odometry with `Tunables.Aim.goalX`, `goalY`.",
        "In `Controls.java`: `g1.rb.toggle(robot.aimMode()).says(\"aim the robot at the goal on/off\").rumble();`",
-       "Simulator: lesson 9's `flywheelbot` commands, then \"FlywheelBot TeleOp\"."
+       "Simulator: the `flywheelbot` commands ([Add a camera: Try it in the simulator](repo:docs/add-to-robot/07-camera.md#try-it-in-the-simulator)), then \"FlywheelBot TeleOp\"."
       ]
      }
     ],
@@ -580,7 +580,7 @@
      {
       "ul": [
        "A robot with `goal(\"BLUE SCORING\", \"RED SCORING\")` on its camera. Its TeleOp.",
-       "A HIVE (or its two CELL tag groups, tags 30-37 for red), or the simulator: lesson 9's turret robot ([the commands](repo:docs/tutorials/start/09-shooter-and-camera.md#try-it-in-the-simulator))."
+       "A HIVE (or its two CELL tag groups, tags 30-37 for red), or the simulator: the turret robot `turretbot` ([the commands](repo:docs/add-to-robot/07-camera.md#try-it-in-the-simulator))."
       ]
      }
     ],
@@ -805,8 +805,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/03-buttons.md",
-     "anchor": "7-pause-with-back-and-the-other-library-buttons"
+     "path": "docs/controls/04-move-library-buttons.md",
+     "anchor": "every-library-button"
     },
     {
      "path": "docs/controls/04-move-library-buttons.md",
@@ -977,8 +977,8 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/02-drive.md",
-     "anchor": "7-check-the-motor-directions"
+     "path": "docs/tuning/02-wiring-checks.md",
+     "anchor": "motor-direction-check-each-wheel-rolls-forward"
     },
     {
      "path": "docs/quick-start.md",
@@ -989,7 +989,7 @@
    "sections": {
     "why": [
      {
-      "p": "Driving is the first thing a team sees work. We want to know that the drive line in `Robot.java` works on many drivetrains, and that the motor-direction steps in lesson 2 find a wrong wheel."
+      "p": "Driving is the first thing a team sees work. We want to know that the drive line in `Robot.java` works on many drivetrains, and that the motor-direction steps in [Wiring checks](repo:docs/tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward) find a wrong wheel."
      }
     ],
     "safety": [
@@ -1013,7 +1013,7 @@
      {
       "ol": [
        "Robot on a block. INIT your TeleOp, then START.",
-       "Push the left stick up. Every wheel must roll the way that moves the robot forward. Fix any wheel with lesson 2 section 7, and count how many fixes you needed.",
+       "Push the left stick up. Every wheel must roll the way that moves the robot forward. Fix any wheel with the wiring check, and count how many fixes you needed.",
        "Put the robot on the floor. Left stick up for about 2 seconds: it drives straight.",
        "Right stick right: it turns clockwise. Mecanum only: left stick right strafes right.",
        "Pull LT all the way while driving: the robot goes slower. (One driver, `oneDriver = true`: click the left stick for slow on and off.)",
@@ -1298,7 +1298,7 @@
      "anchor": ""
     },
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "path": "docs/add-to-robot/05-launcher.md",
      "anchor": "a-hood-the-shot-angle"
     }
    ],
@@ -1718,8 +1718,8 @@
      "anchor": ""
     },
     {
-     "path": "docs/tutorials/start/07-odometry.md",
-     "anchor": "5-the-odometry-tuner"
+     "path": "docs/tuning/09-odometry-tuner.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/ODO-01.md",
@@ -1740,7 +1740,7 @@
     "setup": [
      {
       "ul": [
-       "A robot with an `odometry(...)` line in `Robot.java` ([lesson 7](repo:docs/tutorials/start/07-odometry.md#4-one-line-in-robotjava)).",
+       "A robot with an `odometry(...)` line in `Robot.java` ([Add odometry](repo:docs/add-to-robot/09-odometry.md#robotjava-one-line)).",
        "The small Odometry Tuner file next to `Robot.java`.",
        "A 48 in strip of tape on the floor with a mark at its start, and a tape measure."
       ]
@@ -1799,8 +1799,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/07-odometry.md",
-     "anchor": "7-teleop-starts-where-autonomous-ended"
+     "path": "docs/add-to-robot/09-odometry.md",
+     "anchor": "teleop-starts-where-autonomous-ended"
     },
     {
      "path": "docs/controls/04-move-library-buttons.md",
@@ -1825,7 +1825,7 @@
      {
       "ul": [
        "A robot with an odometry line, and the reset spot in `Tunables.Odometry` (`resetX`, `resetY`, `resetHeading`, seen from your own drivers' wall). BIOBUZZ: also `mirrorForRed = false`, written once for the whole robot in `Tunables.Aim` (or in `Tunables.Odometry` if you have no `Aim` section).",
-       "Simulator: your own robot from `Robot.java` (`./gradlew :sim:fromRobot -PteamCode=../TeamCode`), or the odometry robot from lesson 7.",
+       "Simulator: your own robot from `Robot.java` (`./gradlew :sim:fromRobot -PteamCode=../TeamCode`), or the odometry robot `odometrybot` ([Drive to points: Try it in the simulator](repo:docs/building-autos/04-drive-to-points.md#try-it-in-the-simulator)).",
        "A tape measure (real robot)."
       ]
      }
@@ -1976,8 +1976,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/08-paths-with-pedro.md",
-     "anchor": "5-write-your-first-path"
+     "path": "docs/building-autos/05-pedro-paths.md",
+     "anchor": "actionsjava-and-autos-make-paths-then-follow-them"
     },
     {
      "path": "docs/modules/pedro.md",
@@ -2002,7 +2002,7 @@
     "setup": [
      {
       "ul": [
-       "Lesson 8 done: Pedro added, `PedroConstants` tuned, `Tunables.Odometry.checked = true`.",
+       "[Add Pedro paths](repo:docs/building-autos/05-pedro-paths.md) done: Pedro added, `PedroConstants` tuned, `Tunables.Odometry.checked = true`.",
        "A path with two parts (`PedroPath.line(...).then(PedroPath.curve(...))`), about 4-6 ft long.",
        "Tape marks on the floor where you expect each thing to start (real robot)."
       ]
@@ -2322,8 +2322,8 @@
      "anchor": ""
     },
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "2-its-numbers"
+     "path": "docs/add-to-robot/05-launcher.md",
+     "anchor": "tunablesjava-its-numbers"
     }
    ],
    "file": "testing/tests/SHOT-01.md",
@@ -2406,12 +2406,12 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "4-the-two-safety-rules"
+     "path": "docs/add-to-robot/05-launcher.md",
+     "anchor": "controlsjava-its-buttons"
     },
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "3-the-buttons-it-brings"
+     "path": "docs/add-to-robot/05-launcher.md",
+     "anchor": "controlsjava-its-buttons"
     }
    ],
    "file": "testing/tests/SHOT-02.md",
@@ -2433,7 +2433,7 @@
      {
       "ul": [
        "A launcher with a feeder in `Robot.java` and its gains (SHOT-01).",
-       "Simulator: lesson 9's goBILDA bot (`-Probot=sim/robots/starter-bot-gobilda.properties`, \"goBILDA Bot TeleOp\")."
+       "Simulator: the goBILDA bot ([Add a launcher: Try it in the simulator](repo:docs/add-to-robot/05-launcher.md#try-it-in-the-simulator), `-Probot=sim/robots/starter-bot-gobilda.properties`, \"goBILDA Bot TeleOp\")."
       ]
      }
     ],
@@ -2497,8 +2497,8 @@
      "anchor": ""
     },
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "8-two-game-pieces-two-shot-tables"
+     "path": "docs/add-to-robot/05-launcher.md",
+     "anchor": "two-kinds-of-pieces-two-shot-tables"
     }
    ],
    "file": "testing/tests/SHOT-03.md",
@@ -2582,7 +2582,7 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "path": "docs/add-to-robot/05-launcher.md",
      "anchor": "speed-trim-and-a-low-battery"
     },
     {
@@ -2667,7 +2667,7 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "path": "docs/add-to-robot/05-launcher.md",
      "anchor": "speed-trim-and-a-low-battery"
     },
     {
@@ -2763,8 +2763,8 @@
      "anchor": "first-run-what-you-get-before-tuning"
     },
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "the-first-spin-up-with-no-numbers"
+     "path": "docs/add-to-robot/05-launcher.md",
+     "anchor": "3-find-its-numbers"
     }
    ],
    "file": "testing/tests/SHOT-06.md",
@@ -2921,8 +2921,8 @@
      "anchor": "a-robot-file-from-robotjava"
     },
     {
-     "path": "docs/tutorials/start/01-robot-in-five-files.md",
-     "anchor": "try-it-in-the-simulator"
+     "path": "docs/guides/simulator.md",
+     "anchor": "start-it"
     }
    ],
    "file": "testing/tests/SIM-02.md",
@@ -2948,7 +2948,7 @@
        "`./gradlew :sim:run -PteamCode=../TeamCode`, open http://localhost:8780.",
        "INIT your TeleOp, read the button map, START, drive, and use every part.",
        "Run your autonomous. Read the report at the end.",
-       "Draw your parts with `looks(...)` shapes ([how](repo:docs/tutorials/start/01-robot-in-five-files.md#draw-your-robot-from-robotjava)) if you want pieces to be picked up and shot."
+       "Draw your parts with `looks(...)` shapes ([how](repo:docs/guides/simulator.md#a-robot-file-from-robotjava)) if you want pieces to be picked up and shot."
       ]
      }
     ],
@@ -3070,7 +3070,7 @@
    "since": "v0.17.1",
    "docs": [
     {
-     "path": "docs/tutorials/start/10-test-your-robot-code.md",
+     "path": "docs/tests/01-record-a-test.md",
      "anchor": ""
     },
     {
@@ -3096,7 +3096,7 @@
     "steps": [
      {
       "ol": [
-       "Follow [start lesson 10](repo:docs/tutorials/start/10-test-your-robot-code.md), section 2: record a test of your autonomous (INIT, choose the alliance, START, wait for its end, Stop recording).",
+       "Follow [Record a test](repo:docs/tests/01-record-a-test.md), section 2: record a test of your autonomous (INIT, choose the alliance, START, wait for its end, Stop recording).",
        "Read the suggested checks. Write down any check that looks wrong or missing. Save it.",
        "Press **Run it now**. Then run it 4 more times (**Run it again**).",
        "Record a TeleOp test: drive forward 2 seconds, turn, let go, Stop recording, Save, Run it now (5 times).",
@@ -3169,7 +3169,7 @@
       "ul": [
        "Your robot project in Android Studio, with the library in `ftc-helper-lib` and your code in five files.",
        "The buttons in the list next to the green Run button. The library adds them at the Gradle sync; the first time on a laptop, close the project (**File > Close Project**) and open it again. Write down if they were not there after that.",
-       "At least one test in `simulator/scenarios` (record one: start lesson 10), for step 6."
+       "At least one test in `simulator/scenarios` (record one: [Record a test](repo:docs/tests/01-record-a-test.md)), for step 6."
       ]
      }
     ],
@@ -3229,8 +3229,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "14-extra-shooting-while-moving"
+     "path": "docs/add-to-robot/07-camera.md",
+     "anchor": "shooting-while-moving"
     }
    ],
    "file": "testing/tests/SOM-01.md",
@@ -3310,8 +3310,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "14-extra-shooting-while-moving"
+     "path": "docs/add-to-robot/07-camera.md",
+     "anchor": "shooting-while-moving"
     },
     {
      "path": "docs/modules/vision.md",
@@ -3505,7 +3505,7 @@
        "A turret with no `.homeSwitch(...)` line, and `min`, `max` in `Tunables.Turret`.",
        "A mark or a small jig that holds the turret at `startAngle` (0 = straight forward, the default).",
        "An autonomous that turns the turret (it follows the goal, or a step turns it).",
-       "Simulator: lesson 9's turret robot ([the commands](repo:docs/tutorials/start/09-shooter-and-camera.md#try-it-in-the-simulator)): \"TurretBot Shoot from Start\", then \"TurretBot TeleOp\"."
+       "Simulator: the turret robot `turretbot` ([the commands](repo:docs/add-to-robot/07-camera.md#try-it-in-the-simulator)): \"TurretBot Shoot from Start\", then \"TurretBot TeleOp\"."
       ]
      }
     ],
@@ -3724,8 +3724,8 @@
      "anchor": ""
     },
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "10-no-turret-aim-the-whole-robot"
+     "path": "docs/add-to-robot/07-camera.md",
+     "anchor": "controlsjava-its-buttons"
     }
    ],
    "file": "testing/tests/AIM-08.md",
@@ -3804,8 +3804,8 @@
      "anchor": "cameratilt"
     },
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "5-a-camera-that-knows-the-goal"
+     "path": "docs/add-to-robot/07-camera.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/AIM-09.md",
@@ -3965,8 +3965,8 @@
      "anchor": ""
     },
     {
-     "path": "docs/tutorials/start/03-buttons.md",
-     "anchor": "7-pause-with-back-and-the-other-library-buttons"
+     "path": "docs/controls/04-move-library-buttons.md",
+     "anchor": "every-library-button"
     }
    ],
    "file": "testing/tests/CTL-02.md",
@@ -4117,8 +4117,8 @@
    "since": "v0.28.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/03-buttons.md",
-     "anchor": "6-the-button-map-init-and-guide"
+     "path": "docs/controls/03-see-and-feel.md",
+     "anchor": "the-button-map-and-the-teleops-init-screen"
     }
    ],
    "file": "testing/tests/CTL-04.md",
@@ -4252,7 +4252,7 @@
   },
   {
    "id": "DOC-02",
-   "title": "Follow one main-track lesson from start to end",
+   "title": "Follow one \"Add to your robot\" page from start to end",
    "area": "docs",
    "priority": "medium",
    "where": "both",
@@ -4268,39 +4268,39 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/tutorials/README.md",
-     "anchor": "start-here-the-main-track"
+     "path": "docs/add-to-robot/README.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/DOC-02.md",
    "sections": {
     "why": [
      {
-      "p": "Each lesson builds on your own robot, a few lines at a time. We check our lessons on our robots; yours will show where a lesson assumes something about the robot that is not true for you."
+      "p": "Each \"Add to your robot\" page adds one part to your own robot, a few lines at a time. We check the pages on our robots. Yours will show where a page assumes something about the robot that is not true for you."
      }
     ],
     "safety": [
      {
       "ul": [
-       "Follow the lesson's own safety notes (\"Check it on the robot\"). Low power for the first runs."
+       "Follow the page's own safety notes (its \"Check it\" step). Low power for the first runs."
       ]
      }
     ],
     "setup": [
      {
       "ul": [
-       "Lessons before it done (the lesson says which).",
-       "Pick the lesson your team needs next (1 to 9)."
+       "The page's \"You need\" list done (it says which).",
+       "Pick the part your team needs next ([Add to your robot](repo:docs/add-to-robot/README.md))."
       ]
      }
     ],
     "steps": [
      {
       "ol": [
-       "Write the lesson number. Start a timer.",
-       "Read the lesson top to bottom once without changing code.",
-       "Do it: make each change in your own five files, as the lesson says.",
-       "Do its \"Try it in the simulator\" part, then its \"Check it on the robot\" part.",
+       "Write the page name. Start a timer.",
+       "Read the page top to bottom once without changing code.",
+       "Do it: make each change in your own five files, as the page says.",
+       "Do its \"Check it\" step, in the simulator first when the page has a simulator part.",
        "Each time you are stuck for more than 2 minutes, write the section and the words.",
        "Stop the timer when its last check passes."
       ]
@@ -4308,22 +4308,22 @@
     ],
     "pass": [
      {
-      "p": "Every check in the lesson's \"Check it on the robot\" (or simulator) part passes (all of them, for example 5 of 5), and the time is within 2 times what the lessons page says."
+      "p": "Every check in the page's \"Check it\" step passes (all of them, for example 5 of 5), and every \"Done when\" line is true."
      }
     ],
     "record": [
      {
       "ul": [
-       "lesson number, time it took (minutes)",
+       "page name, time it took (minutes)",
        "each place you got stuck (section and words)",
-       "any code in the lesson that did not build (copy the error)",
-       "what your robot has that the lesson robot does not (or the other way round)"
+       "any code on the page that did not build (copy the error)",
+       "what your robot has that the page's example does not (or the other way round)"
       ]
      }
     ],
     "different": [
      {
-      "p": "The lessons explain with example robots (the lesson robot, the kit bots, the turret robot). Write what you had to change because your robot is different: that is the most useful part of the report."
+      "p": "The pages explain with example code and example robots. Write what you had to change because your robot is different: that is the most useful part of the report."
      }
     ]
    }
@@ -4400,7 +4400,7 @@
   },
   {
    "id": "DOC-04",
-   "title": "Lesson 10 from start to finish - record, break and update a test",
+   "title": "The Tests pages from start to finish - record, break and update a test",
    "area": "docs",
    "priority": "medium",
    "where": "sim",
@@ -4416,7 +4416,11 @@
    "since": "v0.17.1",
    "docs": [
     {
-     "path": "docs/tutorials/start/10-test-your-robot-code.md",
+     "path": "docs/tests/01-record-a-test.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/tests/02-run-all-your-tests.md",
      "anchor": ""
     }
    ],
@@ -4424,7 +4428,7 @@
    "sections": {
     "why": [
      {
-      "p": "Lesson 10 teaches simulator tests with the new \"Record a test\" button. Most students never wrote a test before. We need to know if the lesson is clear enough to follow alone, on a robot that is not ours."
+      "p": "The Tests pages teach simulator tests with the \"Record a test\" button. Most students never wrote a test before. We need to know if the pages are clear enough to follow alone, on a robot that is not ours."
      }
     ],
     "setup": [
@@ -4438,7 +4442,7 @@
     "steps": [
      {
       "ol": [
-       "Start a timer. Follow [lesson 10](repo:docs/tutorials/start/10-test-your-robot-code.md) from the top, exactly as written, with your own robot (or its \"Try it with goBILDA's starter bot\").",
+       "Start a timer. Follow [Record a test](repo:docs/tests/01-record-a-test.md) from the top, exactly as written, with your own robot (or [Try it with goBILDA's starter bot](repo:docs/tests/02-run-all-your-tests.md#try-it-with-gobildas-starter-bot)).",
        "Record one TeleOp test and one autonomous test, and save both.",
        "Run each one: both should say `PASSED`.",
        "Change one number in `Tunables.java` that the test should notice (for example a slower drive), build, and run the tests again: at least one should say `FAILED`.",
@@ -4450,7 +4454,7 @@
     ],
     "pass": [
      {
-      "p": "Both tests pass, fail after the change in step 4, and pass again after the update, within 45 minutes, with no help from outside the lesson."
+      "p": "Both tests pass, fail after the change in step 4, and pass again after the update, within 45 minutes, with no help from outside the pages."
      }
     ],
     "record": [
@@ -4489,8 +4493,8 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/02-drive.md",
-     "anchor": "6-the-driving-you-get-for-free"
+     "path": "docs/controls/01-how-buttons-work.md",
+     "anchor": "the-librarys-own-buttons"
     },
     {
      "path": "docs/controls/04-move-library-buttons.md",
@@ -4573,7 +4577,7 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "path": "docs/add-to-robot/05-launcher.md",
      "anchor": "a-hood-the-shot-angle"
     },
     {
@@ -4600,7 +4604,7 @@
       "ul": [
        "HOOD-01 or HOOD-02 done. A table with three numbers per row, `{inches, rpm, hood}`.",
        "Speed from distance (camera or odometry).",
-       "Simulator: your robot from `Robot.java` (`:sim:fromRobot` writes the hood), or `turretbot` from lesson 9."
+       "Simulator: your robot from `Robot.java` (`:sim:fromRobot` writes the hood), or `turretbot` ([Add a camera: Try it in the simulator](repo:docs/add-to-robot/07-camera.md#try-it-in-the-simulator))."
       ]
      }
     ],
@@ -4740,8 +4744,8 @@
      "anchor": "the-alliance-at-init"
     },
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "13-a-light-for-the-drivers"
+     "path": "docs/add-to-robot/08-lights.md",
+     "anchor": "controlsjava-the-rules"
     }
    ],
    "file": "testing/tests/LGT-02.md",
@@ -4762,7 +4766,7 @@
      {
       "ul": [
        "A light in `Robot.java` (`Lights.gobilda(\"light\")` or `Lights.blinkin(\"blinkin\")`), with no `allianceAtInit` line in its Tunables section.",
-       "Your own rules in `Controls.java` (any, for example lesson 9 section 13's).",
+       "Your own rules in `Controls.java` (any, for example the ones in [Add lights](repo:docs/add-to-robot/08-lights.md#controlsjava-the-rules)).",
        "Simulator: the light is a dot on the robot (V2 example robot, or your own robot from `Robot.java`)."
       ]
      }
@@ -4980,12 +4984,12 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/07-odometry.md",
-     "anchor": "6-drive-to-field-points"
+     "path": "docs/building-autos/04-drive-to-points.md",
+     "anchor": "drive-to-a-point-driveto"
     },
     {
-     "path": "docs/tutorials/start/07-odometry.md",
-     "anchor": "check-it-on-the-robot"
+     "path": "docs/add-to-robot/09-odometry.md",
+     "anchor": "4-check-it-then-tune-it"
     }
    ],
    "file": "testing/tests/ODO-03.md",
@@ -5007,7 +5011,7 @@
      {
       "ul": [
        "ODO-01 passed (`Tunables.Odometry.checked = true`).",
-       "An autonomous with one `driveTo` step, for example lesson 7's \"To the Goal\" (start at -56, -61; drive to -30, -30 facing 45).",
+       "An autonomous with one `driveTo` step, for example `odometrybot`'s \"To the Goal\" (start at -56, -61; drive to -30, -30 facing 45).",
        "Tape on the floor at the start spot and at the target point."
       ]
      }
@@ -5064,8 +5068,8 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/07-odometry.md",
-     "anchor": "7-teleop-starts-where-autonomous-ended"
+     "path": "docs/add-to-robot/09-odometry.md",
+     "anchor": "teleop-starts-where-autonomous-ended"
     }
    ],
    "file": "testing/tests/ODO-04.md",
@@ -5086,7 +5090,7 @@
      {
       "ul": [
        "A robot with odometry and any autonomous that drives and ends somewhere you can measure.",
-       "Simulator: lesson 7's commands (`odometrybot`, \"Odometry Bot To the Goal\", then \"Odometry Bot TeleOp\"), or your own robot."
+       "Simulator: the `odometrybot` commands ([Drive to points: Try it in the simulator](repo:docs/building-autos/04-drive-to-points.md#try-it-in-the-simulator): \"Odometry Bot To the Goal\", then \"Odometry Bot TeleOp\"), or your own robot."
       ]
      }
     ],
@@ -5140,15 +5144,15 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/08-paths-with-pedro.md",
-     "anchor": "6-try-it-in-the-simulator-first"
+     "path": "docs/building-autos/05-pedro-paths.md",
+     "anchor": "4-check-it-then-tune-it"
     }
    ],
    "file": "testing/tests/PATH-01.md",
    "sections": {
     "why": [
      {
-      "p": "Lesson 8 says \"try it in the simulator first\". This checks that the commands and what the lesson says you will see are right on your laptop. No robot needed."
+      "p": "[Add Pedro paths](repo:docs/building-autos/05-pedro-paths.md) says \"try every path in the simulator first\". This checks that the commands and what the docs say you will see are right on your laptop. No robot needed."
      }
     ],
     "setup": [
@@ -5182,13 +5186,13 @@
        "your computer (Windows, Mac, Linux, Chromebook) and browser",
        "the report lines",
        "how long the two Gradle commands took the first time (minutes)",
-       "anything on screen that did not match lesson 8"
+       "anything on screen that did not match the docs"
       ]
      }
     ],
     "different": [
      {
-      "p": "This test uses the library's example robot, so your robot does not matter. If you have Pedro in your own project, also try your own autonomous (lesson 8 section 6, \"Your own robot\") and say so."
+      "p": "This test uses the library's example robot, so your robot does not matter. If you have Pedro in your own project, also try your own autonomous ([Add Pedro paths](repo:docs/building-autos/05-pedro-paths.md)) and say so."
      }
     ]
    }
@@ -5211,8 +5215,8 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/08-paths-with-pedro.md",
-     "anchor": "5-write-your-first-path"
+     "path": "docs/building-autos/05-pedro-paths.md",
+     "anchor": "actionsjava-and-autos-make-paths-then-follow-them"
     }
    ],
    "file": "testing/tests/PATH-03.md",
@@ -5305,7 +5309,7 @@
     "setup": [
      {
       "ul": [
-       "A `Pieces` or `PieceSensor` line in `Robot.java` ([lesson 9 section 12](repo:docs/tutorials/start/09-shooter-and-camera.md#12-extra-know-which-piece-fires-next)).",
+       "A `Pieces` or `PieceSensor` line in `Robot.java` ([Add a launcher: know which piece fires next](repo:docs/add-to-robot/05-launcher.md#know-which-piece-fires-next)).",
        "The Piece Tuner file for your robot ([recipe](repo:docs/cookbook.md#how-do-i-tune-the-piece-sensors)).",
        "One of each game piece."
       ]
@@ -5365,8 +5369,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "12-extra-know-which-piece-fires-next"
+     "path": "docs/add-to-robot/05-launcher.md",
+     "anchor": "know-which-piece-fires-next"
     },
     {
      "path": "docs/cookbook.md",
@@ -5534,8 +5538,8 @@
      "anchor": "in-tunablesjava"
     },
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "4-the-two-safety-rules"
+     "path": "docs/add-to-robot/05-launcher.md",
+     "anchor": "controlsjava-its-buttons"
     }
    ],
    "file": "testing/tests/SHOT-07.md",
@@ -5614,8 +5618,8 @@
    "since": "v0.25.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "4-the-two-safety-rules"
+     "path": "docs/add-to-robot/05-launcher.md",
+     "anchor": "controlsjava-its-buttons"
     },
     {
      "path": "docs/reference/parts/launcher.md",
@@ -6016,7 +6020,7 @@
    "since": "v0.18.2",
    "docs": [
     {
-     "path": "docs/tutorials/start/10-test-your-robot-code.md",
+     "path": "docs/tests/01-record-a-test.md",
      "anchor": ""
     },
     {
@@ -6034,7 +6038,7 @@
     "setup": [
      {
       "ul": [
-       "Your robot project with the simulator running your code, and one test of yours in `simulator/scenarios/` (record one first: [start lesson 10](repo:docs/tutorials/start/10-test-your-robot-code.md))."
+       "Your robot project with the simulator running your code, and one test of yours in `simulator/scenarios/` (record one first: [Record a test](repo:docs/tests/01-record-a-test.md))."
       ]
      }
     ],
@@ -6532,8 +6536,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "14-extra-shooting-while-moving"
+     "path": "docs/add-to-robot/07-camera.md",
+     "anchor": "shooting-while-moving"
     },
     {
      "path": "docs/guides/simulator.md",
@@ -6560,7 +6564,7 @@
      {
       "ol": [
        "Choose \"V2 Bot TeleOp\", pick the alliance (gamepad 1 X = BLUE, B = RED), START. Open the Match panel (Control Hub, \"Match\"): it shows each shot's verdict.",
-       "Drive to a spot about 4 ft from your goal where the turret follows it (`following: camera`; lesson 9's [Try it in the simulator](repo:docs/tutorials/start/09-shooter-and-camera.md#try-it-in-the-simulator) says where the tags can be seen). Write the spot (the line under the field map).",
+       "Drive to a spot about 4 ft from your goal where the turret follows it (`following: camera`; [Add a camera: Try it in the simulator](repo:docs/add-to-robot/07-camera.md#try-it-in-the-simulator) says where the tags can be seen). Write the spot (the line under the field map).",
        "Shooting on the move is off. Standing still, fire 4 (hold gamepad 2 RB). Count clean shots.",
        "Load 4 pieces again (drive the intake over pieces on the field, or restart the simulator) and go back to the spot. Strafe slowly past the goal (keyboard A or D, or the left stick) and fire 4 while moving. Count clean shots.",
        "Stop the simulator. In `examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Tunables.java`, class `Aim`, change `shootOnMove = false` to `true` and add `public static double flightSec = 0.8;` (your own robot: the same two lines in its `Tunables.Aim`). Start the simulator again (the Setup commands).",
@@ -6614,8 +6618,8 @@
      "anchor": ""
     },
     {
-     "path": "docs/guides/testing.md",
-     "anchor": "test-your-robotjava-with-pretend-devices"
+     "path": "docs/tests/02-run-all-your-tests.md",
+     "anchor": "4-for-programmers-laptop-tests-in-java-optional"
     },
     {
      "path": "docs/tutorials/13-testing.md",
@@ -6641,7 +6645,7 @@
     "steps": [
      {
       "ol": [
-       "Make `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/RobotTest.java`: copy the whole file from the [testing guide](repo:docs/guides/testing.md#test-your-robotjava-with-pretend-devices). Change the lift test to one of your parts and its configuration name.",
+       "Make `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/RobotTest.java`: copy the whole file from the [testing guide](repo:docs/tests/02-run-all-your-tests.md#4-for-programmers-laptop-tests-in-java-optional). Change the lift test to one of your parts and its configuration name.",
        "Run `./gradlew :TeamCode:testDebugUnitTest` from the robot project folder (Windows: `gradlew.bat`). All tests pass.",
        "Misspell a field in `Tunables.java` (say `inPowr` for `inPower`). Run again: `tunablesNamesAreRight` fails and names the field. Fix it.",
        "Change a motor's name in `Robot.java` to one the test does not use. Run again: read the message. Put it back.",
@@ -6773,8 +6777,8 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tutorials/start/09-shooter-and-camera.md",
-     "anchor": "13-a-light-for-the-drivers"
+     "path": "docs/add-to-robot/08-lights.md",
+     "anchor": "controlsjava-the-rules"
     },
     {
      "path": "docs/reference/parts/lights.md",
@@ -6799,7 +6803,7 @@
      {
       "ul": [
        "`lights = add(Lights.gobilda(\"light\"));` or `Lights.blinkin(\"blinkin\")` in `Robot.java`.",
-       "Rules in `Controls.java`, for example the five lines in lesson 9 section 13.",
+       "Rules in `Controls.java`, for example the rules in [Add lights: the rules](repo:docs/add-to-robot/08-lights.md#controlsjava-the-rules).",
        "Simulator: the light is a dot on the robot."
       ]
      }

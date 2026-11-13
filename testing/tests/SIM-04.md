@@ -8,7 +8,7 @@ minutes: 40
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.1
-docs: [tutorials/start/10-test-your-robot-code.md, guides/simulator.md#record-a-test]
+docs: [tests/01-record-a-test.md, guides/simulator.md#record-a-test]
 ---
 
 ## Why
@@ -24,7 +24,7 @@ test passes when it is run again (a test that fails for no reason is worse than 
 
 ## Steps
 
-1. Follow [start lesson 10](../../docs/tutorials/start/10-test-your-robot-code.md), section 2: record a
+1. Follow [Record a test](../../docs/tests/01-record-a-test.md), section 2: record a
    test of your autonomous (INIT, choose the alliance, START, wait for its end, Stop recording).
 2. Read the suggested checks. Write down any check that looks wrong or missing. Save it.
 3. Press **Run it now**. Then run it 4 more times (**Run it again**).

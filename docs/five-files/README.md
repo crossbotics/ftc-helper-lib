@@ -35,8 +35,34 @@ You do not type them from nothing. You copy them from
 change them. When you start from a starter bot's or an example's files, these pages still explain every
 line you see.
 
+## Java you will meet
+
+The five files use a few Java ideas again and again. Read the list once. Come back to it when you meet one.
+
+| You see | Its name | What it means |
+| --- | --- | --- |
+| `class Robot extends RobotDefinition` | **extends** | "built on": your class gets everything the library class does. You fill in the methods it leaves open (here `define()`), each marked `@Override`. |
+| `ControlMap<Robot>`, `Auto<Robot>` | **generics** | the name in angle brackets says which class the library class works with: your `Robot`. |
+| `Drive.tank(...).motor(...).wheelMm(96)` | **method chaining** | each method gives back the same thing, so the next one adds to it. Read it left to right as one sentence. |
+| `() -> r.launcher.fire(4)` | **lambda** | a small piece of code you give now, to run later (when a button is pressed, or an action gets to that step). `() ->` means "no inputs, run this". |
+| `r.intake::in` | **method reference** | the short way to write `() -> r.intake.in()`. |
+| `Runnable` | | Java's name for "code with no inputs that can run later". A lambda or a method reference is one. |
+
+**A name is red in Android Studio:** the file needs an `import` line. Click the name and press **Alt+Enter**
+(**Option+Enter** on a Mac). If it offers two, pick the one in `com.crossbotics.ftchelper.robot`.
+
 ## Done when
 
 At the end of the five files pages, the robot drives in TeleOp and runs a short autonomous.
+
+**Check yourself:**
+
+- Where do you change the launcher's speed? (`Tunables.java`, section `Launcher`.)
+- The operator wants the claw on X, not B. Which file? (`Controls.java`: `g2.x.toggle(robot.claw)`.)
+- An action lifts the lift, and the operator moves the lift stick. What happens? (The action stops: the
+  driver always wins.)
+- Why does `define()` not move anything? (It runs in INIT, and the library moves nothing before ▶.)
+
+**Commit after each step that works,** so you can always go back ([Git and GitHub](../guides/github.md)).
 
 **Next:** [Robot.java](01-robot-java.md).

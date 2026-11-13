@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" width="760" height="400" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <rect width="760" height="400" rx="12" fill="#ffffff" stroke="#d5d9e0"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1a7f37"/></marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b03030"/></marker>
+  </defs>
+  <text x="20" y="34" font-size="19" font-weight="bold" fill="#101c45">Record once, run after every change</text>
+  <rect x="20" y="60" width="160" height="64" rx="8" fill="#eef2f8" stroke="#101c45" stroke-width="1.5"/>
+  <text x="100.0" y="87.0" text-anchor="middle" fill="#101c45" font-size="15" font-weight="bold">1. Record</text>
+  <text x="100.0" y="107.0" text-anchor="middle" fill="#101c45" font-size="13">do the job once</text>
+  <line x1="180" y1="92" x2="210" y2="92" stroke="#4b5563" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="212" y="60" width="160" height="64" rx="8" fill="#eef2f8" stroke="#101c45" stroke-width="1.5"/>
+  <text x="292.0" y="87.0" text-anchor="middle" fill="#101c45" font-size="15" font-weight="bold">2. Choose checks</text>
+  <text x="292.0" y="107.0" text-anchor="middle" fill="#101c45" font-size="13">goals, not details</text>
+  <line x1="372" y1="92" x2="402" y2="92" stroke="#4b5563" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="404" y="60" width="150" height="64" rx="8" fill="#eef2f8" stroke="#101c45" stroke-width="1.5"/>
+  <text x="479.0" y="87.0" text-anchor="middle" fill="#101c45" font-size="15" font-weight="bold">3. Save</text>
+  <text x="479.0" y="107.0" text-anchor="middle" fill="#101c45" font-size="13">commit with code</text>
+  <line x1="554" y1="92" x2="584" y2="92" stroke="#4b5563" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="586" y="60" width="154" height="64" rx="8" fill="#eef2f8" stroke="#101c45" stroke-width="1.5"/>
+  <text x="663.0" y="87.0" text-anchor="middle" fill="#101c45" font-size="15" font-weight="bold">4. Run</text>
+  <text x="663.0" y="107.0" text-anchor="middle" fill="#101c45" font-size="13">after each change</text>
+  <line x1="680" y1="124" x2="680" y2="170" stroke="#4b5563" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="560" y="172" width="180" height="56" rx="8" fill="#e7f5ec" stroke="#1a7f37" stroke-width="1.5"/>
+  <text x="650.0" y="195.0" text-anchor="middle" fill="#1a7f37" font-size="15" font-weight="bold">PASSED</text>
+  <text x="650.0" y="215.0" text-anchor="middle" fill="#1a7f37" font-size="13">go on</text>
+  <rect x="310" y="172" width="170" height="56" rx="8" fill="#fbeaea" stroke="#b03030" stroke-width="1.5"/>
+  <text x="395.0" y="195.0" text-anchor="middle" fill="#b03030" font-size="15" font-weight="bold">FAILED</text>
+  <text x="395.0" y="215.0" text-anchor="middle" fill="#b03030" font-size="13">read the red line</text>
+  <line x1="395" y1="228" x2="395" y2="262" stroke="#4b5563" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="275" y="264" width="240" height="52" rx="8" fill="#ffffff" stroke="#101c45" stroke-width="1.5"/>
+  <text x="395.0" y="295.0" text-anchor="middle" fill="#101c45" font-size="14" font-weight="bold">Did you change this on purpose?</text>
+  <line x1="335" y1="316" x2="160" y2="352" stroke="#b03030" stroke-width="2" marker-end="url(#r)"/>
+  <text x="235" y="330" text-anchor="middle" font-size="13" fill="#b03030" font-weight="bold">no</text>
+  <line x1="455" y1="316" x2="560" y2="352" stroke="#1a7f37" stroke-width="2" marker-end="url(#g)"/>
+  <text x="520" y="330" text-anchor="middle" font-size="13" fill="#1a7f37" font-weight="bold">yes</text>
+  <rect x="30" y="354" width="250" height="40" rx="8" fill="#fbeaea" stroke="#b03030" stroke-width="1.5"/>
+  <text x="155.0" y="379.0" text-anchor="middle" fill="#b03030" font-size="13" font-weight="bold">Fix the code. The test caught a break.</text>
+  <rect x="390" y="354" width="350" height="40" rx="8" fill="#e7f5ec" stroke="#1a7f37" stroke-width="1.5"/>
+  <text x="565.0" y="379.0" text-anchor="middle" fill="#1a7f37" font-size="13" font-weight="bold">Press "The change was on purpose: update the test"</text>
+  <line x1="610" y1="124" x2="484" y2="180" stroke="#b03030" stroke-width="2" marker-end="url(#r)"/>
+</svg>

@@ -61,7 +61,7 @@ A robot is [five files](../five-files/README.md) in TeamCode: `Robot.java` (the 
 per auto. Most of last season's files carry over. Change only what the new robot changes.
 
 1. **A new robot, or a big change:** make the robot configuration on the Driver Hub first. Then the
-   library writes the five files from it ([lesson 1: your own robot](../tutorials/start/01-robot-in-five-files.md#your-own-robot)).
+   library writes the five files from it ([Start from a blank slate: your own robot](../pick-your-start/03-blank-slate.md#way-a-from-your-configuration)).
    A starter bot can start from its [ready files](../pick-your-start/01-starter-bot.md).
 2. **`Robot.java`:** delete last year's parts, and add this year's: one `add(...)` line each
    ([the part pages](../reference/README.md)). Check the `drive(...)` and `odometry(...)` lines.
@@ -92,7 +92,7 @@ instead: [Extending the library](extending.md).
 
 ## 6. Docs and records
 
-- Library: CHANGELOG, the part pages, the lessons that changed, this page's table.
+- Library: CHANGELOG, the part pages, the walkthrough pages that changed, this page's table.
 - The camera fix (alpha): look again when the field has fixed tags on the walls
   ([Possible later work](../design/possible-work.md)).
 - The Shot Tuner's field map: change the goal and the spots in `tools/shot_spots.py`, run it, and change

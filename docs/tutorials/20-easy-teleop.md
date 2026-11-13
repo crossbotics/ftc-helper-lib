@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a full TeleOp (driving, lift and claw) in a few short methods.
-The main track's `Controls.java` is built on `EasyTeleOp` and is shorter still: [Buttons](start/03-buttons.md).
+The main track's `Controls.java` is built on `EasyTeleOp` and is shorter still: [Controls.java](../five-files/03-controls-java.md).
 
 **You will learn:** how `EasyTeleOp` turns a TeleOp into a few short methods, which controls you get for
 free, how to add the operator's buttons and sticks, and how TeleOp and autonomous share one robot

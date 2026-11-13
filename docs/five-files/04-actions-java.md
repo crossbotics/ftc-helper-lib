@@ -151,6 +151,21 @@ The simulator's **auto builder** lists your `Actions.java` actions too, next to 
 - **A part that is not on the robot yet** (`.optional()` in Robot.java): the action skips it and goes on
   with the other parts.
 
+## An action when the OpMode starts
+
+An action can run once, right after ▶, in autonomous and in TeleOp. For example, it folds an intake down.
+
+**Where:** `Robot.java`, in `define()`.
+
+<!-- recipe: action-at-start -->
+```java title="Robot.java"
+// In Robot.java's define(): this action runs once, right after ▶ (autonomous and TeleOp).
+atStart(() -> Actions.deployIntake(this));
+```
+
+It never runs in INIT. **Why:** people are still next to the robot in INIT, so the library moves nothing
+before ▶. This is the library's choice, not a game rule.
+
 ## Check it
 
 **In the simulator:** pick **Simulator** in the run list next to Android Studio's **Run** button, and
@@ -179,4 +194,4 @@ click **Run**. Pick your TeleOp, INIT, ▶. Press the action's button.
 
 **Next:** [autos/](05-autos.md).
 **Look it up:** [Action: every step](../reference/steps.md#action). **Go deeper:**
-[lesson 5, actions](../tutorials/start/05-actions.md) and [the cookbook's action recipes](../cookbook.md#actions).
+[Why commands never wait](../guides/non-blocking.md) and [the cookbook's action recipes](../cookbook.md#actions).

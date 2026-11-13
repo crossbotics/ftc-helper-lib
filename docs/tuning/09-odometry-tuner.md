@@ -31,7 +31,7 @@ Check which way each odometry pod counts, measure where the pods sit, and prove 
 The Odometry Tuner is for a robot in five files with an `odometry(...)` line ([odometry](../modules/odometry.md)).
 It needs your robot, in a small file next to `Robot.java` (the odometry robot's
 [OdometryTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/OdometryTuner.java);
-the whole file to type: [lesson 7](../tutorials/start/07-odometry.md#5-the-odometry-tuner)). Put a 48 in
+the whole file to type: [the odometry module](../modules/odometry.md#the-odometry-tuner)). Put a 48 in
 strip of tape on the floor, with a mark at its start. In every test, the sticks drive slowly (30%). You
 can also push the robot by hand. The D-pad chooses, **A** starts, and **B** ends the test.
 

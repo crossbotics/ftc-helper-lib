@@ -7,8 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
- * Lesson 7: the park goes around the HIVE frames, from wherever the park time stopped the robot.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/07-odometry/#go-around-things-on-the-way
+ * Drive to points (routeTo): the park goes around the HIVE frames, from wherever the park time stopped the robot.
+ * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/09-odometry/
  */
 @Autonomous(name = "Odometry Bot Park Around", group = "Examples", preselectTeleOp = "Odometry Bot TeleOp")
 @Disabled

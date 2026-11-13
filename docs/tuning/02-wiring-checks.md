@@ -30,7 +30,7 @@ For the next check, press STOP, then INIT again, and pick it in the menu.
 
 The Hardware Check finds every device and moves each motor and servo. It spins a motor in its raw
 direction, so it does not check `reversed(...)`: the next check does. What to look for, device by device:
-[Hardware check](../guides/testing.md#2-hardware-check-after-any-wiring-or-configuration-change).
+[Hardware check](../tests/03-checks-before-practice-and-matches.md#3-hardware-check-after-a-wiring-or-configuration-change).
 
 ## Motor Direction Check: each wheel rolls forward
 

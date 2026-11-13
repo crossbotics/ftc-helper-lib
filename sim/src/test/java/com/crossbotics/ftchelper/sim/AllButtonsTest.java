@@ -147,7 +147,7 @@ public class AllButtonsTest {
         assertEquals(defaults, written);
     }
 
-    /** The lesson robot switched to one driver: its g2 lines go on gamepad 1, where the left stick drives. */
+    /** The example robot (lessonbot) switched to one driver: its g2 lines go on gamepad 1, where the left stick drives. */
     public static class LessonBotOneDriver extends com.crossbotics.ftchelper.examples.lessonbot.Controls {
         public static boolean oneDriver = true;
     }

@@ -84,7 +84,7 @@ import java.util.function.LongSupplier;
  * center ({@code shooterForwardIn, shooterLeftIn, cameraForwardIn, cameraLeftIn}).
  * {@link #movingShotMode()} switches it with a button.
  *
- * Docs: docs/reference/robot-java.md (section "Aim"). Tutorial: docs/tutorials/start/09-shooter-and-camera.md
+ * Docs: docs/reference/robot-java.md (section "Aim"). Tutorial: docs/add-to-robot/05-launcher.md
  */
 public final class Aim {
     /** Where the goal's direction and distance come from now. */

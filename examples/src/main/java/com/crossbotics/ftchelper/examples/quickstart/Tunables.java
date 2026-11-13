@@ -15,12 +15,12 @@ public class Tunables {
         public static double maxPower = 0.4;                        // top wheel power: slow for the first drives (1.0)
         public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
-        // The library's defaults until you tune them (strafeCorrection: the Drive Tuner, lesson 6).
+        // The library's defaults until you tune them (strafeCorrection: the Drive Tuner).
         public static double strafeCorrection = DEFAULT;            // not used: a tank drive cannot strafe (1.15)
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
         public static double turnKd = DEFAULT;                      // auto turns: brake near the end (0.003)
         public static double moveMinPower = DEFAULT;                // auto: least power that moves it (0.30)
-        // Stays false until the Drive Tuner (lesson 6): until then no autonomous drives the robot.
+        // Stays false until the Drive Tuner: until then no autonomous drives the robot.
         public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
     }
 

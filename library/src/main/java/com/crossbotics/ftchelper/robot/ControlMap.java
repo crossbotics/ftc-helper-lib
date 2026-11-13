@@ -206,7 +206,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     @Override
     protected final String setPoseMissingNote() {
         if (robot().odometrySpec() != null) return null;
-        return "Set pose here needs odometry: this robot has no odometry(...) line in Robot.java (lesson 7)";
+        return "Set pose here needs odometry: this robot has no odometry(...) line in Robot.java (docs: Add odometry)";
     }
 
     // The drive sticks are pushed (past a small dead zone), or whole-robot aim is on (it turns the robot).

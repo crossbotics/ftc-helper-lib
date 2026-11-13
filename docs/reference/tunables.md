@@ -178,7 +178,7 @@ that is `optional()` and not on the robot):
 
 **Check on the laptop:** `./gradlew :sim:fromRobot` (it writes the simulator's robot file) runs the same
 name checks and prints what INIT would stop on or warn about. In a JUnit test, `robot.checkTunables()`
-gives the same lines ([testing](../guides/testing.md)).
+gives the same lines ([testing](../tests/03-checks-before-practice-and-matches.md)).
 
 **Measured servo numbers and the servo's range.** You measure servo positions (named positions,
 `posA`/`posB`, `rest`/`push`, a hood's `calibration`) for the pulse range the servo had at the time. Adding or
@@ -281,7 +281,7 @@ out. **With no part named, or a part whose numbers are not known** (`Motors.unkn
 | --- | --- | --- | --- |
 | Launcher | `kF`, `kP`, `kI`, `kD` | REV's formula with the motor's top speed: F = 32767 / (top RPM x counts per turn / 60), P = F / 10, I = P / 10, D = 0. A goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117. The library does not use the hub's own gains (the numbers the Control Hub uses when the code gives none: P 10, I 3, F 0): with no F, the wheel only creeps up to speed | [Flywheel Finder](../tuning/06-flywheel-finder.md) |
 | Launcher | `speedRpm` | 60% of the motor's top speed, to 10 RPM (6000 RPM motor: 3600). This leaves room above it for the speed control to recover after a shot and on a tired battery, and gives a gentle first shot | [Shot Tuner](../tuning/13-shot-tuner.md) |
-| Lift with `.part(...)` | `kP`, `kD`, `slowZone`, `tolerance` | the plain defaults (made for a goBILDA 312 RPM motor, 537.7 counts a turn) scaled to your motor's counts per turn, so it acts the same per motor turn. A 435 RPM motor: kP 0.0056, kD 0.00028, slowZone 179, tolerance 14 | the tuning menu (lesson 4, step 6) |
+| Lift with `.part(...)` | `kP`, `kD`, `slowZone`, `tolerance` | the plain defaults (made for a goBILDA 312 RPM motor, 537.7 counts a turn) scaled to your motor's counts per turn, so it acts the same per motor turn. A 435 RPM motor: kP 0.0056, kD 0.00028, slowZone 179, tolerance 14 | the tuning menu ([Add a lift, step 4](../add-to-robot/01-lift.md#4-check-it-then-tune-it)) |
 | Claw, Wrist, Positioner with `.part(...)` | `travelSec` | the servo's catalog speed at the hub's 5 V over its whole move (goBILDA 2000 torque: 270 degrees at 0.25 s per 60 = 1.13 s) | time a move and divide by its distance ([how](parts/claw.md#in-tunablesjava)) |
 | Hood, servo Turret with `.part(...)` | `travelSec` | the same, over the move from `posA` to `posB` | time it |
 | servo Indexer with `.part(...)` | `pushSec`, `returnSec` | the same, from `rest` to `push`, at least 0.25 s | watch a feed |

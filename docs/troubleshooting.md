@@ -138,11 +138,11 @@ robot in five files, run the Drive Tuner, then set `Tunables.Drive.calibrated = 
 | <samp>follower encoder not reading: follower switched off</samp> (flywheel) | the second flywheel motor has no encoder cable: plug it in (or use one motor) |
 | <samp>Launcher gave up: flywheel</samp> (or <samp>hood</samp>, <samp>Turret</samp>...) | it was not ready in time: that part is the problem |
 | <samp>Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, ...</samp> | normal on a first run: with no gains written, it starts from the motor's catalog numbers. The wheel gets to speed, but slower after each shot than when tuned: run the [Flywheel Finder](tuning/06-flywheel-finder.md) and write its line ([First run](reference/tunables.md#first-run-what-you-get-before-tuning)) |
-| <samp>Aim odometry: the pose was never set ...</samp> | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended)) |
+| <samp>Aim odometry: the pose was never set ...</samp> | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [Add odometry](add-to-robot/09-odometry.md#teleop-starts-where-autonomous-ended)) |
 | <samp>No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry</samp> | someone held gamepad 1 START 1 s ("set pose here"), but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
 | <samp>Alliance now RED (was BLUE)</samp> | the alliance switch is on (`lib.switchAlliance(...)`) and someone held gamepad 1 START, then BACK, 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](reference/controls.md#controlmap)) |
 | <samp>Alliance now RED: odometry aim OFF until the pose is set (...)</samp> | someone switched the alliance on a turned field (`mirrorForRed = false`): the library cannot fix the pose from autonomous. Park on the reset spot and hold gamepad 1 START 1 s ([buttons guide](controls/04-move-library-buttons.md#switching-the-alliance-in-teleop)) |
-| <samp>Set pose here needs odometry: ...</samp> | someone held gamepad 1 START 1 s, but the robot has no `odometry(...)` line in Robot.java, so it cannot know where it is ([lesson 7](tutorials/start/07-odometry.md)). Nothing changed |
+| <samp>Set pose here needs odometry: ...</samp> | someone held gamepad 1 START 1 s, but the robot has no `odometry(...)` line in Robot.java, so it cannot know where it is ([Add odometry](add-to-robot/09-odometry.md)). Nothing changed |
 | <samp>Launcher : WAITING_READY  left 1  waits for: turret aimed</samp> | the launcher holds the piece until that check is true (here: the turret on the goal). <samp>Launcher gave up: ...</samp> shows for 5 s when it waited too long |
 | <samp>Pose NOT set: stop first ...</samp> | someone held "set pose here" while the robot drove (a drive stick pushed) or whole-robot aim was on. Stop, then hold gamepad 1 START 1 s again |
 | <samp>No pause button (libraryButtons freed it): ...</samp> | `lib.pause(null)` in `libraryButtons`: nothing pauses the robot. Put it on a button: `lib.pause(g1.back)` |
@@ -228,9 +228,9 @@ The wheel is worn, the balls are softer, or the battery is lower than when you t
 operator's D-pad up/down trims every shot speed by 1% (<samp>Speed trim : +3%</samp> on the Driver Station). Held, it makes
 4 steps a second. A double-tap on D-pad down sets it to 0. If it happens every match, the table is off: multiply its
 speeds by the trim (or tune it again with the Shot Tuner) and copy the new line into `Tunables.java`
-([Lesson 9](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery)).
+([Add a launcher](add-to-robot/05-launcher.md#speed-trim-and-a-low-battery)).
 Battery compensation is off by default (nobody has proven it on a robot yet). To try it, read
-[lesson 9's battery box](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery).
+[Add a launcher: speed trim and a low battery](add-to-robot/05-launcher.md#speed-trim-and-a-low-battery).
 
 **In an autonomous move the robot turns and stops short (in the simulator or on the field)**
 A corner touched a wall or a field part, and the robot pivoted on it. `move(...)` drives straight and
@@ -260,7 +260,7 @@ A motor direction or a motor name is wrong. [Check motor directions](modules/dri
 
 **Pushing the stick up drives backward**
 You forgot the minus: forward is `-gamepad1.left_stick_y`. (The gamepad reports stick up as a
-negative number.) With the robot in five files, every direction is flipped: reverse the other side ([Lesson 2](tutorials/start/02-drive.md#7-check-the-motor-directions)).
+negative number.) With the robot in five files, every direction is flipped: reverse the other side ([Wiring checks](tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward)).
 
 **Field-centric goes the wrong way**
 1. The IMU orientation (logo/USB) does not match the hub on the robot ([ImuSetup](modules/hardware.md#imusetup)).

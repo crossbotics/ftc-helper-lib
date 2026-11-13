@@ -696,7 +696,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `.action(robot.launcher.fireAllAction())`. `flywheelbot` turns the whole robot (with a 45 degree sweep
   when the goal is not in view), and aims before it gets ready; `turretbot` and `v2bot` wait for the
   turret to aim. `flywheelbot`'s G2 Y fires with `robot.launcher.fireAllAction()`, and its hand-written
-  `Actions.fireThree` is gone. [Lesson 9, section 10](docs/tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot)
+  `Actions.fireThree` is gone. [Lesson 9, section 10](docs/add-to-robot/07-camera.md#controlsjava-its-buttons)
 - **`flywheelbot` fires only when LOCKED on the goal** (`.requireReady("aimed", () -> aim().stage() == Aim.Stage.LOCKED)`):
   never blind, with the aim mode on or off. Its autonomous starts on the 2nd tile right of the center
   line (x 48), where its camera sees the up CELL, and drives 24 in.
@@ -1211,7 +1211,7 @@ now start with numbers worked out from the motor: see "Changed".
   `-PteamCode=none`); **Run it now** plays it back on the page: PASSED or FAILED with the failed line. After
   a change made on purpose, **The change was on purpose: update the test** measures one more run and shows
   the new numbers of the failed checks before saving.
-- **Start lesson 10: Test your robot code** (advanced, docs/tutorials/start/10-test-your-robot-code.md): why
+- **Start lesson 10: Test your robot code** (advanced, docs/tests/01-record-a-test.md): why
   tests, record one, read it line by line, tolerances, goals not details, a few good tests, update after a
   planned change, run them all with one command; laptop JUnit tests for programmers.
 - `./gradlew :sim:scenario` with no `-Pfile` in a robot project runs every test in `simulator/scenarios`;
@@ -1282,7 +1282,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
   `PretendDevices` (give it to `robot.setup(...)`), `PretendMotor`, `PretendServo`, `PretendCRServo`,
   `PretendPinpoint`, `PretendTelemetry`; `robot.startForTests()` (START in a test) and `robot.checkTunables()`
   (INIT's Tunables name checks without a robot). In the library, so TeamCode needs no extra Gradle lines.
-  Example: `examples/src/test/.../v2bot/V2botTest.java`; tutorial 13 section 7; docs/guides/testing.md rewritten
+  Example: `examples/src/test/.../v2bot/V2botTest.java`; tutorial 13 section 7; docs/tests/03-checks-before-practice-and-matches.md rewritten
   for the five files.
 - **A warning for a misnamed Tunables section:** a section no part reads that is named like a part's kind
   (`Tunables.Launcher` for a launcher on `shooter`) or spelled almost like a part's section shows at INIT:
@@ -1600,7 +1600,7 @@ changed before the release. Read "Changed" below (each entry says what to do), o
   `:sim:fromRobot` writes them, `:sim:newRobot` turns a REV Color Sensor V3 or 2m Distance Sensor in the
   configuration into a `PieceSensor` line. Cookbook: a "Game pieces" section.
 - **Aiming helpers** (so the drivers can focus on driving and firing), in the robot in five files;
-  [robot.md: Aim](docs/reference/parts/aim.md), [lesson 9](docs/tutorials/start/09-shooter-and-camera.md)
+  [robot.md: Aim](docs/reference/parts/aim.md), [lesson 9](docs/add-to-robot/05-launcher.md)
   sections 8-11, and four cookbook recipes ("Aiming and shooting"):
   - **The odometry as a backup for the camera:** with an `odometry(...)` line and the goal's place in
     the new `Tunables.Aim` (`goalX`, `goalY`, in `driveTo`'s numbers; `mirrorForRed` like autonomous),
@@ -2135,7 +2135,7 @@ links to them on the website change. A camera missing from the configuration no 
   5 actions, 6 first autonomous, then the lessons your robot needs: 7 odometry, 8 Pedro paths (optional),
   9 a shooter, a camera and a turret (for robots that shoot).
 - **Renamed lesson pages** (their web addresses change): `docs/tutorials/22-robot-in-five-files.md` is now
-  `docs/tutorials/start/01-robot-in-five-files.md`; `start/08-odometry.md` is now `start/07-odometry.md`;
+  `docs/five-files/README.md`; `start/08-odometry.md` is now `start/07-odometry.md`;
   `start/09-paths-with-pedro.md` is now `start/08-paths-with-pedro.md`; `start/07-shooter-and-camera.md`
   is now `start/09-shooter-and-camera.md`.
 - Under-the-hood tutorial 09 is now called "Autonomous by hand with AutoDrive" (same file), so it is no
@@ -2202,7 +2202,7 @@ uses odometry, and only a project that adds the `pedro` folder gets Pedro Pathin
   (`odometry.scaleError`, `odometry.driftDegPerMin`); `:sim:fromRobot` writes the `odometry` lines.
   `:sim:newRobot` and `:sim:fromConfig`: a goBILDA Pinpoint or SparkFun OTOS in the robot configuration
   becomes the odometry (the `Robot.java` line with a `Tunables.Odometry` section, or the robot-file line).
-- Docs: [Lesson 8: Odometry](docs/tutorials/start/07-odometry.md) (which device to buy, wiring, the
+- Docs: [Lesson 8: Odometry](docs/add-to-robot/09-odometry.md) (which device to buy, wiring, the
   tuner, `driveTo`, TeleOp hand-off), a labeled
   [BIOBUZZ field map](docs/images/biobuzz-field-map.svg) in the lesson's frame (made by
   `tools/field_map.py` from the simulator's field file) and the [odometry module](docs/modules/odometry.md); `driveTo` in
@@ -2567,7 +2567,7 @@ way to write a robot (the robot in five files) is added next to it; tutorial 22 
 ### Added
 
 - **The robot in five files** (package `robot`, [docs/modules/robot.md](docs/reference/robot-java.md),
-  [tutorial 22](docs/tutorials/start/01-robot-in-five-files.md)): `Robot.java` says what is on the robot
+  [tutorial 22](docs/five-files/README.md)): `Robot.java` says what is on the robot
   (`RobotDefinition`: `drive(...)` and one `add(...)` per mechanism), `Tunables.java` holds every number
   (one section per part), `Controls.java` is the TeleOp and the button map (`ControlMap`), `Actions.java`
   holds moves that use several parts (`Action`), and each autonomous is a list of `Steps` (`Auto`).

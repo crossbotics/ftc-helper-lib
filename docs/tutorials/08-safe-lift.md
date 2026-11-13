@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** the lift from Tutorial 07, now with limits it cannot drive past, a bottom switch, and stick control that takes over from the buttons.
-In the main track, the lift part has these limits built in: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+In the main track, the lift part has these limits built in: [Add a lift](../add-to-robot/01-lift.md).
 
 **You will learn:** how `SafeMotor` keeps a mechanism inside its range with soft limits, a limit switch,
 homing and a slow zone. You also learn the standard pattern for "set heights with buttons, plus the stick

@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a lift program with a hideable debug screen, a practice/competition switch, a tuning menu and a match timer.
-The main track uses the same tuning menu: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+The main track uses the same tuning menu: [Add a lift](../add-to-robot/01-lift.md).
 
 **You will learn:** telemetry with a driver level and a debug level, the practice/competition profile,
 how to change numbers live with the tuning menu, and the match timer.

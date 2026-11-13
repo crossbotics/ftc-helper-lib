@@ -55,6 +55,16 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
 .speedFromDistance(camera)
 ```
 
+**Fire only when aimed** (no turret): add this check to the launcher's line too. It feeds a piece only when
+the camera sees the goal now and the robot points at it. So the robot never fires blind. It needs
+`import com.crossbotics.ftchelper.robot.Aim;`.
+
+```java title="Robot.java"
+.requireReady("aimed", () -> aim().stage() == Aim.Stage.LOCKED)
+```
+
+With a turret, use the turret's check in place of this one ([Add a turret](06-turret.md#actionsjava-and-autos-use-it-in-steps)).
+
 ### Tunables.java: its numbers
 
 **Where:** `Tunables.java`, a new section. The section's name is the camera's name in CamelCase:
@@ -105,19 +115,35 @@ g1.rb.hold(robot.aimMode()::on, robot.aimMode()::off).says("hold: aim the robot 
 // g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
 ```
 
+**The driver still wins:** while aim mode is on, a push of the turn stick turns the robot as the stick says.
+Let go, and the aim takes over again.
+
+**Aim only when you shoot:** add `public static boolean aimOnFire = true;` to `Tunables.Aim`. Then, with aim
+mode off, RB with the goal in view turns the robot to the goal, fires, and gives the turn stick back. It
+waits at most `aimOnFireSec` (0.5 s), so a press always fires. Tune whole-robot aim first: it uses the same
+numbers ([Quick turn on fire](../reference/parts/aim.md#quick-turn-on-fire)).
+
 To run the lighting test again in a match, put `relight()` on a button
 ([Camera: Buttons to add](../reference/parts/camera.md#buttons-to-add)).
 
 ### Actions.java and autos: use it in steps
 
-**Where:** an autonomous in `autos/`, before a fire step.
+**Where:** an autonomous in `autos/`, at the shooting spot. Three ready-made steps aim, get ready and fire,
+with nothing in `Actions.java`:
 
-```java
-.aimAtGoal("Aim", 3)
+```java title="autos/YourAuto.java"
+.aimAtGoal("Aim", 4, 45)                      // turns the robot; goal not seen: looks 45 degrees each way
+.readyToLaunch("Ready", 3)                    // spins up, waits until at speed and aimed
+.action(robot.launcher.fireAllAction())       // fires every piece it holds, only when aimed
 ```
 
-It turns the whole robot to the goal, or waits until a following turret is aimed. It never turns blind:
-with no goal in view, it waits up to 3 s ([Aim in an auto](../reference/parts/aim.md#aim-in-an-auto)).
+- `aimAtGoal` turns the whole robot to the goal (at most 4 s). When the camera does not see the goal, the
+  robot turns slowly up to 45 degrees each way to find it. With a turret that follows the goal, it waits for
+  the turret instead.
+- `readyToLaunch` waits until the wheel is at speed and every launcher check is true (at most 3 s).
+- With the "aimed" check, a robot that never found the goal fires nothing.
+- **Start where the camera sees the goal.** In BIOBUZZ, at the start, our HIVE's up CELL is on the HIVE's
+  right side, seen from our wall ([Aim in an auto](../reference/parts/aim.md#aim-in-an-auto)).
 
 ## 3. Find its numbers
 
@@ -144,6 +170,93 @@ with no goal in view, it waits up to 3 s ([Aim in an auto](../reference/parts/ai
 **Tune it:** the aim numbers in `Tunables.Aim` (`turnKp`, `turnKd`) only change whole-robot aim. Change
 them with [Live tuning](../tuning/16-live-tuning.md). Then put the tuned numbers in `Tunables.java`.
 
+## More for your camera
+
+### When the camera loses the goal: the odometry
+
+An arm, another robot or a bad angle can hide the tags. A robot with odometry
+([Add odometry](09-odometry.md)) knows where it is, so it can work out where the goal is too. Tell it where
+the goal is:
+
+**Where:** `Tunables.java`, in the `Tunables.Aim` section.
+
+```java title="Tunables.java"
+public static class Aim {
+    public static double goalX = 13;                            // the goal: inches right of the center line
+    public static double goalY = -13;                           // the goal: inches from the center, - = our half
+    public static boolean mirrorForRed = false;                 // BIOBUZZ: false
+}
+```
+
+- `goalX`, `goalY` are field numbers, seen from your own drivers' wall, as in `driveTo`
+  ([Field numbers](../building-autos/01-what-an-auto-can-do.md#field-numbers)). BIOBUZZ: the up CELL at the
+  start is 13 in right of the center line and 13 in toward your wall. Put the point where the camera
+  measures to (the tags), so the camera's distance and the odometry's agree.
+- `mirrorForRed`: BIOBUZZ is `false`, because the field looks the same from each wall. On a mirror-image
+  field, write `true`. INIT shows the choice on its `Aim :` line. Check it before the match.
+- You need nothing more. The turret and the shot table use the camera while it sees the goal, and the
+  odometry while it does not: `Turret : 12 deg  AIMED  following: odometry`. A robot with no camera uses
+  `.followsOdometry()` on the turret and `.speedFromOdometry()` on the launcher.
+
+**The camera comes first,** because the odometry drifts a little in a match. The odometry needs a good
+start, so the backup stays off until the pose is set: an autonomous ran first, or the drivers parked on the
+reset spot and held gamepad 1 START for 1 s ([Add odometry: TeleOp starts where autonomous ended](09-odometry.md#teleop-starts-where-autonomous-ended)).
+It also stays off while it says the goal is farther than the field allows. Every setting:
+[Aim: The goal point](../reference/parts/aim.md#the-goal-point).
+
+### Shooting while moving
+
+A piece shot from a moving robot keeps the robot's speed. At 30 in/s sideways, a piece in the air for
+0.8 s lands 24 in to the side. So the robot aims that far the other way, at a "virtual goal". It needs
+odometry, for the robot's speed.
+
+**Where:** `Tunables.java`, in the `Tunables.Aim` section.
+
+```java title="Tunables.java"
+public static boolean shootOnMove = false;   // true only after testing it on the real robot
+public static double flightSec = 0.8;        // seconds in the air: measure it
+public static double shooterForwardIn = -4;  // the turret's pivot: inches ahead of the odometry's center
+public static double shooterLeftIn = 0;      // the turret's pivot: inches left of the odometry's center
+```
+
+- **Measure `flightSec`** with a phone's slow-motion video (240 pictures a second). Film a shot from the
+  side, count the pictures from the launcher to the goal, and divide by 240 (192 pictures = 0.8 s).
+- **The shooter's place:** do not measure from the robot's middle. Measure from the edges, in inches:
+  `shooterForwardIn` = (half the robot's length) - (the pivot's distance from the FRONT edge).
+  `shooterLeftIn` = (half the robot's width) - (the pivot's distance from the LEFT edge). Example: a robot
+  17 in long with the pivot 12.5 in from the front: 8.5 - 12.5 = -4 (4 in behind the middle).
+- **Test it:** first shoot standing still: the shots must land as before. Then drive slowly sideways past
+  the goal and shoot. Misses toward the way the robot drives: `flightSec` is too short. Misses the other
+  way: it is too long.
+- A button can switch it off in a match: `g2.a.toggle(robot.aim().movingShotMode()).says("shoot on the move on/off");`.
+
+Every setting, a camera on the body, longer flights: [Shooting on the move](../reference/parts/aim.md#shooting-on-the-move).
+
+### Try it in the simulator
+
+The turret robot has a camera on a turret, and a shot table for each piece. Make its simulator file from
+its `Robot.java`, then run it.
+
+**Where:** the Terminal, in the `ftc-helper-lib` folder.
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.turretbot.Robot -Pout=build/turretbot.properties
+./gradlew :sim:run -PteamCode=none -Probot=build/turretbot.properties
+```
+
+Open http://localhost:8780. Choose "TurretBot TeleOp", pick the alliance in INIT (gamepad 1 X = BLUE,
+B = RED), and press ▶. Drive until the goal is in view. The turret follows it, and the speed changes with
+the distance.
+
+- **Where to stand:** the tags are under the up CELL, so the camera must be below and in front of them.
+  RED: about x 57, y -13, facing the HIVE (heading 90). BLUE: about x -57, y 13 (heading -90). Drag the
+  robot there on the map.
+- Spin up (LB) and fire (RB). The POLLEN table was tuned in the simulator, so POLLEN shots go in. The
+  NECTAR table is example numbers, so expect misses.
+- **Whole-robot aim:** do the same with `flywheelbot` (`-ProbotClass=com.crossbotics.ftchelper.examples.flywheelbot.Robot -Pout=build/flywheelbot.properties`).
+  Choose "FlywheelBot TeleOp", drive until the goal is in view, and press RB on gamepad 1.
+- Your own robot: [Simulator](../guides/simulator.md).
+
 ## Fix a problem
 
 | Problem | Why, and the fix |
@@ -156,6 +269,12 @@ them with [Live tuning](../tuning/16-live-tuning.md). Then put the tuned numbers
 | INIT stops: `robot.aimMode() ... separate modes` | The turret follows the goal. Remove the `aimMode()` line, or `.follows(...)` on the turret |
 | Whole-robot aim stops a few degrees off | Raise `turnKp`, or set `minTurnPower` in `Tunables.Aim` |
 | It is aimed, but the shots go wide by the same angle | The camera is beside the launcher. Run the Aim Tuner |
+| `limelight lighting: trying 1 of 3: pipeline 0 (no tags yet: face a tag)` (INIT) | No pipeline saw a tag yet. Turn the robot toward a tag. The test goes on until ▶ |
+| `Aim: no goal` | Whole-robot aim is on, but the camera does not see the goal, and there is no odometry backup |
+| `following: odometry` points the wrong way | Check `goalX`, `goalY` (seen from your own wall), `mirrorForRed`, and that the pose started right |
+| `Aim odometry: the pose was never set` | TeleOp ran with no autonomous before it. Run the autonomous first, or park on the reset spot and hold gamepad 1 START 1 s |
+| `Aim odometry: ... more than the field allows` | The pose is wrong. The backup stays off until it is right |
+| `Aim: camera says 60 in, odometry 48 in` | The pose drifted, or `goalX`, `goalY` are not where the camera measures to |
 
 ## Done when
 

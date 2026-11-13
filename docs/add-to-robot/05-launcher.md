@@ -40,6 +40,12 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 - `.feeder(...)` is the part that pushes the pieces in. `Indexer.servo` is a servo arm. Use
   `Indexer.crServo(name)` for a CR servo wheel, or `Indexer.motor(name)` for a motor
   ([Indexer](../reference/parts/indexer.md)).
+- **Two arms** that pinch the piece from both sides: `Indexer.servo("feeder_left").alsoServoReversed("feeder_right")`.
+  Both arms use the same `rest` and `push`.
+- **A wheel and an arm:** a CR servo wheel brings each piece up, and the arm pushes it in. Write the arm as
+  the feeder, and add `.feedWheel(Indexer.crServo("feeder_wheel"))` ([Feed wheel](../reference/parts/launcher.md#feed-wheel)).
+- **A motor that is not in the catalog:** write `Motors.custom("my-motor", 28, 5800)` in place of the id
+  (counts per turn, then top RPM).
 - When a name is red, click it and press Alt+Enter (Option+Enter on a Mac) to add the import.
 
 **A feed stop, and an intake that pushes the pieces in.** Add these only when your robot has them:
@@ -127,6 +133,25 @@ robot.launcher.tableOn(g2.dpadRight);
 With one gamepad (`oneDriver = true`), these `g2` lines work on gamepad 1
 ([One gamepad, and a second one when you want it](../controls/01-how-buttons-work.md#one-gamepad-and-a-second-one-when-you-want-it)).
 
+**How it fires:**
+
+- **A tap of RB is CAREFUL:** each piece waits until the wheel is at speed, and `shotIntervalSec` after the
+  last piece.
+- **RB held is QUICK:** the first piece waits the same way. The next ones go a little sooner. Let go, and no
+  more pieces go.
+- **Many quick taps** line up shots, at most `maxFiringQueue` (4). More taps do nothing. A nervous driver
+  who taps 10 times does not get 10 shots.
+- **SPRAY** does not wait for the speed. It is off until you set `sprayEnabled = true`. Then tap RB, press
+  it again and hold it: the launcher empties the robot fast. In the last seconds of a period, the launcher
+  picks SPRAY by itself.
+- **It spins up at ▶** when it has a feeder or a feed stop. A launcher that only the intake feeds
+  (`pushedBy` only) waits for LB. Change it with `spinAtStart = true` or `false` in `Tunables.Launcher`.
+- **Other buttons:** `robot.launcher.fireOn(g2.y);` puts the fire job on Y. Do not give the fire button a
+  double tap or a long press of your own: then a quick press waits to see the gesture, and does not fire at
+  once.
+
+Every setting: [Firing: shot modes](../reference/parts/launcher.md#firing-shot-modes-feed-stop-piece-path).
+
 ### Actions.java and autos: use it in steps
 
 When the intake must run while the launcher fires, an action puts them together.
@@ -164,6 +189,10 @@ s.start("Against our wall, facing the field", 0)
  .right("Park", 12, 0.5);
 ```
 
+**No camera?** Then the launcher has no distance, and shoots at `speedRpm`. An auto that shoots from two
+spots gives each spot its own speed: `.action(robot.launcher.fireAllAction(2250))` fires every piece at
+2250 RPM, then goes back to `speedRpm`.
+
 ## 3. Find its numbers
 
 INIT stops on `MEASURE`. The finders still run, because they do not read `Tunables.java`.
@@ -171,7 +200,8 @@ INIT stops on `MEASURE`. The finders still run, because they do not read `Tunabl
 1. **Servo Finder** ([how](../tuning/03-servo-finder.md)): find the indexer's two positions. `rest` is out
    of the way. `push` has pushed a piece into the wheel. Put them in `Tunables.Indexer`.
 2. **Flywheel Finder** ([how](../tuning/06-flywheel-finder.md)): it finds the speed gains and the
-   recovery time after a shot. Put the gains line in `Tunables.Launcher`. Make `shotIntervalSec` a little
+   recovery time after a shot. Until then, the wheel runs on starting gains from the motor, and INIT says
+   so: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, ...`. Put the gains line in `Tunables.Launcher`. Make `shotIntervalSec` a little
    longer than the recovery time.
 3. **Feed Stop Finder** ([how](../tuning/07-feed-stop-finder.md)), only with a feed stop: the hold and
    release positions, and the firing times.
@@ -196,6 +226,134 @@ INIT stops on `MEASURE`. The finders still run, because they do not read `Tunabl
 
 Then put the tuned numbers in `Tunables.java`, in place of `DEFAULT`.
 
+## More for your launcher
+
+Add these when your robot needs them.
+
+### Two kinds of pieces: two shot tables
+
+Two pieces that fly differently need two speeds for the same distance. BIOBUZZ has POLLEN (a 2.8 in ball)
+and NECTAR (a 3.6 in ball). Each `speedByDistance...` line in `Tunables.Launcher` is a table, and the part
+after `speedByDistance` is its name:
+
+**Where:** `Tunables.java`, in `Tunables.Launcher`, in place of the `speedByDistance` line.
+
+```java title="Tunables.java"
+public static double[][] speedByDistancePollen = {{36, 1970}, {48, 2250}, {60, 2520}, {72, 2790}};
+public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}, {96, 3600}};
+```
+
+- `.startTable("pollen")` on the launcher's line in `Robot.java` picks the table at ▶.
+- **Change the table:** D-pad right picks the next table (`tableOn`, above). Or one button for each piece:
+  `g2.x.press(() -> robot.launcher.useTable("pollen"));`. In an action:
+  `.then(() -> r.launcher.useTable("nectar"))`.
+- The Driver Station shows the table: `Shot table : POLLEN, 48 in (camera)`.
+- The [Shot Tuner](../tuning/13-shot-tuner.md) fills each table: press Y until `> Table`, and pick it with
+  the D-pad.
+
+### Speed trim and a low battery
+
+In some matches every shot lands a little short or long (a worn wheel, soft balls). With a shot table,
+D-pad up and down make every shot 1% faster or slower. Hold it for more. Double-tap D-pad down to go back
+to 0. The Driver Station shows `Speed trim : +3%  READY`.
+
+- The trim starts at 0 at every INIT. At INIT, the Driver Station offers the last trim: double-tap D-pad up
+  after ▶ to use it.
+- **The same trim match after match?** The table is off. Multiply each speed in the table by the trim
+  (+3%: x 1.03), put the new line in `Tunables.java`, and go back to no trim.
+- **A low battery** makes the wheel slow to get back to speed after a shot. Under 11.5 V the Driver Station
+  warns. Swap the battery. Battery compensation is off, and not yet tested on a robot
+  ([Speed trim and battery compensation](../reference/parts/launcher.md#speed-trim-and-battery-compensation)).
+
+### A hood: the shot angle
+
+A **hood** is the curved plate over the flywheel. It sets how steep the piece leaves. Near the goal, a
+steep shot drops in. Far away, a flatter shot goes further. With a hood, each row of a shot table has a
+third number: `{48, 2550, 11}` (inches, RPM, hood angle).
+
+**Where:** `Robot.java`, the launcher's line. The `.hood(...)` line is new. Add `import com.crossbotics.ftchelper.robot.Hood;`.
+
+<!-- recipe: robot-hood -->
+```java title="Robot.java"
+// The hood goes on the launcher; its numbers are in Tunables.Hood.
+// .part(...): which servos they are (optional, recommended).
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
+        .hood(Hood.servo("hood").part("gobilda-2000-torque"))
+        .speedFromDistance(camera));
+```
+
+**Where:** `Tunables.java`, a new section, `Tunables.Hood`.
+
+<!-- recipe: tunables-hood -->
+```java title="Tunables.java"
+public static class Hood {                                      // "hood" in the configuration
+    // posA and posB: the servo positions a hair off the hood's two hard stops. Never past them.
+    public static double posA = MEASURE;                        // servo position at stop A (Hood Finder)
+    public static double posB = MEASURE;                        // servo position at stop B (Hood Finder)
+    // Optional: the hood's angle at each stop (any scale, e.g. 0 = steep end, 30 = flat end).
+    public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
+    public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
+    public static double travelSec = DEFAULT;                   // stop to stop, seconds (0.5, or the servo's)
+    public static double startAngle = DEFAULT;                  // where it goes at ▶ (angle A)
+}
+```
+
+- **`posA` and `posB` are the hood's two hard stops.** The hood never goes past them, because a servo that
+  pushes on a stop gets hot and breaks. The [Hood Finder](../tuning/04-hood-finder.md) finds them.
+- **The launcher waits for the hood.** A servo cannot say where it is, so the launcher waits `travelSec`
+  for a stop-to-stop move (`Launcher waits for: hood`). A piece fired while the hood moves flies wrong.
+- **By hand:** gamepad 2's left stick moves the hood. With a shot table, it trims the hood angle. Use the
+  speed trim for shots that are short or long. Use the hood trim for shots that arrive at the wrong slope.
+- The [Shot Tuner](../tuning/13-shot-tuner.md) finds the speed and the hood angle together: press Y until
+  `> Hood`.
+
+Every setting, a linkage and a motor hood: [Hood](../reference/parts/hood.md).
+
+### Know which piece fires next
+
+A color sensor where the pieces come in, and one at the "ready to fire" place, let the robot count what it
+holds and know the next piece. Then the next piece picks the shot table, and the drivers do not switch
+tables by hand.
+
+**Where:** `Robot.java`, in `define()`, **before** the launcher line (the launcher uses `pieces`). The
+field goes at the top of the class (`public Pieces pieces;`).
+
+```java title="Robot.java"
+pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
+        .comingIn(PieceSensor.color("intake_color"))
+        .readyToFire(PieceSensor.color("ready_color"))
+        .max(4));
+```
+
+Then add these two lines to the launcher's line:
+
+```java title="Robot.java"
+.tableFrom(pieces.nextKind())                         // the next piece picks the table
+.tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")      // both NECTAR colors use "nectar"
+```
+
+- The [Piece Tuner](../tuning/14-piece-tuner.md) measures each kind's color. Until then, a piece reads
+  `UNKNOWN`, and an `UNKNOWN` piece keeps the table in use.
+- The count can be wrong (two pieces that touch, a piece that bounces out). The drivers, not the count, keep
+  the robot to its piece limit.
+
+Every sensor and command: [Pieces](../reference/parts/pieces.md).
+
+### Try it in the simulator
+
+The goBILDA starter bot has a measured simulator robot.
+
+**Where:** the Terminal, in the `ftc-helper-lib` folder.
+
+```bash
+./gradlew :sim:run -PteamCode=none -Probot=sim/robots/starter-bot-gobilda.properties
+```
+
+Open http://localhost:8780, choose "goBILDA Bot TeleOp", press INIT, then ▶. Tap LB and watch the speed go
+up, then tap RB. Tap RB before the wheel is at speed, and the piece waits. The turret and camera robots:
+[Add a camera: Try it in the simulator](07-camera.md#try-it-in-the-simulator).
+
 ## Fix a problem
 
 | Problem | Why, and the fix |
@@ -206,6 +364,12 @@ Then put the tuned numbers in `Tunables.java`, in place of `DEFAULT`.
 | INIT: `Launcher fire one; hold: keep firing: no button (G2 RB is your "..." in Controls.java)` | One of your own jobs is on the launcher's button. Move your job to a free button |
 | Two pieces go in at once | The feeder runs too long. Lower `pushSec` |
 | The wheel spins the wrong way | Add `.reversed()` to the launcher in `Robot.java` |
+| `Launcher gave up: turret aimed` | The goal is not in view, or out of the turret's range, or `tolerance` is too small |
+| `Launcher: no shot table "nectr"` | No `speedByDistance...` line has that name. The warning lists the names there |
+| Shots short (or long) in every match | Trim with the D-pad. If you need the same trim again and again, tune the table again |
+| INIT stops: `Tunables.Hood has no posA` | Run the Hood Finder, and put its line in `Tunables.Hood` |
+| `Launcher waits for: hood`, and it never fires | `travelSec` is very long, or a motor hood cannot reach the angle |
+| INIT stops: `the row at 48 in has hood 30, outside the hood's range` | A table row asks past a stop. Fix the row, or the stops |
 | `battery 11.2 V: low` | Swap the battery. A low battery makes the wheel slow to get back to speed |
 
 ## Done when

@@ -9,7 +9,7 @@ import com.crossbotics.ftchelper.robot.Pad;
 /**
  * Example robot 2, file 3 of 5: the buttons and the TeleOp. Each part's buttons are written out below
  * (INIT shows the map); ours: X grab, Y release into a FLOWER, the aim buzz, and the light's colors.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#13-a-light-for-the-drivers
+ * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/08-lights/#controlsjava-the-rules
  */
 @TeleOp(name = "TurretBot TeleOp", group = "Examples")
 @Disabled

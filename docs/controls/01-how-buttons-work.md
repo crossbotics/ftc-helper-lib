@@ -90,7 +90,7 @@ part. You never write the loop.
 **A job must never wait.** Put no `sleep(...)` and no `while` loop in a job. The code compiles, but it
 freezes the **whole robot** until the job ends: no driving, no other button, no part updates. The Driver
 Station then warns: `... took 512 ms: the whole robot stopped that long. No sleep() or while loop in a
-button job: use an Action with waitSeconds (lesson 5)`. To wait between steps, make an action with
+button job: use an Action with waitSeconds (docs: Actions.java)`. To wait between steps, make an action with
 `waitSeconds(...)` or `waitUntil(...)`, and put the action on the button
 ([Actions.java](../five-files/04-actions-java.md)).
 
@@ -154,6 +154,8 @@ read in this file. Each part's page has its usual lines, ready to copy ("Buttons
   `Controls.java: G2 B has two jobs`. The same gesture twice stops INIT too: `G2 A has two "tap" jobs`.
 - **A job of yours on a library button** stops INIT. The message names the button. Move the library's job
   first ([page 4](04-move-library-buttons.md)).
+- **Two things on one button:** put both in one lambda:
+  `g2.dpadLeft.press(() -> { robot.claw.open(); robot.intake.stop(); }).says("drop")`.
 - **`.free()` keeps a button empty**, for example `g2.rightStickX.free()`. INIT then does not name it as
   free.
 - **A button that is down as you press ▶** (start on the Driver Hub), or as the tuning menu closes, does

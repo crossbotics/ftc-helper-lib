@@ -18,7 +18,7 @@ import com.crossbotics.ftchelper.robot.Turret;
  * Example robot 2, file 1 of 5: a mecanum robot with a turret and a Limelight that follow the goal,
  * a flywheel with a hood (speed and angle from the distance, two shot tables), a claw on a fold-out
  * pivot, and a light for the drivers.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/
+ * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/05-launcher/
  */
 public class Robot extends RobotDefinition {
     public Camera camera;

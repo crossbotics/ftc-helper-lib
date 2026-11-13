@@ -86,7 +86,7 @@ between two headings.
 **In the robot in five files:** `g2.rumbleWhenAimed();` in `Controls.java` does this for a turret or for
 whole-robot aim. Whole-robot aim (`g1.rb.toggle(robot.aimMode())`) turns the robot to face the goal while
 the driver drives. On a robot with no turret, the gamepad also buzzes when the driver turns to the goal by
-hand. See [Lesson 9, sections 10 and 11](start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot).
+hand. See [Add a camera: its buttons](../add-to-robot/07-camera.md#controlsjava-its-buttons).
 
 ## 4. Smooth starts
 

@@ -6,8 +6,8 @@ Six files that make a complete, competition-ready robot program: one TeleOp for 
 an autonomous with a menu, a hardware check, and one place for every setting. Copy them, change
 names and numbers, and you have a working robot.
 
-> **Start with the robot in five files instead.** [Lesson 1](tutorials/start/01-robot-in-five-files.md) of the
-> tutorials' main track shows a shorter way: `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and autos, made from your robot
+> **Start with the robot in five files instead.** [The five files](five-files/README.md) shows a
+> shorter way: `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and autos, made from your robot
 > configuration by `./gradlew :sim:newRobot`, with ready-made modules ([robot module](reference/robot-java.md)).
 > This starter kit still works, and we keep it for teams that use it. If you are a new team, start at
 > [Pick your road](quick-start.md#pick-your-road) in the Quick start.
@@ -57,7 +57,7 @@ flowchart LR
    `Robot.java` ([tuning guide](tuning/16-live-tuning.md)).
 8. **Autonomous**: tune the drivetrain with the **Drive Tuner** finder, set `calibrationConfirmed = true`,
    then change `AutoScoreAndPark`'s steps for your game ([easy autos](guides/easy-autos.md)).
-9. **Before the event**: pick the COMPETITION profile, and go through the [testing checklist](guides/testing.md).
+9. **Before the event**: pick the COMPETITION profile, and go through the [testing checklist](tests/03-checks-before-practice-and-matches.md).
 
 ## Robot.java: the mechanisms
 
@@ -111,7 +111,7 @@ all = new Subsystems().add(lift, claw, intake); // (8)!
    slam into its stops.
 5. How hard the lift pushes toward a height: P = 0.004 pushes harder when it is far, I = 0 (not used),
    D = 0.0002 calms it so it does not overshoot, F = 0.05 is a small steady push up that holds it
-   against gravity. These are starting values: tune yours ([lesson 07](tutorials/07-pid-lift.md)).
+   against gravity. These are starting values: tune yours ([tutorial 07](tutorials/07-pid-lift.md)).
 6. The gains and heights are then in the tuning menu as "Lift/...": change them from the gamepad in the
    PRACTICE profile, then copy the good values back into this file ([tuning guide](tuning/16-live-tuning.md)).
    The code is the record.

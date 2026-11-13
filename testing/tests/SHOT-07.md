@@ -8,7 +8,7 @@ minutes: 10
 needs: [flywheel]
 kit_bots: [gobilda, gobilda-strafer, rev, studica]
 since: v0.24.0
-docs: [reference/parts/launcher.md#in-tunablesjava, tutorials/start/09-shooter-and-camera.md#4-the-two-safety-rules]
+docs: [reference/parts/launcher.md#in-tunablesjava, add-to-robot/05-launcher.md#controlsjava-its-buttons]
 ---
 
 ## Why

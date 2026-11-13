@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a drive program that turns the robot toward an AprilTag (a printed square code on the field) while the driver holds a button.
-The main track adds a camera with less code: [A shooter, a camera and a turret](start/09-shooter-and-camera.md).
+The main track adds a camera with less code: [Add a launcher](../add-to-robot/05-launcher.md).
 
 **You will learn:** how to find AprilTags with a webcam or a Limelight 3A through ONE interface, what
 bearing and distance mean, and how to aim the drivetrain (or a turret) at a tag safely.
@@ -134,7 +134,7 @@ table (tutorial 17). Check `target.hasDistance()` first.
 - With odometry and `Tunables.Aim.goalX, goalY`, they keep working from the odometry when the camera
   loses the goal.
 
-See [Lesson 9](start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry)
+See [Add a camera](../add-to-robot/07-camera.md#when-the-camera-loses-the-goal-the-odometry)
 and [robot.md: Aim](../reference/parts/aim.md).
 
 ## 2026-27 notes
@@ -187,4 +187,4 @@ and [robot.md: Aim](../reference/parts/aim.md).
 
 ## Next
 
-[Check the hardware (lesson 2b, tutorial 19)](19-testing-procedures.md)
+[Check the hardware (tutorial 19)](19-testing-procedures.md)

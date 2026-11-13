@@ -55,7 +55,7 @@ lifts, so they keep their own file ([Aim Tuner](12-aim-tuner.md), [Characterizer
   the TeleOp list under "Finders".
 - The robot in five files: the Servo, Motor and Flywheel finders need no code. The Drive Tuner, the
   Odometry Tuner, the Move Tuner and the Shot Tuner need one line that names your robot. The line makes your `Robot`, so
-  the tuner uses its parts. Examples: the lesson robot's
+  the tuner uses its parts. Examples: `lessonbot`'s
   [DriveTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/DriveTuner.java),
   the turret robot's [ShotTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/ShotTuner.java):
 
@@ -93,7 +93,7 @@ Each finder shows two kinds of lines. Use the kind that fits your code:
 
 | Your code | Copy the lines that start with | Example |
 | --- | --- | --- |
-| the robot in five files ([lessons](../tutorials/README.md#start-here-the-main-track)) | `Tunables.` or `Robot.java:` | `Tunables.Lift: min = 0, max = 2580, P1 = 1200` = in `Tunables.java`, section `Lift`, set those three numbers |
+| the robot in five files ([The five files](../five-files/README.md)) | `Tunables.` or `Robot.java:` | `Tunables.Lift: min = 0, max = 2580, P1 = 1200` = in `Tunables.java`, section `Lift`, set those three numbers |
 | the older helpers | the rest (`PositionMotor.create(...)`, `c.wheelDiameterIn = ...`) | `PositionMotor.create(hardwareMap, "lift").limits(0, 2580)` |
 
 The section is the device's name in CamelCase (each word starts with a capital, with no spaces): `lift` ->

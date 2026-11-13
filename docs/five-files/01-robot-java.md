@@ -110,6 +110,13 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 **Why it matters:** the robot uses the IMU to know which way it faces. A wrong mounting makes turns and
 field-centric driving go the wrong way.
 
+**Check it** after the first drive test (it needs `Controls.java`):
+
+1. Run your TeleOp. Hold gamepad 1's small **START** button, then press **BACK**. This shows the debug
+   lines, with the `Heading`. It does not pause the robot.
+2. Turn the robot LEFT by hand. The `Heading` must go UP.
+3. If it goes down, or barely moves, the logo and USB directions are wrong. Look at the hub again.
+
 ### A wheel turns the wrong way
 
 Leave this until the first drive test. Without a `.reversed(...)` line, the library reverses the left side.

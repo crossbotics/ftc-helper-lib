@@ -401,7 +401,7 @@ public class SimFromRobotTest {
     }
 
     // BLUE's goal (BLUE SCORING, tags 42-45) starts high, under BLUE's raised CELL on the far side of the
-    // HIVE, facing away from the audience: seen from the far side (lesson 9's spot), the turret centers it.
+    // HIVE, facing away from the audience: seen from the far side (the camera page's spot), the turret centers it.
     @Test public void turretBotOnBlueSeesItsGoalFromTheFarSide() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
         com.crossbotics.ftchelper.match.MatchMemory.clear();
@@ -785,7 +785,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // The main-track lessons' robot (docs/tutorials/start/): its actions and its autonomous run.
+    // The example robot lessonbot (docs/five-files/ and docs/add-to-robot/): its actions and its autonomous run.
     @Test public void theLessonBotScoresAndParks() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.lessonbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
@@ -837,7 +837,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // Lesson 7: odometry. The simulator's pretend Pinpoint follows the robot; driveTo ends at the field
+    // Odometry. The simulator's pretend Pinpoint follows the robot; driveTo ends at the field
     // points (the start spot is the drivers' frame: x right, y away, for BLUE).
     @Test public void theOdometryBotDrivesToFieldPoints() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
@@ -897,7 +897,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // Lesson 7: the Odometry Tuner's spin test finds the Pinpoint's offsets (the robot file has -84, -168).
+    // The Odometry Tuner's spin test finds the Pinpoint's offsets (the robot file has -84, -168).
     @Test public void theOdometryTunerFindsThePinpointOffsets() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
@@ -956,7 +956,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // The finders' hookup for the robot in five files (lesson 6): robot() { return new Robot(); }, and
+    // The finders' hookup for the robot in five files (docs/tuning/): robot() { return new Robot(); }, and
     // lines for Robot.java and Tunables.java.
     @Test public void theLessonBotDriveTunerShowsFiveFilesLines() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.lessonbot.Robot.class);

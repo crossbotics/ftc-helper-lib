@@ -7,7 +7,7 @@ you the exact line for `Robot.java` and the lines for `Tunables.java`. A summary
 four complete examples, how to find each number, what the INIT screen shows, and common mistakes follow.
 
 Reference: [Turret in the robot module](../reference/parts/turret.md). The lesson that builds a shooter
-with a turret: [Lesson 9](../tutorials/start/09-shooter-and-camera.md). Signs: angles are in degrees,
+with a turret: [Add a launcher](../add-to-robot/05-launcher.md). Signs: angles are in degrees,
 **0 = straight forward, counterclockwise (to the left, seen from above) is +** ([conventions](../conventions.md)).
 
 ```mermaid
@@ -136,7 +136,7 @@ Put a hard stop there too, because software is not a hard stop. A servo turret's
 | --- | --- |
 | On the turret (turns with it) | `.follows(camera)` |
 | On the robot's body | `.follows(camera).cameraOnBody()` |
-| None: aim from where the robot is ([odometry](../tutorials/start/07-odometry.md)) | `.followsOdometry()` with `Tunables.Aim.goalX, goalY` |
+| None: aim from where the robot is ([odometry](../add-to-robot/09-odometry.md)) | `.followsOdometry()` with `Tunables.Aim.goalX, goalY` |
 
 `follows` turns follow mode on at ▶ (operator BACK switches it). With odometry and the goal point,
 the odometry takes over while the camera does not see the goal ([Aim](../reference/parts/aim.md)).

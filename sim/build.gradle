@@ -145,7 +145,7 @@ tasks.register('run', JavaExec) {
 
 // ./gradlew :sim:scenario -Pfile=path/to/test.sim [-Probot=...] [-PnoFromRobot]   (several: -Pfile=a.sim,b.sim; a folder: every .sim in it)
 // Runs scenario files without a browser and prints a report; fails if any "expect" fails.
-// In a robot project, with no -Pfile: every test in simulator/scenarios (start lesson 10).
+// In a robot project, with no -Pfile: every test in simulator/scenarios (docs/tests/02-run-all-your-tests.md).
 tasks.register('scenario', JavaExec) {
     group = 'verification'
     description = 'Runs simulator scenario files (see docs/guides/simulator.md).'

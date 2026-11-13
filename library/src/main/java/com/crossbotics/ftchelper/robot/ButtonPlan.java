@@ -416,7 +416,7 @@ final class ButtonPlan {
             double ms = (System.nanoTime() - start) / 1e6;
             if (ms > ControllerBindings.SLOW_ACTION_MS) {
                 slowWarning = String.format(java.util.Locale.US, "a button job took %.0f ms: the whole robot stopped "
-                        + "that long. No sleep() or while loop in a button job: use an Action with waitSeconds (lesson 5)", ms);
+                        + "that long. No sleep() or while loop in a button job: use an Action with waitSeconds (docs: Actions.java)", ms);
                 slowWarningAt = System.nanoTime();
             }
         }

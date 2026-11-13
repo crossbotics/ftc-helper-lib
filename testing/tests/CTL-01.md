@@ -8,7 +8,7 @@ minutes: 15
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
-docs: [tutorials/start/03-buttons.md#7-pause-with-back-and-the-other-library-buttons, controls/04-move-library-buttons.md]
+docs: [controls/04-move-library-buttons.md#every-library-button, controls/04-move-library-buttons.md]
 ---
 
 ## Why

@@ -202,7 +202,7 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
 
     @Override
     protected final String notTunedHelp() {
-        return "Tune it with the Drive Tuner (tutorials, main track lesson 6), then set Tunables.Drive.calibrated = true.";
+        return "Tune it with the Drive Tuner (Tune and check menu), then set Tunables.Drive.calibrated = true.";
     }
 
     @Override

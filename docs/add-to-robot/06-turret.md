@@ -98,6 +98,10 @@ aimed. Add this to the launcher's line in `Robot.java`:
 .requireReady("turret aimed", () -> turret.isAimed())
 ```
 
+For a turret that follows the goal, "aimed" means **at the goal now**: the robot sees the goal (camera or
+odometry), and the turret is in range and on it. When the robot loses the goal, the turret is not aimed. So
+the launcher never fires blind.
+
 To point it at an angle in an action, use `r.turret.aimAt(45)`. It stops following.
 
 ### Your turret is different
@@ -222,6 +226,7 @@ Then put the tuned numbers in `Tunables.Turret`, in place of `DEFAULT`.
 | Every angle is off by the same amount | It did not point at `startAngle` at INIT. Use a mark, or add a home switch |
 | The angles are wrong | `.gearRatio(...)` is wrong (count the teeth again), or it did not point forward at INIT |
 | `goal out of turret range` | The goal is past `min` or `max`. Turn the robot |
+| `goal out of turret range (behind the robot: holding)` | The odometry says the goal is far behind. The turret holds where it points. Turn the robot toward the goal |
 | `homing failed: switch not found` | Homing turns the wrong way: set `homeDirection` (+1 or -1) |
 | INIT: `Turret : no angle from a program before: ...` | Turn it to `startAngle` by hand, then INIT again |
 | It is aimed, but the shots go wide by the same angle | The camera is beside the launcher. Run the Aim Tuner (`cameraOffset`) |

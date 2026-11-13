@@ -91,6 +91,18 @@ With `Robot.java`, `Tunables.java` and this file, the robot drives.
 3. On the Driver Hub, pick **First Robot TeleOp** and press **INIT**. The screen shows the button map.
 4. Press **▶**. Push the left stick forward: all four wheels turn forward.
 5. Take it off the block and drive. `Tunables.Drive.maxPower = 0.5` keeps it slow.
+6. Check each one:
+   - Stick up = forward, stick down = back, right stick right = turn clockwise.
+   - Mecanum: left stick right = slide right, in a straight line.
+   - Slow: pull LT (two gamepads; the further you pull, the slower), or click the left stick (one gamepad).
+   - Mecanum: double-tap Y, or the right stick click with one gamepad (two buzzes: field-centric on). Turn the robot 90 degrees, and push the stick
+     up. The robot still goes away from you.
+   - Tap BACK: every part stops and the Driver Hub says PAUSED. Tap BACK again: it drives.
+
+**Robot-centric and field-centric.** Robot-centric (the start): stick up = the way the robot faces.
+Field-centric: stick up = away from the driver, whichever way the robot faces. "Away" is the way the robot
+faced at INIT, or what the autonomous left. When it is wrong: turn field-centric on, point the robot away
+from you, and hold BACK 1 s (one buzz).
 
 **In the simulator:** pick **Simulator** in the run list and click **Run**. Then pick the TeleOp on the
 simulator's Driver Hub.
@@ -244,6 +256,18 @@ g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
 
 INIT stops with a message when a button has two jobs, or when your job is on one of the library's
 buttons. The message names the button.
+
+**If the drive goes wrong:**
+
+| Problem | Fix |
+| --- | --- |
+| INIT stops with a list of names | A motor name in `Robot.java` does not match the configuration (capitals too) |
+| It spins or drifts when it should go straight | A motor direction is wrong: [a wheel turns the wrong way](01-robot-java.md#a-wheel-turns-the-wrong-way) |
+| Stick up drives backward | Every direction is flipped: reverse the other side |
+| It slides on a slant when it should slide sideways | Two motor names are on the wrong wheels (for example `front_left` and `back_left` swapped) |
+| Field-centric goes the wrong way or circles | The IMU's logo and USB directions ([check it](01-robot-java.md#how-your-control-hub-is-mounted)), or "away" is wrong: hold BACK 1 s |
+| Everything stopped and does not move | It is paused: tap BACK |
+| Slow even without LT | `maxPower` is low, or `practiceMaxPower` is low in the PRACTICE profile |
 
 ---
 

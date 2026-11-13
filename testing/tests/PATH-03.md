@@ -8,7 +8,7 @@ minutes: 30
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
-docs: [tutorials/start/08-paths-with-pedro.md#5-write-your-first-path]
+docs: [building-autos/05-pedro-paths.md#actionsjava-and-autos-make-paths-then-follow-them]
 ---
 
 ## Why

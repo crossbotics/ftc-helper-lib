@@ -8,7 +8,7 @@ minutes: 40
 needs: [turret, limelight|webcam]
 kit_bots: []
 since: v0.16.0
-docs: [tutorials/start/09-shooter-and-camera.md#6-a-turret-that-follows-it, tutorials/start/09-shooter-and-camera.md#check-it-on-the-robot]
+docs: [add-to-robot/06-turret.md, add-to-robot/05-launcher.md#4-check-it-then-tune-it]
 ---
 
 ## Why
@@ -28,7 +28,7 @@ past its limits, and say clearly when the goal is out of range. Every turret is 
 - `Turret.motor(...).gearRatio(...).follows(camera)` in `Robot.java`, `Tunables.Turret` with `min`, `max`.
 - A goal tag (AprilTag) you can see: the field, or a printed tag at the right height.
 - The turret at its `startAngle` before INIT (by default 0 = straight forward; a mark or a jig helps), unless it has a home switch ([TUR-01](TUR-01.md)) or an absolute encoder. TeleOp started within 5 minutes of another program starts from the angle that program ended at.
-- Simulator: lesson 9's turret robot (`turretbot`) commands, then "TurretBot TeleOp".
+- Simulator: the turret robot (`turretbot`) commands ([Add a camera: Try it in the simulator](../../docs/add-to-robot/07-camera.md#try-it-in-the-simulator)), then "TurretBot TeleOp".
 
 ## Steps
 

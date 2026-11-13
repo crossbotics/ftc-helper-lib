@@ -8,7 +8,7 @@ minutes: 20
 needs: [flywheel]
 kit_bots: [gobilda, gobilda-strafer, rev, studica]
 since: v0.16.0
-docs: [tutorials/start/09-shooter-and-camera.md#4-the-two-safety-rules, tutorials/start/09-shooter-and-camera.md#3-the-buttons-it-brings]
+docs: [add-to-robot/05-launcher.md#controlsjava-its-buttons, add-to-robot/05-launcher.md#controlsjava-its-buttons]
 ---
 
 ## Why
@@ -25,7 +25,7 @@ feeders (a CR servo, a servo, a roller) must all follow them.
 ## Setup
 
 - A launcher with a feeder in `Robot.java` and its gains (SHOT-01).
-- Simulator: lesson 9's goBILDA bot (`-Probot=sim/robots/starter-bot-gobilda.properties`, "goBILDA Bot TeleOp").
+- Simulator: the goBILDA bot ([Add a launcher: Try it in the simulator](../../docs/add-to-robot/05-launcher.md#try-it-in-the-simulator), `-Probot=sim/robots/starter-bot-gobilda.properties`, "goBILDA Bot TeleOp").
 
 ## Steps
 

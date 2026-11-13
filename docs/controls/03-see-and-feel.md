@@ -39,6 +39,16 @@ method reference or a small lambda. With the Quick start robot, try `show("Intak
 
 **In the simulator,** a buzz shakes the gamepad picture. A real controller or a phone buzzes too.
 
+## The button map and the TeleOp's INIT screen
+
+- **At INIT** the Driver Hub shows the whole button map, one line per button, with the part that gave it
+  (`G2 A: down [Lift]`). Then it lists the free buttons (`G2 free: ...`). Read it before every match.
+- **In the match,** tap GUIDE to see the map again. The robot still drives. Tap GUIDE again to close it.
+- **The alliance:** in INIT, gamepad 1 X = BLUE, B = RED. After an autonomous, its alliance is already set.
+- **The INIT menu:** D-pad up/down picks **Alliance** or **Profile**, and left/right changes it. A practice
+  that starts straight in TeleOp can switch to PRACTICE here. When your own INIT code uses gamepad 1's
+  D-pad, turn the menu off in `Controls.java`: `@Override protected boolean initMenu() { return false; }`.
+
 ## Done when
 
 - Each button line has a `.says(...)`, and the button map shows every button.

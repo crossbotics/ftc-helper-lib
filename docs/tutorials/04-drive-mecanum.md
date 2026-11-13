@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a TeleOp that drives a mecanum robot, with slow mode, field-centric driving and reverse drive.
-The main track gives you all of this in one line: [Drive](start/02-drive.md).
+The main track gives you all of this in one line: [Robot.java](../five-files/01-robot-java.md).
 
 **You will learn:** how to set up a mecanum drivetrain, check its motor directions, make the sticks feel
 good, add a slow mode, switch to field-centric driving, and drive "backwards".

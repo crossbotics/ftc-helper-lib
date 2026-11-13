@@ -8,7 +8,7 @@ minutes: 10
 needs: [flywheel]
 kit_bots: [gobilda, gobilda-strafer, rev, studica]
 since: v0.17.1
-docs: [reference/tunables.md#default-and-measure, reference/tunables.md#first-run-what-you-get-before-tuning, tutorials/start/09-shooter-and-camera.md#the-first-spin-up-with-no-numbers]
+docs: [reference/tunables.md#default-and-measure, reference/tunables.md#first-run-what-you-get-before-tuning, add-to-robot/05-launcher.md#3-find-its-numbers]
 ---
 
 ## Why

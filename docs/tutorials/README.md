@@ -2,70 +2,29 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-These lessons teach the library: you build real robot programs, one idea at a time. There are two
-tracks: the **main track** (start here) and **under the hood**.
+These tutorials build robot programs by hand, with the library's building blocks, one idea at a time
+(**under the hood**). Start with the main track below: it is the docs sections, not tutorials.
 Each tutorial has a **complete program** you can copy into TeamCode and run. A test builds and checks
-those programs every time the library changes. So the code in these lessons always works with the
-current version.
+those programs every time the library changes.
 
 The [module pages](../modules/) are the reference: every function, every parameter.
 The tutorials give the "how and why": what to write, in what order, and what to check on the robot.
 
 ## Start here: the main track
 
-**New to Android Studio:** start with [Set up](../setup/README.md). **Used Scratch or Blocks before:**
-read [From Blocks to Java](../blocks-to-java.md) next, before the Quick start. It shows where each block
-you know went.
+The main track is now the docs sections, in this order:
 
-**For a driving robot first, with no explanations:** do the [Quick start](../quick-start.md). It has a
-road for a starter bot as it is, a changed starter bot, and your own robot. Then come back here.
-**To choose the robot code to start from:** read [Pick your template](../templates.md).
+1. [Set up](../setup/README.md): Android Studio, GitHub, the library, the configuration.
+2. [Pick your start](../pick-your-start/README.md): a starter bot, a common setup, or a blank slate.
+3. [The five files](../five-files/README.md): `Robot.java`, `Tunables.java`, `Controls.java`,
+   `Actions.java` and the autos. Done when the robot drives and runs a first auto.
+4. [Add to your robot](../add-to-robot/README.md): one page per part.
+5. [Controls](../controls/README.md): every way a button can work.
+6. [Building autos](../building-autos/README.md): steps, field points, Pedro paths, the auto builder.
+7. [Tuning](../tuning/README.md): find and check every number.
+8. [Tests](../tests/README.md): simulator tests of your code, and checks of the real robot.
 
-The shortest way to a whole robot program. **Lessons 1 to 6 are for every robot:** do them in order.
-**Lessons 7 to 9 are for some robots:** do only the ones your robot needs (odometry, paths, a shooter).
-**Lesson 10 is advanced:** automatic tests of your code, for when your robot works.
-
-**Which robot you build:** your own. You change **your robot's five files** (the ones the Quick start
-put in your TeamCode), a few lines per lesson. Each lesson explains with a worked example, the
-**lesson robot** ([`examples/.../lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)):
-a mecanum drive, an intake, a lift and a claw, in five short files. Read the lesson robot's lines. Then
-make the same change in your own TeamCode. The lesson robot's files are also the answer key. Lesson 1
-explains with goBILDA's starter bot in the same way. Lesson 7 uses an odometry robot, and lesson 9 uses
-two shooter robots. Every part brings its own numbers, and its buttons are a few lines to copy. So each
-lesson adds only a few lines. A simulator test runs the finished lesson robot, so the code here always
-works.
-
-**The simulator commands:** each lesson shows two sets. The commands for the lesson robot use
-`-PteamCode=none` (the library's examples). The commands for your own robot use `-PteamCode=../TeamCode`:
-`./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then `./gradlew :sim:run -PteamCode=../TeamCode`.
-Run them from the `ftc-helper-lib` folder ([the Terminal tab](../setup/09-the-terminal.md)).
-Put the simulator tests (lesson 10) for your own robot in your robot project's `simulator/scenarios/`
-folder. Then they stay with your code.
-
-**"Every loop":** the lessons often say a job runs "every loop". The **loop** is the library's loop. It
-runs many times a second. Each time round, it reads the gamepads, runs the jobs and updates every part.
-You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-idea-you-never-write-the-loop)).
-
-| # | Lesson | You learn | Robot needed |
-| --- | --- | --- | --- |
-| 1 | [The robot in five files](start/01-robot-in-five-files.md) | what each of the five files is for; make them from your robot configuration; try it in the simulator | none |
-| 2 | [Drive](start/02-drive.md) | the drive line: mecanum or tank, motors, wheels, the IMU; the driving you get for free; check the directions | a drivetrain (or the simulator) |
-| 2b | [Check the hardware (lesson 2b)](19-testing-procedures.md) | the Hardware Check, and a testing order that finds problems early | your robot |
-| 3 | [Buttons](start/03-buttons.md) | `Controls.java`: the buttons the parts bring, your own jobs, one or two drivers | a gamepad |
-| 4 | [An intake, a lift and a claw](start/04-lift-and-claw.md) | parts, their numbers in `Tunables.java`, homing, finding and tuning the numbers | the mechanisms |
-| 5 | [Actions](start/05-actions.md) | several parts together, from a button or in an autonomous | the mechanisms |
-| 6 | [Your first autonomous](start/06-first-autonomous.md) | tune the drive, then steps, park time, the report | a tuned drivetrain |
-| | **The lessons your robot needs** | | |
-| 7 | [Odometry: where am I on the field?](start/07-odometry.md) | which device to buy, the odometry line, the Odometry Tuner, `driveTo` field points, TeleOp starting where autonomous ended | a mecanum drive, a Pinpoint (or OTOS, or dead wheels) |
-| 8 | [Paths with Pedro Pathing](start/08-paths-with-pedro.md) (optional) | what a path follower does and whether you need one, adding Pedro, lines and curves in your field numbers, Pedro's tuner, the first real run | a mecanum drive and odometry (lesson 7 done) |
-| 9 | [A shooter, a camera and a turret](start/09-shooter-and-camera.md) (for robots that shoot) | a flywheel and feeder, aiming with a camera, a turret that follows the goal, the odometry as backup aim, two shot tables, whole-robot aim, a buzz on target, knowing which piece fires next, a light for the drivers | lesson 6 done, a shooter, a camera |
-| | **Advanced** | | |
-| 10 | [Test your robot code](start/10-test-your-robot-code.md) (advanced) | record a test in the simulator, read it line by line, tolerances, goals not details, a few good tests, update a test after a planned change, run them all with one command | lesson 6 done; the simulator |
-
-Then: [Controls](../controls/README.md) (every way a button can work),
-[the cookbook](../cookbook.md) (short "how do I...?" answers with code to copy),
-[building autos](../building-autos/README.md) (everything autonomous can do),
-[the finders](../tuning/README.md) (measure your numbers), and the [simulator](../guides/simulator.md).
+**Used Scratch or Blocks before:** read [From Blocks to Java](../blocks-to-java.md) first.
 
 ## Under the hood: how it works
 
@@ -95,7 +54,7 @@ complete program.
 | 16 | [Easy autonomous](16-easy-autos.md) | `EasyAuto`, the layer under the five-files autonomous | tuned drivetrain + lift + claw |
 | 17 | [Launcher](17-launcher.md) | flywheel, hood, feeder, shot table, by hand | a shooter |
 | 18 | [Vision aiming](18-vision-aim.md) | webcam, Limelight 3A or HuskyLens through one interface, safe aiming | camera + drivetrain |
-| 19 | [Check the hardware (lesson 2b)](19-testing-procedures.md) | the Hardware Check and a testing order (it is lesson 2b of the main track) | any robot |
+| 19 | [Check the hardware](19-testing-procedures.md) | the Hardware Check and a testing order  | any robot |
 | 20 | [Easy TeleOp](20-easy-teleop.md) | `EasyTeleOp`, the layer under `Controls.java` (also used by the [starter kit](../starter-kit.md)) | drivetrain + lift + claw |
 | 21 | [Find your numbers](21-finders.md) | the finders: servo ends, lift limits, flywheel gains, wheel size, camera offset, shot table | the parts to measure |
 

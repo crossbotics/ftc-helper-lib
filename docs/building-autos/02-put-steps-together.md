@@ -9,7 +9,7 @@ the right way for red and blue.
 
 ## The example
 
-The lesson robot's auto holds the piece, drives to the goal, scores, and parks. The library has it as a
+The example robot's (`lessonbot`) auto holds the piece, drives to the goal, scores, and parks. The library has it as a
 compiled file:
 [`lessonbot/autos/ScoreAndPark.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/autos/ScoreAndPark.java).
 

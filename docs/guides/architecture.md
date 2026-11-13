@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** students who have written a TeleOp and want the big picture. **You need:** nothing to
-install. The first [lessons](../tutorials/README.md#start-here-the-main-track) help.
+install. [The five files](../five-files/README.md) helps.
 
 This page shows the whole library, and where your team's code goes. TeamCode is the folder in your
 robot project where your team's own code lives.

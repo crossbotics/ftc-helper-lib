@@ -11,7 +11,7 @@ Finders are ready-made programs. Each one **measures** numbers your code needs (
 flywheel gains, wheel size, odometry offsets, shot speeds, camera offset). It shows them as **lines of code
 to copy**. Use a finder whenever a part is new or was rebuilt, before you tune by hand. When you press STOP,
 the finder also saves those lines on the Control Hub in `/sdcard/FIRST/ftc-helper/finder-results.txt`. So
-nobody copies numbers from the screen by hand. Start with tutorial 21, or with [lesson 4](../tutorials/start/04-lift-and-claw.md) for the robot in five files.
+nobody copies numbers from the screen by hand. Start with tutorial 21, or with [Add a lift](../add-to-robot/01-lift.md) for the robot in five files.
 
 Each finder shows its numbers in two forms. The first form is code for the older helpers (`PositionServo.create(...)`,
 `PositionMotor.create(...)`, `c.wheelDiameterIn = ...`). The second form is lines for the
@@ -256,7 +256,7 @@ Tunables.Flywheel: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.
 ```
 
 The `Tunables` line is for a [`Launcher`](../reference/robot-java.md) module on that motor. Here the motor is
-named `flywheel`. The lessons call it `launcher`, so their section is `Tunables.Launcher`. The line has
+named `flywheel`. The docs pages call it `launcher`, so their section is `Tunables.Launcher`. The line has
 `shotIntervalSec` only when the recovery is longer than the default 0.25 s. `nominalVolts` is the battery
 voltage during the top-speed test (the screen shows `Battery: 12.61 V (gains for 12.6 V)`). The gains are
 right for that voltage. The launcher's [battery compensation](launcher.md#battery-compensation) (off until you
@@ -307,7 +307,7 @@ if (test.isReady() && !test.isBusy() && gamepad1.right_bumper) test.fire();
 ## DriveTunerOpMode
 
 Use it to find the wheel size and strafe correction for autonomous. It needs your robot. For the robot in
-five files, put this file next to `Robot.java`. An example is the lesson robot's
+five files, put this file next to `Robot.java`. An example is `lessonbot`'s
 [DriveTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/DriveTuner.java):
 
 ```java

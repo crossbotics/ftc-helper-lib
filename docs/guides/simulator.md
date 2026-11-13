@@ -360,7 +360,7 @@ What a team does, step by step:
    - **TeleOp next** (the TeleOp written for that Robot class), until you type your own.
    - the Java's package, from your Robot class.
 
-   A new plan has no steps ("Load the lesson's example" puts lesson 6's in). **Run as** RED or BLUE, and
+   A new plan has no steps ("Load the example auto" puts the example robot's auto in). **Run as** RED or BLUE, and
    set **Red's side**: **Rotated 180°** (BIOBUZZ: each red part is the blue one turned half a turn about
    the field's center) or **Mirrored**. The builder writes `mirrorForRed()` in the Java for you (false /
    true).
@@ -445,7 +445,7 @@ What a team does, step by step:
      **A tank drive cannot strafe, so the builder never makes a strafe for it.** There is no Strafe button,
      and a drive's direction is only forward or back. A tap adds a turn and a drive, and a dragged point
      changes the turn before its drive (or adds one). The steps may already have a strafe (from a mecanum
-     plan, the lesson's example or a saved plan). When the chosen Robot code has a tank drive, the builder
+     plan, the example auto or a saved plan). When the chosen Robot code has a tank drive, the builder
      changes each strafe into three steps: a turn, the drive forward (or back, when that turns less), and a
      turn back to the heading it had. It leaves the turn back out when a turnTo comes next. So the robot
      drives the same route, and a box above the steps lists each change. If a strafe still reaches the
@@ -723,7 +723,7 @@ forward and up sizes.
 
 ### A robot file from Robot.java
 
-A team that writes its robot in five files ([lesson 1](../tutorials/start/01-robot-in-five-files.md)) gets
+A team that writes its robot in five files ([The five files](../five-files/README.md)) gets
 its robot file from the code. **It is automatic:** each time the simulator starts (`:sim:run`,
 `:sim:scenario`, or their buttons), it first makes the robot file from the Robot class and prints one line:
 
@@ -1264,7 +1264,7 @@ OpModes, and uses `simulator/robot.properties` from the robot project. Iterative
   `src/main/java`). For the library's own examples instead, use `-PteamCode=none`.
 - When TeamCode uses other libraries (Road Runner, FTC Dashboard...), put their Gradle lines in
   `simulator/sim-dependencies.gradle` in the robot project, like the example below. You do not need this
-  for Pedro Pathing: it comes with the library's `pedro` module. Pedro's tuning library from start lesson 8
+  for Pedro Pathing: it comes with the library's `pedro` module. Pedro's tuning library from [Add Pedro paths](../building-autos/05-pedro-paths.md#3-find-its-numbers)
   is added by itself when `build.dependencies.gradle` or `TeamCode/build.gradle` has it.
 
 ```groovy
@@ -1274,7 +1274,7 @@ dependencies { testImplementation 'com.acmerobotics.dashboard:dashboard:0.4.16' 
 
 ## Record a test
 
-**Students: read [lesson 10, Test your robot code](../tutorials/start/10-test-your-robot-code.md) first.
+**Students: read [Record a test](../tests/01-record-a-test.md) first.
 This section lists every detail.**
 
 The page writes a test for you. Open **Tests**, over the 3D view:

@@ -1,7 +1,7 @@
 # Camera
 
 A Limelight, a webcam or a HuskyLens. It finds the alliance's goal by its AprilTags. Learn it step by step:
-[lesson 9, the shooter and the camera](../../tutorials/start/09-shooter-and-camera.md).
+[Add a camera](../../add-to-robot/07-camera.md).
 
 ## In Robot.java
 

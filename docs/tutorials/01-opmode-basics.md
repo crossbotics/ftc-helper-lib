@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a small program that counts A presses and shows the loop speed on the Driver Station.
-Every other tutorial builds on it. The main track skips these details: [The robot in five files](start/01-robot-in-five-files.md).
+Every other tutorial builds on it. The main track skips these details: [The five files](../five-files/README.md).
 
 **You will learn:** the shape of every program in these tutorials, how to import library classes, why
 some variables are "fields", what `() -> ...` means, and why the programs use `try`/`finally`.

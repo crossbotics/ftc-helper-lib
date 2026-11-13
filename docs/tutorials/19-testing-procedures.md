@@ -1,19 +1,18 @@
-# Check the hardware (lesson 2b, also tutorial 19)
+# Check the hardware (tutorial 19)
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a 3-line OpMode. With it, you test every motor, servo and sensor on the robot by hand.
-This page is also lesson 2b of the main track (after lesson 2, Drive).
 
 **You will learn:** how to use the Hardware Check OpMode, a fixed order for testing a robot (laptop,
 bench, floor, autonomous, event), and how to turn a problem into a fix that stays fixed.
 
-**You need:** any robot. On the main track, do [lesson 1](start/01-robot-in-five-files.md) and
-[lesson 2](start/02-drive.md) first. On the under-the-hood track, do tutorials 01-03 first. The page's
+**You need:** any robot. **For the checks themselves** (what to check, in what order, and before every match), use the [Tests section](../tests/README.md): this tutorial only builds the Hardware Check OpMode by hand. With the robot in five files, do [The five files](../five-files/README.md) and
+[Robot.java](../five-files/01-robot-java.md) first. On the under-the-hood track, do tutorials 01-03 first. The page's
 file is `19-...` because it is also tutorial 19 of that track.
 
 **Full program:** [`Tut19HardwareCheck.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut19HardwareCheck.java) (only 3 lines)
-**Reference:** [testing.md](../modules/testing.md). Guide with all checklists: [Testing procedures](../guides/testing.md).
+**Reference:** [testing.md](../modules/testing.md). The checks in order, with every checklist: [Tests: checks before practice and matches](../tests/03-checks-before-practice-and-matches.md).
 
 ---
 
@@ -64,30 +63,11 @@ the active configuration, and the battery voltage.
 - **IMU**: turn the robot left by hand. The **yaw** (the heading: which way the robot faces, in degrees)
   goes UP. That is for a hub mounted logo up, USB forward.
 
-## 3. A fixed order
+## 3. The checks, in order
 
-```mermaid
-flowchart LR
-    A["laptop tests"] --> B["Hardware Check<br/>(on a block)"] --> C["mechanism checks"] --> D["floor, low power"] --> E["autonomous runs<br/>read the report"]
-```
-
-Do the steps in this order. Each step catches problems that would be dangerous or confusing in the next
-step. For example, step B finds a reversed drive motor at once. At step D, the same motor looks like
-"the robot spins randomly".
-
-The full checklists, with the short pre-match check, are in [Testing procedures](../guides/testing.md).
-Print them for the pit.
-
-## 4. When something breaks
-
-1. **Write it down**: what you did, what you expected, what happened. Turn debug telemetry on and take
-   a photo of the screen.
-2. **Reproduce it** on the bench. You can fix a problem on purpose only when you can repeat it.
-3. **Find the layer** (where the problem lives): the hardware (the Hardware Check shows it), the
-   configuration (names), your code, or the library.
-4. **Fix it.** When the problem was in the logic, also **add a test** (tutorial 13). Then it can never
-   come back without a warning.
-5. **Note it** in the team's log: the next driver or programmer will meet it again.
+The fixed order (laptop, Hardware Check, mechanisms, floor, autonomous, event), the printable checklists
+and what to do when something breaks are on one page:
+[Checks before practice and matches](../tests/03-checks-before-practice-and-matches.md).
 
 ## Try it in the simulator
 
@@ -103,7 +83,7 @@ The simulator lists the Hardware Check with the library's examples.
 Open http://localhost:8780 and choose "Tutorial 19: Hardware Check". Press INIT, then ▶ (start on the
 Driver Hub). Pick `lift` with the D-pad, and push gamepad 1's right stick up: the lift rises and its
 count goes up. Pick `claw` and step it with the D-pad. **For your own robot:** run
-`./gradlew :sim:run -PteamCode=../TeamCode` with your `HardwareCheck.java` in TeamCode (lesson 1 shows
+`./gradlew :sim:run -PteamCode=../TeamCode` with your `HardwareCheck.java` in TeamCode ([the simulator guide](../guides/simulator.md#a-robot-file-from-robotjava) shows
 how to make its robot file). The simulator builds its robot from your code. So it cannot find a wrong
 wire or a motor that turns the wrong way: only the real robot can.
 
@@ -112,7 +92,7 @@ wire or a motor that turns the wrong way: only the real robot can.
 1. Make the file from section 1 in TeamCode (the whole file, with its `package` and `import` lines).
    Build, install and run it.
 2. Go through every device once. Fix any direction or name problem you find.
-3. Take the pre-match checklist from the guide, and practice it until it is quick.
+3. Take the before-every-match list from [Checks before practice and matches](../tests/03-checks-before-practice-and-matches.md#7-before-every-match-print-it), and practice it until it is quick.
 
 ## Try this
 
@@ -122,7 +102,7 @@ wire or a motor that turns the wrong way: only the real robot can.
 
 ## You finished the tutorials
 
-On the main track, go on to [Lesson 3: Buttons](start/03-buttons.md). Under the hood, go on to
+With the robot in five files, go on to [Controls.java](../five-files/03-controls-java.md). Under the hood, go on to
 [Tutorial 20: Easy TeleOp](20-easy-teleop.md), [21: Find your numbers](21-finders.md), and
-[Lesson 1: The robot in five files](start/01-robot-in-five-files.md), the shortest way to a whole robot
+[The five files](../five-files/README.md), the shortest way to a whole robot
 program. When you build something new, read [Extending the library](../guides/extending.md).

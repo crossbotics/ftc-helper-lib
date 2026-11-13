@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 /**
  * Pedro paths in the same field numbers as driveTo: a line then a curve to the goal, the intake
  * starting halfway, holding still to score, then a driveTo to park.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/08-paths-with-pedro/#5-write-your-first-path
+ * more: https://crossbotics.com/ftc-helper/docs/building-autos/05-pedro-paths/#actionsjava-and-autos-make-paths-then-follow-them
  */
 @Autonomous(name = "Pedro Bot Curve to the Goal", group = "Examples", preselectTeleOp = "Pedro Bot TeleOp")
 @Disabled

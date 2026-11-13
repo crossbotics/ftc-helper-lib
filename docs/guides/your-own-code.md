@@ -4,7 +4,7 @@
 
 **For:** students who want to write their own code in the steps of an FTC OpMode, and students who
 want to write a whole OpMode themselves. **You need:** the five files
-([lesson 1](../tutorials/start/01-robot-in-five-files.md)) and a first look at
+([The five files](../five-files/README.md)) and a first look at
 [non-blocking code](non-blocking.md).
 
 ## The five steps of every FTC OpMode
@@ -28,7 +28,7 @@ Two rules for all of them:
 - **Never wait.** While your code waits, the whole robot freezes, STOP included
   ([Non-blocking code](non-blocking.md)). So each piece of code must be quick: no `sleep()`, no `while` that waits for
   something. To do things one after another, use an
-  [action](../tutorials/start/05-actions.md).
+  [action](../five-files/04-actions-java.md).
 
 ## Road 1: your code in the five files
 
@@ -74,7 +74,7 @@ protected void atInit(Robot robot) {
 }
 ```
 
-- `atStart(...)` takes an [action](../tutorials/start/05-actions.md), for example
+- `atStart(...)` takes an [action](../five-files/04-actions-java.md), for example
   `atStart(() -> Actions.deployIntake(this))`.
 - `show("label", value)` puts one line on the Driver Hub, under the library's warnings. The screen starts
   empty each loop, so call it in every loop.
@@ -144,7 +144,7 @@ public class OwnTeleOp extends LinearOpMode {
 }
 ```
 
-The whole file is in the lesson robot's example:
+The whole file is in the example robot `lessonbot`:
 [OwnTeleOp.java](https://github.com/crossbotics/ftc-helper-lib/blob/main/examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/OwnTeleOp.java).
 Try it in the simulator: **Lesson Bot: own OpMode**.
 

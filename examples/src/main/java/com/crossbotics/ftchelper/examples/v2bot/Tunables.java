@@ -68,7 +68,7 @@ public class Tunables {
 
     /**
      * The hood (turret v8.1GB): 25 degrees between two stops.
-     * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#a-hood-the-shot-angle
+     * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/05-launcher/#a-hood-the-shot-angle
      */
     public static class Hood {
         public static double posA = 0.20;                           // servo position at the steep stop (example)
@@ -81,7 +81,7 @@ public class Tunables {
 
     /**
      * Aiming. The goal: our HIVE's CELL that is up at the start.
-     * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#9-when-the-camera-loses-the-goal-the-odometry
+     * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/07-camera/#when-the-camera-loses-the-goal-the-odometry
      */
     public static class Aim {
         public static double goalX = 13;                            // the goal: inches right of the center line

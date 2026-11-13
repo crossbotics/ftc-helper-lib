@@ -9,7 +9,7 @@
 A **template** is robot code you copy and then change. Start from the one that looks most like your
 robot: you delete less and type less. Most of them (all but the last row) are a robot in five files:
 `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and an `autos` folder
-([Lesson 1](tutorials/start/01-robot-in-five-files.md) explains them).
+([The five files](five-files/README.md) explains them).
 
 Some have extra files: a finder that knows the robot (`lessonbot/DriveTuner.java`,
 `odometrybot/OdometryTuner.java`, `turretbot/HoodFinder.java` and `ShotTuner.java`), or Pedro's
@@ -21,17 +21,17 @@ numbers (`pedrobot/PedroConstants.java`). Copy them with the rest.
 | --- | --- | --- |
 | **anything, and its configuration is on the Driver Station** | `./gradlew :sim:newRobot` ([Quick start, way A](quick-start.md#a-from-your-robot-configuration-best-if-it-is-already-set-up)) | five files made for you from your configuration, with each part's line and TODO marks, and every setting in `Tunables.java` as `DEFAULT` or `MEASURE` ([the two words](reference/tunables.md#default-and-measure)) |
 | a mecanum drive and an intake, no configuration yet | [`quickstart`](../examples/src/main/java/com/crossbotics/ftchelper/examples/quickstart) ([Quick start, way B](quick-start.md#b-copy-the-template-no-configuration-yet-or-you-want-to-see-every-line)) | the smallest robot, with STEP marks on every line to change |
-| a mecanum drive, an intake, a lift and a claw | [`lessonbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot) | the lesson robot of lessons 2 to 6, and its Drive Tuner |
+| a mecanum drive, an intake, a lift and a claw | [`lessonbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot) | the example robot of The five files and Add to your robot, and its Drive Tuner |
 | **goBILDA's FTC StarterBot** (BIOBUZZ) | [`gobildabot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot) | tank drive, intake with two corner wheels, flywheel and "windmill" feeder; goBILDA's own names |
 | **goBILDA's FTC StarterBot with Mecanum Wheels** (BIOBUZZ, Strafer chassis) | [`gobildastraferbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildastraferbot) | mecanum drive, intake with two corner wheels, flywheel and "windmill" feeder; goBILDA's own names |
 | **REV's DUO FTC Starter Bot** (BIOBUZZ) | [`revbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/revbot) | tank drive, intake, flywheel and CR-servo feeder, the pollen pusher ("poker"); REV's own names |
 | **AndyMark's Robits BIOBUZZ StarterBot** | [`andymarkbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/andymarkbot) | tank drive, roller intake, the catapult (see the note below); AndyMark's own names |
 | **Studica's FTC Starter Bot** (BIOBUZZ) | [`studicabot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/studicabot) | tank drive, intake, flywheel and servo flap (see the note below); Studica's own names |
 | a tank drive and a flywheel shooter | [`flywheelbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot) | intake on from the start, a deploy servo, a flywheel the driver speeds up and down, a servo feeder, a webcam and whole-robot aim (no turret) |
-| a mecanum drive with a turret and a camera | [`turretbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot) | a Limelight that the turret follows, speed and hood angle from distance with a POLLEN and a NECTAR table (a hood servo, Hood Finder), a buzz when on target, a folding claw, a Shot Tuner ([lesson 9](tutorials/start/09-shooter-and-camera.md)) |
+| a mecanum drive with a turret and a camera | [`turretbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot) | a Limelight that the turret follows, speed and hood angle from distance with a POLLEN and a NECTAR table (a hood servo, Hood Finder), a buzz when on target, a folding claw, a Shot Tuner ([Add a launcher](add-to-robot/05-launcher.md)) |
 | a turret shooter AND a lift with a wrist and a claw (two parts that share space) | [`v2bot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot) | team 8938's 2026-27 designs: a turret on a magnetic home switch (+/-190 degrees), a hood, odometry, a piece count, a Viper-Slide lift with a wrist and a claw, the lifter's steps as actions, and an [interlock rule](guides/interlocks.md) that keeps the turret out of the back while the wrist holds the claw low behind the robot |
-| a mecanum drive with odometry (Pinpoint, OTOS or dead wheels) | [`odometrybot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot) | `driveTo` field points, the Odometry Tuner ([lesson 7](tutorials/start/07-odometry.md)) |
-| a mecanum drive with odometry and Pedro Pathing | [`pedrobot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot) | `odometrybot` plus paths ([lesson 8](tutorials/start/08-paths-with-pedro.md)); add Pedro to the project first ([lesson 8, section 3](tutorials/start/08-paths-with-pedro.md#3-add-pedro-to-your-project)) |
+| a mecanum drive with odometry (Pinpoint, OTOS or dead wheels) | [`odometrybot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot) | `driveTo` field points, the Odometry Tuner ([Add odometry](add-to-robot/09-odometry.md)) |
+| a mecanum drive with odometry and Pedro Pathing | [`pedrobot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot) | `odometrybot` plus paths ([Add Pedro paths](building-autos/05-pedro-paths.md)); add Pedro to the project first ([Add Pedro paths](building-autos/05-pedro-paths.md#your-project-add-the-pedro-add-on-once)) |
 | you already use the older six-file starter kit | [`starter`](../examples/src/main/java/com/crossbotics/ftchelper/examples/starter) ([Starter kit](starter-kit.md)) | `EasyTeleOp` and `EasyAuto`; kept for teams that use it. New teams: use a row above |
 
 **If you are not sure:** use `:sim:newRobot` if your configuration is ready, and `quickstart` if it is not. You can
@@ -59,8 +59,8 @@ follow [Copy example files into TeamCode](pick-your-start/04-copy-into-teamcode.
 the imports, the `@Disabled` lines and the OpMode names.
 
 Then build. Check the motor directions with the wheels off the ground
-([Lesson 2](tutorials/start/02-drive.md)). Check every part with the Hardware Check:
-[Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md).
+([Robot.java](five-files/01-robot-java.md)). Check every part with the Hardware Check:
+[Check the hardware](tutorials/19-testing-procedures.md).
 
 **Numbers:** every number in `Tunables.java` is a starting value. Find the real ones with the
 [finders](tuning/README.md). The hub saves a number you change live on the robot (in the tuning menu).
@@ -99,5 +99,5 @@ REV, AndyMark and Studica bots start "overlapping the field wall" on BLUE.
 
 ## Next
 
-[Lesson 1: The robot in five files](tutorials/start/01-robot-in-five-files.md): what each file is for.
-Then the rest of the [main track](tutorials/README.md#start-here-the-main-track).
+[The five files](five-files/README.md): what each file is for.
+Then [Add to your robot](add-to-robot/README.md): one page per part.

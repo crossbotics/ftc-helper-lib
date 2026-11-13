@@ -4,7 +4,7 @@
 
 **You will build:** only small OpModes that start the library's ready-made finders. The finders measure
 your robot and print the code lines to copy.
-The main track uses the same finders: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+The main track uses the same finders: [Add a lift](../add-to-robot/01-lift.md).
 
 **You will learn:** how to measure the numbers your code needs (servo ends, lift limits, flywheel gains,
 wheel size, camera offset, shot table), and how to move the results into your code. You measure with
@@ -63,7 +63,7 @@ Tunables.Claw: P1 = 0.210
     // rename P1, P2... (open, closed); keep them between 0.180 and 0.770
 ```
 
-Copy it into your code and rename P1 to "OPEN". With the [robot in five files](start/01-robot-in-five-files.md),
+Copy it into your code and rename P1 to "OPEN". With the [robot in five files](../five-files/README.md),
 copy the `Tunables.Claw` line instead: `open = 0.210` in `Tunables.Claw`. When you press STOP, the finder
 saves the same lines in `/sdcard/FIRST/ftc-helper/finder-results.txt` on the hub.
 

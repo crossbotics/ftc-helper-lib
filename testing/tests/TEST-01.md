@@ -8,7 +8,7 @@ minutes: 40
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
-docs: [modules/testkit.md, guides/testing.md#test-your-robotjava-with-pretend-devices, tutorials/13-testing.md#7-test-your-robot-in-five-files]
+docs: [modules/testkit.md, tests/02-run-all-your-tests.md#4-for-programmers-laptop-tests-in-java-optional, tutorials/13-testing.md#7-test-your-robot-in-five-files]
 ---
 
 ## Why
@@ -26,7 +26,7 @@ Gradle lines.
 
 ## Steps
 
-1. Make `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/RobotTest.java`: copy the whole file from the [testing guide](../../docs/guides/testing.md#test-your-robotjava-with-pretend-devices). Change the lift test to one of your parts and its configuration name.
+1. Make `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/RobotTest.java`: copy the whole file from the [testing guide](../../docs/tests/02-run-all-your-tests.md#4-for-programmers-laptop-tests-in-java-optional). Change the lift test to one of your parts and its configuration name.
 2. Run `./gradlew :TeamCode:testDebugUnitTest` from the robot project folder (Windows: `gradlew.bat`). All tests pass.
 3. Misspell a field in `Tunables.java` (say `inPowr` for `inPower`). Run again: `tunablesNamesAreRight` fails and names the field. Fix it.
 4. Change a motor's name in `Robot.java` to one the test does not use. Run again: read the message. Put it back.

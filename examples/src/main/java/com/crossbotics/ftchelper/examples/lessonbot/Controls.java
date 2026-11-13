@@ -6,9 +6,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * The lesson robot, file 3 of 5: the buttons, and the TeleOp. Driving is the library's (gamepad 1);
+ * The example robot (lessonbot), file 3 of 5: the buttons, and the TeleOp. Driving is the library's (gamepad 1);
  * the intake's, lift's and claw's buttons are written out below (gamepad 2), then our own.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/03-buttons/
+ * more: https://crossbotics.com/ftc-helper/docs/five-files/03-controls-java/
  */
 @TeleOp(name = "Lesson Bot TeleOp", group = "Examples")
 @Disabled
@@ -34,7 +34,7 @@ public class Controls extends ControlMap<Robot> {
         g2.leftStickY.use(robot.lift::manual).says("by hand");   // one driver: g2.rightStickY (G1 left stick drives)
 
         // Ours.
-        g2.rb.press(Actions.scoreHigh(robot)).says("score high");     // lesson 5
+        g2.rb.press(Actions.scoreHigh(robot)).says("score high");     // docs: Actions.java
         g2.b.toggle(robot.claw).says("claw").rumble();                 // 2 buzzes = closed, 1 = open
         g2.lb.tap(Actions.grabAndLift(robot)).says("grab and lift")    // a tap...
              .heldFor(1.0, () -> robot.lift.goTo("down")).says("lift all the way down");   // ...or held 1 s

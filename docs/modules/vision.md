@@ -9,7 +9,7 @@ Learn it hands-on: [18 Vision aiming](../tutorials/18-vision-aim.md).
 Find **AprilTags** (square black-and-white field markers, each with an id number) with a USB webcam,
 a Limelight 3A or a HuskyLens camera, and aim at them. Your code talks to ONE interface (a set of methods every
 camera has), so you switch cameras by changing one line. With the [robot in five files](../reference/parts/camera.md),
-its `Camera` part sets this up: start with [lesson 9](../tutorials/start/09-shooter-and-camera.md).
+its `Camera` part sets this up: start with [Add a camera](../add-to-robot/07-camera.md).
 Use this page to aim in your own code (tutorial 18).
 
 The **bearing** is how far the robot must turn to face a target, in degrees (+ = the target is to the left).

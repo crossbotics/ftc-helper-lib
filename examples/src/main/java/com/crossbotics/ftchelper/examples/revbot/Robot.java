@@ -12,7 +12,7 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
 /**
  * REV's DUO FTC Starter Bot for BIOBUZZ, file 1 of 5: what is on the robot. The configuration names
  * are the ones in REV's own code (its TeleOp page), so it runs on that robot as it is. REV does not
- * say which way each motor turns: check them on your robot (lesson 2).
+ * say which way each motor turns: check them on your robot (docs: Wiring checks).
  * more: https://crossbotics.com/ftc-helper/docs/guides/starter-bots/#rev-bot-code
  */
 public class Robot extends RobotDefinition {

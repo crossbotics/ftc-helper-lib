@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" width="760" height="330" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <rect width="760" height="330" rx="12" fill="#ffffff" stroke="#d5d9e0"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1a7f37"/></marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#b03030"/></marker>
+  </defs>
+  <text x="20" y="34" font-size="19" font-weight="bold" fill="#101c45">Two questions, two kinds of tests</text>
+  <rect x="20" y="56" width="350" height="52" rx="8" fill="#e8f0fb" stroke="#1f4e9c" stroke-width="1.5"/>
+  <text x="195.0" y="87.0" text-anchor="middle" fill="#1f4e9c" font-size="15" font-weight="bold">Is my robot CODE right?</text>
+  <rect x="390" y="56" width="350" height="52" rx="8" fill="#fdf1e7" stroke="#b45309" stroke-width="1.5"/>
+  <text x="565.0" y="87.0" text-anchor="middle" fill="#b45309" font-size="15" font-weight="bold">Is my ROBOT right?</text>
+  <rect x="20" y="122" width="350" height="120" rx="8" fill="#ffffff" stroke="#1f4e9c" stroke-width="1.5"/>
+  <text x="195.0" y="157.0" text-anchor="middle" fill="#101c45" font-size="15" font-weight="bold">Simulator tests (on the laptop)</text>
+  <text x="195.0" y="177.0" text-anchor="middle" fill="#101c45" font-size="13">Record once. Run after every code change.</text>
+  <text x="195.0" y="197.0" text-anchor="middle" fill="#101c45" font-size="13">Finds: a typo, a wrong button, a number</text>
+  <text x="195.0" y="217.0" text-anchor="middle" fill="#101c45" font-size="13">in the wrong section.</text>
+  <rect x="390" y="122" width="350" height="120" rx="8" fill="#ffffff" stroke="#b45309" stroke-width="1.5"/>
+  <text x="565.0" y="157.0" text-anchor="middle" fill="#101c45" font-size="15" font-weight="bold">Checks (on the real robot)</text>
+  <text x="565.0" y="177.0" text-anchor="middle" fill="#101c45" font-size="13">Hardware, mechanisms, floor, autonomous,</text>
+  <text x="565.0" y="197.0" text-anchor="middle" fill="#101c45" font-size="13">and before every match.</text>
+  <text x="565.0" y="217.0" text-anchor="middle" fill="#101c45" font-size="13">Finds: a loose cable, a flat battery.</text>
+  <rect x="20" y="256" width="350" height="50" rx="8" fill="#e8f0fb" stroke="#1f4e9c" stroke-width="1.5"/>
+  <text x="195.0" y="286.0" text-anchor="middle" fill="#1f4e9c" font-size="14" font-weight="bold">Pages 1 and 2</text>
+  <rect x="390" y="256" width="350" height="50" rx="8" fill="#fdf1e7" stroke="#b45309" stroke-width="1.5"/>
+  <text x="565.0" y="286.0" text-anchor="middle" fill="#b45309" font-size="14" font-weight="bold">Page 3</text>
+</svg>

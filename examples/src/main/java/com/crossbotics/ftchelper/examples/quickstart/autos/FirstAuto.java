@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
  * Quick start, file 5 of 5: a first autonomous that drives forward and stops. It only drives the robot
- * after the Drive Tuner (Tunables.Drive.calibrated = true, lesson 6); the simulator runs it anyway.
+ * after the Drive Tuner (Tunables.Drive.calibrated = true); the simulator runs it anyway.
  */
 // STEP 8: the name on the Driver Station, and the TeleOp it chooses next. Delete @Disabled in TeamCode.
 @Autonomous(name = "Quick Start Auto", group = "Examples", preselectTeleOp = "Quick Start TeleOp")

@@ -8,7 +8,7 @@ minutes: 40
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
-docs: [guides/simulator.md#a-robot-file-from-robotjava, tutorials/start/01-robot-in-five-files.md#try-it-in-the-simulator]
+docs: [guides/simulator.md#a-robot-file-from-robotjava, guides/simulator.md#start-it]
 ---
 
 ## Why
@@ -28,7 +28,7 @@ so this is where we learn which parts the simulator gets wrong or cannot draw.
 3. `./gradlew :sim:run -PteamCode=../TeamCode`, open http://localhost:8780.
 4. INIT your TeleOp, read the button map, START, drive, and use every part.
 5. Run your autonomous. Read the report at the end.
-6. Draw your parts with `looks(...)` shapes ([how](../../docs/tutorials/start/01-robot-in-five-files.md#draw-your-robot-from-robotjava)) if you want pieces to be picked up and shot.
+6. Draw your parts with `looks(...)` shapes ([how](../../docs/guides/simulator.md#a-robot-file-from-robotjava)) if you want pieces to be picked up and shot.
 
 ## Pass rule
 

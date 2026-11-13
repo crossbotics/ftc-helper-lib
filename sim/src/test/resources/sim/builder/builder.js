@@ -50,7 +50,7 @@ const clampXY = (x, y) => [Math.max(-LIMIT, Math.min(LIMIT, x)), Math.max(-LIMIT
 
 // ------------------------------------------------------------------ the state
 
-// The web builder's examples: lesson 6's ScoreAndPark (any drive), and the Pedro example robot's path.
+// The web builder's examples: lessonbot's ScoreAndPark (any drive), and the Pedro example robot's path.
 const STEPS_EXAMPLE = {
 	drive: 'mecanum', mirror: false,
 	start: { x: -56, y: -61.1, h: 0, note: 'Our wall, left corner tile, facing the field', spot: true, noteAuto: true },
@@ -214,7 +214,7 @@ panel.innerHTML = `
   <div id="bAddHome"></div>
   <div id="bTankNote" class="b-tanknote" hidden></div>
   <div id="bList"></div>
-  <div class="row"><button id="bClear" title="Remove every step">Remove all steps</button><button id="bExample" title="The steps from lesson 6">Load the lesson's example</button></div>
+  <div class="row"><button id="bClear" title="Remove every step">Remove all steps</button><button id="bExample" title="The example robot's auto (lessonbot ScoreAndPark)">Load the example auto</button></div>
 </div>
 <div class="b-sec" id="bPedroPane">
   <h4 class="b-h">Path</h4>
@@ -223,7 +223,7 @@ panel.innerHTML = `
   <div class="row"><label>Step label <input type="text" id="bLabel"></label><label>Path name <input type="text" id="bName"></label></div>
   <div class="row"><label><input type="checkbox" id="bHold"> Hold the end</label><label id="bLimitBox">Time limit <input type="number" step="1" min="1" id="bTimeout" placeholder="10"> s</label></div>
   <div id="bParts"></div>
-  <div class="row"><button id="bPClear" title="Remove every part">Remove all parts</button><button id="bPExample" title="The Pedro example robot's path">Load the Pedro lesson's example</button></div>
+  <div class="row"><button id="bPClear" title="Remove every part">Remove all parts</button><button id="bPExample" title="The Pedro example robot's path">Load the Pedro example</button></div>
   <h4 title="PathAt in the Java">Actions along the path <button id="bAddAct" class="small">+ Add one</button></h4>
   <div id="bActions"></div>
 </div>

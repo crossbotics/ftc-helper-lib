@@ -8,7 +8,7 @@ minutes: 45
 needs: [pinpoint|otos|dead-wheels]
 kit_bots: []
 since: v0.16.0
-docs: [tuning/09-odometry-tuner.md, tutorials/start/07-odometry.md#5-the-odometry-tuner]
+docs: [tuning/09-odometry-tuner.md, tuning/09-odometry-tuner.md]
 ---
 
 ## Why
@@ -24,7 +24,7 @@ Pinpoint; OTOS and dead wheels need your help.
 
 ## Setup
 
-- A robot with an `odometry(...)` line in `Robot.java` ([lesson 7](../../docs/tutorials/start/07-odometry.md#4-one-line-in-robotjava)).
+- A robot with an `odometry(...)` line in `Robot.java` ([Add odometry](../../docs/add-to-robot/09-odometry.md#robotjava-one-line)).
 - The small Odometry Tuner file next to `Robot.java`.
 - A 48 in strip of tape on the floor with a mark at its start, and a tape measure.
 

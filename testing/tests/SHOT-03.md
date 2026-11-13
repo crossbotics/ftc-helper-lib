@@ -8,7 +8,7 @@ minutes: 60
 needs: [flywheel, limelight|webcam|pinpoint|otos|dead-wheels]
 kit_bots: []
 since: v0.17.0
-docs: [tuning/13-shot-tuner.md, tutorials/start/09-shooter-and-camera.md#8-two-game-pieces-two-shot-tables]
+docs: [tuning/13-shot-tuner.md, add-to-robot/05-launcher.md#two-kinds-of-pieces-two-shot-tables]
 ---
 
 ## Why

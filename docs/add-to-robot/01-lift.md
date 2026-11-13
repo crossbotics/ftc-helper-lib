@@ -15,8 +15,13 @@ A **lift** holds named heights. You send it to a height by its name, and it goes
 - **Heights are encoder counts.** An encoder is a sensor on the motor that counts how far the shaft has
   turned. 0 is the bottom, and bigger numbers are higher.
 - **It never goes past its safe range** (`min` to `max`). The library slows it down near both ends.
-- **It needs a known 0.** A switch at the bottom gives it one. Without a switch, 0 is where the lift is at
-  INIT ([Where 0 is](../reference/parts/lift.md#where-0-is)).
+- **It needs a known 0** (homing). An encoder counts only changes, so it does not know where the bottom is.
+  - **With a switch at the bottom:** a press of the switch sets 0. Until the first press, the lift goes
+    only down, at most 0.3 power, and the screen says `Lift: push it DOWN to the switch to home it`. Each
+    later press fixes drift from a slipped belt or a skipped tooth.
+  - **Without a switch:** 0 is where the lift is at INIT. Press INIT with the lift all the way down, every
+    time, also in TeleOp after an autonomous that left it up
+    ([Where 0 is](../reference/parts/lift.md#where-0-is)).
 
 **Hard stops and software limits:** `min` and `max` are software limits. The program stops the motor there.
 Software can be wrong (a bad number, a slipped encoder). So the lift also needs physical blocks at both

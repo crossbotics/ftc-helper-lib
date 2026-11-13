@@ -8,7 +8,7 @@ minutes: 30
 needs: [flywheel, pinpoint|otos|dead-wheels]
 kit_bots: []
 since: v0.17.0
-docs: [tutorials/start/09-shooter-and-camera.md#14-extra-shooting-while-moving]
+docs: [add-to-robot/07-camera.md#shooting-while-moving]
 ---
 
 ## Why

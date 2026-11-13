@@ -17,7 +17,7 @@ the field in 3D (see below). It started from our 2025-26 (DECODE) robot code. We
 built it to grow every season.
 
 A whole robot is **five files**. These are three of them, for a robot with a lift, a claw and an intake
-(the [lesson robot](examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)):
+(the example robot [`lessonbot`](examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)):
 
 ```java
 // Robot.java: what is on the robot (names as in the robot configuration)
@@ -50,7 +50,7 @@ s.start("Against our wall, facing the field", 0)
  .right("Park", 20, 0.7);
 ```
 
-If you are new to Java, do not worry if this looks strange. The [lessons](docs/tutorials/README.md) explain each
+If you are new to Java, do not worry if this looks strange. [The five files](docs/five-files/README.md) explains each
 line, one at a time. You can also use only some pieces in your own OpMode, without the five files:
 [Use only what you need](docs/guides/use-only-what-you-need.md).
 
@@ -116,9 +116,9 @@ replacement for learning.
 2. [From Blocks to Java](docs/blocks-to-java.md) (used Scratch or Blocks before): where each block you
    know went, and why you never write the loop.
 3. [Quick start](docs/quick-start.md): add the library, get five files, and drive.
-4. [Lesson 1: the robot in five files](docs/tutorials/start/01-robot-in-five-files.md): what each file is for.
-5. Lessons 2 to 6 of the [main track](docs/tutorials/README.md#start-here-the-main-track): drive,
-   buttons, mechanisms, actions, autonomous. Then the lessons your robot needs: odometry, paths, a shooter.
+4. [The five files](docs/five-files/README.md): what each file is for.
+5. [Add to your robot](docs/add-to-robot/README.md): one page per part (a lift, a launcher, odometry, ...).
+   Then [Controls](docs/controls/README.md), [Building autos](docs/building-autos/README.md) and [Tuning](docs/tuning/README.md).
 
 **For a question like "how do I add a lift?":** the [Cookbook](docs/cookbook.md) has more than 100
 short answers, each with code to copy. The build tests that code with every change.
@@ -132,15 +132,15 @@ Everything else, by what you want to do:
 | Know Scratch or Blocks: see where each block went in Java | [From Blocks to Java](docs/blocks-to-java.md) |
 | **Get a robot driving, then a first autonomous** (a starter bot, a robot like an example, or your own design) | [Pick your start](docs/pick-your-start/README.md), then [the five files](docs/five-files/README.md) |
 | Add the library to our robot project | [Add the library](docs/setup/04-add-the-library.md) |
-| **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/start/01-robot-in-five-files.md), [robot module](docs/reference/robot-java.md) |
+| **A whole robot program, fast: the robot in five files** (made from your configuration) | [The five files](docs/five-files/README.md), [robot module](docs/reference/robot-java.md) |
 | **Start from code for a robot like ours** (kit bots, example robots, or made from our configuration) | [Pick your template](docs/templates.md) |
-| **Learn it step by step** (a 9-lesson main track: 6 for every robot, 3 for the robots that need them; plus 21 "under the hood" tutorials) | [Tutorials](docs/tutorials/README.md) |
+| **Learn it step by step** (Set up, Pick your start, The five files, Add to your robot, Controls, Building autos, Tuning; plus 21 "under the hood" tutorials) | [Tutorials](docs/tutorials/README.md) |
 | **Every way a button can work: tap, hold, double-tap, tap then hold, pairs, buzzes** | [Controls](docs/controls/README.md) |
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
 | **Write autonomous modes with the builder (every feature, with a tested example)** | [Building autos](docs/building-autos/README.md) |
 | **Several autos, and choosing one at the field (one file per plan, names, INIT menu choices)** | [Having multiple autos](docs/building-autos/03-multiple-autos.md), [Advanced autos](docs/building-autos/08-advanced-autos.md) |
-| **Know where the robot is on the field** (odometry: goBILDA Pinpoint, SparkFun OTOS, dead wheels) and drive to field points | [Lesson 7](docs/tutorials/start/07-odometry.md), [odometry module](docs/modules/odometry.md) |
-| **Smooth paths with Pedro Pathing support**, in the same field numbers (mecanum drives) | [Lesson 8](docs/tutorials/start/08-paths-with-pedro.md), [pedro module](docs/modules/pedro.md) |
+| **Know where the robot is on the field** (odometry: goBILDA Pinpoint, SparkFun OTOS, dead wheels) and drive to field points | [Add odometry](docs/add-to-robot/09-odometry.md), [odometry module](docs/modules/odometry.md) |
+| **Smooth paths with Pedro Pathing support**, in the same field numbers (mecanum drives) | [Add Pedro paths](docs/building-autos/05-pedro-paths.md), [pedro module](docs/modules/pedro.md) |
 | Make autonomous modes the older way (EasyAuto) | [Easy autonomous modes](docs/guides/easy-autos.md) |
 | The older six-file starter kit (EasyTeleOp, EasyAuto) | [Starter kit](docs/starter-kit.md) |
 | Look up any class or method (searchable) | [Search every class](docs/reference/javadoc.md) |
@@ -154,7 +154,7 @@ Everything else, by what you want to do:
 | **Set up any turret: motor, servo or CR servo; home switch or not; +/-90 to a slip ring; hood; camera** | [Setting up a turret](docs/guides/turret-setup.md) |
 | **Set up a Limelight's pipelines for bright, normal and dim light (the lighting test at INIT)** | [Setting up Limelight lighting pipelines](docs/guides/limelight-lighting.md) |
 | Keep two parts from hitting each other (a turret and a lift) | [Interlocks](docs/guides/interlocks.md) |
-| Test the robot (checklists) | [Testing procedures](docs/guides/testing.md) |
+| Test the robot (checklists) | [Checks before practice and matches](docs/tests/03-checks-before-practice-and-matches.md) |
 | **Try OpModes without a robot (pretend Control Hub + Driver Hub, field in 3D)** | [Simulator](docs/guides/simulator.md) |
 | Motors and servos the simulator knows (and how to add your own) | [Parts catalog](docs/guides/parts-catalog.md) |
 | **Ask an AI agent (Claude Code, Codex, a chat) about the library, with answers from these docs** | [Ask an AI agent](docs/guides/ask-an-ai-agent.md) |
@@ -173,7 +173,7 @@ Everything else, by what you want to do:
 
 The module pages explain every class and every function. A **package** is a folder of Java
 classes; its name is how your code finds them (in an `import` line). A **module** here is one part of
-the library, with its own docs page. (In the lessons, a module is also a ready-made robot part, like
+the library, with its own docs page. (In the docs pages, a module is also a ready-made robot part, like
 `Intake` or `Lift`, that you add in `Robot.java`. Neither is a Gradle module.)
 
 | Module | Package | What it does | Docs |

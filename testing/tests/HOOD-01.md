@@ -8,7 +8,7 @@ minutes: 30
 needs: [hood-servo]
 kit_bots: []
 since: v0.17.0
-docs: [tuning/04-hood-finder.md, tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle]
+docs: [tuning/04-hood-finder.md, add-to-robot/05-launcher.md#a-hood-the-shot-angle]
 ---
 
 ## Why

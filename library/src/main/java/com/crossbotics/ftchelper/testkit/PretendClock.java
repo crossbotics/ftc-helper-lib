@@ -25,7 +25,7 @@ import java.util.function.LongSupplier;
  * }
  * }</pre>
  *
- * Docs: docs/modules/testkit.md, docs/guides/testing.md
+ * Docs: docs/modules/testkit.md, docs/tests/03-checks-before-practice-and-matches.md
  */
 public final class PretendClock implements LongSupplier {
     // Starts at 1 s, not 0 (some parts treat a time of 0 as "never").

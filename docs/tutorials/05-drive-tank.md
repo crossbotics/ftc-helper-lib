@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a TeleOp that drives a standard (tank) robot, with a button to switch between two driving styles.
-The main track sets up a tank drive in one line: [Drive](start/02-drive.md).
+The main track sets up a tank drive in one line: [Robot.java](../five-files/01-robot-java.md).
 
 **You will learn:** how to set up a standard drivetrain (also called tank, differential, or
 "skid steer"), the two ways to drive it (arcade and tank style), and how the 2- and 4-motor versions are

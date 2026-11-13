@@ -3,7 +3,7 @@ package com.crossbotics.ftchelper.examples.odometrybot;
 import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT
 
 /**
- * Lesson 7's robot: every number, one per line. DEFAULT = the library's default (in brackets).
+ * The odometry robot: every number, one per line. DEFAULT = the library's default (in brackets).
  * more: https://crossbotics.com/ftc-helper/docs/reference/tunables/
  */
 public class Tunables {

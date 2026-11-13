@@ -87,8 +87,8 @@ You make the five files for your robot, from its configuration or from a short t
 6. [Measure the numbers](#6-measure-the-numbers): every `MEASURE` in `Tunables.java`.
 7. [Drive, then each mechanism](#7-drive-then-each-mechanism).
 8. [The simulator](#8-the-simulator), then [a first autonomous](#9-a-first-autonomous).
-9. Then the [main track lessons](tutorials/README.md#start-here-the-main-track): lessons 1 to 6
-   explain each file and add more mechanisms and actions.
+9. Then [The five files](five-files/README.md) explains each file, and
+   [Add to your robot](add-to-robot/README.md) adds more mechanisms and actions.
 
 Words used on this page:
 
@@ -102,7 +102,7 @@ Words used on this page:
 - **Profile:** a mode for the whole robot. **PRACTICE** is for the shop (debug lines, the tuning menu),
   **COMPETITION** is for matches. The drive power is the same in both.
 - **Action:** a list of steps that one button starts, for example "push out, wait 0.5 s, stop"
-  (`spitOut` in `Actions.java`). Lesson 5 shows how to write them.
+  (`spitOut` in `Actions.java`). [Actions.java](five-files/04-actions-java.md) shows how to write them.
 - **Finder:** a small program that measures a number on the real robot (a servo's positions, a
   flywheel's gains, the wheel size) and shows the line to copy into your code.
 - **`MEASURE`:** a word in `Tunables.java` in place of a number only your robot can give. INIT stops on
@@ -245,7 +245,7 @@ mounted, then go to section 5. **Road 2:** the same, plus STEP 4 and STEP 5 for 
 If you used Scratch or Blocks before, [From Blocks to Java](blocks-to-java.md) shows where each block you know
 went (the loop, "when pressed", "wait") in these files.
 
-**Java you will see in the files** (more in [lesson 1](tutorials/start/01-robot-in-five-files.md#java-you-will-meet)):
+**Java you will see in the files** (more in [The five files](five-files/README.md#java-you-will-meet)):
 
 - `() -> r.intake.out()` is a **lambda**: a small piece of code you hand over now, to run later (when
   a button is pressed, or an action gets to that step).
@@ -270,12 +270,12 @@ went (the loop, "when pressed", "wait") in these files.
 7. **`Controls.java`:** the TeleOp's name. If you rename it, change `preselectTeleOp` in `autos/FirstAuto.java` to the same name. Change `group = "Examples"` to your own group name (or delete it). Set `oneDriver = true` if one person drives and runs the mechanisms.
    **Why:** You pick the TeleOp by its name on the Driver Station. `preselectTeleOp` picks the TeleOp for you after the autonomous. One driver puts every button on gamepad 1.
 8. **`autos/FirstAuto.java`:** the autonomous's name and `group`, where the drive team puts the robot, and how far it drives.
-   **Why:** It drives only after the Drive Tuner ([lesson 6](tutorials/start/06-first-autonomous.md)).
+   **Why:** It drives only after the Drive Tuner ([The autos](five-files/05-autos.md)).
 
 **STEP 5, more mechanisms:** add a line for each part in `define()`, a field for each at the top of
 the class, an import for each part class, and its numbers in `Tunables.java` (a section named after the
 part: `"lift"` reads `Tunables.Lift`). For example a lift and a claw
-([lesson 4](tutorials/start/04-lift-and-claw.md) explains them):
+([Add a lift](add-to-robot/01-lift.md) explains them):
 
 ```java
 public Lift lift;     // the fields, next to "public Intake intake;"
@@ -295,7 +295,7 @@ In `Controls.java` and `autos/FirstAuto.java`, also delete the `@Disabled` line 
 
 1. Build (**Build > Make Project**), then Run to install it on the Control Hub ([the buttons](setup/06-build-and-install.md#the-buttons)).
    **Why:** the robot runs the app that is on the hub, not the code on your laptop.
-2. Add the small **Hardware Check** OpMode from [Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md#1-the-3-line-opmode)
+2. Add the small **Hardware Check** OpMode from [Check the hardware](tutorials/19-testing-procedures.md#1-the-3-line-opmode)
    (it is not one of the five files). Build and install again.
 3. **Robot on a block, wheels off the ground.** Run the Hardware Check. Every device must be found.
    Nothing sets limits yet. So on a lift or an arm, use short, gentle taps, know where its hard stop is (the end of its
@@ -321,7 +321,7 @@ How:
 
 1. Add the finders your robot needs, each in its own small file next to `Robot.java`: the
    **Servo Finder** and the **Motor Finder** (the whole files are in
-   [lesson 4, section 5](tutorials/start/04-lift-and-claw.md#5-find-the-real-numbers-with-the-finders)),
+   [Add a lift](add-to-robot/01-lift.md#3-find-its-numbers)),
    and for a flywheel the **Flywheel Finder** (the same 3 lines, with `FlywheelFinderOpMode`).
    Build and install.
 2. Robot on a block. Run them in this order ([why this order](tuning/README.md#the-tuning-order)):
@@ -350,7 +350,7 @@ How:
 3. **Robot on a block, wheels off the ground.** INIT your TeleOp, then press ▶. **Why:** a wrong motor
    direction can make the robot spin or drive off the table.
 4. Left stick up: every wheel must roll the way that moves the robot forward. If a wheel rolls backward,
-   fix STEP 4 ([how to check each wheel](tutorials/start/02-drive.md#7-check-the-motor-directions)).
+   fix STEP 4 ([how to check each wheel](tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward)).
 5. On the floor, with space around the robot and one person's hand on STOP: left stick drives (and
    strafes on mecanum), right stick turns, LT slows down.
 6. Tap BACK: everything stops (PAUSED). Tap again to go on. Tap GUIDE to see every button.
@@ -418,7 +418,7 @@ servos, and how they look. The names and the drive come from `Robot.java`. The s
 - **`MEASURE` numbers:** the simulator uses a stand-in for each one, so it runs before you measure. The
   real robot still stops at INIT ([MEASURE in the simulator](guides/simulator.md#measure-in-the-simulator)).
 - **Simulator tests**, the second button, runs your saved tests. That comes later:
-  [lesson 10](tutorials/start/10-test-your-robot-code.md).
+  [Record a test](tests/01-record-a-test.md).
 
 ### Laptop setup (once)
 
@@ -447,7 +447,7 @@ the robot until you say the drive is tuned.** Until then, INIT shows
    STOP. Read the report on the Driver Station at the end. The autonomous then picks your TeleOp for
    you (`preselectTeleOp`).
 
-Then [lesson 6](tutorials/start/06-first-autonomous.md) explains each line of the autonomous, and how
+Then [The autos](five-files/05-autos.md) explains each line of the autonomous, and how
 to add steps.
 
 ## If something goes wrong
@@ -471,10 +471,10 @@ to add steps.
 
 ## Next
 
-[Lesson 1: the robot in five files](tutorials/start/01-robot-in-five-files.md) explains what each of the five
-files is for. Then lessons 2 to 6 of the [main track](tutorials/README.md#start-here-the-main-track)
-add the drive in detail, buttons, mechanisms, actions and the autonomous. After that, do only the
-lessons your robot needs (7 odometry, 8 paths, 9 a shooter). For a quick question
+[The five files](five-files/README.md) explains what each of the five
+files is for. Then [Add to your robot](add-to-robot/README.md) adds one part at a time, and
+[Building autos](building-autos/README.md) covers the autonomous. Add only the parts your robot needs.
+For a quick question
 ("how do I add a claw?"), the [cookbook](cookbook.md) has short answers with code to copy.
 
 Road 1 and 2: your starter bot's page says what its code does differently, and what the simulator

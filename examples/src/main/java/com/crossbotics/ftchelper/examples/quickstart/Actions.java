@@ -3,7 +3,7 @@ package com.crossbotics.ftchelper.examples.quickstart;
 
 import com.crossbotics.ftchelper.robot.Action;
 
-/** Quick start, file 4 of 5: moves that use several parts or steps (lesson 5). */
+/** Quick start, file 4 of 5: moves that use several parts or steps (docs: Actions.java). */
 public class Actions {
 
     /** Pushes a piece out for half a second, then stops the intake. */

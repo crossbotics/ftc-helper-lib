@@ -8,7 +8,7 @@ minutes: 20
 needs: [pinpoint|otos|dead-wheels]
 kit_bots: []
 since: v0.17.0
-docs: [tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended, controls/04-move-library-buttons.md]
+docs: [add-to-robot/09-odometry.md#teleop-starts-where-autonomous-ended, controls/04-move-library-buttons.md]
 ---
 
 ## Why
@@ -24,7 +24,7 @@ driver pairs a gamepad (START + A or START + B).
 ## Setup
 
 - A robot with an odometry line, and the reset spot in `Tunables.Odometry` (`resetX`, `resetY`, `resetHeading`, seen from your own drivers' wall). BIOBUZZ: also `mirrorForRed = false`, written once for the whole robot in `Tunables.Aim` (or in `Tunables.Odometry` if you have no `Aim` section).
-- Simulator: your own robot from `Robot.java` (`./gradlew :sim:fromRobot -PteamCode=../TeamCode`), or the odometry robot from lesson 7.
+- Simulator: your own robot from `Robot.java` (`./gradlew :sim:fromRobot -PteamCode=../TeamCode`), or the odometry robot `odometrybot` ([Drive to points: Try it in the simulator](../../docs/building-autos/04-drive-to-points.md#try-it-in-the-simulator)).
 - A tape measure (real robot).
 
 ## Steps

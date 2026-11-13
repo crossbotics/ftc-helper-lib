@@ -3,13 +3,13 @@ package com.crossbotics.ftchelper.examples.lessonbot;
 import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE
 
 /**
- * The lesson robot, file 2 of 5: every number, one per line. Section name = the device's name in
+ * The example robot (lessonbot), file 2 of 5: every number, one per line. Section name = the device's name in
  * CamelCase ("lift" reads Lift). DEFAULT = the library's default (in brackets). Tune live, then
  * copy the numbers back here: the code is the record.
  * more: https://crossbotics.com/ftc-helper/docs/reference/tunables/
  */
 public class Tunables {
-    /** Lesson 2. calibrated: set true after the Drive Tuner (lesson 6); until then no autonomous runs. */
+    /** calibrated: set true after the Drive Tuner; until then no autonomous runs. */
     public static class Drive {
         public static double maxPower = DEFAULT;                    // top wheel power (1.0)
         public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
@@ -26,7 +26,7 @@ public class Tunables {
         public static double outPower = DEFAULT;                    // power pushing pieces out (0.7)
     }
 
-    /** Lesson 4. Encoder counts from the bottom (the switch sets 0). Tune kP..kF live (lesson 4, step 6). */
+    /** Encoder counts from the bottom (the switch sets 0). Tune kP..kF live (docs: Add a lift, step 4). */
     public static class Lift {
         public static double min = 0;                               // lowest safe point, counts (Motor Finder)
         public static double max = 2600;                            // highest safe point, counts (Motor Finder)
@@ -39,7 +39,7 @@ public class Tunables {
         public static double high = 2400;                           // a named height (Motor Finder)
     }
 
-    /** Lesson 4. Servo positions (the Servo Finder measures them). */
+    /** Servo positions (the Servo Finder measures them). */
     public static class Claw {
         public static double open = 0.20;                           // servo position, open (Servo Finder)
         public static double closed = 0.75;                         // servo position, closed (Servo Finder)

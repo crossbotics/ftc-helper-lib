@@ -166,13 +166,13 @@ Not modeled or not published:
 ### REV bot code
 
 [`revbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/revbot) is this robot in five
-files ([lesson 1](../tutorials/start/01-robot-in-five-files.md) walks through them). The configuration
+files ([The five files](../five-files/README.md) walks through them). The configuration
 names are the ones in REV's own code, so it runs on that robot as it is. These facts are not in the code's
 comments:
 
 - **Drive:** REV's code does not reverse a drive motor, so the library's default (the left side reversed)
   is a guess. If the robot spins when you push the stick forward, change it
-  ([lesson 2, step 3](../tutorials/start/02-drive.md#3-say-which-motors-are-reversed)). REV does not say
+  ([Robot.java](../five-files/01-robot-java.md#a-wheel-turns-the-wrong-way)). REV does not say
   which way each motor turns: check them all on your robot.
 - **Intake:** REV's code takes POLLEN in with the right bumper and pushes it out with the right trigger.
   REV's page does not say which power sign is "in". If the intake pushes out when it should take in, add
@@ -336,7 +336,7 @@ Not modeled or not published:
 ### AndyMark bot code
 
 [`andymarkbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/andymarkbot) is this robot
-in five files ([lesson 1](../tutorials/start/01-robot-in-five-files.md) walks through them). The
+in five files ([The five files](../five-files/README.md) walks through them). The
 configuration names are the ones in AndyMark's own code (RobitsStarterBotTeleop), so it runs on that robot
 as it is. These facts are not in the code's comments:
 
@@ -406,7 +406,7 @@ Not modeled or not published:
 ### Studica bot code
 
 [`studicabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/studicabot) is this robot
-in five files ([lesson 1](../tutorials/start/01-robot-in-five-files.md) walks through them). The
+in five files ([The five files](../five-files/README.md) walks through them). The
 configuration names are the ones in Studica's own Blocks code, so it runs on that robot as it is. These
 facts are not in the code's comments:
 
@@ -459,9 +459,9 @@ robot file and the notes on this page all use them.
    finder gives the real number, so a guess never pushes the part into the frame.
 4. **Buttons:** `Controls.java` writes out each part's buttons. So a part you add has **no buttons** until
    you write its lines there (each part's "buttons to add" in the [reference](../reference/robot-java.md)).
-   To move a button, or add a job, edit `Controls.java` ([lesson 3](../tutorials/start/03-buttons.md)).
+   To move a button, or add a job, edit `Controls.java` ([Controls.java](../five-files/03-controls-java.md)).
    For several parts together, write an action in `Actions.java`
-   ([lesson 5](../tutorials/start/05-actions.md)).
+   ([Actions.java](../five-files/04-actions-java.md)).
 5. **When you changed the intake, or where the pieces ride:** count again how many pieces fit (POLLEN,
    NECTAR, a mix), and change `.holds(...)` on the intake's line
    ([Quick start, section 6, step 5](../quick-start.md#6-measure-the-numbers)).
