@@ -8,7 +8,7 @@ minutes: 30
 needs: [color-sensor|distance-sensor]
 kit_bots: []
 since: v0.17.0
-docs: [tuning/13-piece-tuner.md, reference/parts/pieces.md]
+docs: [tuning/14-piece-tuner.md, reference/parts/pieces.md]
 ---
 
 ## Why

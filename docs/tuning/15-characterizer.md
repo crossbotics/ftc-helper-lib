@@ -67,6 +67,6 @@ each test ran 2-3 times and the numbers agree.
 
 ---
 
-**Next:** [Live tuning: change numbers while the robot runs](15-live-tuning.md).
+**Next:** [Live tuning: change numbers while the robot runs](16-live-tuning.md).
 
 **Look it up:** [CharacterizerOpMode](../modules/finders.md#characterizeropmode).

@@ -101,6 +101,6 @@ the Loop test shows `checked = true` and it is in `Tunables.java`.
 
 ---
 
-**Next:** [Camera lighting](10-camera-lighting.md).
+**Next:** [Move Tuner: how exactly moves stop and turns end](10-move-tuner.md).
 
 **Look it up:** [Odometry: In Tunables.java](../reference/parts/odometry.md#in-tunablesjava), [Odometry module](../modules/odometry.md).

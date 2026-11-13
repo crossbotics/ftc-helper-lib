@@ -27,7 +27,7 @@ import java.util.function.Consumer;
  * <p>Saved values are kept in the robot's {@link SettingsFile}, under names that start with
  * "tunable.". Tutorial 15 (docs/tutorials/15-telemetry-profiles-tuning.md) walks through it.
  *
- * Docs: docs/tuning/15-live-tuning.md
+ * Docs: docs/tuning/16-live-tuning.md
  */
 public final class Tunable {
     // Every tunable made so far. "static": one shared list for the whole app, so the menu can

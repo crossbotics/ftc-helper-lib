@@ -821,7 +821,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     String toolFor(String field) {
-        if (field.equals("speedRpm") || field.startsWith("speedByDistance")) return "the Shot Tuner, docs/tuning/12-shot-tuner.md";
+        if (field.equals("speedRpm") || field.startsWith("speedByDistance")) return "the Shot Tuner, docs/tuning/13-shot-tuner.md";
         if (field.startsWith("k") || field.equals("nominalVolts") || field.equals("shotIntervalSec")) {
             return "the Flywheel Finder, docs/tuning/06-flywheel-finder.md";
         }

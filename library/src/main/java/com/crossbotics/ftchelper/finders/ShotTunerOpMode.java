@@ -87,7 +87,7 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  * }
  * }</pre>
  *
- * Docs: docs/modules/finders.md. Guide: docs/tuning/12-shot-tuner.md
+ * Docs: docs/modules/finders.md. Guide: docs/tuning/13-shot-tuner.md
  */
 public abstract class ShotTunerOpMode extends FinderOpMode {
 

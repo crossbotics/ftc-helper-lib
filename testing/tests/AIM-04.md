@@ -8,7 +8,7 @@ minutes: 40
 needs: [flywheel, limelight|webcam]
 kit_bots: []
 since: v0.16.0
-docs: [tuning/11-aim-tuner.md]
+docs: [tuning/12-aim-tuner.md]
 ---
 
 ## Why

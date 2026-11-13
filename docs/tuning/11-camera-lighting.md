@@ -51,7 +51,7 @@ camera = add(Camera.webcam("Webcam 1").autoExposure());   // or your own list: a
 2. Read the lighting line on the Driver Station, for example
    `limelight lighting : pipeline 2 (9 of 10 pictures saw tags)`. When the camera sees no tag, this line
    is a warning.
-3. Look at the camera's picture: [See what the camera sees](11-aim-tuner.md#see-what-the-camera-sees).
+3. Look at the camera's picture: [See what the camera sees](12-aim-tuner.md#see-what-the-camera-sees).
 
 ## At an event
 
@@ -84,7 +84,7 @@ camera = add(Camera.webcam("Webcam 1").autoExposure());   // or your own list: a
 
 ---
 
-**Next:** [Aim Tuner: camera offset](11-aim-tuner.md).
+**Next:** [Aim Tuner: camera offset](12-aim-tuner.md).
 
 **Look it up:** [Camera: Venue lighting](../reference/parts/camera.md#venue-lighting),
 [how the test works](../modules/vision.md#venue-lighting).

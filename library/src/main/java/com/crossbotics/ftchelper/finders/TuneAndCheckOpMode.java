@@ -300,6 +300,11 @@ public class TuneAndCheckOpMode extends LinearOpMode {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
+        if (robot != null) {
+            out.add(new Tool("Move Tuner", "how exactly moves stop and turns end", () -> new MoveTunerOpMode() {
+                @Override protected RobotDefinition robot() { return fresh.get(); }
+            }));
+        }
         if (any(modules, Launcher.class)) {
             out.add(new Tool("Shot Tuner", "the shot speed by distance", () -> new ShotTunerOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }

@@ -1,0 +1,21 @@
+# The Move Tuner's Creep test sets moveMinPower, and its Drift test drives four 48 in moves and reports the heading.
+# Run it:  ./gradlew :sim:scenario -Pfile=sim/scenarios/move-tuner.sim
+set tunable Drive.calibrated true      # as if the Drive Tuner was done
+init "Lesson Bot Move Tuner"
+expect screen has "Move tuner"
+start
+expect screen has "> 1 Creep"
+press g1.a
+expect within 20 screen has "moveMinPower now"
+expect screen has "Tunables.Drive: moveMinPower ="
+press g1.dpad_down
+press g1.dpad_down
+press g1.dpad_down
+expect screen has "> 4 Drift"
+press g1.a
+expect within 60 screen has "OK: the heading stays within 2 deg"
+press g1.guide
+expect screen has "help"
+press g1.guide
+stop
+expect error none

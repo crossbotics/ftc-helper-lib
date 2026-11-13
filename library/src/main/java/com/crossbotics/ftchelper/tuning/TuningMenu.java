@@ -25,7 +25,7 @@ import java.util.List;
  * <p>{@code menu::toggle} hands over the menu's toggle method itself (a "method reference"), so the
  * button can run it later. Profiles: docs/guides/profiles.md.
  *
- * Docs: docs/tuning/15-live-tuning.md
+ * Docs: docs/tuning/16-live-tuning.md
  */
 public class TuningMenu {
     // How many tunables fit on one screen page.

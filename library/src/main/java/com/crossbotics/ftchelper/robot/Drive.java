@@ -25,7 +25,8 @@ import java.util.List;
  *
  * <p>Its numbers are in {@code Tunables.Drive}: {@code maxPower}, {@code practiceMaxPower} (the
  * PRACTICE profile's limit; if not written, the same as maxPower, so drivers practice at match speed), {@code slowSpeed} (the slow trigger), and the autonomous ones
- * ({@code strafeCorrection}, {@code strafeCorrectionLeft} if left slips differently, {@code turnKp}, {@code turnKd}, {@code moveMinPower}, {@code slowDownIn}) with
+ * ({@code strafeCorrection}, {@code strafeCorrectionLeft} if left slips differently, {@code turnKp}, {@code turnKd}, {@code turnMinPower},
+ * {@code turnToleranceDeg}, {@code moveMinPower}, {@code slowDownIn}, {@code moveTurnScale}, {@code moveMaxTurnPower}) with
  * {@code calibrated = true} once the Drive Tuner is done (autonomous refuses to run before).
  *
  * <p>Motor directions: the left side is reversed by default (the usual way motors are mounted). If
@@ -180,6 +181,11 @@ public final class Drive {
         final double turnKd = t.tunable("turnKd", 0.003, 0.0005).range(0, 1).get();
         final double moveMin = t.tunable("moveMinPower", 0.30, 0.02).range(0, 1).get();
         final double slowDown = t.tunable("slowDownIn", 0, 0.5).range(0, 48).get();
+        // The Move Tuner finds these four (docs/tuning: Move Tuner). Defaults = AutoDriveConfig's.
+        final double turnMin = t.tunable("turnMinPower", 0, 0.01).range(0, 0.3).get();
+        final double turnTol = t.tunable("turnToleranceDeg", 1.0, 0.25).range(0.25, 10).get();
+        final double moveTurnScale = t.tunable("moveTurnScale", 0.60, 0.05).range(0, 1).get();
+        final double moveMaxTurn = t.tunable("moveMaxTurnPower", 0.35, 0.05).range(0.05, 1).get();
         final boolean calibrated = t.flag("calibrated", false);
         return new RobotConfig() {
             @Override public DriveConfig drive() {
@@ -207,6 +213,10 @@ public final class Drive {
                 c.turnKd = turnKd;
                 c.moveMinPower = moveMin;
                 c.slowDownIn = slowDown;
+                c.turnMinPower = turnMin;
+                c.turnToleranceDeg = turnTol;
+                c.moveTurnScale = moveTurnScale;
+                c.moveMaxTurnPower = moveMaxTurn;
                 c.calibrationConfirmed = calibrated;
                 return c;
             }

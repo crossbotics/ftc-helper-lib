@@ -33,17 +33,18 @@ The menu lists only the tools that fit your robot. It finds Robot.java by itself
 | Feed Stop Finder | the launcher has a `.feedStop(...)` |
 | Drive Tuner | there is a Robot.java |
 | Odometry Tuner | Robot.java has an `odometry(...)` line |
+| Move Tuner | there is a Robot.java |
 | Shot Tuner | the robot has a launcher |
 | Piece Tuner | the robot has a piece sensor |
 
 Two tools are not in the menu: the **Aim Tuner** and the **Characterizer**. They need your camera or your
-lifts, so they keep their own file ([Aim Tuner](11-aim-tuner.md), [Characterizer](14-characterizer.md)). Your own finder files still work: keep them or delete them.
+lifts, so they keep their own file ([Aim Tuner](12-aim-tuner.md), [Characterizer](15-characterizer.md)). Your own finder files still work: keep them or delete them.
 
 ## Before you start
 
 - Put the robot on a block for the Servo, Motor and Flywheel finders (wheels off the floor).
 - Wear eye protection for the Flywheel Finder, Shot Tuner and Aim Tuner. Keep everybody out of the line of fire.
-- Use a charged battery (12.5 V or more) for the Drive Tuner, the Characterizer, the Flywheel Finder and
+- Use a charged battery (12.5 V or more) for the Drive Tuner, the Move Tuner, the Characterizer, the Flywheel Finder and
   the Shot Tuner. Their numbers are powers and speeds, so they depend on the battery. Their screens show
   the battery and warn when it is low. Every finder writes the battery at the start (▶) in the results file
   (`== Drive Tuner, 2026-10-24 14:05, battery 12.8 V ==`).
@@ -53,7 +54,7 @@ lifts, so they keep their own file ([Aim Tuner](11-aim-tuner.md), [Characterizer
   `ExampleAimTuner`: put your launcher and camera in them). Remove `@Disabled` and build. Then they are in
   the TeleOp list under "Finders".
 - The robot in five files: the Servo, Motor and Flywheel finders need no code. The Drive Tuner, the
-  Odometry Tuner and the Shot Tuner need one line that names your robot. The line makes your `Robot`, so
+  Odometry Tuner, the Move Tuner and the Shot Tuner need one line that names your robot. The line makes your `Robot`, so
   the tuner uses its parts. Examples: the lesson robot's
   [DriveTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/DriveTuner.java),
   the turret robot's [ShotTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/ShotTuner.java):

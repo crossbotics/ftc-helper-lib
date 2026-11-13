@@ -26,7 +26,7 @@ flowchart TB
     end
     subgraph G4["Driving"]
         direction LR
-        D["Drive Tuner<br/>wheel size + strafe"] --> O["Odometry Tuner<br/>pods + offsets"]
+        D["Drive Tuner<br/>wheel size + strafe"] --> O["Odometry Tuner<br/>pods + offsets"] --> MV["Move Tuner<br/>stops + turns"]
     end
     subgraph G5["Scoring"]
         direction LR
@@ -50,16 +50,17 @@ flowchart TB
 | 7 | [Feed Stop Finder](07-feed-stop-finder.md) | hold and release | the launcher must feed one piece at a time before you tune shots |
 | 8 | [Drive Tuner](08-drive-tuner.md) | wheel size and strafe | autonomous moves need the right distances. Autonomous stays off until it passes |
 | 9 | [Odometry Tuner](09-odometry-tuner.md) | pod directions and offsets | `driveTo` and the shot distance need a true pose. Path steps stay off until it passes |
-| 10 | [Camera lighting](10-camera-lighting.md) (a setup, not a tool) | the camera setting for each kind of light | the camera must see the tags well before you aim or tune shots |
-| 11 | [Aim Tuner (own file)](11-aim-tuner.md) | camera offset | aim first, so you build the shot table with straight shots |
-| 12 | [Shot Tuner](12-shot-tuner.md) | the shot table | it needs a steady wheel, straight aim and a true distance: everything above |
-| 13 | [Piece Tuner](13-piece-tuner.md) | what each sensor sees | nothing moves, so it can also come earlier |
-| 14 | [Characterizer (own file)](14-characterizer.md) | how the motors really move | it needs a robot that drives and lifts that work, so it comes last |
+| 10 | [Move Tuner](10-move-tuner.md) | where moves stop, how turns end | it needs the right distances (Drive Tuner) and, with odometry, a true pose to measure with |
+| 11 | [Camera lighting](11-camera-lighting.md) (a setup, not a tool) | the camera setting for each kind of light | the camera must see the tags well before you aim or tune shots |
+| 12 | [Aim Tuner (own file)](12-aim-tuner.md) | camera offset | aim first, so you build the shot table with straight shots |
+| 13 | [Shot Tuner](13-shot-tuner.md) | the shot table | it needs a steady wheel, straight aim and a true distance: everything above |
+| 14 | [Piece Tuner](14-piece-tuner.md) | what each sensor sees | nothing moves, so it can also come earlier |
+| 15 | [Characterizer (own file)](15-characterizer.md) | how the motors really move | it needs a robot that drives and lifts that work, so it comes last |
 
 **After the finders:**
 
-- [Live tuning](15-live-tuning.md): change a number from the gamepad while your TeleOp runs (the tuning menu in TeleOp, not Tune and check).
-- [Fix it by what you see](16-fix-by-symptom.md): "the lift sags" -> which number to change, and which way.
+- [Live tuning](16-live-tuning.md): change a number from the gamepad while your TeleOp runs (the tuning menu in TeleOp, not Tune and check).
+- [Fix it by what you see](17-fix-by-symptom.md): "the lift sags" -> which number to change, and which way.
 
 ---
 

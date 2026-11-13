@@ -430,10 +430,9 @@ public class AutoDrive {
      * @param toleranceIn close enough, inches (1 is usual)
      * @return DONE, STALLED, TIMED_OUT or STOPPED
      */
-    // driveTo's last few inches: proportional speed, so it stops on the point.
+    // driveTo's last few inches (proportional speed, so it stops on the point): AutoDriveConfig.driveToKp & co.
     // How long the odometry may be "not ready" before driveTo gives up (NO_ODOMETRY), seconds.
     public static final double ODOMETRY_LOST_SEC = 0.2;
-    static final double DRIVE_TO_NEAR_IN = 8, DRIVE_TO_KP = 0.04, DRIVE_TO_MIN_POWER = 0.12, DRIVE_TO_MIN_TURN = 0.08;
     // driveTo's stuck checks count at most this much time per loop (seconds), see driveTo.
     static final double STALL_STEP_SEC = 0.1;
     // After move() reaches its distance: the wheels brake, and it waits until the robot is slower than
@@ -470,13 +469,13 @@ public class AutoDrive {
             int closeLoops = 0;
             // The heading counts as there within 2 degrees (or the drive's own tolerance, if bigger).
             double headingTol = Math.max(cfg.turnToleranceDeg, 2.0);
-            double minTurn = cfg.turnMinPower > 0 ? cfg.turnMinPower : DRIVE_TO_MIN_TURN;
+            double minTurn = cfg.turnMinPower > 0 ? cfg.turnMinPower : cfg.driveToMinTurn;
             // The smallest powers near the point are WHEEL powers: mix() scales every power by the drive's
             // power limit (Tunables.Drive.maxPower, for example 0.4 for first runs), and 0.12 x 0.4 is
             // too weak to move a robot, so it would end STALLED a little short of the point. Asked for
             // before that scaling, they are divided by the limit (at most 1).
             double limit = Math.max(powerLimit, 1e-6);
-            double nearMin = Math.min(1, DRIVE_TO_MIN_POWER / limit);
+            double nearMin = Math.min(1, cfg.driveToMinPower / limit);
             minTurn = Math.min(1, minTurn / limit);
             // A single bad reading (a CRC glitch) is not a lost odometry: wait still for up to 0.2 s.
             double notReadySince = Double.NaN;
@@ -520,12 +519,12 @@ public class AutoDrive {
                 double forwardErr = -dx * Math.sin(h) + dy * Math.cos(h);
                 double rightErr = dx * Math.cos(h) + dy * Math.sin(h);
                 // Speed: like move() far away; in the last few inches, proportional to the distance left
-                // (DRIVE_TO_KP per inch, at least DRIVE_TO_MIN_POWER), so it settles on the point instead
+                // (driveToKp per inch, at least driveToMinPower), so it settles on the point instead
                 // of circling it.
                 double speed;
                 if (dist <= toleranceIn) speed = 0;
-                else if (dist < DRIVE_TO_NEAR_IN) {
-                    double near = Math.min(DRIVE_TO_KP * dist, maxSpeed);
+                else if (dist < cfg.driveToNearIn) {
+                    double near = Math.min(cfg.driveToKp * dist, maxSpeed);
                     // With slowDownIn the slow-down goes on here too: never faster than it (but at least nearMin).
                     if (cfg.slowDownIn > 0) near = Math.min(near, MotionMath.taperSpeed(dist / startDist,
                             cfg.moveMinPower, maxSpeed, cfg.taperFraction(startDist)));
@@ -535,13 +534,13 @@ public class AutoDrive {
                 double right = dist > 1e-6 ? speed * rightErr / dist : 0;
                 // PID output is counterclockwise; the drive's turn is clockwise.
                 double turn = -headingPid.calculate(headingDeg, p.headingDeg);
-                // A small turn is too weak to move the robot: at least DRIVE_TO_MIN_TURN until it is there.
+                // A small turn is too weak to move the robot: at least driveToMinTurn until it is there.
                 if (Math.abs(headingErr) > headingTol && Math.abs(turn) < minTurn) {
                     turn = -Math.signum(headingErr) * minTurn;
                 }
                 setPowers(MecanumMixer.mix(fwd, right, turn, powerLimit));
                 // Stuck: far away, the usual rule; in the last inches (slow on purpose), no progress for 2 s.
-                boolean near = dist <= DRIVE_TO_NEAR_IN;
+                boolean near = dist <= cfg.driveToNearIn;
                 if (near != wasNear) {
                     stall.reset();
                     nearStall.reset();
@@ -779,10 +778,14 @@ public class AutoDrive {
      * How far the robot moved between two encoder readings, robot-relative:
      * {forward inches, right inches}. Sideways wheel travel is divided by {@code strafeCorrection}
      * ({@code strafeCorrectionLeft} for travel to the left, when set),
-     * because mecanum wheels turn more than the robot moves sideways.
-     * (No "public" or "private": only code in this package, like the tests, can use it.)
+     * because mecanum wheels turn more than the robot moves sideways. The Move Tuner uses it to
+     * measure how far a move slid past its end.
+     *
+     * @param from wheel counts from {@link #getWheelTicks()} at the start
+     * @param to   wheel counts from {@link #getWheelTicks()} at the end
+     * @return {forward inches, right inches}, robot-relative
      */
-    double[] displacementIn(int[] from, int[] to) {
+    public double[] displacementIn(int[] from, int[] to) {
         // How many ticks each wheel turned since "from".
         double[] d = new double[4];
         for (int i = 0; i < 4; i++) d[i] = to[i] - from[i];

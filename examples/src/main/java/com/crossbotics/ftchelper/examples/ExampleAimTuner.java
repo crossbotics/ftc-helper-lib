@@ -17,7 +17,7 @@ import com.crossbotics.ftchelper.vision.WebcamTags;
  * when the launcher points straight at it). This robot aims by turning (no turret); for a turret,
  * also fill in createTurret(). Use YOUR camera and launcher (best: from your Robot class).
  * Needs a webcam "Webcam 1", a motor "flywheel" and a motor "feeder".
- * more: https://crossbotics.com/ftc-helper/docs/tuning/11-aim-tuner/
+ * more: https://crossbotics.com/ftc-helper/docs/tuning/12-aim-tuner/
  */
 @TeleOp(name = "Aim Tuner", group = "Finders")
 @Disabled // hides this program on the Driver Station: delete this line in your copy

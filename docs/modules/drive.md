@@ -277,7 +277,11 @@ Tuning numbers for `AutoDrive`. The defaults come from last season's robot. **Tu
 | `taperStartFraction` | 0.10 | the move starts slowing for its last 10% |
 | `slowDownIn` | 0 | ...and for at least this many inches at the end (0 = only the 10%). `taperFraction(distanceIn)` gives the larger of the two |
 | `moveTurnScale` | 0.60 | `moveWithTurn` multiplies the heading correction by this |
-| `moveMaxTurnPower` | 0.35 | `moveWithTurn`: the most turn power while moving |
+| `moveMaxTurnPower` | 0.35 | `moveWithTurn` and routes: the most turn power while moving |
+| `driveToNearIn` | 8 | `driveTo` and routes: in the last this-many inches, the speed follows the distance left... |
+| `driveToKp` | 0.04 | ...this much power per inch left... |
+| `driveToMinPower` | 0.12 | ...but at least this power, so it does not stall short |
+| `driveToMinTurn` | 0.08 | `driveTo` and routes: the least turn power while the heading is off, when `turnMinPower` is 0 |
 | `actionTimeoutSec` | 10.0 | any move or turn gives up after this long |
 | `stallExitEnabled` | `true` | stops a move early when the robot is stuck |
 | `stallProgressIn` | 0.25 | stuck = less than this many inches of progress... |

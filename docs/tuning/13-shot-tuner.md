@@ -65,7 +65,7 @@ Load only that kind of piece, and tune. The screen shows no `Table` line.
    - **A piece sensor (best):** `.tableFrom(pieces.nextKind())` picks the table for the next piece, by
      itself. Both NECTAR colors use one table: add `.tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")`
      ([Pieces](../reference/parts/pieces.md); find the sensor's colors with the
-     [Piece Tuner](13-piece-tuner.md)). A robot that holds both kinds at once needs this.
+     [Piece Tuner](14-piece-tuner.md)). A robot that holds both kinds at once needs this.
    - **No sensor:** a driver's button picks the next table:
      `robot.launcher.tableOn(g2.dpadRight);` in `Controls.java`. The Driver Station shows
      `Shot table: POLLEN, 48 in (camera)`, so the driver sees which one is in use.
@@ -238,6 +238,6 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 
 ---
 
-**Next:** [Piece Tuner: what each sensor sees](13-piece-tuner.md).
+**Next:** [Piece Tuner: what each sensor sees](14-piece-tuner.md).
 
 **Look it up:** [Launcher: In Tunables.java](../reference/parts/launcher.md#in-tunablesjava).

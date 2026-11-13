@@ -96,6 +96,6 @@ instead: [Extending the library](extending.md).
 - The camera fix (alpha): look again when the field has fixed tags on the walls
   ([Possible later work](../design/possible-work.md)).
 - The Shot Tuner's field map: change the goal and the spots in `tools/shot_spots.py`, run it, and change
-  the season paragraph in `docs/tuning/12-shot-tuner.md`.
+  the season paragraph in `docs/tuning/13-shot-tuner.md`.
 - Robot project: its own README / design log.
 - AI agents: they read `AGENTS.md` every session. Update it when the rules or the layout change.

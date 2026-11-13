@@ -5,7 +5,7 @@ Something on the robot is not right. Find what you see, and change one number.
 **You need:** the finders done for the part ([the tuning order](README.md)).
 
 Find what you see in the first column. Change the setting in the middle column, in the direction it says.
-Change one number at a time, and test after each change. The [tuning menu](15-live-tuning.md) changes most
+Change one number at a time, and test after each change. The [tuning menu](16-live-tuning.md) changes most
 of them while the robot runs. Then copy the good value back into `Tunables.java`.
 
 When the last column names a finder, run that finder again: a guess is worse than a measurement.
@@ -20,10 +20,12 @@ When the last column names a finder, run that finder again: a guess is worse tha
 | **Autonomous moves** | - | - |
 | Autonomous does not run ("AUTONOMOUS IS OFF") | [`Drive.calibrated`](../reference/parts/drive.md#in-tunablesjava) | `true`, after the Drive Tuner |
 | Sideways moves are short or long (mecanum) | [`Drive.strafeCorrection`](../reference/parts/drive.md#in-tunablesjava) | Drive Tuner |
-| Turns stop short | [`Drive.turnKp`](../reference/parts/drive.md#in-tunablesjava) | more |
-| Turns wobble or overshoot | [`Drive.turnKp`](../reference/parts/drive.md#in-tunablesjava) / [`Drive.turnKd`](../reference/parts/drive.md#in-tunablesjava) | less / more |
-| The robot stops just before the end of a move | [`Drive.moveMinPower`](../reference/parts/drive.md#in-tunablesjava) | more |
-| Short moves slide past the end | [`Drive.slowDownIn`](../reference/parts/drive.md#in-tunablesjava) | more (try 6) |
+| Turns stop a few degrees off target | [`Drive.turnMinPower`](../reference/parts/drive.md#in-tunablesjava), then [`Drive.turnKp`](../reference/parts/drive.md#in-tunablesjava) | Move Tuner (Turns), or more |
+| Turns wobble or overshoot | [`Drive.turnKp`](../reference/parts/drive.md#in-tunablesjava) / [`Drive.turnKd`](../reference/parts/drive.md#in-tunablesjava) | Move Tuner (Turns), or less / more |
+| Turns rock near the end and take long to finish | [`Drive.turnToleranceDeg`](../reference/parts/drive.md#in-tunablesjava) | Move Tuner (Turns), or more |
+| The robot stops just before the end of a move | [`Drive.moveMinPower`](../reference/parts/drive.md#in-tunablesjava) | Move Tuner (Creep), or more |
+| Moves slide past the end | [`Drive.slowDownIn`](../reference/parts/drive.md#in-tunablesjava) | Move Tuner (Stops), or more (try 6) |
+| `moveWithTurn` ends its move before the turn is done | [`Drive.moveTurnScale`](../reference/parts/drive.md#in-tunablesjava), then [`Drive.moveMaxTurnPower`](../reference/parts/drive.md#in-tunablesjava) | Move Tuner (Move and turn), or more |
 | Path steps do not run on the real robot | [`Odometry.checked`](../reference/parts/odometry.md#in-tunablesjava) | `true`, after the Odometry Tuner |
 | The odometry's distances are off (OTOS) | [`Odometry.linearScalar`](../reference/parts/odometry.md#in-tunablesjava) | Odometry Tuner |
 | **Intake** | - | - |

@@ -33,6 +33,7 @@ device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 | [`FeedStopFinderOpMode`](#feedstopfinderopmode) | find a feed stop's hold and release positions | `robot()` (five files, with `.feedStop(...)`) |
 | [`DriveTunerOpMode`](#drivetuneropmode) | find the wheel size and strafe correction for autonomous | `robot()` (five files) or `robotConfig()` |
 | [`OdometryTunerOpMode`](#odometrytuneropmode) | check which way each odometry pod counts and measure where it sits (the offsets); a loop check sets `checked` | `robot()` (five files, with an `odometry(...)` line) |
+| [`MoveTunerOpMode`](#movetuneropmode) | measure how exactly autonomous moves stop and turns end, and find `moveMinPower`, `slowDownIn`, the turn numbers and `moveWithTurn`'s numbers | `robot()` (five files) or `robotConfig()` |
 | [`AimTunerOpMode`](#aimtuneropmode) | find the camera offset so shots go in the middle | your camera (+ turret or drive) |
 | [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | `robot()` (five files), or your launcher (+ camera) |
 | [`CameraFixCheckOpMode`](#camerafixcheckopmode) | ALPHA: find the camera fix's turn for each alliance | `robot()` (five files, with `cameraFix(camera)`) |
@@ -391,6 +392,48 @@ Tunables.Odometry: checked = true
 For a reversed pod, the result says which name to add to (or take out of) `.reversed(...)`. While a test
 runs, the screen shows the pose and the raw pod counts since the test began. Walk-through:
 [finders guide](../tuning/09-odometry-tuner.md).
+
+## MoveTunerOpMode
+
+Use it after the Drive Tuner, to see how exactly autonomous moves stop and turns end. It suggests the
+numbers in `Tunables.Drive` and uses each new number at once. It needs your robot and
+`Tunables.Drive.calibrated = true`. The **Tune and check** menu has it. For your own file, put this next to
+`Robot.java`:
+
+```java
+@TeleOp(name = "Move Tuner", group = "Finders")
+public class MoveTuner extends MoveTunerOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+For a robot with a `RobotSettings` class instead, write `@Override protected RobotConfig robotConfig() { return new RobotSettings(); }`.
+
+D-pad up/down chooses a test, and **A** starts it. D-pad left/right sets the power of the moves and turns
+(0.3 to 1.0, starts at 0.5). Use the power of your autonomous moves: a faster robot slides farther.
+With an `odometry(...)` line, the tuner measures with the odometry. The odometry sees a wheel that skids.
+Without it, the tuner measures with the wheel counts.
+
+| Test | It does | It finds |
+| --- | --- | --- |
+| 1 Creep | raises the power slowly until the robot rolls (forward, then right on a mecanum) | `moveMinPower`: that power x 1.3, at least 0.10 |
+| 2 Stops | moves of 6, 12 and 24 in, out and back, with `slowDownIn` 0, 3, 6, 9 and 12, until every move slides 0.5 in or less past its end | `slowDownIn`: the smallest that is good (or the best one) |
+| 3 Turns | turns 90, 135 and 45 degrees left and back | one change per round: `turnMinPower` (0.05, 0.08, 0.11), then `turnKp`, when it stops off target; `turnToleranceDeg` + 0.5 when it rocks just outside it; `turnKd` or less `turnKp` when it swings past; `turnKp` when it is slow |
+| 4 Drift | 48 in forward and back (and right and left) | how much the heading changes on a straight move. A report, nothing to copy |
+| 5 Move and turn (mecanum) | 24 in sideways while it turns 90 degrees (`moveWithTurn`), four times | `moveTurnScale` or `moveMaxTurnPower` |
+
+Each move and turn WAITS while the robot moves, like autonomous. STOP still works. GUIDE (or the gamepad's
+START button) stops a test at once and opens help. The tuner does not use that test's numbers. Between the
+moves, nothing waits: the tuner waits for the robot to stand still loop by loop, then measures. Run a test
+again until it says OK, then copy the lines. The output:
+
+```java
+c.slowDownIn = 6;   // RobotSettings.auto()
+Tunables.Drive: slowDownIn = 6
+c.turnKd = 0.0039;   // RobotSettings.auto()
+Tunables.Drive: turnKd = 0.0039
+// measured at power 0.6: these numbers fit autonomous moves at that power
+```
 
 ## AimTunerOpMode
 

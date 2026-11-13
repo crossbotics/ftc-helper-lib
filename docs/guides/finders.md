@@ -14,8 +14,9 @@ This page moved to [Tuning](../tuning/README.md), one page per tool:
 | Feed Stop Finder | [Feed Stop Finder](../tuning/07-feed-stop-finder.md) |
 | Drive Tuner | [Drive Tuner](../tuning/08-drive-tuner.md) |
 | Odometry Tuner | [Odometry Tuner](../tuning/09-odometry-tuner.md) |
-| Aim Tuner | [Aim Tuner](../tuning/11-aim-tuner.md) |
-| Shot Tuner | [Shot Tuner](../tuning/12-shot-tuner.md) |
+| Move Tuner | [Move Tuner](../tuning/10-move-tuner.md) |
+| Aim Tuner | [Aim Tuner](../tuning/12-aim-tuner.md) |
+| Shot Tuner | [Shot Tuner](../tuning/13-shot-tuner.md) |
 | Camera Fix Check | not in Tune and check now (alpha, not for BIOBUZZ): [Camera fix](../modules/odometry.md#camera-fix-alpha) |
-| Piece Tuner | [Piece Tuner](../tuning/13-piece-tuner.md) |
-| Characterizer | [Characterizer](../tuning/14-characterizer.md) |
+| Piece Tuner | [Piece Tuner](../tuning/14-piece-tuner.md) |
+| Characterizer | [Characterizer](../tuning/15-characterizer.md) |

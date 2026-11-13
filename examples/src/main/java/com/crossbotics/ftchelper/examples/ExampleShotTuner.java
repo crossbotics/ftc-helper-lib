@@ -18,7 +18,7 @@ import com.crossbotics.ftchelper.vision.WebcamTags;
  * Use YOUR launcher here: the same set-up as your TeleOp (best: from your Robot class, e.g.
  * {@code return new Robot(hardwareMap).launcher;}). Needs a motor "flywheel", a motor "feeder",
  * a servo "hood" and a webcam "Webcam 1".
- * more: https://crossbotics.com/ftc-helper/docs/tuning/12-shot-tuner/
+ * more: https://crossbotics.com/ftc-helper/docs/tuning/13-shot-tuner/
  */
 @TeleOp(name = "Shot Tuner", group = "Finders")
 @Disabled // hides this program on the Driver Station: delete this line in your copy

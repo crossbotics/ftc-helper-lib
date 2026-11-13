@@ -363,7 +363,7 @@ public static class Turret {
 - `kP`, `kI`, `kD`: how hard it turns toward the target. Tune `kP` live in the tuning menu. Too low, and
   it lags. Too high, and it shakes. Then copy the value back into `Tunables.java`.
 - `tolerance`: how many degrees off still counts as "aimed". `cameraOffset`: if shots land to one side,
-  the [Aim Tuner](../../tuning/11-aim-tuner.md) finds it.
+  the [Aim Tuner](../../tuning/12-aim-tuner.md) finds it.
 - **0 degrees is where the turret points when you press INIT** (`startAngle`, default 0). Point it
   straight forward first, or add a home switch so it finds its angle by itself at ▶. That is why
   INIT says, on a turret with no home switch:
@@ -408,7 +408,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   A camera sometimes gives one picture with a wrong distance (a glitch). The launcher uses the middle of
   the last 5 pictures, and a big jump must show in 3 pictures in a row. So one bad picture never changes
   the speed ([how](../../modules/vision.md#distancefilter)).
-  Fill the rows from real shots with the [Shot Tuner](../../tuning/12-shot-tuner.md).
+  Fill the rows from real shots with the [Shot Tuner](../../tuning/13-shot-tuner.md).
   Its buttons are all on **gamepad 1**. At each distance, shoot 3-5 at a speed (RB), and mark each one
   A = HIT or B = MISS. Try another speed (D-pad). X keeps the speed with the best **hit ratio** (hits out
   of shots: 4 in out of 5 beats 2 out of 3). If you marked one wrong, a left stick click takes the last
@@ -779,7 +779,7 @@ pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
 Each piece the intake sensor sees counts one in. Each feed counts one out, once the piece has gone.
 `robot.pieces.next()` says `"POLLEN"`, `"UNKNOWN"` or `"NONE"`. `robot.pieces.isFull()` is true at 4
 (rule G407). Each kind's color goes in Tunables. Measure it with the Piece Tuner
-([finders guide](../../tuning/13-piece-tuner.md)). Until a kind is tuned,
+([finders guide](../../tuning/14-piece-tuner.md)). Until a kind is tuned,
 the sensor reads it as `"UNKNOWN"`, and INIT says which kinds are missing. An UNKNOWN piece keeps the
 shot table in use.
 

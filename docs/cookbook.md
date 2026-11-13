@@ -1650,7 +1650,7 @@ at ▶:** a plain `speedByDistance` table (named `main`) if there is one. If not
 `nectar` (n before p). To start on POLLEN, add `.startTable("pollen")` to the launcher line in
 `Robot.java` ([like here](#how-do-i-keep-aiming-when-the-camera-loses-the-goal)). The Driver Station's
 `Shot table` line says which one is in use. Fill each table with the
-[Shot Tuner](tuning/12-shot-tuner.md) ([its file](#how-do-i-build-a-shot-table-speed-for-each-distance)).
+[Shot Tuner](tuning/13-shot-tuner.md) ([its file](#how-do-i-build-a-shot-table-speed-for-each-distance)).
 Press Y until `> Table`, then pick the table you tune with the D-pad. Then copy its line into
 `Tunables.java`. To let the robot pick the table by itself, see
 [the next piece picks it](#how-do-i-let-the-next-piece-pick-the-shot-table).
@@ -3194,7 +3194,7 @@ for 1 second**, and the tuning menu opens. D-pad up/down chooses a number, and r
 `Tunables.java`.** A value saved only on the hub is lost with a new Control Hub, and your teammates cannot see it.
 
 **Why:** you see the effect at once, and you do not have to build and install again.
-**More:** [Tuning](tuning/15-live-tuning.md#open-it-and-change-a-number), [Lesson 4: tune the lift live](tutorials/start/04-lift-and-claw.md#6-tune-the-lift-live).
+**More:** [Tuning](tuning/16-live-tuning.md#open-it-and-change-a-number), [Lesson 4: tune the lift live](tutorials/start/04-lift-and-claw.md#6-tune-the-lift-live).
 
 ### How do I tune the drive for autonomous?
 
@@ -3231,7 +3231,7 @@ wheel get back to speed fast after each shot.
 
 ### How do I build a shot table (speed for each distance)?
 
-**Where:** a new file in TeamCode, `ShotTuner.java`. Run the [Aim Tuner](tuning/11-aim-tuner.md) first.
+**Where:** a new file in TeamCode, `ShotTuner.java`. Run the [Aim Tuner](tuning/12-aim-tuner.md) first.
 Below is the whole file. Its first line is `package org.firstinspires.ftc.teamcode;` (Android Studio writes it
 when you make the file), then:
 
@@ -3258,7 +3258,7 @@ and mark each HIT (A) or MISS (B), all on gamepad 1. A left stick click takes th
 keeps the speed with the best hit ratio (hits out of shots). The tuner fills
 `Tunables.Launcher.speedByDistance` (one line per table to copy), so the launcher picks the speed for
 each distance.
-**More:** [Shot Tuner](tuning/12-shot-tuner.md).
+**More:** [Shot Tuner](tuning/13-shot-tuner.md).
 
 ### How do I find my hood's stops and angles?
 

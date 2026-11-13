@@ -321,6 +321,7 @@ one. If it still goes past by the same amount every time, shorten that move by t
 
 **AutoDrive turns overshoot or stop short**
 Overshoot: raise `turnKd` or lower `turnKp`. Stop short: raise `turnKp` a little or set `turnMinPower`.
+The [Move Tuner](tuning/10-move-tuner.md) measures the turns and finds these numbers for you.
 
 **AutoDrive stops early with "robot stuck"**
 It was blocked, or it moved too slowly. If it was not blocked, raise `moveMinPower` or `stallTimeSec`.

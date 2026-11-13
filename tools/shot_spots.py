@@ -5,7 +5,7 @@ the drivers' wall, the field parts from the season's field file, the goal, and t
 
 Why: the spots depend on the field. In BIOBUZZ the goal is near the middle, so the spots go toward the
 corner, not straight back. Each new season: change the lines under THE SEASON (and the words), run it, and
-change the season paragraph in docs/tuning/12-shot-tuner.md.
+change the season paragraph in docs/tuning/13-shot-tuner.md.
 
 Where: a terminal, in the ftc-helper-lib folder.
     python3 tools/shot_spots.py

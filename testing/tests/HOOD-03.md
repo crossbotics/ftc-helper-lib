@@ -8,7 +8,7 @@ minutes: 40
 needs: [flywheel, hood-servo|hood-motor]
 kit_bots: []
 since: v0.17.0
-docs: [tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle, tuning/12-shot-tuner.md]
+docs: [tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle, tuning/13-shot-tuner.md]
 ---
 
 ## Why

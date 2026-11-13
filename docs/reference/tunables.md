@@ -38,7 +38,7 @@ complete: if a part reads a new number, the check fails until the number is on i
 
 ## Find a setting by what you want
 
-This table moved to [Fix it by what you see](../tuning/16-fix-by-symptom.md) in the Tuning section.
+This table moved to [Fix it by what you see](../tuning/17-fix-by-symptom.md) in the Tuning section.
 
 ## When you add a part
 
@@ -111,7 +111,7 @@ A section no part reads, like `Team` with a number your `Controls.java` uses:
 
 - `public static` fields: FTC Dashboard can show them too, **at home and in practice only**. Rule R704.D
   (2026-27) bans tools like FTC Dashboard at events, so take it out of the robot project before one
-  ([tuning guide](../tuning/15-live-tuning.md#ftc-dashboard-practice-only)). The library's tuning menu is
+  ([tuning guide](../tuning/16-live-tuning.md#ftc-dashboard-practice-only)). The library's tuning menu is
   allowed.
 - The menu's names ("Lift/kP") are shared by the whole robot app: keep one Robot class per app.
 
@@ -280,7 +280,7 @@ out. **With no part named, or a part whose numbers are not known** (`Motors.unkn
 | Part | Not written | What it starts with | Tune it with |
 | --- | --- | --- | --- |
 | Launcher | `kF`, `kP`, `kI`, `kD` | REV's formula with the motor's top speed: F = 32767 / (top RPM x counts per turn / 60), P = F / 10, I = P / 10, D = 0. A goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117. The library does not use the hub's own gains (the numbers the Control Hub uses when the code gives none: P 10, I 3, F 0): with no F, the wheel only creeps up to speed | [Flywheel Finder](../tuning/06-flywheel-finder.md) |
-| Launcher | `speedRpm` | 60% of the motor's top speed, to 10 RPM (6000 RPM motor: 3600). This leaves room above it for the speed control to recover after a shot and on a tired battery, and gives a gentle first shot | [Shot Tuner](../tuning/12-shot-tuner.md) |
+| Launcher | `speedRpm` | 60% of the motor's top speed, to 10 RPM (6000 RPM motor: 3600). This leaves room above it for the speed control to recover after a shot and on a tired battery, and gives a gentle first shot | [Shot Tuner](../tuning/13-shot-tuner.md) |
 | Lift with `.part(...)` | `kP`, `kD`, `slowZone`, `tolerance` | the plain defaults (made for a goBILDA 312 RPM motor, 537.7 counts a turn) scaled to your motor's counts per turn, so it acts the same per motor turn. A 435 RPM motor: kP 0.0056, kD 0.00028, slowZone 179, tolerance 14 | the tuning menu (lesson 4, step 6) |
 | Claw, Wrist, Positioner with `.part(...)` | `travelSec` | the servo's catalog speed at the hub's 5 V over its whole move (goBILDA 2000 torque: 270 degrees at 0.25 s per 60 = 1.13 s) | time a move and divide by its distance ([how](parts/claw.md#in-tunablesjava)) |
 | Hood, servo Turret with `.part(...)` | `travelSec` | the same, over the move from `posA` to `posB` | time it |
@@ -311,7 +311,7 @@ A name that ends in `Sec` is seconds, `Ms` milliseconds, `In` inches, `Mm` milli
 ## The "In tuning menu" column
 
 You can change some numbers while the robot runs. In the PRACTICE profile, after ▶, hold **GUIDE** for 1 s.
-Use the D-pad to choose and change, and **A** to save on the Control Hub ([tuning guide](../tuning/15-live-tuning.md)). The
+Use the D-pad to choose and change, and **A** to save on the Control Hub ([tuning guide](../tuning/16-live-tuning.md)). The
 numbers you tune most are [`Tunable`](../modules/tuning.md)s ("Lift/kP").
 
 | In tuning menu says | What it means |
@@ -341,8 +341,8 @@ The finders are: [Servo Finder](../tuning/03-servo-finder.md),
 [Flywheel Finder](../tuning/06-flywheel-finder.md),
 [Drive Tuner](../tuning/08-drive-tuner.md),
 [Odometry Tuner](../tuning/09-odometry-tuner.md),
-[Aim Tuner](../tuning/11-aim-tuner.md), [Shot Tuner](../tuning/12-shot-tuner.md),
-[Hood Finder](../tuning/04-hood-finder.md), [Piece Tuner](../tuning/13-piece-tuner.md).
+[Aim Tuner](../tuning/12-aim-tuner.md), [Shot Tuner](../tuning/13-shot-tuner.md),
+[Hood Finder](../tuning/04-hood-finder.md), [Piece Tuner](../tuning/14-piece-tuner.md).
 "Test" in the part tables means: try it on the robot and change it by hand.
 
 ## Parts with no Tunables

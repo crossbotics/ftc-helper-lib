@@ -542,11 +542,11 @@ How it drives, every loop:
 2. **Far away:** it sets the speed like a `move`: up to `maxPower`, slower as it gets close, but never
    less than `Tunables.Drive.moveMinPower`.
 3. **In the last 8 inches:** it sets the speed in proportion to the distance left (0.04 power per inch,
-   at least 0.12). So it settles on the point and does not circle it.
+   at least 0.12; `AutoDriveConfig.driveToNearIn`, `driveToKp` and `driveToMinPower`). So it settles on the point and does not circle it.
 4. **The heading:** it corrects the heading all the way with the drive's turn numbers (`turnKp`,
    `turnKd` in `Tunables.Drive`). While the heading is off, the turn power is at least
    `AutoDriveConfig.turnMinPower` when that is set (more than 0), or else 0.08. So a weak turn cannot stop
-   a bit short. `Tunables.Drive` has no `turnMinPower` yet, so a five-file robot uses 0.08.
+   a bit short (`Tunables.Drive.turnMinPower`; the Move Tuner finds it).
 5. **Done:** it is within the **tolerance** ("close enough": 1 inch unless you give one), and within 2
    degrees of the heading (or the drive's `turnToleranceDeg`, if that is bigger). This must be true for
    3 loops in a row, so passing by does not count.

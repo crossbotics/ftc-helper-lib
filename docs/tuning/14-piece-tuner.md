@@ -69,6 +69,6 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 
 ---
 
-**Next:** [Characterizer: how the robot really moves](14-characterizer.md).
+**Next:** [Characterizer: how the robot really moves](15-characterizer.md).
 
 **Look it up:** [Pieces and PieceSensor](../reference/parts/pieces.md).

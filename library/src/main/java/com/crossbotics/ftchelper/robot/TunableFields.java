@@ -34,8 +34,8 @@ final class TunableFields {
 
     // tools/check_tunables.py reads these lines: one part(...) per <!-- tunables: Key --> in tunables.md.
     static {
-        part("Drive", "calibrated", "maxPower", "moveMinPower", "practiceMaxPower", "slowDownIn", "slowSpeed",
-                "strafeCorrection", "strafeCorrectionLeft", "turnKd", "turnKp");
+        part("Drive", "calibrated", "maxPower", "moveMaxTurnPower", "moveMinPower", "moveTurnScale", "practiceMaxPower", "slowDownIn", "slowSpeed",
+                "strafeCorrection", "strafeCorrectionLeft", "turnKd", "turnKp", "turnMinPower", "turnToleranceDeg");
         part("Odometry", "angularScalar", "checked", "linearScalar", "mirrorForRed", "resetHeading", "resetX", "resetY");
         part("Aim", "aimOnFire", "aimOnFireSec", "cameraForwardIn", "cameraLatencyMs", "cameraLeftIn", "cameraMaxAgeMs", "cameraOdometryAgree",
                 "cameraOffset", "flightSec", "flightSecPerIn", "goalSteadyDeg", "goalSteadyIn", "goalSteadySec", "goalX", "goalY", "lockMarginDeg", "maxGoalDistance", "maxLeadIn",

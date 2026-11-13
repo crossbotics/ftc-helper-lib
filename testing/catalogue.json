@@ -1198,6 +1198,87 @@
    }
   },
   {
+   "id": "DRV-05",
+   "title": "Move Tuner finds the stopping and turning numbers",
+   "area": "drive",
+   "priority": "high",
+   "where": "both",
+   "minutes": 30,
+   "needs": [],
+   "kit_bots": [
+    "gobilda-strafer"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tuning/10-move-tuner.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/reference/parts/drive.md",
+     "anchor": "in-tunablesjava"
+    }
+   ],
+   "file": "testing/tests/DRV-05.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The Drive Tuner makes a move the right length. The Move Tuner must make it stop in the right place, and make turns end on their heading, by suggesting `moveMinPower`, `slowDownIn` and the turn numbers."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Nobody near the robot. Hand on STOP. Nothing moves before ▶."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A mecanum or tank robot in five files with `Tunables.Drive.calibrated = true` (or the simulator).",
+       "5 ft of clear floor around the robot. A tape measure.",
+       "A charged battery (12.5 V or more)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT **Tune and check**. The **Move Tuner** must be on the list after the Drive Tuner (and the Odometry Tuner, with odometry). Open it, press ▶.",
+       "Set the power of your autonomous moves (D-pad left/right).",
+       "Run **1 Creep**. The screen must show `moveMinPower now ...` and the lines to copy.",
+       "Run **2 Stops**. It must show one line per `slowDownIn` it tried, and end with `OK` or the best one. Measure one 24 in move with the tape: it must end within 0.5 in of the tuner's number.",
+       "Run **3 Turns** until it says `OK`, at most 6 rounds. Write down each round's change.",
+       "Run **4 Drift**. It must show the heading change of each 48 in move.",
+       "Mecanum: run **5 Move and turn** until it says `OK`, at most 5 rounds.",
+       "While a test moves, press GUIDE. The robot must stop at once, and the screen must say `not measured`.",
+       "Copy the lines into `Tunables.Drive`. Run an autonomous with an 8 in and a 24 in move and a 90 degree turn, 3 times."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Steps 1 to 8 show what they say. In step 9 every move ends within 0.5 in of its distance, and every turn within 2 degrees, on 3 runs out of 3."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "The robot, the floor, the battery and where (simulator or real robot), and whether it has odometry.",
+       "Each number the tuner suggested, and how many rounds Turns and Move and turn took.",
+       "The ends in step 9."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A tank robot has no Move and turn test, and Creep and Drift test forward only. With odometry, the tuner measures with it: check one move with the tape anyway."
+     }
+    ]
+   }
+  },
+  {
    "id": "HOOD-01",
    "title": "Hood Finder on a servo hood - stops and angles",
    "area": "hood",
@@ -2412,7 +2493,7 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tuning/12-shot-tuner.md",
+     "path": "docs/tuning/13-shot-tuner.md",
      "anchor": ""
     },
     {
@@ -3482,7 +3563,7 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/tuning/11-aim-tuner.md",
+     "path": "docs/tuning/12-aim-tuner.md",
      "anchor": ""
     }
    ],
@@ -4496,7 +4577,7 @@
      "anchor": "a-hood-the-shot-angle"
     },
     {
-     "path": "docs/tuning/12-shot-tuner.md",
+     "path": "docs/tuning/13-shot-tuner.md",
      "anchor": ""
     }
    ],
@@ -5199,7 +5280,7 @@
    "since": "v0.17.0",
    "docs": [
     {
-     "path": "docs/tuning/13-piece-tuner.md",
+     "path": "docs/tuning/14-piece-tuner.md",
      "anchor": ""
     },
     {

@@ -121,6 +121,8 @@ result.
 (Tutorial 07 explains gains). Use a corner of a field tile to check the angle.
 **When the turn overshoots:** raise `turnKd` (try +0.001) or lower `turnKp`. **When it stops short:**
 raise `turnKp` a little (+0.002), or set `turnMinPower = 0.06`.
+**With a robot in five files:** the [Move Tuner](../tuning/10-move-tuner.md)
+in **Tune and check** runs these turns for you, and also finds where moves stop (`slowDownIn`).
 
 Write every final number in `RobotSettings` and in your engineering notebook.
 

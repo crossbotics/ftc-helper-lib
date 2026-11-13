@@ -6,6 +6,17 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Move Tuner** (in Tune and check, after the Odometry Tuner): it measures how exactly autonomous moves
+  stop and turns end, and suggests the numbers. Five tests: Creep (`moveMinPower`), Stops (`slowDownIn`:
+  it tries 0 to 12 until moves slide 0.5 in or less), Turns (`turnMinPower`, `turnKp`, `turnKd` or
+  `turnToleranceDeg`, one per round), Drift (how much the heading changes on long moves; report only) and
+  Move and turn (`moveTurnScale`, `moveMaxTurnPower`). Each new number is used at once. It measures with
+  the odometry when the robot has it. Docs: docs/tuning/10-move-tuner.md. Test: DRV-05.
+- **`Tunables.Drive`: `turnMinPower`, `turnToleranceDeg`, `moveTurnScale`, `moveMaxTurnPower`.** They were
+  in `AutoDriveConfig` only. The defaults are the same, so nothing changes until you write them.
+- **`AutoDriveConfig.driveToNearIn`, `driveToKp`, `driveToMinPower`, `driveToMinTurn`**: the numbers for
+  the last inches of `driveTo` and routes. They were fixed in the code. The defaults are the same.
+  `AutoDrive.displacementIn(...)` is now public.
 - **Feed Stop Finder: the firing times.** With both positions saved, it also finds `feedStopMoveSec` and
   `feedStopOpenSec`, and shows a second line to copy. The open time comes from the servo's catalog speed
   when Robot.java names the part: `.feedStop("feed_stop", "gobilda-2000-speed")` (new). For the backup
