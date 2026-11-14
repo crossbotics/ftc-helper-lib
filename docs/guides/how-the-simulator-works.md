@@ -231,7 +231,7 @@ With the physics engine, the field file's game pieces are on the field. BIOBUZZ:
 GARDEN. The sizes (POLLEN 2.8 in and NECTAR 3.6 in) come from manual 9.8. The weights (25 g and 41 g) come
 from AndyMark's am-5851/am-5852 pages, not the manual. The pieces roll and bounce, and the robot pushes them. The FLOWER tops are goals
 (the opening's center and height measured in the FLOWER CAD). The robot file says which robot shapes
-handle the pieces:
+handle the pieces: its `collect.`, `shoot.` and `grab.` lines ([The robot file: game pieces](../reference/robot-file.md#game-pieces)).
 
 The match starts with every piece that the manual stages on the field (10.3.1). The simulator places them
 from the official field CAD: 4 POLLEN in each GARDEN (loose on the tiles), 4 POLLEN in each FLOWER and 3 NECTAR in each
@@ -334,7 +334,6 @@ Not modeled:
 - the other three robots.
 - the human player and the alliance areas' NECTAR (one per tip, all of them in the last 60 s).
 - the 8 s transition between AUTO and TELEOP.
-- the ranking points (SWARM, POLLINATOR).
 - every other foul (G408 opponent NECTAR, G409 catching what a tipped HIVE drops, G417 touching the HIVE,
   and so on), and G407's VERBAL WARNING and YELLOW CARD.
 

@@ -221,9 +221,9 @@ backward at 147 degrees from forward, because the hood rises 33 degrees toward t
 simulator's shot arc says "shoots backward, 33° up" for it.
 
 Its autonomous, **goBILDA Bot Launch and Back Up**, starts with the robot's back against your wall, left
-of center (x -56, y -63, facing the field). The simulator puts it there at INIT. It fires the preload up
-and back over the robot, then drives `Away from the wall` (forward 4.7 in, at power 0.4). The robot is
-15.1 in long, so at y -63 its center is 7.5 in from the wall's inside face (y -70.6). goBILDA's code
+of center (x -56, y -62.95, facing the field). The simulator puts it there at INIT. It fires the preload up
+and back over the robot, then drives `Away from the wall` (forward 4.7 in, at power 0.4). Its frame is 15.1 in long (17.8 in with the intake wheels), so at y -62.95 its center is
+7.6 in from the wall's inside face (y -70.585). goBILDA's code
 launches for 10 s. Here the launch ends as soon as the feeder sends the last piece.
 
 ### goBILDA bot code
@@ -327,7 +327,8 @@ It collects POLLEN.
 Not modeled or not published:
 - The shot: the simulator has no part for a catapult that a motor winds and rubber bands throw. AndyMark
   does not publish its release angle, which the hood sets.
-- The NeveRest Hex gearmotors (am-5442 / am-5550) are not in the parts catalog. The files use the NeveRest
+- The NeveRest Hex gearmotors (the drive's am-5442, am-5550-0100-019 in the CAD, and the catapult's am-5443)
+  are not in the parts catalog. The files use the NeveRest
   Orbital 20 and 50 (the same motor and ratio). AndyMark's page gives only "~344 RPM" and "~130 RPM".
 - The drivetrain has its own guide (ROBITS Starter Chassis), which we did not read. The 1:1 gears and the
   wheel base come from the CAD. We estimated the track width, because each side is in its own CAD frame.
