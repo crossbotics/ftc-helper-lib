@@ -25,7 +25,7 @@ The screen now shows the test list, with the arrow on `Push (by hand)`. Go on wi
 
 ![The Drive Tuner floor from above: a tape line marked 0 and 48 in along the robot's left wheels, the push and drive arrow along it, the strafe arrow to the right, and 5 ft of clear floor ahead and to the right (to the left too for the optional Strafe left test)](../images/finder-drive-tuner.svg)
 
-**Set up the floor:** a straight line of tape, marked **0** and **48 in**, and 5 ft of clear floor ahead
+**Set up the floor:** a straight line of tape, marked **0** and **48 in**. Clear 5 ft of floor ahead
 of the robot and to its right (and to its left, for the optional Strafe left test). **Start each test**
 with the robot's **left wheels touching the tape** (their outside edge) and the front left wheel's front
 edge on **0**. **Why the left wheels:** when you push by hand, a wheel edge against a line is easy to keep
@@ -104,7 +104,7 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 
 ## Done when
 
-the Drive test (and on a mecanum the Strafe test) measures 48 within 0.5 in, and `calibrated = true` is copied.
+the Drive test (and on a mecanum the Strafe test) measures 48 within 0.5 in, and you copied `calibrated = true`.
 
 ---
 

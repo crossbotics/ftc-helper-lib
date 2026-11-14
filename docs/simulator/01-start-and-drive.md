@@ -76,7 +76,7 @@ when the robot project already builds.
 SDK XML versions up to 3`, `Deprecated Gradle features were used`, `[Incubating] Problems report`.
 
 **Android Studio's "Start AGP Upgrade Assistant" note: do not click it.** The FTC SDK sets its own Android
-build version, and an upgrade can break the robot build. Close the note.
+build version. An upgrade can break the robot build. Close the note.
 
 ## 3. Read the page
 
@@ -156,7 +156,7 @@ something. A roller glows green while it takes pieces in, and orange while it pu
 glows yellow while it spins.
 
 **Move it by hand:** while no program runs (or in INIT), drag the robot on the field map (Control Hub,
-**Robot** panel), and turn it with the mouse wheel over it. In the 3D view, double-click the robot, then
+**Robot** panel). Turn it with the mouse wheel over it. In the 3D view, double-click the robot, then
 drag it, or drag its yellow ring to turn it. Under the map, the page shows the spot in the numbers that an
 autonomous's `s.start(...)` takes.
 

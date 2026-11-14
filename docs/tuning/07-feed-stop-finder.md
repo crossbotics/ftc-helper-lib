@@ -99,14 +99,13 @@ A servo that is not in the catalog: measure the open time with a video (below).
    The backup time is the longest test shot plus 0.2 s, because a low battery or a worn piece is slower.
 6. Press **LB** to stop the wheel.
 
-When you change hold or release after the test shots, the old times are cleared: do the test shots again.
+When you change hold or release after the test shots, the finder clears the old times: do the test shots again.
 
 ### When the finder warns
 
 - **`No shot seen in 3 s`:** the piece did not reach the wheel. Check the release position (the piece must
   roll through freely). With `.pushedBy(...)`, try a larger `assistSec`. A heavy wheel that slows by less
-  than 150 RPM gives this warning too, even when the piece fired: then measure the time with a video
-  (below).
+  than 150 RPM gives this warning too, even when the piece fired. In that case, measure the time with a video (below).
 - **`2 pieces in one opening`:** the next piece got past before the stop closed. Check that the hold
   position catches the next piece. Pieces that sit tight against each other can slip through together: a
   gap between them, or a faster servo, helps.
@@ -125,8 +124,8 @@ do the test shots again, or measure with a video.
 
 ### Measure the times with a slow-motion video
 
-Use a video only when the finder cannot find a time: a servo that is not in the catalog, or a heavy wheel
-that the finder cannot see slow down. A phone's slow-motion video shows what happens too fast for your eyes.
+Use a video only when the finder cannot find a time. This happens with a servo that is not in the catalog,
+or with a heavy wheel that the finder cannot see slow down. A phone's slow-motion video shows what happens too fast for your eyes.
 
 1. Film the feed stop and the wheel from the side, in slow motion. Use 240 frames a second, if the phone
    can.

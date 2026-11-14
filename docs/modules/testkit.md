@@ -7,8 +7,8 @@ Package: `com.crossbotics.ftchelper.testkit`
 Learn it hands-on: [13 Testing](../tutorials/13-testing.md#7-test-your-robot-in-five-files). Guide: [Run all your tests: laptop tests](../tests/02-run-all-your-tests.md#4-for-programmers-laptop-tests-in-java-optional).
 
 The test kit gives you pretend motors, servos and switches for **JUnit tests on a laptop**. Your `Robot.java`
-(the robot in five files) runs on them instead of the real hardware. A test sets the robot up (INIT), presses ▶
-(start on the Driver Hub), runs a loop, and checks what the robot sent to each motor and servo. A test needs no
+(the robot in five files) runs on them instead of the real hardware. A test sets the robot up (INIT) and presses ▶
+(start on the Driver Hub). Then it runs a loop and checks what the robot sent to each motor and servo. A test needs no
 robot and no Control Hub, and it takes a second. So you can run the tests after every change.
 
 | Class | Use it to |
@@ -103,7 +103,7 @@ assertTrue(screen.has("Lift : high"));
 With the real clock, a timing test must wait, and a slow computer can make it fail when the code is fine.
 The pretend clock moves only when your test moves it. The robot's parts read the library's clock
 ([`Time`](core.md#time)). So with a pretend clock, a timing test ("the arm pushes 0.2 s after fire") runs at
-once and gives the same result on every computer.
+once. It gives the same result on every computer.
 
 ```java
 @After public void realClock() {
@@ -140,8 +140,8 @@ once and gives the same result on every computer.
 | `addSec(sec)` | moves the time forward (seconds, 0 or more) |
 | `sec()` | the time now, seconds (it starts at 1) |
 
-A part that waits for a helper thread (a camera, a distance sensor on the library's helper thread) still
-needs real time, because the thread runs on its own. The camera aim also keeps the real clock, because the
+A part that waits for a helper thread still needs real time, because the thread runs on its own. Two
+examples: a camera, a distance sensor on the library's helper thread. The camera aim also keeps the real clock, because the
 camera stamps its pictures with it.
 
 **Always** call `PretendClock.stopUsing()` in `@After`. A pretend clock that stays in use stops time for every

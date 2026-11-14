@@ -119,7 +119,7 @@ numbers it used. A `MEASURE` stops INIT and names the tool that finds the number
 ## A part's numbers
 
 When you add a part to `Robot.java`, add its section here. The sections below are for the two common
-parts. Each one shows the part's lines, so you can see what there is to change. Most lines are set to
+parts. Each one shows the part's lines, so you can see what there is to change. Most lines hold
 `DEFAULT` or `MEASURE`, and a few have example numbers.
 
 ### Intake

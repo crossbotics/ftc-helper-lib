@@ -50,8 +50,8 @@ servo, the servo's catalog part).
 
    ![Press D-pad up: the arm turns clockwise, and the Driver Hub shows Position : 0.600 and the Hint line](../images/hub-servo-finder-step-direction.svg)
 
-5. **Find the first end, slowly.** Move toward one end in small steps (D-pad up/down; D-pad left makes the
-   step smaller, down to 0.001) until the part BARELY touches the frame. **A servo that hums is pushing on
+5. **Find the first end, slowly.** Move toward one end in small steps (D-pad up/down) until the part
+   BARELY touches the frame. D-pad left makes the step smaller, down to 0.001. **A servo that hums is pushing on
    something: back off at once.** It gets hot and can strip its gears. Back off 0.01 more and press **X**.
 
    ![At one end, press X: the arm is just before the frame, and the Driver Hub shows End X : 0.120](../images/hub-servo-finder-step-end-x.svg)
@@ -128,7 +128,7 @@ take the other side's arm off first, or unplug the second servo's wire.
 
 ## Put the numbers in your code
 
-When both ends and your positions are saved, the screen looks like this. The marked lines are the ones for
+When you have saved both ends and your positions, the screen looks like this. The marked lines are the ones for
 the robot in five files. The `PositionServo.create(...)` lines above them are for the older helpers.
 
 ![The Driver Hub with both ends marked (0.120 and 0.880), two saved positions, and the lines to copy: Tunables.Claw: P1 = 0.210, P2 = 0.770](../images/hub-servo-finder-done.svg)

@@ -113,8 +113,8 @@ and the picture time in `System.nanoTime()`. Then `AimController`, `Turret.aimBy
 3. **Hardware setup leaves motors at 0 power.** Nothing moves before ▶ (start on the Driver Hub).
 4. **Safety stays on in every profile.** Limits, timeouts, jam checks.
 5. **Testable**: tests need pretend devices and a pretend clock (see `library/src/test`). So put the logic in a part
-   with no hardware, or take a clock (`LongSupplier`, a method that returns the time) and devices in the
-   constructor (the code that makes the object). A part's default clock is `Time::nanos` (core). With it, a test's
+   with no hardware. Or take a clock (`LongSupplier`, a method that returns the time) and devices in the
+   constructor. The constructor is the code that makes the object. A part's default clock is `Time::nanos` (core). With it, a test's
    [`PretendClock`](../modules/testkit.md#pretendclock) moves the part's clock too, and with `System::nanoTime` it does not.
 6. **The six steps**: code, Javadoc, test, module page, tutorial, CHANGELOG ([Contributing](../contributing.md)).
 7. **Parts stay general** (any team, any season). Season knowledge goes in the season definitions (the field, the

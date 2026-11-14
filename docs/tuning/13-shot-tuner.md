@@ -89,7 +89,7 @@ so one bad picture does not go into the table.
 
 With odometry, the robot knows where it is on the field. It also knows where the goal is, from
 `Tunables.Aim`. So it can work out the distance from any spot: in front of the goal, from the side, or
-from far away. Tune from the spots where your drivers really shoot.
+from far away. Tune from the spots where your drivers shoot in a match.
 
 **BIOBUZZ:** the goal is your HIVE's up CELL, near the middle of the field. Straight back from it, you
 reach the wall after about 4 ft, and the HIVE frame is in the way on one side. So do not test in one
@@ -102,7 +102,8 @@ line: go out toward your corner. The farthest spot is about 66 in from the goal.
 1. **The odometry works.** Robot.java has an `odometry(...)` line, and the
    [Odometry Tuner](09-odometry-tuner.md) is done (`Tunables.Odometry: checked = true`).
 2. **The goal point is in `Tunables.Aim`:** `goalX` and `goalY`, in inches, for the BLUE goal, seen from
-   your drivers' wall (x to the right of the center line, y from the center toward the far wall). Take
+   your drivers' wall. x counts to the right from the center line, and y counts from the center toward the
+   far wall. Take
    them from the season's field map ([Aim](../reference/parts/aim.md)). The tuner mirrors the goal for RED
    when the last OpMode you ran chose RED.
 
@@ -122,7 +123,7 @@ the bearing is near 0, so that the robot points at the goal before you shoot.
 
 **When the camera also sees the goal,** the screen shows both: `Distance` (from the camera) and
 `Odometry says` (from the odometry). They should be within a few inches. When they are far apart, the goal
-point in `Tunables.Aim` is wrong, or the robot did not start in the middle of the field facing away from
+point in `Tunables.Aim` is wrong. Or the robot did not start in the middle of the field facing away from
 you. Fix it before you tune: one table must fit both.
 
 **Odometry drifts a little over time,** most after bumps. When the distance looks wrong, press STOP: it
@@ -154,8 +155,8 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
 
    ![Press RB: the Driver Hub shows Shots fired : 1, 1 to mark](../images/hub-shot-tuner-step-shoot.svg)
 
-4. After each shot, press **A** = HIT or **B** = MISS. The marks go to the shots in the order they were
-   fired. Each shot keeps the speed, hood angle and distance it was **fired** with. So when you change the speed or the hood before
+4. After each shot, press **A** = HIT or **B** = MISS. The marks go to the shots in the order you
+   fired them. Each shot keeps the speed, hood angle and distance it was **fired** with. So when you change the speed or the hood before
    you mark, the mark does not move. The screen shows `Hits at 2600: 3/4` and every speed tried here
    (`Tried here: 2500: 1/3, 2600: 3/4 (best)`). Change the speed with the D-pad, and shoot 3-5 again.
    **Y** steps through what the D-pad changes: SPEED, HOOD with a hood, TABLE with two tables, and
@@ -171,9 +172,9 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
 5. Press **X** to save. The tuner keeps the speed with the **best hit ratio** at this distance. In a tie,
    it keeps the one with more shots. You must mark all shots before you save. With no shots marked at all,
    X only warns. X again within 3 s saves the speed now anyway: a guess, not a tested speed. With a hood,
-   it also saves the hood angle that those shots were fired with. Each point also keeps the flywheel speed
+   it also saves the hood angle that you fired those shots with. Each point also keeps the flywheel speed
    **measured** as the pieces were fed. When the flywheel was well under the speed asked for, it
-   **sagged**: the last shot or a low battery slowed it, and it was not back yet. Then the screen warns.
+   **sagged**. The last shot or a low battery slowed it, and it was not back yet. Then the screen warns.
    Wait for `Ready: YES` between shots and charge the battery, or the table will not match a match. To
    delete a wrong point, stand there and **hold BACK 1 s**. It is a hold, so that nobody presses it by
    mistake.
@@ -181,9 +182,9 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    ![Press X: the Driver Hub shows Saved 24.2 in -> 2600 RPM (3/4 in) POLLEN](../images/hub-shot-tuner-step-save.svg)
 
 6. Move 1-2 ft further from the goal (drive with the sticks) and do it again. The spots do not need to be
-   in a line: when the wall or a field part is in the way, go out at another angle
+   in a line. When the wall or a field part is in the way, go out at another angle
    ([BIOBUZZ](#tune-from-any-spot-with-odometry)). When the distance moves more than 4 in, the
-   hit counts start again by themselves, and the tuner drops the unmarked shots fired at the old spot.
+   hit counts start again by themselves. The tuner also drops the unmarked shots fired at the old spot.
    `Points: POLLEN 3, NECTAR 0  (4-6 per table)` says how far you are: 4-6 points per table cover the
    field. Then go to the next table (step 1).
 7. **Copy the tables into `Tunables.java`**: the robot uses the file, not the tuner's screen. There is
@@ -200,8 +201,8 @@ With `robot()`, the Shot Tuner uses your robot's launcher, camera and drive. A t
 (`.hood(...)` in Robot.java, or the older helpers' `.hood(servo)`), **Y** also chooses HOOD. The D-pad then
 steps the hood by a fifth / a fiftieth of its range: 5 / 0.5 deg for a 0-25 deg hood. The hood starts at
 the table's hood for this distance, like the speed. Each speed and hood angle is its own try in the hit
-counts (`Tried here: 2550 @ hood 10: 3/4 (best), 2550 @ hood 12.5: 1/3`). X saves the hood that the
-winning shots were fired with.
+counts (`Tried here: 2550 @ hood 10: 3/4 (best), 2550 @ hood 12.5: 1/3`). X saves the hood angle that you fired the
+winning shots with.
 
 A weak battery changes how far the shots go, so charge the battery before you tune speeds. The screen
 shows the battery and warns below 12.5 V. The tuner does not use the launcher's speed trim (the D-pad in a

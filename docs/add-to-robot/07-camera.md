@@ -87,7 +87,7 @@ public static class Limelight {                                 // "limelight" i
 - The camera reads these numbers once, at INIT. They are not in the tuning menu. Change them in
   `Tunables.java` and install again.
 
-**Aiming numbers** are in a section with a fixed name, `Tunables.Aim`: how whole-robot aim turns, and the
+**Aiming numbers** are in a section with a fixed name, `Tunables.Aim`. They set how whole-robot aim turns, and the
 goal's place on the field for the odometry backup. Every line is optional ([Aim](../reference/parts/aim.md)).
 
 ### Controls.java: its buttons
@@ -104,7 +104,7 @@ The aim buzz: gamepad 2 buzzes while the aim is close.
 g2.rumbleWhenAimed();
 ```
 
-**No turret?** The whole robot turns to face the goal while the driver holds RB. Do not use it with a
+**With no turret:** the whole robot turns to face the goal while the driver holds RB. Do not use it with a
 turret that follows the goal: INIT stops.
 
 <!-- recipe: aim-whole-robot -->
@@ -199,9 +199,9 @@ public static class Aim {
   `.followsOdometry()` on the turret and `.speedFromOdometry()` on the launcher.
 
 **The camera comes first,** because the odometry drifts a little in a match. The odometry needs a good
-start, so the backup stays off until the pose is set: an autonomous ran first, or the drivers parked on the
-reset spot and held gamepad 1 START for 1 s ([Add odometry: TeleOp starts where autonomous ended](09-odometry.md#teleop-starts-where-autonomous-ended)).
-It also stays off while it says the goal is farther than the field allows. Every setting:
+start, so the backup stays off until the robot has its pose. It gets the pose when an autonomous ran first, or
+when the drivers parked on the reset spot and held gamepad 1 START for 1 s ([Add odometry: TeleOp starts where autonomous ended](09-odometry.md#teleop-starts-where-autonomous-ended)).
+The backup also stays off while it says the goal is farther than the field allows. Every setting:
 [Aim: The goal point](../reference/parts/aim.md#the-goal-point).
 
 ### Shooting while moving
@@ -251,7 +251,7 @@ the distance.
 - **Where to stand:** the tags are under the up CELL, so the camera must be below and in front of them.
   RED: about x 57, y -13, facing the HIVE (heading 90). BLUE: about x -57, y 13 (heading -90). Drag the
   robot there on the map.
-- Spin up (LB) and fire (RB). The POLLEN table was tuned in the simulator, so POLLEN shots go in. The
+- Spin up (LB) and fire (RB). The POLLEN table comes from tuning in the simulator, so POLLEN shots go in. The
   NECTAR table is example numbers, so expect misses.
 - **Whole-robot aim:** do the same with `flywheelbot` (`-ProbotClass=com.crossbotics.ftchelper.examples.flywheelbot.Robot -Pout=build/flywheelbot.properties`).
   Choose "FlywheelBot TeleOp", drive until the goal is in view, and press RB on gamepad 1.

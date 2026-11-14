@@ -83,9 +83,9 @@ choices go in TeamCode:
 | Scoring heights, positions, the shot table | `Tunables.java`, found with the tuning menu and the finders |
 | Something at a set time in TeleOp (park, a buzz) | `atSecondsLeft(seconds, job)` in `Controls.java` |
 
-**For the library (the mentor):** a new season also needs its season files in the simulator:
-`sim/fields/<season>.json` (made from the official field CAD by a script) and `sim/fields/<season>.rules.json`
-(the rules, typed from the manual with section numbers).
+**For the library (the mentor):** a new season also needs its season files in the simulator.
+One is `sim/fields/<season>.json`, made from the official field CAD by a script. The other is
+`sim/fields/<season>.rules.json`: the rules, typed from the manual with section numbers.
 
 When something is useful for ANY game (a new mechanism type, a sensor helper), put it in the library
 instead: [Extending the library](extending.md).

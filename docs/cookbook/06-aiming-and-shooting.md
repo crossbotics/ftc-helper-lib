@@ -222,8 +222,7 @@ g2.a.toggle(robot.aim().movingShotMode()).says("shoot on the move on/off").rumbl
 ```
 
 **Why:** a piece shot from a moving robot keeps the robot's speed, so it lands to the side (30 in/s for
-0.8 s: 24 in). With `shootOnMove`, the turret (or the whole robot) aims at a point that far the other way,
-and the launcher takes its speed from that point's distance. It also brings the camera's picture forward
+0.8 s: 24 in). With `shootOnMove`, the turret (or the whole robot) aims at a point that far the other way. The launcher takes its speed from that point's distance. It also brings the camera's picture forward
 to now, because the robot turned and moved since the camera took it. It works with a turret or
 whole-robot aim, with a camera on the turret or on the body, or with the odometry alone. Tell it where
 the shooter and the camera are. The Driver Station says `Aim : moving shot: lead 12.3 deg, 18 in` while
@@ -322,8 +321,7 @@ F x 1.10). Nobody has proven it on a real robot yet, so it is off: the box write
 `nominalVolts` that the Flywheel Finder found together. That is why the box writes the gains as
 `MEASURE`. Without battery compensation, `DEFAULT` gains (from the motor) are a good start.
 
-When you need a trim every match, with a charged battery, the cause is the wheel or the balls, and the
-table is off. Make the trim part of the table (+3%: every speed x 1.03, `{48, 2550}` becomes
+When you need a trim every match, with a charged battery, the cause is the wheel or the balls, not the battery. The table is off. Make the trim part of the table (+3%: every speed x 1.03, `{48, 2550}` becomes
 `{48, 2627}`). Copy the lines into `Tunables.java`, and trim back to 0.
 **More:** [Add a launcher: speed trim and a low battery](../add-to-robot/05-launcher.md#speed-trim-and-a-low-battery), [Launcher](../reference/parts/launcher.md#speed-trim-and-battery-compensation).
 

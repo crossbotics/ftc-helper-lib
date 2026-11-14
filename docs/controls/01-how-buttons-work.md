@@ -29,7 +29,7 @@ now. When you add gamepad 2 later, change `oneDriver` to `false`, and those line
 change no other line.
 
 With one gamepad, two lines on the same button stop INIT with a message. The library's own buttons also
-move a little with one gamepad (slow goes on the left stick click), so the triggers are free for your parts
+move a little with one gamepad: slow goes on the left stick click. So the triggers are free for your parts
 ([Every library button](04-move-library-buttons.md#every-library-button)).
 
 ## The buttons

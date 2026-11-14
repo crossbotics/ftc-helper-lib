@@ -18,7 +18,7 @@ Each part below adds one thing to an auto. Use only the parts you need.
 | [Keep code inside the steps](#keep-code-inside-the-steps) | Why a line between two steps runs in INIT, and the fix. |
 | [Write your own step](#write-your-own-step) | Your own Java code as one step, for what no other step can do. |
 
-> **The auto builder cannot write anything on this page.** Build the route in the builder first, copy the
+> **The auto builder cannot write anything on this page.** Build the route in the builder first. Copy the
 > Java into your file, then add these by hand. **Note:** after you add them, the builder's **Load** may not
 > read the file again. Keep a copy of the plain plan, so you can change it in the builder later.
 

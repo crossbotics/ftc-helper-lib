@@ -3,7 +3,7 @@
 Find your robot's numbers in the right order, then fix what you see on the field.
 
 Every robot program is full of numbers: where a servo opens, how high a lift may go, how fast a flywheel
-spins, how big the wheels really are. When you guess them, you waste practice time and break parts. The
+spins, how big the wheels are. When you guess them, you waste practice time and break parts. The
 **finders** measure them for you and show the lines to copy into `Tunables.java` and `Robot.java`.
 
 ## The tuning order
@@ -55,7 +55,7 @@ flowchart TB
 | 12 | [Aim Tuner (own file)](12-aim-tuner.md) | camera offset | aim first, so you build the shot table with straight shots |
 | 13 | [Shot Tuner](13-shot-tuner.md) | the shot table | it needs a steady wheel, straight aim and a true distance: everything above |
 | 14 | [Piece Tuner](14-piece-tuner.md) | what each sensor sees | nothing moves, so it can also come earlier |
-| 15 | [Characterizer (own file)](15-characterizer.md) | how the motors really move | it needs a robot that drives and lifts that work, so it comes last |
+| 15 | [Characterizer (own file)](15-characterizer.md) | how the motors move | it needs a robot that drives and lifts that work, so it comes last |
 
 **After the finders:**
 

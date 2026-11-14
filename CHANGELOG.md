@@ -2,6 +2,14 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- Docs: a style pass on every page (shorter sentences, active voice, words explained on first use, no
+  question labels), checked so that no code, heading, link or number changed and each sentence keeps its
+  meaning.
+
 ## v0.41.0 - 2026-11-14
 
 ### Added

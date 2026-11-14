@@ -136,8 +136,8 @@ before you copy the Java.
 
 ## 6. Run it
 
-Press **Run**. The simulator puts the field's pieces back, puts the robot on the start spot, and runs the
-plan as a real auto: the INIT menu, the 30 s timer, the park time and the report.
+Press **Run**. The simulator puts the field's pieces back and puts the robot on the start spot. Then it runs
+the plan as a real auto: the INIT menu, the 30 s timer, the park time and the report.
 
 - A **purple robot** drives the plan. Your robot drives beside it. You see where they part.
 - The **green line** is the path your robot drove.
@@ -201,8 +201,8 @@ The builder keeps your plan in this browser.
   `Robot.java` or `Actions.java`, and pick that method. The builder reads only these shapes:
   `robot.part::method`, `robot::method`, `() -> robot.part.method(...)`, `() -> robot.method(...)`,
   `Actions.name(robot, ...)` and `robot.part.method(...)` that gives an Action, with plain values (text,
-  numbers, true/false, `robot`). **Why:** nothing else in your code or on the laptop can be reached from
-  the page, and nothing runs as a script. INIT checks every name before the first step, and names the
+  numbers, true/false, `robot`). **Why:** the page can reach nothing else in your code or on the laptop,
+  and nothing runs as a script. INIT checks every name before the first step, and names the
   parts there are when one is wrong.
 
 **Why learn the file too:** you change autos at events, often in a hurry, and the builder does not do

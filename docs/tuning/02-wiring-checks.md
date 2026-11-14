@@ -35,7 +35,7 @@ direction, so it does not check `reversed(...)`: the next check does. What to lo
 ## Motor Direction Check: each wheel rolls forward
 
 The Hardware Check spins a motor in its raw direction. This check uses your directions, so it shows what
-the robot will really do. It spins ONE drive motor at a time at 30%, set up exactly as Robot.java says:
+the robot will do. It spins ONE drive motor at a time at 30%, set up exactly as Robot.java says:
 its direction comes from `reversed(...)` on the drive line.
 
 1. Hold **X** (front-left), **Y** (front-right), **A** (back-left) or **B** (back-right). On a tank drive,
@@ -92,7 +92,7 @@ motor port's count, and shows a result for each motor:
 
 
 The check sets up each motor as Robot.java says (its direction). It pushes the motor toward the side where
-its part has room, from your `Tunables.java`: a lift up from its bottom stop, a hood toward `posB`, a turret
+its part has room. It reads that side from your `Tunables.java`: a lift up from its bottom stop, a hood toward `posB`, a turret
 toward the end of its range that is farther from its start angle. Its count must move the same way.
 
 **Watch each part while the check pushes it.** The count turns with the direction setting, so the check

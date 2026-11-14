@@ -184,8 +184,8 @@ Use them in `Controls.java`, `Actions.java` and autos: `robot.pieces.count()`.
 - **The ready sensor**, if there is one, has the last word on the next piece. It corrects the kind, and it adds a piece
   it sees that was never counted.
 - After a shot, Pieces trusts the ready sensor again once the slot reads empty, or a new steady reading
-  begins (the next piece). The end of the feed is not enough: the sensor's answer lags a little (`steadyMs`),
-  and its old reading would put the piece just fired back in the count. After a jammed feed (nothing went),
+  begins (the next piece). The end of the feed is not enough: the sensor's answer lags a little (`steadyMs`).
+  Its old reading would put the fired piece back in the count. After a jammed feed (nothing went),
   Pieces trusts the sensor again at once.
 
 **The count is a helper, and it can be wrong.** A piece that bounces out, or two pieces read as one, make
@@ -202,7 +202,7 @@ count is wrong:
   sees nothing.
 - When a sensor (or camera) has no new reading for 0.5 s, it warns ("no new reading"). It then sees nothing
   until readings come back (`isWorking()` is false), and Pieces counts nothing with it.
-- The loop never waits for a sensor. A REV 2m Distance Sensor reading can take up to 0.2 s, so the library
+- The loop never waits for a sensor. A REV 2m Distance Sensor reading can take up to 0.2 s. So the library
   reads it on a helper thread, and throws away a reading older than 0.25 s.
 
 ### Hooks for other parts

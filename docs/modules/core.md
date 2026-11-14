@@ -166,8 +166,9 @@ The mechanisms go in your own `Robot` class, not here. Then your programs can re
 
 ## InitStop
 
-It shows a mistake found at INIT (a wrong name in Robot.java, a missing number in Tunables.java) as plain
-lines on the Driver Station, in place of the FTC app's red line:
+It shows a mistake found at INIT as plain lines on the Driver Station, in place of the FTC app's red line.
+A mistake can be a wrong name in Robot.java or a missing number in Tunables.java. For a missing number, you
+see:
 
 <samp>INIT STOPPED: the robot did not start.</samp><br>
 <samp>Tunables.Lift has no max: write max (...)</samp><br>
@@ -194,8 +195,8 @@ test of timing is quick, and it gives the same result on a slow computer. Use th
 
 `Time.nanos()` is the time now, in nanoseconds. Only the difference between two times means anything. On
 the robot it is the real clock, `System.nanoTime()`. Most of the robot's parts read it each time they need
-the time: the five-files modules, the launcher, the mechanisms, the match timer, the PID and slew
-controllers.
+the time. These parts include the five-files modules, the launcher, the mechanisms, the match timer, and
+the PID and slew controllers.
 
 | Method | What it does |
 | --- | --- |

@@ -112,7 +112,7 @@ The third number in `assertEquals(a, b, 1e-9)` is the allowed difference for dec
 
 The first version jumped from position 0 to 2400 in 20 ms, and expected only the F push. It got -1.0:
 the D part saw a huge, sudden "movement" and pushed back hard. The PID was right, and the test was
-wrong: no real lift moves that fast. Tests teach you how your code really behaves.
+wrong: no real lift moves that fast. Tests teach you how your code behaves.
 
 ## 6. Run the tests
 

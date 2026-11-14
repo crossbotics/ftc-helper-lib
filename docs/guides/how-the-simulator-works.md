@@ -22,7 +22,7 @@ Differences to know:
   UP. In TeleOp with field-centric, stick up goes away from you.
 - STOP works like on a robot: a `sleep()` ends at once. An OpMode that ignores STOP for 3 s loses the
   hardware: restart the simulator to run another.
-- Each INIT here forgets `MatchMemory.chosen()` and the start spot of the last program, so the simulator
+- Each INIT here forgets `MatchMemory.chosen()` and the start spot of the last program. So the simulator
   does not put the robot on an old program's spot. A real robot keeps them until a program sets them. So
   your own OpMode must not read them before it has set them. The library's autonomous and TeleOp do this
   for you.
@@ -45,7 +45,7 @@ Differences to know:
 - the battery voltage. Lower it to see a weaker robot.
 
 **Path lines** (on the field map and in the 3D view): an orange dashed line is the path that a Pedro
-`follow` step drives (the plan). A green line is where the robot really went in its last 30 seconds of
+`follow` step drives (the plan). A green line is where the robot actually went in its last 30 seconds of
 driving (the trail). The plan stays, faded, after its step ends, so you can compare the two. **Clear
 lines** clears both. Untick **Path lines** to hide them. More: [Pedro module](../modules/pedro.md#the-simulator).
 
@@ -56,8 +56,8 @@ glows **green** while it takes pieces in, and **orange** while it pushes them ou
 spinner glows **yellow** while it turns. A passive part (moved by gravity or springs) **blinks yellow**
 while it moves.
 
-The page builds the field from the field file's shapes (tiles, walls, tape, solid and overhead parts),
-with each AprilTag as a square with its ID. With a 3D model of the field, the page shows that model
+The page builds the field from the field file's shapes (tiles, walls, tape, solid and overhead parts).
+Each AprilTag is a square with its ID. With a 3D model of the field, the page shows that model
 instead, with the tag squares on top. The library has BIOBUZZ's model, made from FIRST's field CAD, and a
 robot file can name its own with `field.model`. "Field CAD model" in the **View** menu switches between
 them. Each camera shows as a cone (webcam yellow, Limelight green). "Camera view" in the View menu shows a
@@ -68,9 +68,9 @@ them roll and spin. A tipping HIVE turns smoothly. With a rules file, the simula
 still turns it over half a second. The 3D library (three.js, MIT license) comes with the simulator, so the
 page works without the internet. On a slow computer, untick "Show the 3D view" in the View menu.
 
-The toolbar over the 3D view has how to look on the left: **View** (where it looks from, and the "Show",
-"Field CAD model" and "Camera view" boxes) and **Layers** (lines and maps over the field). It has what to
-do on the right: **Tests**, **Edit robot**, **Auto builder**.
+The toolbar over the 3D view has the ways to look on the left. **View** sets where it looks from, and has
+the "Show", "Field CAD model" and "Camera view" boxes. **Layers** draws lines and maps over the field. The
+things to do are on the right: **Tests**, **Edit robot**, **Auto builder**.
 
 **Smooth motion.** The simulator moves everything 100 times a second. It sends the page where everything
 is 50 times a second (a stream: `GET /stream`), with its own clock. The page draws the moment about 1/20 s
@@ -96,8 +96,7 @@ In INIT, the simulator puts the robot where the program says:
   `sim-start-spots.properties`, next to the simulator's settings). The next INIT puts the robot there.
   For the other alliance, it uses the same spot on that alliance's side. Or give the spot in inches in the
   code (`s.start(note, x, y, heading)`), so the robot goes there by itself.
-- A TeleOp with no autonomous before it puts the robot at the robot file's start for RED, or at that
-  spot's mirror image for BLUE, as the drivers choose the alliance (X / B). Until they choose, the robot
+- A TeleOp with no autonomous before it places the robot when the drivers choose the alliance (X / B). RED gets the robot file's start. BLUE gets that spot's mirror image. Until they choose, the robot
   stands on BLUE's spot, and the page looks from the blue wall. The reason: the TeleOp says
   `Alliance : BLUE until you choose`, and aims and drives for BLUE.
 - After an autonomous, TeleOp leaves the robot where autonomous ended.
@@ -110,15 +109,15 @@ Hub's **Match** button shows the game. A score bar sits over the 3D view: click 
 - **The score and the clock**: RED and BLUE, the period (AUTO, TELEOP, "AUTO done", FINAL or free play)
   and the time left. **The score counts like a referee** (manual 10.5). HIVE TIPs count when they happen.
   LEAVE and AUTO PARK count at the end of AUTO. Pieces in the CELLs, FLOWERs and GARDENs and TELEOP PARK
-  count **only at the end of the match**, because they change all match long (a TIP spills the CELL's
+  count **only at the end of the match**. The reason: they change all match long (a TIP spills the CELL's
   pieces). Until then, they show **gray, as "+N"**: what they would add if the match ended now. When
   TeleOp ends (or you stop it), the score is **FINAL** and held. When you move the robot after that, it
   changes nothing. A new autonomous, or a TeleOp after a FINAL, starts a new match. BIOBUZZ starts each
   side at "+10": the field's own pieces in the up CELLs and GARDENs.
-- **Where the points come from**: click a side. The table is grouped like FIRST's score calculator: AUTO
+- **Where the points come from**: click a side. The table has the same groups as FIRST's score calculator: AUTO
   (LEAVE, PARK, TIPs), TELEOP (TIPs, CELL, FLOWERs, the bottom NECTAR bonus, GARDEN, PARK), FOUL (the other
   side's fouls), the total, and the **RANKING POINTS**. These are SWARM (LEAVE + PARK points, 16 to earn
-  it) and POLLINATOR 1 and 2 (4 and 7 TIPs), each with a tick or a cross and the count. The end-of-match
+  it) and POLLINATOR 1 and 2 (4 and 7 TIPs). Each has a tick or a cross and the count. The end-of-match
   rows have a * until the end. A line says whether a NECTAR into a FLOWER is allowed now (G410).
 - **FLOWERs**: each FLOWER's owner, and its stack from the bottom up. Each piece is a dot in its color, and
   a hollow dot is outside the scoring rings. In 3D, a ring over each FLOWER shows its owner's color (gray:
@@ -149,7 +148,7 @@ The **Layers** button over the 3D view turns each of these on or off. This brows
 
 ## Motors and the parts catalog
 
-The simulator moves each motor by the same "feedforward" model that a real motor follows: power (at
+The simulator moves each motor by the same "feedforward" model that a real motor follows. The model: power (at
 12.8 V) = kS (to start moving) + speed / maxTicksPerSec + accelSec / maxTicksPerSec x speeding-up (+
 gravity for a lift). Without measurements, it uses the parts catalog's top speed and typical values. To make the simulated robot move like YOURS, measure it with the Characterizer ([Real speeds](../simulator/03-make-it-match-your-robot.md#6-real-speeds-optional)).
 
@@ -171,8 +170,8 @@ numbers and checks that the fit finds them again.
 come from the seller's page, with the date someone checked them. The list has goBILDA Yellow Jacket (5203
 and 5204, every ratio), REV HD Hex (bare, UltraPlanetary combinations, spur gearboxes) and Core Hex,
 AndyMark NeveRest, goBILDA 2000 series servos, REV Smart Robot Servos and Axon servos. A robot file names a
-part by its `id` (`part=gobilda-5203-312`). The simulator takes these numbers from it: for a motor, the top
-speed, encoder counts per turn and current; for a servo, the speed and range. When the seller does not
+part by its `id` (`part=gobilda-5203-312`). The simulator takes these numbers from it. For a motor: the top
+speed, encoder counts per turn and current. For a servo: the speed and range. When the seller does not
 publish a number, the catalog leaves it empty, with a note. The catalog uses real ratios (an UltraPlanetary
 "5:1" is 5.23:1). Servo speeds use the seller's row closest to 5 V. A Control Hub servo port gives about
 5 V, and the headline number is often for 6 V.
@@ -182,7 +181,7 @@ Motor kinds:
 - `free`: it only spins.
 - `lift`: hard stops, gravity.
 - `flywheel`: it coasts. While its `feeder` (a motor or a CR servo) runs, pieces go through and slow it
-  down: one each time the feeder starts, then one every 0.3 s from 0.45 s on.
+  down. One piece goes each time the feeder starts, then one every 0.3 s from 0.45 s on.
 
 `ticksPerRev=` sets a motor's encoder counts per turn (default 537.7; flywheel 28). On a robot, `setPower`
 in RUN_USING_ENCODER aims for the top speed of the motor TYPE chosen in the configuration. Here it aims for
@@ -217,11 +216,11 @@ bottom), z up from the tiles. Headings and tag facing are in degrees, counterclo
 
 ### The size check at full reach
 
-The simulator checks the size rules with the robot's shapes: the 18 in start cube, and 18 x 24 in and 29 in tall (R105), now and **at full reach** (every moving part
-tried over its whole range). The Control Hub panel shows the sizes in green or red.
+The simulator checks the size rules with the robot's shapes: the 18 in start cube, and 18 x 24 in and 29 in tall (R105).
+It checks them now and **at full reach**, with every moving part tried over its whole range. The Control Hub panel shows the sizes in green or red.
 
 How the simulator checks "at full reach": it tries every combination of the moving parts' important
-values. A slide or claw is biggest at an end of its range. A hinge (arm, turret) is tried at both ends, at
+values. A slide or claw is biggest at an end of its range. It tries a hinge (arm, turret) at both ends, at
 each multiple of 90 degrees, and every few degrees between. That is every 5 degrees or less with a few
 moving parts, and coarser with many, to stay under 50,000 poses. The panel shows the worst pose. It is a
 careful check, not a proof: leave a little margin, and measure the real robot at its hard stops.
@@ -229,13 +228,13 @@ careful check, not a proof: leave a little margin, and measure the real robot at
 ## Game pieces
 
 With the physics engine, the field file's game pieces are on the field. BIOBUZZ: the 4 POLLEN in each
-GARDEN; POLLEN 2.8 in and NECTAR 3.6 in from manual 9.8; 25 g and 41 g from AndyMark's am-5851/am-5852
-pages, not the manual. The pieces roll and bounce, and the robot pushes them. The FLOWER tops are goals
+GARDEN. The sizes (POLLEN 2.8 in and NECTAR 3.6 in) come from manual 9.8. The weights (25 g and 41 g) come
+from AndyMark's am-5851/am-5852 pages, not the manual. The pieces roll and bounce, and the robot pushes them. The FLOWER tops are goals
 (the opening's center and height measured in the FLOWER CAD). The robot file says which robot shapes
 handle the pieces:
 
-The match starts with every piece that the manual stages on the field (10.3.1), placed from the official
-field CAD: 4 POLLEN in each GARDEN (loose on the tiles), 4 POLLEN in each FLOWER and 3 NECTAR in each
+The match starts with every piece that the manual stages on the field (10.3.1). The simulator places them
+from the official field CAD: 4 POLLEN in each GARDEN (loose on the tiles), 4 POLLEN in each FLOWER and 3 NECTAR in each
 upward CELL. A FLOWER is solid above its bottom opening, the Retrieval Opening. That opening is 9-99 mm up,
 and open toward the field and both sides. So the POLLEN above the opening hold their places (the field
 file's `stacks`). The bottom POLLEN sits in the opening as a real piece. It stays still until the robot or
@@ -245,17 +244,17 @@ The robot rolls over the FLOWER's thin floor plate (0.35 in), and pieces rest on
 
 
 The colors are the screen colors of the field file, not a real sensor's. Measure the real ones with the
-Piece Tuner (it also runs here). A motor or CR servo feeder sends one piece each time it is turned on.
+Piece Tuner (it also runs here). A motor or CR servo feeder sends one piece each time it turns on.
 If it keeps running, it sends one more every 0.3 s from 0.45 s on. So keep an indexer's `feedSec` under
 0.45 s. Otherwise one feed fires two pieces here, and the count is off by one.
 A second webcam's colors are not simulated: it says "not found" and sees nothing.
 
 **Rollers turn the pieces they touch.** A roller or spinner (any `roller` or `flywheel` shape) drags a
-piece along with its surface, at its real surface speed, as far as the grip allows. So spinners can pull
+piece along with its surface. It moves the piece at up to its real surface speed, as far as the grip allows. So spinners can pull
 a piece in, or fling one away, even when the robot cannot take it (when it is full).
 
-**The HIVEs tip** (manual 9.6, 10.5.1). Each CELL is an open box: its floor, back, sides and roof, from
-the field CAD, about 20 x 14 in open and 12 in deep. So a shot can go in, roll down to the back and stay.
+**The HIVEs tip** (manual 9.6, 10.5.1). Each CELL is an open box from the field CAD: its floor, back, sides and
+roof. It is about 20 x 14 in open and 12 in deep. So a shot can go in, roll down to the back and stay.
 The 3 staged NECTAR rest in each up CELL. A piece counts when it has come to rest in a HIVE's up CELL
 (slow for 0.3 s). When those pieces weigh 187 g or more, the HIVE turns 60 degrees. The number comes from
 the team's field tests: no tip at about 175 g, and a tip at about 199-200 g. The 3 NECTAR are 123 g, so the
@@ -270,7 +269,7 @@ the tips. When a piece goes over a wall, the simulator takes it off and counts i
 `print pieces` lists it all. Scenario checks: `expect cell "Red" >= 2`, `expect tips "Red" >= 1`,
 `expect left >= 1`.
 
-The 3D view shows what the robot holds, in its top-left corner: a dot in each piece's color, an empty dot
+The 3D view shows what the robot holds, in its top-left corner. It shows a dot in each piece's color, an empty dot
 for each free place (its `holds=`), and the count ("In the robot: 3 / 4 · 3 POLLEN").
 
 On the page (Control Hub, Robot tab):
@@ -305,7 +304,7 @@ the rules cover and what they do not: [Game rules and the score](#game-rules-and
 A season's rules sit in a second file next to the field file: `sim/fields/biobuzz-2026.rules.json`.
 Someone types it by hand from the game manual, and each part says which section. (A script makes the field
 file itself from the CAD.) With the rules file, the simulator plays by the manual and keeps the score.
-Without one (an older or home-made field), the simulator counts a piece in a goal and takes it off, HIVEs
+Without one (an older or home-made field), the simulator counts a piece in a goal and takes it off. HIVEs
 tip at once, and there is no score.
 
 What it models (BIOBUZZ, Competition Manual TU01):
@@ -348,8 +347,8 @@ is not a referee: it counts what it can see.
 **Each shot gets a verdict.** The simulator judges it the same way as the team's turret shot simulator (a
 line-by-line port of its `judge()`):
 
-- **clean** when the shot comes through an up CELL's opening going down at least 10 degrees, clears the
-  rim by its own radius, and first touched neither the frame, the outside of its own CELL nor the other
+- **clean** when the shot comes through an up CELL's opening going down at least 10 degrees, and clears the
+  rim by its own radius. Before that, it touched neither the frame, the outside of its own CELL nor the other
   HIVE.
 - **rim** when it touched the rim going in: it may bounce out.
 - **other HIVE** or **frame** when it would have gone in, but hit that first.
@@ -392,23 +391,23 @@ For the page (and your own tools):
 
 A shot leaves the launcher shape at `angle=` (degrees up from its forward; default 40). Its speed is
 `share=` of the wheel's rim speed (default 0.5: a guess). It has `spin=`: 1 = backspin as if the ball
-rolled along a still hood, -1 topspin, 0 none. In flight, the air slows it. The drag uses Cd 0.5, which is
-assumed, not measured for POLLEN or NECTAR. A piece type can set `dragCd` in the field file. Spin lifts or
+rolled along a still hood, -1 topspin, 0 none. In flight, the air slows it. The drag uses Cd 0.5 (the drag coefficient).
+That is a guess: nobody measured it for POLLEN or NECTAR. A piece type can set `dragCd` in the field file. Spin lifts or
 drops the shot: the Magnus force, with lift coefficient = radius x spin / speed, at most 0.5.
 
-**A hood.** With `hood=SERVO, hoodAt0=80, hoodAt1=30`, the shot angle follows where that servo really is,
+**A hood.** With `hood=SERVO, hoodAt0=80, hoodAt1=30`, the shot angle follows where that servo is,
 instead of `angle=`: 80 at position 0, 30 at 1, and a straight line between. With a shot table, the table's
 scatter goes around the hood's angle. `:sim:fromRobot` writes it for a launcher whose `Hood.servo(...)` has
 `shotAngles(atA, atB)` (the shot angle at the hood's two stops). A motor hood does not move the shot angle
 in the simulator yet.
 
-**Shot tables** replace the guesses with how the launcher really throws: `shoot.NAME = shape=flywheel,
+**Shot tables** replace the guesses with how the real launcher throws: `shoot.NAME = shape=flywheel,
 table=launcher-table.json`. For each piece and wheel speed, the table gives the likely exit speed, angle,
 spin and exit point, and how much they scatter. Each shot picks its numbers from that spread, so shots
 scatter like real ones. A share of feeds that do not become shots drop out. Make a table with the
 **launcher program** (`tools/launcher/`). It cuts your robot's CAD along the ball's path. It runs many shots
-through it, with the ball as a soft disc squeezed against the spinning wheel and the hood. Some numbers the
-CAD cannot give, so it tries them over ranges: how soft the balls are, how much the wheel and hood grip,
+through it, with the ball as a soft disc squeezed against the spinning wheel and the hood. The CAD cannot
+give some numbers. So it tries them over ranges: how soft the balls are, how much the wheel and hood grip,
 where the ball comes in. Then it writes the table. It is still a model: film a few real shots (a phone's
 slow motion, next to a tape measure) and compare.
 
@@ -420,8 +419,8 @@ by the SDK's own builders.
 
 What it does: the camera opens about 1 s after the OpMode makes it, then sends 30 pictures a second.
 For each picture, it works out which of the field file's AprilTags are in view. A tag is in view when it
-is inside the picture, faces the camera (within 60 degrees), and is big enough to find at the OpMode's
-decimation. That is about 6.5 pixels across per step of decimation, which matches the FTC docs' ranges.
+is inside the picture and faces the camera (within 60 degrees). It must also be big enough to find at the
+OpMode's decimation. That is about 6.5 pixels across per step of decimation, which matches the FTC docs' ranges.
 The simulator then turns the tags into the SDK's own detections, the way the SDK makes them. A tag in one
 of the tag library's clusters gives a cluster detection. BIOBUZZ: the SDK 12 library has one cluster per
 CELL group of 4 tags, "RED SCORING" and so on. Any other tag gives a single-tag detection, without a pose
@@ -437,7 +436,7 @@ with the reason it cannot see each one. It also draws a floor map of where the c
 
 The hardware map gives your code a Limelight3A: the SDK's own class, with its network part replaced. So
 `LimelightTags` and code that calls `getLatestResult()` directly work. About 0.5 s after `start()`, it
-sends 50 results a second. The simulator makes them as the same JSON a real Limelight sends, and the SDK's
+sends 50 results a second. The simulator makes them as the same JSON a real Limelight sends. The SDK's
 own `LLResult` reads them: `isValid()`, `tx`/`ty`/`ta` (the biggest tag), and one `FiducialResult` per tag.
 A Limelight does not group tags into clusters. Each result has `tx` (+ = right), `ty` (+ = up), `ta`, the
 pixel position and `getTargetPoseCameraSpace()` (meters; x right, y down, z out of the lens). Every

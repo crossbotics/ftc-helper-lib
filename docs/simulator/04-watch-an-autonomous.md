@@ -41,7 +41,7 @@ score goes on, like a match.
 
 ## 3. Watch the route
 
-- **The green line** is where the robot really went, in its last 30 seconds of driving.
+- **The green line** is where the robot actually went, in its last 30 seconds of driving.
 - **The orange dashed line** is the path that a Pedro `follow` step plans. It stays, faded, after the step
   ends, so you can compare the plan with the green line.
 - The robot turns **red** when it bumps into something. The Control Hub's Robot panel names what it hit.
@@ -66,7 +66,7 @@ The **score bar** over the 3D view shows RED and BLUE, the period (AUTO, TELEOP,
 left. Click it to open the **Match** panel.
 
 - **The score counts like a referee.** Points that change all match long (pieces in goals, parking) show
-  gray, as "+N", until the end: what they would add if the match ended now.
+  gray, as "+N", until the end. The gray number shows what those points would add if the match ended now.
 - **Click a side** to see where its points come from, grouped like FIRST's score calculator.
 - **Shots** lists each shot's verdict: clean, rim, other HIVE, frame or miss.
 - **Fouls** lists each foul that the simulator can see.

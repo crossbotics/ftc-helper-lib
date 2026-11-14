@@ -63,7 +63,7 @@ TargetSource camera = HuskyLensCamera.create(hardwareMap, "huskylens")
         .tag(1, 34).tag(2, 35); // (1)!
 ```
 
-1. The first tag you taught is number 1. It is really AprilTag 34. Now `camera.target(34)` works.
+1. The first tag you taught is number 1. Its AprilTag number is 34. Now `camera.target(34)` works.
 
 This tutorial's program offers only the other two cameras. The HuskyLens's limits, and how to teach it:
 [the HuskyLens section](../modules/vision.md#huskylenscamera).

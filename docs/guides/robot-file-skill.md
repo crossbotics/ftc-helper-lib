@@ -7,8 +7,8 @@ coding agent (Claude Code, Codex or similar), your robot project with ftc-helper
 measure.
 
 The simulator moves like YOUR robot only when its robot file (`simulator/robot.properties` in your robot
-project) describes your robot: every device name, the motors and servos, the size, the mechanisms and
-cameras. You can write it by hand ([simulator guide](../simulator/README.md)). An AI coding agent can do most of
+project) describes your robot. The file lists every device name, the motors and servos, the size, the
+mechanisms and cameras. You can write it by hand ([simulator guide](../simulator/README.md)). An AI coding agent can do most of
 it for you with the **robot-file skill**. A skill is a set of written instructions that the agent follows.
 This one is in `ftc-helper-lib/skills/robot-file/`.
 
@@ -39,12 +39,12 @@ questions) together, follow [Ask an AI agent](ask-an-ai-agent.md#set-it-up) inst
 1. Reads your **robot configuration** and makes a draft with the tool below. The configuration is
    `/sdcard/FIRST/<name>.xml` on the Control Hub. Get it with the REV Hardware Client or Android Studio's Device Explorer.
 2. Reads your **TeamCode** (motor names, directions, limits, finder results).
-3. **Asks you** the rest, a few questions at a time: sizes (bring a tape measure), which motors and
+3. **Asks you** the rest, a few questions at a time. It asks about sizes (bring a tape measure), which motors and
    servos, the lift's and arm's hard stops (from the Motor Finder), where the cameras are, how the robot
    picks up and scores pieces.
    **With photos and a tape measure (no CAD):** give it photos of the robot from the side, the top and
-   the front, and of each moving part at both ends of its travel, with a field tile or a tape measure in
-   view. It reads where each part sits from the photos, then asks you for the few numbers that decide a
+   the front. Add photos of each moving part at both ends of its travel. Keep a field tile or a tape measure in
+   view. It reads where each part sits from the photos. Then it asks you for the few numbers that decide a
    rule (measured from the robot's edges and the floor). It checks its 3D robot against your photos with
    you. Photos stay on your computer (`skills/robot-file/photos.md`).
    **With CAD of the whole robot:** give it the STEP file. It reads the exact sizes, places, spin axes and

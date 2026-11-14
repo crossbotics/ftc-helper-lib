@@ -3,8 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 With the five files, the Hardware Check is already in the **Tune and check** menu: [Wiring checks](../tuning/02-wiring-checks.md).
-Build it by hand here to see that a whole library OpMode can be a 3-line file, or to run it as its own
-OpMode on a robot without the five files.
+Build it by hand here to see that a whole library OpMode can be a 3-line file. Or build it to run it as its own OpMode on a robot without the five files.
 
 **You will build:** a 3-line OpMode. With it, you test every motor, servo and sensor on the robot by hand.
 

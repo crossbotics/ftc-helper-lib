@@ -280,7 +280,7 @@ More:
 - With a feed stop, the arm also waits for the stop to open (`feedStopMoveSec`).
 - The launcher runs the feed wheel: the wheel's own `feedOne()` and `stop()` do nothing.
 - A canceled fire stops the wheel (only while firing), and the arm never pushes.
-- In the simulator, a push sends a piece only if the wheel ran just before it.
+- In the simulator, a push sends a piece only if the wheel ran right before it.
 
 **A squeeze feeder** is a common kind. The feed wheel pinches the piece against pads on the arm. So the
 arm's `rest` position also sets the gap the piece is squeezed through. When the gap is too wide, the piece
@@ -346,7 +346,7 @@ every row of every table. Or tune the table again with the Shot Tuner.
 > when the battery is too low for the speed you ask (the motor is already at full power).
 > - **Turn it on:** `public static boolean batteryCompensation = true;` in `Tunables.Launcher` (with `kF`
 >   set, and `nominalVolts` from the Flywheel Finder; without it INIT says it assumes 12.8 V).
-> - **Test it on your robot:** with a battery at about 11.5 V, fire 4 shots quickly and watch the
+> - **Test it on your robot:** with a battery at about 11.5 V, fire 4 shots fast and watch the
 >   launcher's measured RPM against its target on the Driver Station. Do it with compensation off, then
 >   on. If you see no difference, leave it off. If the wheel overshoots after a battery swap, turn it
 >   off and tell us.

@@ -56,7 +56,7 @@ Find the gains that hold a flywheel at its speed, and how fast it recovers after
 ## Fix a mistake
 
 - The finder saves no positions, so there is nothing to undo. Each button changes one setting, and you
-  can change it back: **X** again turns the reverse off, **B** again stops the held speed, **LB** lowers F
+  can change it back. **X** again turns the reverse off, **B** again stops the held speed, and **LB** lowers F
   again after an **RB**.
 - **Chose the wrong motor, or a bad top-speed test:** press **BACK** and choose the motor again. It starts
   over, with a new top-speed test.
@@ -75,7 +75,7 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 
 ## Done when
 
-the `Tunables.Launcher` gains line is copied and the speed holds the target.
+you copied the `Tunables.Launcher` gains line, and the speed holds the target.
 
 ---
 

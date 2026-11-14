@@ -28,7 +28,7 @@ Which one to get, and how to mount and wire it: step 1.
   and a turn to the left is +. See the [field numbers](../building-autos/01-what-an-auto-can-do.md#field-numbers).
 - **It must know where its pods sit.** When the robot turns in place, a pod away from the turn point rolls
   too. The library takes that roll away.
-- **It must be checked before it drives.** `driveTo` steps do nothing on the robot until
+- **You must check it before it drives.** `driveTo` steps do nothing on the robot until
   `Tunables.Odometry.checked = true`. **Why:** a pod that counts the wrong way would send the robot the
   wrong way at speed.
 
@@ -60,7 +60,7 @@ camera is for aiming.
   Pinpoint and the OTOS, plug in there.
 - **4-bar and swingarm pods:** goBILDA's two pod designs. They give a different number of encoder counts
   per mm. The library expects 4-bar pods. Swingarm pods need `.podsSwingarm()` in the odometry line.
-- **Why the Pinpoint is recommended:** it does the math itself about 1500 times a second, and the robot
+- **Why we recommend the Pinpoint:** it does the math itself about 1500 times a second, and the robot
   reads the answer once per loop. So the loop speed does not change how good the pose is. It also uses no
   encoder ports.
 
@@ -193,7 +193,7 @@ You write nothing for this:
 - Field-centric "forward" comes from the odometry's heading. Hold BACK to make "forward" the way the robot
   faces now. This is for the driver only: the pose does not change, so aiming at a field point stays right.
 
-**With no autonomous, or one stopped early,** set the pose with the reset spot: put the robot on it, let go
+**With no autonomous, or one stopped early,** set the pose with the reset spot. Put the robot on it, let go
 of the sticks, and hold gamepad 1 **START** (OPTIONS on a PlayStation gamepad) for 1 s. Do it in INIT if
 you can. Gamepad 1 buzzes twice, and the Driver Station says `Pose set: x -56, y -61 in, heading 0 (BLUE)`.
 While the robot drives, it says `Pose NOT set: stop first`. START held with A or B pairs a gamepad, so it
@@ -276,7 +276,7 @@ s.start("Against our wall, in the left corner tile, facing the field", -56, -61,
 ```
 
 - `driveTo(label, x, y, heading, power)`: a place on the field, not a distance.
-- The numbers in `start(...)` must be where the robot really stands. The pose starts there.
+- The numbers in `start(...)` must be where the robot stands. The pose starts there.
 
 An action can also use the pose. **Where:** `Actions.java`, one method per action.
 

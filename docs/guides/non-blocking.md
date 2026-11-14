@@ -8,7 +8,7 @@
 A robot program is ONE loop that runs 50-200 times per second. Every part of the robot gets a turn
 in every loop. When any one piece of code **waits** (sleeps, loops until something happens, waits for
 a network answer), the whole robot freezes for that time. It does not drive, stop at limits, or
-react to STOP. This is called **blocking**.
+react to STOP. The name for this is **blocking**.
 
 ```mermaid
 flowchart LR
@@ -110,10 +110,10 @@ Use `submitLatest` for anything you send again and again, so the worker sends on
 
 ## Checked automatically
 
-`tools/check_blocking.py` runs on every push. It fails the build when the library has any of these: a `sleep(`, `Thread.sleep` or
-`.join(`; a `while` loop outside the methods that block on purpose (the script lists them, each with the reason); or another
-kind of wait, such as `.await(`, `.acquire(`, `.take(`, a `Future` or `LockSupport.park`. Examples may not sleep or wait
+`tools/check_blocking.py` runs on every push. It fails the build when the library has a `sleep(`, `Thread.sleep` or
+`.join(`. It also fails on a `while` loop outside the methods that block on purpose (the script lists them, each with the reason).
+Another kind of wait fails it too, such as `.await(`, `.acquire(`, `.take(`, a `Future` or `LockSupport.park`. Examples may not sleep or wait
 either.
 
-The script only reads the words of the code, so two things stay your job. The first is a wait for a lock: never hold a lock that the loop also
-needs while you write a file or talk to a device. The second is a slow request inside a call: some SDK methods wait for a device.
+The script only reads the words of the code, so two things stay your job. The first is a wait for a lock (a lock lets only one thread
+use something at a time). Never hold a lock that the loop also needs while you write a file or talk to a device. The second is a slow request inside a call: some SDK methods wait for a device.

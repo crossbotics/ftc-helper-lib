@@ -99,7 +99,7 @@ follower(Pedro.follower(PedroConstants.foresight));
 - **`PedroConstants.foresight`** holds Pedro's own numbers: how fast the robot goes, how it brakes,
   how hard it corrects. They come from [Pedro's Foresight tuner](#tuning-pedro). To start, copy
   [`PedroConstants.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/PedroConstants.java)
-  from the example into your TeamCode. Its numbers were measured on the simulated example robot
+  from the example into your TeamCode. We measured its numbers on the simulated example robot
   ([The simulator](#the-simulator)). They are **not yours**: run the tuner before you trust a path.
 
 Pedro reads `PedroConstants` at INIT. These numbers are not in the library's tuning menu. Change them in the
@@ -172,9 +172,10 @@ wait: it starts things (`spinUp`, `goTo`), as in a `run` step.
 - **Once each.** Every loop the step checks them **in the order you wrote them**. So when the robot
   reaches two in the same loop, they start in that order. Write them in the order they come along the path.
 - **At the end of the path**, the ones reached there start. This holds even when Pedro called the path
-  done a little short of the end (it is done within 2.5 in), or in its very first loop.
-- **A path that comes back the same way** (out 24 in, then back along the same line) keeps counting:
-  halfway back is 36 in done, never back to 12. The robot's place on the path only moves forward. It
+  done a little short of the end (it is done within 2.5 in). It also holds when Pedro called it done in its
+  very first loop.
+- **A path that comes back the same way** (out 24 in, then back along the same line) keeps counting.
+  Halfway back is 36 in done, never back to 12. The robot's place on the path only moves forward. It
   may slip back a few inches, no more. `near` starts only when the robot truly came that close.
 - **If the path ends early** (`timed out`, `STALLED`, `NO_ODOMETRY`, `cut short`), the rest do not
   start, and the report names them: `To the goal: STALLED, not fired: Spin up`. When a path got to its
@@ -391,8 +392,8 @@ c.headingDeviationTolerance.set(Math.toRadians(5));          // 5 degrees
 
 When no path runs or holds, Pedro sets nothing. So it never fights TeleOp driving or a `driveTo` step.
 
-**The power limit:** as with every other drive in the library, no wheel gets more than the drive's
-limit (`Tunables.Drive.maxPower`, or `practiceMaxPower` in the PRACTICE profile).
+**The power limit:** no wheel gets more than the drive's limit (`Tunables.Drive.maxPower`, or
+`practiceMaxPower` in the PRACTICE profile). Every other drive in the library works the same way.
 
 **Brake or coast:** Pedro brakes with power, on purpose, so it lets the wheels coast while it drives
 a path. After the path, the robot's own setting (brake) comes back.

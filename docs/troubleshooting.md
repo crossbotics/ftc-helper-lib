@@ -37,12 +37,11 @@ See [A new FTC SDK version](02-keep-up-to-date.md#a-new-ftc-sdk-version).
 **<samp>INIT STOPPED: the robot did not start.</samp>**
 
 The library found a mistake at INIT. The line under it says what is wrong and how to fix it: find it
-below. Nothing moves. Press STOP, fix it, then press INIT again. (After ▶ on the Driver Hub, a mistake shows as
-the FTC app's red line, <samp>User code threw an uncaught exception: ...</samp>, after every part has
-stopped. The words after the dash are the same messages as below.)
+below. Nothing moves. Press STOP, fix it, then press INIT again. (After ▶ on the Driver Hub, a mistake shows after every part has stopped. It shows as
+the FTC app's red line, <samp>User code threw an uncaught exception: ...</samp>. The words after the dash are the same messages as below.)
 
-A mistake in your own code (not a library message) shows its kind and where it is, for example
-<samp>NullPointerException in Robot.java line 42</samp>: open that line.
+A mistake in your own code (not a library message) shows its kind and where it is. For example:
+<samp>NullPointerException in Robot.java line 42</samp>. Open that line.
 
 **<samp>No DcMotorEx named "..." in the active robot configuration</samp>**
 - or <samp>No Servo named "intake_deploy" ...</samp>
@@ -52,7 +51,7 @@ names that do exist. Fix the spelling, or pick the right configuration on the Dr
 
 **When the part is not on the robot yet,** the message ends <samp>Not on the robot yet? Add .optional() ...</samp>
 
-Add `.optional()` to its line in Robot.java: INIT then goes on, says the part is off, and its
+Add `.optional()` to its line in Robot.java. Then INIT goes on and says the part is off. Its
 buttons and actions skip it until it is in the configuration
 ([parts not on the robot yet](reference/robot-java.md#parts-not-on-the-robot-yet)). The
 [Hardware Check](modules/testing.md#hardwarecheckopmode) with `robot()` lists every Robot.java device
@@ -215,7 +214,7 @@ them: <samp>G2 free: ...</samp>).
 **A servo turns less than its seller says (a goBILDA 2000 servo: about 270 degrees, not 300)**
 The hub sends 600 to 2400 microseconds for positions 0 to 1 (the FTC SDK's normal range). The servo's
 full turn needs 500 to 2500. Add `.fullRange()` to the part in Robot.java (`ServoSetup...fullRange()`
-or `PositionServo...fullRange()` without the five files), then measure its positions again: they move
+or `PositionServo...fullRange()` without the five files). Then measure its positions again: they move
 when the range changes ([Full range](modules/hardware.md#full-range)). INIT says <samp>cannot change its pulse range</samp>
 for a servo that is not on a REV hub.
 
@@ -226,8 +225,8 @@ servo = full range) or the Hood Finder, and copy the new numbers into `Tunables.
 **Every shot is a little short (or long) today**
 The wheel is worn, the balls are softer, or the battery is lower than when you tuned. In the match: the
 operator's D-pad up/down trims every shot speed by 1% (<samp>Speed trim : +3%</samp> on the Driver Station). Held, it makes
-4 steps a second. A double-tap on D-pad down sets it to 0. If it happens every match, the table is off: multiply its
-speeds by the trim (or tune it again with the Shot Tuner) and copy the new line into `Tunables.java`
+4 steps a second. A double-tap on D-pad down sets it to 0. If it happens every match, the table is off. Multiply its
+speeds by the trim (or tune it again with the Shot Tuner), and copy the new line into `Tunables.java`
 ([Add a launcher](add-to-robot/05-launcher.md#speed-trim-and-a-low-battery)).
 Battery compensation is off by default (nobody has proven it on a robot yet). To try it, read
 [Add a launcher: speed trim and a low battery](add-to-robot/05-launcher.md#speed-trim-and-a-low-battery).
@@ -338,7 +337,7 @@ for every later test. Fix: put `PretendClock.stopUsing()` in that test class's `
 ## Autonomous choice and git problems
 
 **The robot ran the wrong autonomous plan, or started in the wrong place**
-The first option of each INIT menu line runs when nobody changes it, and the "Place robot" note says
+The first option of each INIT menu line runs when nobody changes it. The "Place robot" note says
 where the robot must stand. Read the menu and the note out loud before ▶:
 [match day checklist](building-autos/09-match-day.md).
 

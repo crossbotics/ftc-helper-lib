@@ -170,7 +170,7 @@ off: 2 buzzes = on, 1 buzz = off. Robot 1 uses the same click for its auto-aim.
 
 **With one driver:** this line goes on gamepad 1's right stick click, which is also the library's field-centric
 button. Move field-centric first, as Robot 1 does. In `libraryButtons(...)` in `Controls.java`, write
-`lib.fieldCentric(null);` and, in `buttons(...)`, put field-centric on hold RT, then click the right stick:
+`lib.fieldCentric(null);`. In `buttons(...)`, put field-centric on hold RT, then click the right stick:
 
 ```java title="Controls.java"
 g1.rt.with(g1.rightStickButton, () -> driving().toggleFieldCentric()).says("field-centric on/off");

@@ -107,15 +107,15 @@ all = new Subsystems().add(lift, claw, intake); // (8)!
 3. A touch sensor at the bottom. Each press sets the count back to 0, which removes drift.
    Until the first press, the lift only goes down, slowly. With no switch in the configuration, the
    library skips the line.
-4. Within 250 ticks of either end, the lift cuts its power, down to 20% right at the end, so it does not
-   slam into its stops.
-5. How hard the lift pushes toward a height: P = 0.004 pushes harder when it is far, I = 0 (not used),
-   D = 0.0002 calms it so it does not overshoot, F = 0.05 is a small steady push up that holds it
-   against gravity. These are starting values: tune yours ([tutorial 07](tutorials/07-pid-lift.md)).
-6. The gains and heights are then in the tuning menu as "Lift/...": change them from the gamepad in the
+4. Within 250 ticks of either end, the lift cuts its power, down to 20% right at the end. So the lift does
+   not slam into its stops.
+5. These numbers set how hard the lift pushes toward a height. P = 0.004 pushes harder when it is far.
+   I = 0 (not used). D = 0.0002 calms it so it does not overshoot. F = 0.05 is a small steady push up that
+   holds it against gravity. These are starting values: tune yours ([tutorial 07](tutorials/07-pid-lift.md)).
+6. The gains and heights are then in the tuning menu as "Lift/...". Change them from the gamepad in the
    PRACTICE profile, then copy the good values back into this file ([tuning guide](tuning/16-live-tuning.md)).
    The code is the record.
-7. A servo cannot say where it is, so the claw guesses when it has finished moving from this time: about
+7. A servo cannot say where it is. So the claw uses this time to guess when it has finished moving: about
    how many seconds the servo takes to move the whole way (0 to 1).
 8. The library updates, shows and stops the `all` group for you. It never updates (so never moves) or
    stops a mechanism that is not in it.
@@ -168,17 +168,17 @@ the TeleOp waits.
 | GUIDE | tuning menu (PRACTICE) | B (hold) | intake reverse |
 | BACK + START together | debug telemetry on/off | | |
 
-The lift by hand has a deadband of 0.1 (the stick must move past 0.1 before it counts), so a bumped
+The lift by hand has a deadband of 0.1 (the stick must move past 0.1 before it counts). So a bumped
 stick does not cancel a button height. The gamepad buzzes at 1:00 and 0:20 left (2026-27 BIOBUZZ:
 FLOWER ownership unlocks at 1:00, and then the final 20 s).
 
 ## AutoScoreAndPark.java: an autonomous
 
-It is written for BLUE. The library mirrors it for RED. `preselectTeleOp` makes the Driver Station pick Main TeleOp
+We wrote it for BLUE. The library mirrors it for RED. `preselectTeleOp` makes the Driver Station pick Main TeleOp
 after the autonomous. `extends StarterAuto` gives it the shared setup from file 4 (drive, IMU, robot,
-INIT menu), so this file only says where to start, which extra choices to offer, and the steps.
+INIT menu). So this file only says where to start, which extra choices to offer, and the steps.
 `startHeadingDeg()` is the way the robot faces at the start, compared with "straight away from your
-driver": TeleOp uses it, so field-centric "forward" is right as soon as TeleOp starts. The step names
+driver". TeleOp uses it, so field-centric "forward" is right as soon as TeleOp starts. The step names
 show on the Driver Station while each one runs, and in the report at the end: make them clear. More:
 [easy autos](guides/easy-autos.md), [tutorial 16](tutorials/16-easy-autos.md).
 
@@ -214,7 +214,7 @@ protected void buildRoutine(AutoRoutine r) {
 2. `startStep` starts the lift and goes straight on: the lift rises while the robot drives, which saves
    time.
 3. `robot.lift::isAtTarget` is a **method reference**: it hands over "how to ask the lift if it is
-   there", checked again and again until it is true, or 2 s have passed.
+   there". The routine checks it again and again until it is true, or 2 s have passed.
 4. The steps before `thenPark()` stop when `parkReserveSec()` (4 s) is left, so the park always runs.
    70% power: the park is a straight, simple move, and time is short.
 

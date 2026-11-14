@@ -1,6 +1,6 @@
 # Lights
 
-A colored light on the robot. The drivers watch the robot, not the Driver Station, so the light shows them
+A colored light on the robot. The drivers watch the robot, not the Driver Station. So the light shows them
 what they need: green when the robot is ready to fire, orange blinking when it is jammed, a white flash for
 each piece fired, yellow in the last 20 seconds.
 
@@ -82,8 +82,8 @@ robot.lights.otherwise(LightColor.OFF);                                 // when 
 ### How the rules work
 
 - **The first true rule wins**, in the order written. A flash beats every rule while it lasts, wherever it
-  is written (write it first, so the file reads in that order). A flash in the color of the rule under it cannot be
-  seen: give it another color.
+  is written (write it first, so the file reads in that order). Nobody can see a flash in the color of the rule
+  under it: give it another color.
 - **Any true/false works:** `robot.intake::isRunning`, a mode (`() -> robot.turret.followMode().isOn()`),
   or your own (`() -> robot.lift.position() > 1000`). A rule that fails counts as false, and the Driver
   Station warns.

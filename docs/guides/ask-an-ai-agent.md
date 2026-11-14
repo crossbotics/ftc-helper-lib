@@ -17,7 +17,7 @@ methods that do not exist. The library gives it two ways to read the docs:
 ## The ftc-helper skill (coding agents)
 
 A skill is a set of written instructions that the agent follows. This one is in
-`ftc-helper-lib/skills/ftc-helper/SKILL.md`. It tells the agent where each answer is in the docs, and the
+`ftc-helper-lib/skills/ftc-helper/SKILL.md`. It tells the agent where each answer is in the docs. It also gives the
 library's rules: change TeamCode only, nothing in the loop waits, numbers come from the finders.
 
 ### Set it up

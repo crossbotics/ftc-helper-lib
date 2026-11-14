@@ -47,7 +47,7 @@ pid.setGains(LIFT_KP.get(), 0, 0, 0);   // read it every loop
 | `Tunable.forgetAllForTests()` | for JUnit tests only: forgets every tunable in memory, so one test's robot does not see another's numbers ([`PretendDevices`](testkit.md) does it). Never use it in robot code |
 | `Tunable.changedAsCode()` | the ones that differ, as lines to copy into the code: `"Lift: kP = 0.005"` (in `Tunables.java`, class `Lift`) |
 
-**Saved values come back after a restart.** That makes tuning fast, and it is also a risk:
+**Saved values come back after a restart.** That makes tuning fast. It is also a risk:
 the robot uses a value tuned in the shop at the event, even when the code says something else. So
 when a number is good, **copy it into the code** and press "reset all". The code is the record.
 

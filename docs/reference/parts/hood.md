@@ -140,8 +140,8 @@ them, or change the button ([how to read a button line](../controls.md#reading-a
 
 - `g2` is gamepad 2, the operator's. The driver on gamepad 1 drives, and the operator runs the parts.
 - **With one driver:** set `oneDriver = true` in `Controls.java`. Then the `g2` lines go on gamepad 1. You do
-  not change them. A line on a button gamepad 1 already uses (its sticks, the stick clicks, BACK) stops INIT,
-  and INIT names the button: give the line a free one.
+  not change them. A line on a button gamepad 1 already uses (its sticks, the stick clicks, BACK) stops INIT.
+  INIT names the button: give the line a free one.
 - **On gamepad 1, with two drivers:** write `g1` and a free button or stick. If you pick a button the library
   uses, INIT stops and names it.
 

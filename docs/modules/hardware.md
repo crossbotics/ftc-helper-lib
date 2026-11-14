@@ -7,7 +7,7 @@ Package: `com.crossbotics.ftchelper.hardware`
 Learn it hands-on: [02 Motors and servos](../tutorials/02-motors-and-servos.md), [06 A fast, clear loop](../tutorials/06-fast-clear-loop.md).
 
 Gets motors, servos, sensors and the IMU (the turn sensor in the Control Hub) from the robot
-configuration and sets them up, each in one readable chain. When a name is wrong, the error says
+configuration. It sets each one up in one readable chain. When a name is wrong, the error says
 which names do exist. Use it whenever your own code needs a device. The
 [robot in five files](../reference/robot-java.md) does this for its parts, so there you only type the names. Start with tutorial 02.
 
@@ -180,8 +180,8 @@ Servo wrist = ServoSetup.get(hardwareMap, "wrist").fullRange().done();   // 0 to
 - **Only REV hub servos** (Control Hub, Expansion Hub, Servo Hub: the SDK's `ServoImplEx`) can change
   the range. On another servo, `setPulseRange` gives false and nothing changes.
 - **It lasts until the next INIT:** the hub goes back to its normal range when an OpMode starts.
-- **Check your servo's own numbers:** a servo programmed to a smaller range (an Axon's left and right
-  limits, a REV servo in its Servo Limit Mode) turns less. Past 500 or 2500 us, most servos stop short or
+- **Check your servo's own numbers:** a servo programmed to a smaller range turns less. Two
+  examples: an Axon's left and right limits, a REV servo in its Servo Limit Mode. Past 500 or 2500 us, most servos stop short or
   buzz. Stay inside the range the seller gives.
 
 The [parts catalog](../guides/parts-catalog.md) lists each servo's pulse range and both degrees.

@@ -119,7 +119,7 @@ send the arm between its angles:
 
 1. **kF:** raise it until the arm holds still at a level angle, with no sag. Do this first: gravity pulls an
    arm hardest when it is level.
-2. **kP:** raise it until the arm moves quickly to each angle. If it shakes, go back a step.
+2. **kP:** raise it until the arm moves fast to each angle. If it shakes, go back a step.
 3. **kD:** if it goes past the angle and comes back, raise it a little at a time.
 4. **kI:** only if a small error stays, a very small number.
 

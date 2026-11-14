@@ -108,8 +108,7 @@ pid.setGains(gains[0], gains[1], gains[2], gains[3]);
 ## 6. The tuning recipe
 
 Tune in the order kP, kD, kF, then kI only if needed. The steps are in
-[Add a lift: tune it](../add-to-robot/01-lift.md#4-check-it-then-tune-it). In this program, kP is
-selected at the start (0.002), and A, X and Y switch between targets after each change.
+[Add a lift: tune it](../add-to-robot/01-lift.md#4-check-it-then-tune-it). In this program, kP is selected at the start (0.002). A, X and Y switch between targets after each change.
 
 ## Run it
 

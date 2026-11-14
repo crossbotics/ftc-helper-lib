@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 With the five files, every finder is already in the **Tune and check** menu: [Tuning](../tuning/README.md).
-Build the finders by hand here to see how a finder OpMode is made, or to run one as its own OpMode on a
+Build the finders by hand here to see how to make a finder OpMode. Or build one to run it as its own OpMode on a
 robot without the five files.
 
 **You will build:** small OpModes that start the library's ready-made finders. A **finder** is a library

@@ -5,8 +5,8 @@ A slide on a motor that goes up and down to named heights, like "low" and "high"
 **You need:**
 
 - A robot that drives, with its five files ([The five files](../five-files/README.md)).
-- On the robot: a lift motor with an encoder, and hard stops at the top and the bottom. A touch switch at
-  the bottom is recommended. In the robot configuration, call them `lift` and `lift_bottom`.
+- On the robot: a lift motor with an encoder, and hard stops at the top and the bottom. We recommend a touch switch
+  at the bottom. In the robot configuration, call them `lift` and `lift_bottom`.
 
 ## 1. What it is
 
@@ -140,7 +140,7 @@ INIT stops on `MEASURE`. The finders still run, because they do not read `Tunabl
 **Tune it** with [Live tuning](../tuning/16-live-tuning.md), while the robot runs. Change one number, then
 send the lift between its heights:
 
-1. **kP:** raise it until the lift moves quickly to each height. If it shakes, go back a step.
+1. **kP:** raise it until the lift moves fast to each height. If it shakes, go back a step.
 2. **kD:** if it goes past the height and comes back, raise it a little at a time.
 3. **kF:** if it stops a little low and sags, raise it until it holds still.
 4. **kI:** only if a small error stays, a very small number.

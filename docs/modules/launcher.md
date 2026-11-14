@@ -6,9 +6,9 @@ Package: `com.crossbotics.ftchelper.launcher`
 
 Learn it hands-on: [17 Launcher](../tutorials/17-launcher.md), [18 Vision aiming](../tutorials/18-vision-aim.md).
 
-Parts for a robot that shoots game pieces: a **flywheel** (a fast-spinning wheel that throws the
-piece), a **hood** (a curved plate a servo tilts to set the shot angle), a **feeder** (it pushes one
-piece into the flywheel) and a **turret** (it turns the shooter to aim). Each part works alone. The
+Parts for a robot that shoots game pieces. A **flywheel** is a fast-spinning wheel that throws the
+piece. A **hood** is a curved plate that a servo tilts to set the shot angle. A **feeder** pushes one
+piece into the flywheel. A **turret** turns the shooter to aim. Each part works alone. The
 `Launcher` joins them. The [robot in five files](../reference/parts/launcher.md) builds its `Launcher` on
 these parts, so start there ([Add a launcher](../add-to-robot/05-launcher.md)). Use this
 page to build a shooter by hand (tutorial 17). Speeds are in **RPM** (turns per minute).
@@ -112,8 +112,8 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel").pidf(1.17, 0.117, 0
 ```
 
 **Why.** The hub's speed control works in power. F means "this much power for each count per second of
-speed". The Flywheel Finder sets F = 32767 / the top speed in counts per second, as FIRST's motor
-PIDF tuning guide does (32767 = full power). Power is a share of the battery's voltage. So the same power
+speed". The Flywheel Finder sets F = 32767 / the top speed in counts per second (32767 = full power).
+FIRST's motor PIDF tuning guide does the same. Power is a share of the battery's voltage. So the same power
 on a weaker battery pushes less, and the wheel runs slower. The P and I gains notice the missing speed and
 add power, but I builds up slowly. So with a low battery, the wheel spins up slowly and recovers slowly
 after each shot. Shots fired before it recovers go short.

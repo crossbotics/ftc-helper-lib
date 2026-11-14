@@ -68,8 +68,8 @@ drivers' wall and look at the field:
 - The pose is the pose of the robot's **center**: the point it turns around (on a mecanum robot,
   the middle of the four wheels).
 
-The map shows the BIOBUZZ field in this frame, with the example's start, goal and park points. It is drawn
-from the RED wall. From the BLUE wall the numbers are the same: the field is turned half a turn between
+The map shows the BIOBUZZ field in this frame, with the example's start, goal and park points. It shows the
+field from the RED wall. From the BLUE wall the numbers are the same: the field is turned half a turn between
 the alliances, and `mirrorForRed()` is false.
 
 ![The BIOBUZZ field from above in the library's frame: tiles every 24 in from -72 to 72, the HIVEs, FLOWERs, the red loading zone and the example's three points with heading arrows](../images/biobuzz-field-map.svg)
@@ -165,7 +165,7 @@ frame's edges with a tape, and let the library do the math:
 odometry(Odometry.pinpoint("pinpoint").robotSizeMm(430, 400).podsFromEdgesMm(284, 383));
 ```
 
-The robot is 430 mm long and 400 mm wide, so the center is 200 mm from the left edge and 215 mm from the
+The robot is 430 mm long and 400 mm wide. So the center is 200 mm from the left edge and 215 mm from the
 front. The X pod's wheel is 284 mm from the left edge: 84 mm right of the center (-84). The Y pod's wheel is
 383 mm from the front edge: 168 mm behind the center (-168). The result is `offsetsMm(-84, -168)`. The
 [Odometry Tuner](#the-odometry-tuner) then measures the exact offsets. It tells you to write
@@ -337,7 +337,7 @@ odometry line). `robot.odometrySpec()` gives the line as written. `robot.odometr
 
 `cameraFix(camera)` in `Robot.java` (`CameraPoseFix`, `CameraFixCheckOpMode`) corrects the odometry's x
 and y. It uses the field position that a Limelight 3A works out from the AprilTags (MegaTag2). It uses
-last season's lessons. Last season's version never worked for three reasons: the odometry itself lost
+last season's lessons. Last season's version never worked, for three reasons. The odometry itself lost
 distance, the heading never reached the camera, and the field directions were guesses
 ([From last season](../from-last-season.md)).
 
@@ -541,15 +541,15 @@ How it drives, every loop:
    the robot.
 2. **Far away:** it sets the speed like a `move`: up to `maxPower`, slower as it gets close, but never
    less than `Tunables.Drive.moveMinPower`.
-3. **In the last 8 inches:** it sets the speed in proportion to the distance left (0.04 power per inch,
-   at least 0.12; `AutoDriveConfig.driveToNearIn`, `driveToKp` and `driveToMinPower`). So it settles on the point and does not circle it.
+3. **In the last 8 inches:** it sets the speed in proportion to the distance left. That is 0.04 power per
+   inch, at least 0.12 (`AutoDriveConfig.driveToNearIn`, `driveToKp` and `driveToMinPower`). So it settles on the point and does not circle it.
 4. **The heading:** it corrects the heading all the way with the drive's turn numbers (`turnKp`,
    `turnKd` in `Tunables.Drive`). While the heading is off, the turn power is at least
    `AutoDriveConfig.turnMinPower` when that is set (more than 0), or else 0.08. So a weak turn cannot stop
    a bit short (`Tunables.Drive.turnMinPower`; the Move Tuner finds it).
-5. **Done:** it is within the **tolerance** ("close enough": 1 inch unless you give one), and within 2
-   degrees of the heading (or the drive's `turnToleranceDeg`, if that is bigger). This must be true for
-   3 loops in a row, so passing by does not count.
+5. **Done:** it is within the **tolerance** ("close enough": 1 inch unless you give one). It is also
+   within 2 degrees of the heading (or the drive's `turnToleranceDeg`, if that is bigger). Both must be true
+   for 3 loops in a row, so passing by does not count.
 
 **If the odometry stops working** during a `driveTo`, `isReady()` becomes false. A Pinpoint fault (like
 an unplugged pod) or an OTOS that stops answering does this. A short glitch does no harm: the robot holds
@@ -663,8 +663,8 @@ half your robot, the robot presses against the wall, and the route ends `STALLED
 
 - **Any drive stick stops the route at once**, and the sticks drive from that loop on. The Driver Station
   says `Park: stopped: a drive stick moved`.
-- **A route that `atSecondsLeft(...)` starts does not take the robot from a driver who is driving.** If a
-  stick is pushed at that time, the gamepad buzzes, and the Driver Station says `Park: waiting: let go of the
+- **A route that `atSecondsLeft(...)` starts does not take the robot from a driver who is driving.** If the
+  driver pushes a stick at that time, the gamepad buzzes, and the Driver Station says `Park: waiting: let go of the
   drive sticks to start it`. The route starts on the first loop after the driver lets go of the sticks.
   After 5 s it gives up: `Park: not started: the driver kept driving`. It waits no longer because a driver
   who parked by hand and lets go at the last moment must not see the robot drive off. Pause and the tuning

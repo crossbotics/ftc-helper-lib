@@ -96,7 +96,7 @@ turret = add(Turret.crServo("turret").part("axon-max-mk2").analogEncoder("turret
         .follows(camera));
 ```
 
-1. The encoder is on an analog port and knows the angle at once, so the turret needs no homing. A slip ring (a turning joint that carries the wires) lets the turret turn with no limits, and it always takes the shortest way.
+1. The encoder is on an analog port and knows the angle at once, so the turret needs no homing. A slip ring (a turning joint that carries the wires) lets the turret turn with no limits. With no limits, the turret always takes the shortest way.
 
 <!-- recipe: tunables-turret-slip-ring -->
 ```java title="Tunables.java"

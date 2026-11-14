@@ -192,8 +192,7 @@ public static class LiftLeft {                                  // "lift_left" i
 ```
 
 **Why:** two motors on one slide must never fight. The library sends both the very same power in the same
-loop. It does this also when the lift stops or pauses (BACK), or when an interlock rule (a rule that stops
-two parts from hitting each other) holds the lift. Your own code that copies the power every loop would
+loop. It does this also when the lift stops or pauses (BACK). It does it also when an interlock rule (a rule that stops two parts from hitting each other) holds the lift. Your own code that copies the power every loop would
 miss pause and STOP. **Check the directions before the chain goes on.** With the chain or belt off, each
 motor must turn the way that lifts. If one is wrong, swap `alsoMotorReversed` and `alsoMotor`. Two motors
 that push against each other get hot and can break a gearbox. An arm works the same way:

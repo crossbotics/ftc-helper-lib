@@ -56,12 +56,12 @@ Open `Robot.java`. Change only these, then build:
    `"front_left"` in `Drive.mecanum("front_left", ...)` and `"claw"` in `Claw.servo("claw")`. Each one
    must be exactly the name in your robot configuration ([Set up 7](../setup/07-robot-configuration.md)).
    Capitals and `_` count. **Why:** the code finds each device by its name.
-   Leave the other quoted words as they are: `.part("gobilda-2000-torque")` is a catalog id (which
+   Leave the other quoted words as they are. `.part("gobilda-2000-torque")` is a catalog id (which
    motor or servo it is), and words like `"high"` in `goTo("high")` are position names.
 2. **The drive motor and wheels:** `.motor(...)` and `.wheel(...)` (or `.wheelMm(...)`) on the drive line
    ([the drive line](../five-files/01-robot-java.md#the-drive-attribute-by-attribute)).
 3. **The IMU line** (`.imu(...)`): where the Control Hub's logo and USB ports face. Change it only if
-   your hub is mounted another way ([how](../five-files/01-robot-java.md#how-your-control-hub-is-mounted)).
+   your team mounted the hub another way ([how](../five-files/01-robot-java.md#how-your-control-hub-is-mounted)).
 4. **A part your robot does not have:** delete its line in `define()` and its field
    (`public Claw claw;`). Then build. Each red mark now shows a place that still uses the part. Fix
    each one, in any file:

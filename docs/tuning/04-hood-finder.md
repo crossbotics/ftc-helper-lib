@@ -70,7 +70,7 @@ range here.
 - **Marked the wrong stop:** move to the right place and press the same button (X or B) again. The new stop
   replaces the old one.
 - **Typed a wrong angle:** hold LB and press the D-pad again, before you press X, B or A. After you press,
-  the angle is used: press **Y**, then type the angle and mark the place again.
+  the finder uses the angle: press **Y**, then type the angle and mark the place again.
 
 **Start over:** press STOP, then INIT, and open the tool again. It starts empty: nothing carries over. The lines saved at STOP stay in the results file, the newest at the end.
 

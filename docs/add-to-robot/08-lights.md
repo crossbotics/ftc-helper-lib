@@ -51,7 +51,7 @@ lights = add(Lights.gobilda("light"));
 - Use one of the two lines. The name in quotes is the name in the robot configuration.
 - When a name is red, click it and press Alt+Enter (Option+Enter on a Mac) to add the import.
 
-**A Blinkin color looks wrong on your strip?** Give that color another Blinkin pattern. Your rules still say
+**When a Blinkin color looks wrong on your strip:** give that color another Blinkin pattern. Your rules still say
 `LightColor.BLUE`. A goBILDA light ignores this line.
 
 **Where:** `Robot.java`, in `define()`, below the lights line.
