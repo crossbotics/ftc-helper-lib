@@ -37,7 +37,7 @@ A change is not done until all six are done.
 - Tutorial 13's tests (`examples/src/test/...`) run with the build too.
 - `tools/check_docs.py` fails if a link or heading link is broken, if a public library class is
   missing from the module pages, or if a tutorial program is not mentioned in a tutorial page.
-- The [cookbook](cookbook.md) is the exception: every java block in it is a copy of a marked region
+- The [cookbook](cookbook/README.md) is the exception: every java block in it is a copy of a marked region
   (`// recipe: name` ... `// end recipe`) in `examples/.../cookbook/`. `tools/check_docs.py` fails
   if they differ. Change the Java file, then run `python3 tools/check_docs.py --fix-cookbook` to copy
   the regions into the page. The simulator test `CookbookTest` INITs and runs every cookbook OpMode.

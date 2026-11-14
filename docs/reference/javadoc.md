@@ -6,7 +6,7 @@ matches the version you have. It has a **search box**: type a name (`parkWithSec
 `slow`) to jump to it.
 
 The [reference pages](README.md) explain each part, with examples. The Javadoc is for looking one method
-up. For "how do I...?" questions, with code to copy, see the [cookbook](../cookbook.md).
+up. For "how do I...?" questions, with code to copy, see the [cookbook](../cookbook/README.md).
 
 ## Open it
 

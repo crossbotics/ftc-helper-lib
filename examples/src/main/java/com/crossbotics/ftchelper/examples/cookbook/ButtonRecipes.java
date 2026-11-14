@@ -14,11 +14,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: buttons and gestures (docs/cookbook.md#buttons-and-gestures). Every line goes inside
+ * Cookbook: buttons and gestures (docs/cookbook/03-buttons.md). Every line goes inside
  * {@code buttons(...)} in Controls.java. That method runs ONCE, at INIT: each line plugs a job into a
  * button, and the library runs the job when the button is pressed. So no if, while or sleep() there.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class ButtonRecipes {

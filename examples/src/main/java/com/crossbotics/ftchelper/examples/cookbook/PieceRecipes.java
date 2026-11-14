@@ -16,11 +16,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: game pieces (docs/cookbook.md#game-pieces). Which piece is in the robot, how many it holds,
+ * Cookbook: game pieces (docs/cookbook/05-game-pieces.md). Which piece is in the robot, how many it holds,
  * and which one fires next, from a color sensor, a distance sensor or a second camera.
  * The Piece Tuner is its own file: PieceTuner.java.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class PieceRecipes {
@@ -142,7 +142,7 @@ public class PieceRecipes {
             robot.lights.show(LightColor.ORANGE).when(robot.pieces.whenEmpty());
             // Pieces shows "3/4, next POLLEN" by itself; this adds what the intake sees now.
             show("At the intake", robot.pieces::atIntake);
-            // The count went wrong? Already on the buttons: hold G2's left stick button 1 s = count 0,
+            // The count went wrong? Hold G2's left stick button 1 s = count 0 (its line: below),
             // and hold the intake's RT 1 s to pull in although the count says full.
             // end recipe
         }

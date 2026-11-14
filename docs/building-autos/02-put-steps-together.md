@@ -97,7 +97,7 @@ a line, D-pad left/right changes it.
 | Profile | PRACTICE (for the shop: debug lines and the tuning menu) or COMPETITION (for matches): [what they change](../five-files/05-autos.md#practice-and-competition) |
 
 **The menu remembers:** Alliance starts at the last auto's alliance, and the hub saves the Profile.
-A longer start delay: [`maxStartDelaySec()`](../cookbook.md#autonomous).
+A longer start delay: [`maxStartDelaySec()`](../cookbook/09-autonomous.md).
 
 **Your own lines** (park or stay, near or far): [Advanced autos](08-advanced-autos.md#add-choices-to-the-init-menu).
 Or make one auto file per plan: [Having multiple autos](03-multiple-autos.md).
@@ -159,4 +159,4 @@ You need nothing more. A field where both alliances' drivers stand at one wall n
 **Next:** [Having multiple autos](03-multiple-autos.md).
 
 **Look it up:** [every step](../reference/steps.md#auto), [keep time to park](../reference/steps.md#keep-time-to-park).
-**Go deeper:** [the cookbook's autonomous recipes](../cookbook.md#autonomous).
+**Go deeper:** [the cookbook's autonomous recipes](../cookbook/09-autonomous.md).

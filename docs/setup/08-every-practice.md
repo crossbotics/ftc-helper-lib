@@ -75,6 +75,6 @@ You pulled at the start, and you pushed your work at the end.
 
 **More git** (branches, conflicts, undo, before an event): [Git and GitHub for FTC teams](../guides/github.md).
 
-**Set up is done.** Next you start using the library: [Quick start: pick your road](../quick-start.md#pick-your-road).
+**Set up is done.** **Next:** [Pick your start](../pick-your-start/README.md): the code you start from.
 
 **Look it up:** [Troubleshooting: git problems](../troubleshooting.md#autonomous-choice-and-git-problems).

@@ -23,3 +23,5 @@ More: [the numbers are in the step](../five-files/05-autos.md#the-numbers-are-in
 
 **Start with page 1.** If you like to see the field before you read code, read pages 6 and 7 (the auto
 builder) first.
+
+**Next:** [What an auto can do](01-what-an-auto-can-do.md).

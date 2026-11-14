@@ -17,8 +17,8 @@ Each of these three ways runs every test in your `simulator/scenarios` folder:
   ![The Tests menu, open, with Run all tests at the bottom](../images/tests-menu.png)
 
 - **In Android Studio:** pick **Simulator tests** in the list next to the green Run button, and click Run.
-  If the list has no such button,
-  [add the buttons once](../setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing).
+  If the list has no such button, close the project and open it again
+  ([the simulator buttons](../setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing)).
 - **In the Terminal:**
 
   **Where:** the Terminal, in the `ftc-helper-lib` folder.
@@ -121,7 +121,7 @@ With no robot project yet, try the recorder and the runner with goBILDA's starte
 | A test passes on the page but fails with the button or the command | The page runs the code the simulator started with. Stop the simulator, start it again, and run the test on the page again |
 | `No scenario file. Use: ./gradlew :sim:scenario -Pfile=...` | The command found no `simulator/scenarios` folder. Check that it is in the folder that holds `TeamCode`, and that it has a test |
 | `PROBLEM: no such file: ...` | A wrong `-Pfile` path. Paths start from the `ftc-helper-lib` folder: `../simulator/scenarios/...` |
-| **Simulator tests** is not in the Run list | [Add the buttons once](../setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing) |
+| **Simulator tests** is not in the Run list | Close the project and open it again ([the simulator buttons](../setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing)) |
 | A test failed, and you did not change that part | Read the failed line: it names the check and the value it saw. Fix the code, or update the test if the change was on purpose ([Record a test, section 7](01-record-a-test.md#7-after-a-planned-change-update-the-test)) |
 | More problems with one test | [Record a test: fix a problem](01-record-a-test.md#fix-a-problem) |
 

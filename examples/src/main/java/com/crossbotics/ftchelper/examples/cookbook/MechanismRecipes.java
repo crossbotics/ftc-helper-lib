@@ -25,11 +25,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: mechanisms (docs/cookbook.md#mechanisms). Each part is one line in Robot.java's
+ * Cookbook: mechanisms (docs/cookbook/04-mechanisms.md). Each part is one line in Robot.java's
  * {@code define()}, plus a field for it ({@code public Lift lift;}) and its numbers in Tunables.java.
  * Its buttons: its usual lines in Controls.java.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class MechanismRecipes {

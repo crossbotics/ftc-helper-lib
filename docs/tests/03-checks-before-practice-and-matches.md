@@ -94,7 +94,8 @@ taps. Know where its hard stop is, and keep hands clear.
 1. Set the PRACTICE profile, and a low `Tunables.Drive.maxPower` (for example 0.4) for the first runs.
 2. Drive: forward, sideways, turn, field-centric.
 3. Every button on the drivers' sheet does what it says.
-4. The match timer buzzes. To test it fast, use a short timer: `new MatchTimer(30)`.
+4. The match timer buzzes 20 s before the end of TeleOp. Run a whole TeleOp once to hear it (the simulator
+   works too).
 
 ## 6. Autonomous check (after a change to an autonomous)
 
@@ -154,7 +155,9 @@ these checks on the robot:
 
 ---
 
-**Next:** [Match day](../building-autos/09-match-day.md): the auto at an event.
+**Next:** the road ends here. Before an event, read [Match day](../building-autos/09-match-day.md). To look
+something up: [Reference](../reference/README.md) and the [Cookbook](../cookbook/README.md). To learn how
+it works inside: [Build it by hand](../tutorials/README.md).
 
 **Look it up:** [Wiring checks](../tuning/02-wiring-checks.md): the Hardware, Motor Direction and Encoder
 Checks. [The testing module](../modules/testing.md): the Hardware Check OpMode.

@@ -383,5 +383,5 @@ between `{` and `}` are your code:
 **Next:** [Match day](09-match-day.md).
 
 **Look it up:** [every step](../reference/steps.md#auto). **Go deeper:**
-[cookbook: several autos and choosing one](../cookbook.md#several-autos-and-choosing-one),
-[the cookbook's autonomous recipes](../cookbook.md#autonomous).
+[cookbook: several autos and choosing one](../cookbook/10-several-autos.md),
+[the cookbook's autonomous recipes](../cookbook/09-autonomous.md).

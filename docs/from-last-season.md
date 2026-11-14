@@ -4,7 +4,7 @@
 
 The library started from the 2025-26 (DECODE) robot code, branch `codex/biobuzz-base` of the
 team's FtcRobotController repository. This page is for programmers who know that code. If you are new to it,
-start with the [Quick start](quick-start.md) instead.
+start with [Pick your start](pick-your-start/README.md) instead.
 
 Each reusable part of last season's code has a new name in the library, and some parts changed.
 Game-specific code (launcher, feed, intake, vision, routes) is NOT in the library.

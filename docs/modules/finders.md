@@ -5,7 +5,7 @@
 Package: `com.crossbotics.ftchelper.finders`
 
 Learn it hands-on: [21 Find your numbers](../tutorials/21-finders.md). Step by step on the robot:
-[Finders guide](../tuning/README.md). Quick answers: [cookbook: tuning and finders](../cookbook.md#tuning-and-finders).
+[Finders guide](../tuning/README.md). Quick answers: [cookbook: tuning and finders](../cookbook/15-tuning.md).
 
 Finders are ready-made programs. Each one **measures** numbers your code needs (servo ends, lift limits,
 flywheel gains, wheel size, odometry offsets, shot speeds, camera offset). It shows them as **lines of code

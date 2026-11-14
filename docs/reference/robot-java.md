@@ -8,7 +8,7 @@ Package: `com.crossbotics.ftchelper.robot`. Worked examples:
 [`examples/.../gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot)
 (goBILDA's starter bot), [`flywheelbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 and [`turretbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot). The
-[cookbook](../cookbook.md) has code to copy.
+[cookbook](../cookbook/README.md) has code to copy.
 
 ## The five files
 

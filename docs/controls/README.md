@@ -12,3 +12,5 @@ library's own buttons.
 | 4 | [Move the library's buttons](04-move-library-buttons.md) | Driving, pause, field-centric, the menus: put them on other buttons, or free them. |
 
 **Start with page 1.** Each page has short examples. Copy the ones your robot needs.
+
+**Next:** [How buttons work](01-how-buttons-work.md).

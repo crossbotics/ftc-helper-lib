@@ -531,7 +531,7 @@
       <p>On-screen, the keyboard, or your own USB or Bluetooth controller: plug it in and press one of its buttons. It goes to gamepad 1 if that one is on-screen, else gamepad 2. To change, pick it in that gamepad's list.</p>
       <p>Keyboard: left stick <code>W A S D</code>, right stick <code>arrows</code>, D-pad <code>T F G H</code>,
       A/B/X/Y <code>K L J I</code>, LB/RB <code>Q E</code>, LT/RT <code>Z C</code>, BACK <code>Backspace</code>,
-      START <code>Enter</code>, GUIDE <code>M</code>.</p>
+      START <code>Enter</code>, GUIDE <code>M</code>, left/right stick click <code>X V</code>.</p>
       <p>Real controller: plug it in, choose it above, press any of its buttons once (a browser rule).
       GUIDE/PS often does not reach the browser: click the on-screen GUIDE (it works with every source) or press <code>M</code> (keyboard source).</p>
       <p>Another page using a gamepad (a phone, a second tab)? Set that gamepad here to "Phone / other page" so they do not fight.</p>
@@ -863,7 +863,7 @@ function drawPad(el, n) {
 const KEYMAP = { w:["ly",-1], s:["ly",1], a:["lx",-1], d:["lx",1],
   arrowup:["ry",-1], arrowdown:["ry",1], arrowleft:["rx",-1], arrowright:["rx",1],
   t:"up", g:"down", f:"left", h:"right", k:"a", l:"b", j:"x", i:"y", q:"lb", e:"rb",
-  z:["lt",1], c:["rt",1], backspace:"back", enter:"start", m:"guide" };
+  z:["lt",1], c:["rt",1], backspace:"back", enter:"start", m:"guide", x:"ls", v:"rs" };
 const keysDown = new Set();
 function keyboardPads() { return [1,2].filter(n => source[n] === "keyboard"); }
 function applyKeys() {

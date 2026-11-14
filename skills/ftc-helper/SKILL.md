@@ -18,7 +18,7 @@ but that site shows the newest release, which can be newer than the team's.
 - **Never make up a class, method or Tunables name.** Find it in the docs or the library code first
   (`ftc-helper-lib/library/src/main/java/com/crossbotics/ftchelper/`). If you cannot find it, it does
   not exist: say so.
-- **Copy the docs' way of doing it.** Most questions have a recipe in `docs/cookbook.md` or a part page
+- **Copy the docs' way of doing it.** Most questions have a recipe in `docs/cookbook/` (the questions list is its README.md) or a part page
   in `docs/reference/parts/`. Use that code and link that page in your answer, so the team can read more.
 - **Change TeamCode, never `ftc-helper-lib/`.** The library is shared by many teams, and an update
   overwrites local changes. If the library cannot do something, say what is missing and point to
@@ -51,7 +51,7 @@ Start with the row that matches the question. Paths are inside `ftc-helper-lib/`
 
 | The question is about | Read |
 | --- | --- |
-| A short "how do I..." | `docs/cookbook.md` (one recipe per question; the code is in `examples/.../cookbook/`) |
+| A short "how do I..." | `docs/cookbook/` (one page per topic, the questions list in README.md; one recipe per question; the code is in `examples/.../cookbook/`) |
 | An error message or "it does not work" | `docs/troubleshooting.md` (search for the exact error text) |
 | Getting the project and the library set up | `docs/setup/` (in order, each page ends with "Done when") |
 | Which way to start (a starter bot, a common setup, a blank slate) | `docs/pick-your-start/` |

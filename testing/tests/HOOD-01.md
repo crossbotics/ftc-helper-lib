@@ -25,7 +25,7 @@ safe on hoods built differently from ours.
 ## Setup
 
 - `.hood(Hood.servo("hood"))` on the launcher in `Robot.java` (no `Tunables.Hood` numbers needed yet).
-- The Hood Finder OpMode ([recipe](../../docs/cookbook.md#how-do-i-find-my-hoods-stops-and-angles)).
+- The Hood Finder OpMode ([recipe](../../docs/cookbook/15-tuning.md#how-do-i-find-my-hoods-stops-and-angles)).
 - A phone angle app (optional, for angles).
 
 ## Steps

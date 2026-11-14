@@ -10,7 +10,7 @@ names and numbers, and you have a working robot.
 > shorter way: `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and autos, made from your robot
 > configuration by `./gradlew :sim:newRobot`, with ready-made modules ([robot module](reference/robot-java.md)).
 > This starter kit still works, and we keep it for teams that use it. If you are a new team, start at
-> [Pick your road](quick-start.md#pick-your-road) in the Quick start.
+> [Pick your start](pick-your-start/README.md).
 
 **Before this:** [Add the library](setup/04-add-the-library.md).
 

@@ -70,8 +70,8 @@ public static class Aim {                                       // a fixed name:
 | `flightSecPerIn` | shooting on the move: more flight time per inch of distance | seconds per inch | 0 | yes, at once | test | far moving shots miss but near ones hit |
 | `maxLeadIn` | shooting on the move: the most it aims ahead | inches | 24 | yes, at once | test | fast moves need more lead |
 | `cameraLatencyMs` | shooting on the move: the camera's delay, instead of its own timestamp | ms | the camera's own timestamp | yes, at once | test | the camera's timestamp is wrong |
-| `shooterForwardIn`, `shooterLeftIn` | where the shooter (turret pivot or launcher exit) is from the robot's center | inches | 0 | no | measure the robot | the shooter is not at the center |
-| `cameraForwardIn`, `cameraLeftIn` | where a camera on the robot's body is from the center | inches | 0 | no | measure the robot | a body camera that is not at the center |
+| `shooterForwardIn`, `shooterLeftIn` | where the shooter (turret pivot or launcher exit) is from the robot's center | inches | 0 | no | measure from the edges (below) | the shooter is not at the center |
+| `cameraForwardIn`, `cameraLeftIn` | where a camera on the robot's body is from the center | inches | 0 | no | measure from the edges (below) | a body camera that is not at the center |
 
 More lines, with example numbers:
 
@@ -228,7 +228,8 @@ Turn it on with `shootOnMove = true`. **It is off by default: tune it on the rea
 - It works with a turret that follows the goal (camera on the turret, `cameraOnBody()`, or
   `followsOdometry()`), and with whole-robot aim (a fixed shooter).
 - `shooterForwardIn, shooterLeftIn`: the turret's pivot (or a fixed launcher's exit) from the robot's center,
-  inches. The distance is from there, and a turning robot swings it sideways.
+  inches. Measure from the edges, not the middle: forward = length / 2 - (from the front edge), left =
+  width / 2 - (from the left edge). The distance is from there, and a turning robot swings it sideways.
 - `cameraForwardIn, cameraLeftIn`: a camera on the body. Aim treats a camera on the turret as if it sits at the pivot.
 - INIT shows `Moving shot: ON: flight 0.80 s ...`. TeleOp shows
   `Aim: moving shot: lead 12.3 deg, 18 in` while the robot moves, and a debug line with every number.

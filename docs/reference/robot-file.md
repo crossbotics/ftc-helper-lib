@@ -61,6 +61,7 @@ imu = imu
 motor.lift = lift, part=gobilda-5203-312, min=0, max=2750, gravity=0.06
 motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=feeder, shotDrop=0.15   # feeder: a motor, CR servo or servo
 servo.claw = 0.5, part=gobilda-2000-torque
+crservo.feeder =                      # the flywheel's feeder (a CR servo here)
 camera.front = name=Webcam 1, forward=7, up=12, pitch=20   # see "Cameras"
 touch.lift_bottom = lift, below=20
 ```
@@ -224,7 +225,7 @@ what scored. The 3D view and the field from above draw the pieces.
 color.ready_color = at=ready
 # at=intake: it sees each piece the intake takes in, for 0.25 s
 color.intake_color = at=intake
-# a distance sensor across a 150 mm channel: 150 minus the piece's size (POLLEN 79 mm, NECTAR 59 mm)
+# a distance sensor across a 150 mm channel: 150 minus the piece's size (reads 79 mm with a POLLEN, 59 mm with a NECTAR)
 distance.intake_distance = at=intake, acrossMm=150
 ```
 

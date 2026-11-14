@@ -20,7 +20,7 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and robots in five files (the five kit bots
   `gobildabot/`, `gobildastraferbot/`, `revbot/`, `andymarkbot/`, `studicabot/`, and `lessonbot/`, `flywheelbot/`, `turretbot/`,
   `v2bot/` (turret + lift with wrist and claw + an interlock rule), `odometrybot/`, `pedrobot/`, `quickstart/`; docs/templates.md lists them; docs/five-files/ explains them; `SimFromRobotTest` runs them), and the cookbook's recipes (`cookbook/`, one file per topic,
-  shown in `docs/cookbook.md`; `CookbookTest` in `sim/` INITs and runs every cookbook OpMode).
+  shown in `docs/cookbook/` (one page per topic, the questions list in its README.md); `CookbookTest` in `sim/` INITs and runs every cookbook OpMode).
 - `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new
   module: extend `Module` (or `MotorPositions`/`ServoPositions`), read numbers through `TunableSection`,
   route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` (its usual buttons: INIT names the ones Controls.java left free) and the same lines in `examples/.../cookbook/UsualButtons.java` and a "Buttons to add" on its reference page and
@@ -69,7 +69,7 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   user-facing feature gets a test there. Issue forms in `.github/ISSUE_TEMPLATE/` (their option words
   must match vocabulary.json), the triage helper's guide in `.github/triage.md`. How: `testing/README.md`.
 - `tools/check_docs.py` checks links, heading links, class coverage, tutorial programs, and that every
-  java block in `docs/cookbook.md` matches its `// recipe: name` region in `examples/.../cookbook/`
+  java block in the `docs/cookbook/` pages matches its `// recipe: name` region in `examples/.../cookbook/`
   (after changing one: `python3 tools/check_docs.py --fix-cookbook`). A guide may show a recipe too, with the
   same `<!-- recipe: name -->` marker (the five-files and add-to-robot pages do): it is checked and fixed the same way.
 - `tools/check_tunables.py` finds every Tunables field the robot package reads and checks it against

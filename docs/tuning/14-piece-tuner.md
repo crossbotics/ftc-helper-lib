@@ -22,7 +22,7 @@ Teach each piece sensor what each kind of game piece looks like, and what "nothi
 ## Steps
 
 The Piece Tuner is for a robot with a [`Pieces` or `PieceSensor`](../reference/parts/pieces.md) line. Its
-file names your robot, like the Odometry Tuner (the cookbook's [piece-tuner recipe](../cookbook.md#how-do-i-tune-the-piece-sensors)).
+file names your robot, like the Odometry Tuner (the cookbook's [piece-tuner recipe](../cookbook/05-game-pieces.md#how-do-i-tune-the-piece-sensors)).
 Nothing moves, so you need no block.
 
 1. Mount the sensor where it will stay. Put a piece where it really sits or passes. At the intake, that is

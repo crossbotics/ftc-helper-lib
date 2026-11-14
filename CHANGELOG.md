@@ -6,6 +6,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- Docs: three diagrams on the Move Tuner page: the five tests seen from above, how `slowDownIn` changes a
+  move's slow-down, and the four turn shapes with the number the tuner changes for each.
+- Docs: the Move Tuner's tape check now says how to measure, and what to do when the move ends wrong.
+- Docs: the Move Tuner page has "On a game field": the clear floor each test needs, and where the tests fit
+  on the BIOBUZZ field beside the HIVE.
+- **Simulator: keys for the stick clicks.** On the keyboard, X is the left stick click and V the right one
+  (robots often use them for reverse drive, auto-aim or field-centric).
+
 - **Two lights in sync: `Lights.alsoLight(...)`.** One Lights part drives more lights of the same kind
   (goBILDA lights or Blinkins): the same color, blinking and flashes, with the rules written once.
   `lights = add(Lights.gobilda("light").alsoLight("light_right"));`. Two lights that show different
@@ -85,6 +93,15 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   [How the simulator works](docs/guides/how-the-simulator-works.md), and the maintainer notes in
   [Contributing](docs/contributing.md#the-simulator-notes-for-maintainers). The simulator's messages and
   page links point to the new pages.
+- **Docs: one road.** Each walkthrough page's **Next** link leads through every section in order, from Set
+  up to Tests. The old Quick start (`docs/quick-start.md`), a second road that disagreed with the sections,
+  is gone: Pick your start has its parts. Outside reviews (Codex and Fable) also fixed: measuring the aim
+  offsets from the robot's edges, buttons a part only gets from `Controls.java`, the robot file example,
+  Where lines on commands, and a crash in `tools/check_docs.py` when a recipe differs.
+- **Docs: the cookbook is one page per topic** (`docs/cookbook/`: the basics, driving, buttons, mechanisms,
+  game pieces, aiming and shooting, turrets, actions, autonomous, several autos, odometry, Pedro, telemetry,
+  lights, tuning, simulator). Its README keeps the list of every question. `tools/check_docs.py` checks
+  every page's recipes against `examples/.../cookbook/` as before.
 - **Docs: Go deeper.** The tutorials are now "Build it by hand": each one starts with what the five files
   do for you (with a link) and why to build it by hand, repeats of the walkthrough pages became one-line
   links, and each ends with Next and Look it up. The old "moved" pages (`01-add-to-project.md`,
@@ -2128,7 +2145,7 @@ links to them on the website change. A camera missing from the configuration no 
   - Simulator: `goodPipelines=1|2` (Limelight) and `goodExposureMs=4-10` (webcam) make a pretend
     camera find tags only with those settings.
 - Example robot 2 (turretbot) uses `autoPipelines(0, 1, 2)`; Lesson 9 (the shooter lesson) teaches it.
-- **Cookbook** ([docs/cookbook.md](docs/cookbook.md)): about 70 short "how do I...?" answers in ten
+- **Cookbook** ([docs/cookbook/README.md](docs/cookbook/README.md)): about 70 short "how do I...?" answers in ten
   topics (driving, buttons and gestures, mechanisms, actions, autonomous, odometry and driveTo, Pedro
   paths, telemetry, tuning and finders, simulator). Each has a few lines of code to copy, one "why"
   sentence and links to the lesson and module page. The code lives in compiled Java
@@ -2334,7 +2351,7 @@ Nothing old stops working.
 
 ### Added
 
-- [Quick start](docs/quick-start.md): a driving robot in 30 minutes. The five files come from your robot
+- [Quick start](docs/pick-your-start/README.md): a driving robot in 30 minutes. The five files come from your robot
   configuration (`:sim:newRobot`) or from a new copy-in template (`examples/.../quickstart`) whose lines
   to change are marked STEP 1 to 8. A simulator test drives the template and runs its autonomous.
 

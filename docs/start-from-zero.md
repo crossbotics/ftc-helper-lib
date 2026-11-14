@@ -138,9 +138,9 @@ Later pages say "make a file" or "make a folder". Do it in the **Project** panel
    the top project folder (the one with `TeamCode` in it), click **New > Directory**, and type
    `simulator/scenarios`. The `/` makes a folder inside a folder.
 
-The Quick start puts the autonomous programs in a Java folder `autos` inside `teamcode` (kind 2).
+The example robots put the autonomous programs in a Java folder `autos` inside `teamcode` (kind 2).
 
 ## Next
 
 1. If you used Scratch or Blocks before, read [From Blocks to Java](blocks-to-java.md): it shows where each block you know went.
-2. [Quick start](quick-start.md): [pick your road](quick-start.md#pick-your-road), get the five robot files, and drive.
+2. [Pick your start](pick-your-start/README.md): get the five robot files, then [The five files](five-files/README.md) to drive.

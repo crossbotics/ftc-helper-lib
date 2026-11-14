@@ -19,11 +19,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: turrets and interlocks (docs/cookbook.md#turrets-and-interlocks). A turret with a home
+ * Cookbook: turrets and interlocks (docs/cookbook/07-turrets-and-interlocks.md). A turret with a home
  * switch, a slip-ring turret, an interlock rule that keeps a turret and a lift apart, and the lifter's
  * steps (wrist, claw, lift) in a safe order.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class InterlockRecipes {

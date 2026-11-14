@@ -25,7 +25,7 @@ it is one line per press type.
 | Several taps | `g2.x.taps(3, () -> robot.lift.goTo("high"))` (2 to 5) | once, on the last quick tap |
 | Tap, then hold | `g2.lb.tapThenHold(robot.intake::out, robot.intake::stop)` | a tap, then press again and hold: every loop while held |
 | Held for a time | `g2.dpadLeft.heldFor(1.0, robot.launcher::stop)` | once, after the driver holds it 1 s: a safe "are you sure?" |
-| Two buttons together | `g1.rb.with(g1.dpadUp, () -> robot.lift.goTo("high"))` | once, when the driver presses Y while holding LB |
+| Two buttons together | `g1.rb.with(g1.dpadUp, () -> robot.lift.goTo("high"))` | once, when the driver presses D-pad up while holding RB |
 | A stick | `g2.rightStickY.use(robot.lift::manual)` | every loop, with the stick's value (-1 to 1) |
 
 The method names (`open`, `in`, `fire`...) depend on the part. Each part's page lists its commands
@@ -49,7 +49,7 @@ g2.rb.tap(robot.launcher::fire).says("fire one")
 
 **One line puts the launcher's firing on a button.** `robot.launcher.fireOn(g2.y)` puts all of its firing
 (taps, hold, tap then hold) on Y. `spinOn(...)` puts its spin up / down on a button
-([cookbook](../cookbook.md#how-do-i-put-the-launchers-fire-button-on-another-button)).
+([cookbook](../cookbook/03-buttons.md#how-do-i-put-the-launchers-fire-button-on-another-button)).
 
 ## When a gesture's job runs
 
@@ -132,4 +132,4 @@ debug lines, set pose and the alliance switch still work.
 **Next:** [What the drivers see and feel](03-see-and-feel.md).
 
 **Look it up:** [Reading a button line](../reference/controls.md#reading-a-button-line). **Go deeper:**
-[the cookbook's button recipes](../cookbook.md#buttons-and-gestures).
+[the cookbook's button recipes](../cookbook/03-buttons.md).

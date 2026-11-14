@@ -52,7 +52,7 @@ This table moved to [Fix it by what you see](../tuning/17-fix-by-symptom.md) in 
 4. Optional: write a line for each setting in the part's table, set to `DEFAULT`, with a short comment,
    and `MEASURE` for the numbers only your robot can give. Then the file shows every setting the part
    has, and you can change one when you need to. Leaving a line out does the same as `DEFAULT`. The
-   [Cookbook](../cookbook.md) shows each part's section this way.
+   [Cookbook](../cookbook/README.md) shows each part's section this way.
 
 ## What Tunables.java is
 

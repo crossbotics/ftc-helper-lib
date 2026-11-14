@@ -70,4 +70,6 @@ problems with wiring and code.
 
 ---
 
+**Next:** [Tests](../tests/README.md): check your code and your robot after every change.
+
 **Look it up:** [Tunables.java](../reference/tunables.md), [Troubleshooting](../troubleshooting.md).

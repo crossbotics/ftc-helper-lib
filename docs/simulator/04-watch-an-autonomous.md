@@ -122,7 +122,7 @@ when the route is right.
 | --- | --- |
 | The robot does not move at ▶ | The INIT screen has an error, or the INIT menu still waits for a choice. Read the Driver Hub |
 | The robot starts in the wrong place | The autonomous gives its start in words only. Drag the robot to the spot in INIT, or give the start in inches |
-| The robot drives the mirror route on BLUE | Your autonomous mirrors for the other alliance. Check `mirrorForRed()` ([Multiple autos](../building-autos/03-multiple-autos.md)) |
+| The robot drives a mirror route on RED | Autos are written for BLUE, and the library changes them for RED. Check `mirrorForRed()` ([Red and blue](../building-autos/02-put-steps-together.md#red-and-blue)) |
 | The score stays at 0 | The field has no rules file, or the pieces did not reach a goal. Watch the Shot arc layer |
 | A shot falls short in the simulator but not on the robot | The simulator's shots are a model. Make a shot table ([How shots fly](../guides/how-the-simulator-works.md#how-shots-fly-and-shot-tables)), or trust the real robot |
 | The route is right here, but wrong on the real robot | The real robot's numbers differ. Tune it ([Tuning](../tuning/README.md)), and measure its speeds for the simulator ([Real speeds](03-make-it-match-your-robot.md#6-real-speeds-optional)) |

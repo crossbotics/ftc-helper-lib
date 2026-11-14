@@ -57,7 +57,7 @@ your robot needs it.
 | `Drive.tank(fl, fr, bl, br)` | **yes**, one of the three | a tank drive, two motors per side | - |
 | `.motor(id)` | recommended | the drive motor, by its [parts catalog](../guides/parts-catalog.md#motors) id: speeds and distances come from it | Defaults to `gobilda-5203-312` |
 | `.wheel(id)` | recommended | the wheel, by its [parts catalog](../guides/parts-catalog.md#wheels-and-rollers) id: its size comes from the catalog | Defaults to a 96 mm wheel |
-| `.wheelMm(mm)` | optional | the wheel's diameter in mm, for a wheel that is not in the catalog (in place of `.wheel`) | Defaults to 96 |
+| `.wheelMm(mm)` | optional | the wheel's diameter in mm, for a wheel that is not in the catalog, or the size the Drive Tuner measured (after `.wheel(...)`: the last one wins) | Defaults to 96 |
 | `.imu(name, logo, usb)` | recommended | the IMU's name, and where the hub's logo and USB ports face | Defaults to `"imu"`, `UP`, `FORWARD` |
 | `.reversed(names...)` | optional | exactly these motors run reversed: add it after the first drive test, if needed | Defaults to the left side reversed |
 | `.gearRatio(r)` | optional | motor turns per wheel turn, when gears, a belt or a chain sit between them | Defaults to 1 |

@@ -228,4 +228,4 @@ everything.
 
 **Next:** [The auto builder: odometry and Pedro](07-auto-builder-odometry-and-pedro.md).
 
-**Look it up:** [the auto builder, every detail](06-auto-builder-steps.md).
+**Look it up:** [every step](../reference/steps.md#auto).

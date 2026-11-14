@@ -194,4 +194,4 @@ click **Run**. Pick your TeleOp, INIT, ▶. Press the action's button.
 
 **Next:** [autos/](05-autos.md).
 **Look it up:** [Action: every step](../reference/steps.md#action). **Go deeper:**
-[Why commands never wait](../guides/non-blocking.md) and [the cookbook's action recipes](../cookbook.md#actions).
+[Why commands never wait](../guides/non-blocking.md) and [the cookbook's action recipes](../cookbook/08-actions.md).

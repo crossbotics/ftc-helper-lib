@@ -16,9 +16,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.Locale;
 
 /**
- * Cookbook: telemetry, the lines on the Driver Station (docs/cookbook.md#telemetry).
+ * Cookbook: telemetry, the lines on the Driver Station (docs/cookbook/13-telemetry.md).
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class TelemetryRecipes {

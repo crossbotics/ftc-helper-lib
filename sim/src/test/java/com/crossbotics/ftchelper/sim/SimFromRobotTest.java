@@ -1002,7 +1002,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // The quick start's template (docs/quick-start.md): it drives, its action runs, its autonomous ends.
+    // The quickstart template (docs/pick-your-start/03-blank-slate.md, way B): it drives, its action runs, its autonomous ends.
     @Test public void theQuickStartTemplateDrivesAndRuns() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.quickstart.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {

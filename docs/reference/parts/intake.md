@@ -36,7 +36,7 @@ intake = add(Intake.motor("intake").part("gobilda-5203-117")
 - The simulator takes as many as you write, also above the limit. Then it gives the G407 foul: 6 at once, or 5
   for more than 3 s twice ([the simulator's rules](../../guides/how-the-simulator-works.md#game-rules-and-the-score)).
 - It does not stop the real intake by itself. To stop at a count, use [Pieces](pieces.md) and
-  `.stopsWhen(...)` ([cookbook](../../cookbook.md#how-do-i-stop-the-intake-when-the-robot-is-full)).
+  `.stopsWhen(...)` ([cookbook](../../cookbook/05-game-pieces.md#how-do-i-stop-the-intake-when-the-robot-is-full)).
 - A name matches every kind that has it in its name: "NECTAR" is red and blue NECTAR.
 - With `holds(n)` too, it is a mix: `.holds(4).holds(1, "NECTAR")` = 4 pieces, at most 1 NECTAR.
 - goBILDA's starter bot cannot take a NECTAR: `.holds(4).holds(0, "NECTAR")`.

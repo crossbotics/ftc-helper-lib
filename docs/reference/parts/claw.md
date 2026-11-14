@@ -66,7 +66,7 @@ arm = add(Positioner.servo("arm_left").alsoServo("arm_right"));        // both t
 wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());   // 0 to 1 = 300 degrees
 ```
 
-Recipe: [How do I get my servo's full range?](../../cookbook.md#how-do-i-get-my-servos-full-range)
+Recipe: [How do I get my servo's full range?](../../cookbook/04-mechanisms.md#how-do-i-get-my-servos-full-range)
 
 ## In Tunables.java
 

@@ -118,7 +118,7 @@ Each gamepad has its own source, picked in its list under the 3D view.
 
 | Source | How |
 | --- | --- |
-| Keyboard | Set the gamepad's list to **Keyboard**. Left stick: W A S D. Right stick: the arrows. D-pad: T F G H. A, B, X, Y: K, L, J, I. LB, RB: Q, E. LT, RT: Z, C. BACK: Backspace. START: Enter. GUIDE: M |
+| Keyboard | Set the gamepad's list to **Keyboard**. Left stick: W A S D. Right stick: the arrows. D-pad: T F G H. A, B, X, Y: K, L, J, I. LB, RB: Q, E. LT, RT: Z, C. BACK: Backspace. START: Enter. GUIDE: M. Left and right stick click: X, V |
 | Controller | Plug in a USB or Bluetooth controller and press one of its buttons (a browser rule). Gamepad 1 takes it, or gamepad 2 when gamepad 1 already has one. Xbox, PS4 and PS5 controllers work everywhere. A Logitech F310 works on Windows (on a Mac, set its back switch to "D"). Chrome and Edge work best |
 | On-screen | Click the buttons, drag the sticks, slide the triggers. **Sticky buttons** (the box under the gamepads): a click holds a button until the next click, so you can hold two things with one mouse |
 | Phone | Start the simulator with `-Plan` ([options](../reference/robot-file.md#the-commands)). On a phone on the same WiFi, open the address that the page shows, with `?phone=2` at the end. The phone is then gamepad 2 (`?phone=1`: gamepad 1). Set that gamepad's list to **Phone / other page** |

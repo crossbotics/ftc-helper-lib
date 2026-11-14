@@ -76,8 +76,8 @@ tape to the left wheels.
 7. **Turn 90 left** (a check, with nothing to copy): the robot turns 90 degrees left. Put a square against
    the robot to see it. The screen shows the IMU's heading, and it should say 90.
 8. Copy the lines, then switch autonomous on:
-   - five files: `Robot.java: .wheelMm(96.8)` goes in the drive line. It replaces `.wheel(...)` if you
-     used a catalog wheel. `Tunables.Drive: strafeCorrection = 1.180` goes in `Tunables.Drive`. Once the
+   - five files: `Robot.java: .wheelMm(96.8)` goes in the drive line, after `.wheel(...)` if you used
+     a catalog wheel (the last one wins). `Tunables.Drive: strafeCorrection = 1.180` goes in `Tunables.Drive`. Once the
      Drive test (and on a mecanum the Strafe test) measures 48 within 0.5 in, the tuner also shows
      `Tunables.Drive: calibrated = true`: copy that too.
    - older helpers: the `c.` lines go in `RobotSettings.auto()`, then `c.calibrationConfirmed = true`.
@@ -98,7 +98,7 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 
 | The finder shows | Put it in |
 | --- | --- |
-| `Robot.java: .wheelMm(96.8)` | the drive line in `Robot.java` (it replaces `.wheel(...)`) |
+| `Robot.java: .wheelMm(96.8)` | the drive line in `Robot.java`, after `.wheel(...)` (the last one wins) |
 | `Tunables.Drive: strafeCorrection = 1.180` | `Tunables.Drive` (and `strafeCorrectionLeft`, if you ran Strafe left) |
 | `Tunables.Drive: calibrated = true` | `Tunables.Drive`. Autonomous moves run only with it |
 

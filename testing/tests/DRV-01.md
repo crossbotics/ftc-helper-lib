@@ -8,7 +8,7 @@ minutes: 30
 needs: [mecanum|tank]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
-docs: [tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward, quick-start.md#7-drive-then-each-mechanism]
+docs: [tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward, five-files/README.md]
 ---
 
 ## Why

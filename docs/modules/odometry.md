@@ -7,7 +7,7 @@ is in `com.crossbotics.ftchelper.robot`).
 
 Learn it hands-on: [Add odometry](../add-to-robot/09-odometry.md). Worked example:
 [`examples/.../odometrybot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot).
-Quick answers with code to copy: [cookbook: odometry and driveTo](../cookbook.md#odometry-and-driveto).
+Quick answers with code to copy: [cookbook: odometry and driveTo](../cookbook/11-odometry.md).
 
 **Odometry** tells the robot where it is on the field. Small unpowered wheels, called **pods**, roll
 on the tiles. They count how far the robot moved forward and sideways. An **optical sensor** under the
@@ -703,7 +703,7 @@ map**, and a wrong pose gives a wrong route. If the robot hits something, the st
 image of the route (x and the heading flip). With it false (BIOBUZZ), RED uses the same numbers from the
 red wall.
 
-More: [`FieldMap` and `RouteDriver`](drive.md#fieldmap), the [cookbook](../cookbook.md#how-do-i-get-around-field-elements-on-the-way-to-a-spot).
+More: [`FieldMap` and `RouteDriver`](drive.md#fieldmap), the [cookbook](../cookbook/11-odometry.md#how-do-i-get-around-field-elements-on-the-way-to-a-spot).
 
 ---
 

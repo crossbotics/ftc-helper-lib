@@ -74,4 +74,4 @@ The drivers read the Autonomous list in a hurry, on a small screen.
 **Next:** [Drive to points on the field](04-drive-to-points.md): with odometry. No odometry yet? Go on to [the auto builder](06-auto-builder-steps.md).
 
 **Look it up:** [every step](../reference/steps.md#auto). **Go deeper:**
-[cookbook: several autos and choosing one](../cookbook.md#several-autos-and-choosing-one).
+[cookbook: several autos and choosing one](../cookbook/10-several-autos.md).

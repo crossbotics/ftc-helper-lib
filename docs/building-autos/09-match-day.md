@@ -151,7 +151,7 @@ Change the number in the step, test it, and commit.
 
 ---
 
-**Next:** [Tuning](../tuning/README.md): find and check every number.
+**Next:** [Simulator](../simulator/README.md): watch your autonomous and fix it on the laptop.
 
 **Look it up:** [every step](../reference/steps.md#auto). **Go deeper:**
 [test an auto with a scenario file](../reference/scenario-files.md).

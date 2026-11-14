@@ -278,4 +278,4 @@ The robot drives, turns left, waits, and turns back. The report at the end says 
 **Next:** [Put steps together](02-put-steps-together.md).
 
 **Look it up:** [every step](../reference/steps.md#auto). **Go deeper:**
-[the cookbook's autonomous recipes](../cookbook.md#autonomous).
+[the cookbook's autonomous recipes](../cookbook/09-autonomous.md).

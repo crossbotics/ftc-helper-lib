@@ -24,3 +24,5 @@ check its "Done when" and go on to the next.
 **If you use only the simulator on this laptop:** skip pages 5, 6 and 7. They need the hubs.
 
 **After Set up:** start using the library. Pick the code you start from: [Pick your start](../pick-your-start/README.md).
+
+**Next:** [Before you start](01-before-you-start.md).

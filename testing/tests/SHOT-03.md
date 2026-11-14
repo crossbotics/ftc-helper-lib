@@ -24,7 +24,7 @@ done it can fill a table that scores, in about an hour.
 ## Setup
 
 - SHOT-01 done (gains). A camera that sees the goal, or odometry with `Tunables.Aim.goalX`, `goalY`.
-- A Shot Tuner file for your robot ([recipe](../../docs/cookbook.md#how-do-i-build-a-shot-table-speed-for-each-distance)).
+- A Shot Tuner file for your robot ([recipe](../../docs/cookbook/15-tuning.md#how-do-i-build-a-shot-table-speed-for-each-distance)).
 - 10 or more game pieces, a tape measure, a charged battery.
 
 ## Steps

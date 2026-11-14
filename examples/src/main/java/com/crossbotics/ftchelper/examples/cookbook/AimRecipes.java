@@ -17,11 +17,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: aiming and shooting (docs/cookbook.md#aiming-and-shooting). Things the robot can do for
+ * Cookbook: aiming and shooting (docs/cookbook/06-aiming-and-shooting.md). Things the robot can do for
  * the drivers, so they can focus on driving and firing: aim the whole robot, buzz when on target, keep
  * aiming from the odometry when the camera loses the goal, and one shot table per game piece.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class AimRecipes {
@@ -85,10 +85,10 @@ public class AimRecipes {
             public static double flightSecPerIn = DEFAULT;              // longer shots fly longer: per inch (0)
             public static double maxLeadIn = DEFAULT;                   // never lead more than this, inches (24)
             // Where the shooter (a turret's pivot) and a camera on the body are from the robot's center.
-            public static double shooterForwardIn = MEASURE;            // inches forward of the center (a tape)
-            public static double shooterLeftIn = MEASURE;               // inches left of the center (a tape)
-            public static double cameraForwardIn = MEASURE;             // inches forward of the center (a tape)
-            public static double cameraLeftIn = MEASURE;                // inches left of the center (a tape)
+            public static double shooterForwardIn = MEASURE;            // inches forward of the center (from the edges)
+            public static double shooterLeftIn = MEASURE;               // inches left of the center (from the edges)
+            public static double cameraForwardIn = MEASURE;             // inches forward of the center (from the edges)
+            public static double cameraLeftIn = MEASURE;                // inches left of the center (from the edges)
             // end recipe
         }
     }
@@ -143,7 +143,7 @@ public class AimRecipes {
         @Override
         protected void buttons(TrimRobot robot, Pad g1, Pad g2) {
             // recipe: speed-trim
-            // The launcher's own buttons already trim: gamepad 2 D-pad up/down = +/- 1%.
+            // The launcher's usual line trims too: speedOn(g2.dpadUp, g2.dpadDown) = +/- 1% a press.
             // Your own: a bigger step on a button, and a far shot that sets the trim first.
             g2.y.press(() -> robot.launcher.trimBy(+3)).says("speed trim +3%");
             g2.a.press(Action.named("Far shot +5%")

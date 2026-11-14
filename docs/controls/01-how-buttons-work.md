@@ -172,4 +172,4 @@ read in this file. Each part's page has its usual lines, ready to copy ("Buttons
 **Next:** [Press types](02-press-types.md).
 
 **Look it up:** [Controls.java reference](../reference/controls.md). **Go deeper:**
-[the cookbook's button recipes](../cookbook.md#buttons-and-gestures).
+[the cookbook's button recipes](../cookbook/03-buttons.md).

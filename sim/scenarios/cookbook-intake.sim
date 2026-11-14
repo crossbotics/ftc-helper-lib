@@ -1,4 +1,4 @@
-# The cookbook's scenario example (docs/cookbook.md#how-do-i-test-my-code-with-a-script):
+# The cookbook's scenario example (docs/cookbook/16-simulator.md#how-do-i-test-my-code-with-a-script):
 # holding RT on gamepad 2 runs the intake, letting go stops it.
 init "Quick Start TeleOp"            # your TeleOp's name
 start

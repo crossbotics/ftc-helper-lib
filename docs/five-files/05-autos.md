@@ -192,11 +192,11 @@ Your robot now drives in TeleOp and in autonomous.
 
 ## Next
 
-Your robot is the smallest robot that works. Now:
+Your robot is the smallest robot that works.
 
-- **Add parts, one at a time:** [Robot.java, add a part](01-robot-java.md#add-a-part).
-- **Build better autos:** turns, actions, multiple autos, the auto builder, and choices in INIT:
-  [Building autos](../building-autos/README.md).
+**Next:** [Add to your robot](../add-to-robot/README.md): add parts, one at a time. Then
+[Controls](../controls/README.md) and [Building autos](../building-autos/README.md): turns, actions,
+multiple autos, the auto builder, and choices in INIT.
 
 **Look it up:** [every step](../reference/steps.md#auto). **Go deeper:**
-[the cookbook's autonomous recipes](../cookbook.md#autonomous).
+[the cookbook's autonomous recipes](../cookbook/09-autonomous.md).

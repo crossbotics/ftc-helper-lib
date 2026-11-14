@@ -28,3 +28,5 @@ Then the [five files pages](../five-files/README.md) explain every line, and you
 | 2 | [A common setup](02-common-setup.md) |
 | 3 | [A blank slate](03-blank-slate.md) |
 | 4 | [Copy example files into TeamCode](04-copy-into-teamcode.md) (pages 1 to 3 send you here) |
+
+**Next:** pick one: [a starter bot](01-starter-bot.md), [a common setup](02-common-setup.md) or [a blank slate](03-blank-slate.md).

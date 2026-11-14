@@ -870,7 +870,7 @@
   },
   {
    "id": "DOC-01",
-   "title": "Quick start from a blank robot project",
+   "title": "Set up and a first drive from a blank robot project",
    "area": "docs",
    "priority": "high",
    "where": "both",
@@ -891,11 +891,11 @@
    "since": "v0.16.0",
    "docs": [
     {
-     "path": "docs/quick-start.md",
+     "path": "docs/setup/README.md",
      "anchor": ""
     },
     {
-     "path": "docs/templates.md",
+     "path": "docs/pick-your-start/README.md",
      "anchor": ""
     }
    ],
@@ -903,13 +903,13 @@
    "sections": {
     "why": [
      {
-      "p": "The Quick start promises a driving robot in 30 minutes. A student who has never used the library should be able to follow it alone. Every place you get stuck is a docs fix for us."
+      "p": "A student who has never used the library should be able to follow Set up, Pick your start and The five files alone, to a robot that drives. Every place you get stuck is a docs fix for us."
      }
     ],
     "safety": [
      {
       "ul": [
-       "Real robot: on a block for the first drive (the Quick start says when), low power."
+       "Real robot: on a block for the first drive (the pages say when), low power."
       ]
      }
     ],
@@ -925,9 +925,9 @@
     "steps": [
      {
       "ol": [
-       "Start the timer. Follow the [Quick start](repo:docs/quick-start.md) from the top, exactly as written.",
+       "Start the timer. Follow [Set up](repo:docs/setup/README.md) from the top, then each page's **Next:** link, exactly as written.",
        "Each time you are stuck for more than 2 minutes, write the step and the words that confused you.",
-       "Real robot: build, install, run the Hardware Check, drive. Simulator: the Quick start's simulator part.",
+       "Real robot: build, install, run the Hardware Check, drive. Simulator: [Start it and drive](repo:docs/simulator/01-start-and-drive.md).",
        "Stop the timer when the robot drives (or the simulator robot drives)."
       ]
      }
@@ -981,8 +981,8 @@
      "anchor": "motor-direction-check-each-wheel-rolls-forward"
     },
     {
-     "path": "docs/quick-start.md",
-     "anchor": "7-drive-then-each-mechanism"
+     "path": "docs/five-files/README.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/DRV-01.md",
@@ -1321,7 +1321,7 @@
      {
       "ul": [
        "`.hood(Hood.servo(\"hood\"))` on the launcher in `Robot.java` (no `Tunables.Hood` numbers needed yet).",
-       "The Hood Finder OpMode ([recipe](repo:docs/cookbook.md#how-do-i-find-my-hoods-stops-and-angles)).",
+       "The Hood Finder OpMode ([recipe](repo:docs/cookbook/15-tuning.md#how-do-i-find-my-hoods-stops-and-angles)).",
        "A phone angle app (optional, for angles)."
       ]
      }
@@ -2519,7 +2519,7 @@
      {
       "ul": [
        "SHOT-01 done (gains). A camera that sees the goal, or odometry with `Tunables.Aim.goalX`, `goalY`.",
-       "A Shot Tuner file for your robot ([recipe](repo:docs/cookbook.md#how-do-i-build-a-shot-table-speed-for-each-distance)).",
+       "A Shot Tuner file for your robot ([recipe](repo:docs/cookbook/15-tuning.md#how-do-i-build-a-shot-table-speed-for-each-distance)).",
        "10 or more game pieces, a tape measure, a charged battery."
       ]
      }
@@ -2586,7 +2586,7 @@
      "anchor": "speed-trim-and-a-low-battery"
     },
     {
-     "path": "docs/cookbook.md",
+     "path": "docs/cookbook/06-aiming-and-shooting.md",
      "anchor": "every-shot-is-a-bit-short-today-how-do-i-trim-the-speed-a-low-battery"
     }
    ],
@@ -5310,7 +5310,7 @@
      {
       "ul": [
        "A `Pieces` or `PieceSensor` line in `Robot.java` ([Add a launcher: know which piece fires next](repo:docs/add-to-robot/05-launcher.md#know-which-piece-fires-next)).",
-       "The Piece Tuner file for your robot ([recipe](repo:docs/cookbook.md#how-do-i-tune-the-piece-sensors)).",
+       "The Piece Tuner file for your robot ([recipe](repo:docs/cookbook/05-game-pieces.md#how-do-i-tune-the-piece-sensors)).",
        "One of each game piece."
       ]
      }
@@ -5373,8 +5373,8 @@
      "anchor": "know-which-piece-fires-next"
     },
     {
-     "path": "docs/cookbook.md",
-     "anchor": "game-pieces"
+     "path": "docs/cookbook/05-game-pieces.md",
+     "anchor": ""
     }
    ],
    "file": "testing/tests/PCS-02.md",

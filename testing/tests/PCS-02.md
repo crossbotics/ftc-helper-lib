@@ -8,7 +8,7 @@ minutes: 30
 needs: [intake, color-sensor|distance-sensor]
 kit_bots: []
 since: v0.17.0
-docs: [add-to-robot/05-launcher.md#know-which-piece-fires-next, cookbook.md#game-pieces]
+docs: [add-to-robot/05-launcher.md#know-which-piece-fires-next, cookbook/05-game-pieces.md]
 ---
 
 ## Why

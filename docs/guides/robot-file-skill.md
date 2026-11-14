@@ -63,6 +63,8 @@ from (measured, the configuration, a seller page, a photo estimate, a default).
 
 ## The draft tool on its own
 
+**Where:** Android Studio's **Terminal** tab, in the **`ftc-helper-lib` folder** (type `cd ftc-helper-lib` first).
+
 ```bash
 ./gradlew :sim:fromConfig -Pconfig=path/to/config.xml -Pout=../simulator/robot.properties
 ```

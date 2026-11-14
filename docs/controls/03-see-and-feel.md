@@ -61,4 +61,4 @@ method reference or a small lambda. With the Quick start robot, try `show("Intak
 **Next:** [Move the library's buttons](04-move-library-buttons.md).
 
 **Look it up:** [Controls.java reference](../reference/controls.md).
-**Go deeper:** [the cookbook's button recipes](../cookbook.md#buttons-and-gestures).
+**Go deeper:** [the cookbook's button recipes](../cookbook/03-buttons.md).

@@ -123,4 +123,6 @@ folder in **Settings > Languages & Frameworks > Android SDK**.
 | `JAVA_HOME is not set` | [Java](#java), above |
 | `SDK location not found` | [The Android SDK](#the-android-sdk), above |
 
+**Next:** back to the page that sent you here, or [Pick your start](../pick-your-start/README.md).
+
 **Look it up:** [Troubleshooting: build problems](../troubleshooting.md#build-problems) and [Git and GitHub for FTC teams](../guides/github.md).

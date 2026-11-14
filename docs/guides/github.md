@@ -70,6 +70,8 @@ A branch lets you change code without touching `main`. When the idea does not wo
 
 Command line (`auto-far-start` is the branch's name: short, small letters, dashes):
 
+**Where:** Android Studio's **Terminal** tab, in your **robot project's folder** (where `TeamCode` is).
+
 ```bash
 git switch -c auto-far-start
 git push -u origin auto-far-start
@@ -79,6 +81,8 @@ git push -u origin auto-far-start
 You need it only the first time. After that, `git push` is enough. Commit on the branch as usual.
 
 Switch back to `main` (commit your changes first):
+
+**Where:** Android Studio's **Terminal** tab, in your **robot project's folder** (where `TeamCode` is).
 
 ```bash
 git switch main
@@ -95,6 +99,8 @@ app for a match, check which branch you are on. `git status` says `On branch ...
 When the idea works on the robot, bring it into `main`.
 
 Command line:
+
+**Where:** Android Studio's **Terminal** tab, in your **robot project's folder** (where `TeamCode` is).
 
 ```bash
 git switch main
@@ -145,6 +151,8 @@ Then build. A marker line left in the file stops the build. Then finish the merg
 
 Command line:
 
+**Where:** Android Studio's **Terminal** tab, in your **robot project's folder** (where `TeamCode` is).
+
 ```bash
 git add TeamCode
 git commit -m "Merge auto-far-start: 28 in to the goal"
@@ -161,6 +169,8 @@ origin**. **Abort Merge** goes back.
 
 **Changes not committed yet** (you want the file back as it was at the last commit):
 
+**Where:** Android Studio's **Terminal** tab, in your **robot project's folder** (where `TeamCode` is).
+
 ```bash
 git restore TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Tunables.java
 ```
@@ -170,6 +180,8 @@ discarded changes in the computer's trash.
 
 **A commit that is already pushed.** Do not delete history. Add a new commit that undoes it. Find the
 commit's id (the first letters are enough):
+
+**Where:** Android Studio's **Terminal** tab, in your **robot project's folder** (where `TeamCode` is).
 
 ```bash
 git log --oneline
@@ -238,6 +250,8 @@ not enough, because someone may already have a copy.
    internet again.
 
 To get the event's code back later (to look at it, or to build it again), run:
+
+**Where:** Android Studio's **Terminal** tab, in your **robot project's folder** (where `TeamCode` is).
 
 ```bash
 git switch --detach event-2026-11-14

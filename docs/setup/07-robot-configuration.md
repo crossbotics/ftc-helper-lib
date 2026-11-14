@@ -35,9 +35,7 @@ code finds each device by that name.
 
 The Driver Hub shows your configuration's name at the top, and each port with a device has a name.
 
-**Set up is done.** Next you start using the library: pick the code you start from,
-[Quick start: pick your road](../quick-start.md#pick-your-road).
-Keep [Every practice](08-every-practice.md) open: you use it from now on.
+**Next:** [Every practice: pull, change, commit, push](08-every-practice.md). You use it from now on.
 
 **A wrong name** stops the program at INIT, and the Driver Hub then lists the names that do exist.
 More: [hardware names](../modules/hardware.md).

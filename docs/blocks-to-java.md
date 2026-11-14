@@ -7,8 +7,8 @@ with Java. Each block you know has a place in the robot's five files. Come back 
 [Controls.java](five-files/03-controls-java.md).
 
 **Before this:** [Set up](setup/README.md) (if you are new to Android Studio). Read this
-page **before** the [Quick start](quick-start.md): the Quick start gives you the five files this page
-talks about. **The reading order:** [Set up](setup/README.md), [Read Java and make your first edit](start-from-zero.md), then this page, then the Quick start, then
+page **before** [Pick your start](pick-your-start/README.md): it gives you the five files this page
+talks about. **The reading order:** [Set up](setup/README.md), [Read Java and make your first edit](start-from-zero.md), then this page, then Pick your start, then
 [The five files](five-files/README.md), then [Add to your robot](add-to-robot/README.md) (only the parts your robot needs).
 
 ## The key idea: you never write the loop
@@ -33,7 +33,7 @@ protected void buttons(Robot robot, Pad g1, Pad g2) {
 }
 ```
 
-(The claw line needs a claw in `Robot.java`. The Quick start robot has only an intake.)
+(The claw line needs a claw in `Robot.java`. The quickstart example robot has only an intake.)
 
 **Why it is built this way:** in one loop, many jobs share the robot. If one job stops to wait, the
 whole robot stops: no driving, no other button. So **a job must never wait.** Waits happen only inside
@@ -64,7 +64,7 @@ and in **autonomous steps** ([The autos](five-files/05-autos.md)).
 | `go to x: y:` | `s.driveTo("To the goal", -30, -30, 45, 0.6)` (x, y, heading, power), with odometry | `autos/` |
 | `if <sensor> then ...` | not an `if`. Pick one: `g2.rumbleWhen(...)` (a buzz when it becomes true), `.waitUntil(...)` in an Action (wait for it, then go on), or a `hold(...)` (runs while a button is held) | `Controls.java`, `Actions.java` |
 | `if ... else` inside an action | **not yet** in an Action. Use two actions on two buttons, one for each case | `Actions.java`, `Controls.java` |
-| `repeat 3 times` | a `for` loop that adds the steps to the Action 3 times, when the action is made ([cookbook: repeat](cookbook.md#how-do-i-repeat-steps-several-times)); or press the button again (it runs the action again) | `Actions.java` |
+| `repeat 3 times` | a `for` loop that adds the steps to the Action 3 times, when the action is made ([cookbook: repeat](cookbook/08-actions.md#how-do-i-repeat-steps-several-times)); or press the button again (it runs the action again) | `Actions.java` |
 | `change [count] by 1` | a variable (a **field**) in `Controls.java`, changed by a button job: see [Count with a button](#count-with-a-button) | `Controls.java` |
 | `broadcast` / `when I receive` | not needed: a button job or an Action calls the part's method itself (`robot.intake.in()`) | |
 | `stop all` | Tap gamepad 1 **BACK** (pause; tap again to go on), or **STOP** on the Driver Station. | the drive team |
@@ -91,7 +91,7 @@ The FTC Blocks editor has blocks for the robot itself. Each one has a place in J
 
 | FTC Blocks block | In Java with this library | Where |
 | --- | --- | --- |
-| `waitForStart` | nothing: the library waits for ▶. Something right after ▶: `atStart(...)` ([cookbook](cookbook.md#how-do-i-run-an-action-when-the-opmode-starts)) | `Robot.java`, in `define()` |
+| `waitForStart` | nothing: the library waits for ▶. Something right after ▶: `atStart(...)` ([cookbook](cookbook/08-actions.md#how-do-i-run-an-action-when-the-opmode-starts)) | `Robot.java`, in `define()` |
 | `repeat while opModeIsActive` | nothing: the library's loop | |
 | `telemetry.addData("key", value)` and `telemetry.update` | `show("Lift ticks", robot.lift::position);` once, in `buttons(...)`. The library shows it every loop as `Lift ticks : 350`. You need no `update` | `Controls.java` |
 | `gamepad1.left_stick_y` (and the other sticks) | driving is built in. For your own part: `g2.leftStickY.use(robot.lift::manual);` | `Controls.java` |
@@ -100,7 +100,7 @@ The FTC Blocks editor has blocks for the robot itself. Each one has a place in J
 | `set motor.Direction to REVERSE` | drive motors: `.reversed("front_left", "back_left")` in the `drive(...)` line; a part: `.reversed()` on its line | `Robot.java` |
 | `set motor.Power to 1` | a command of the part: `robot.intake.in()`, `robot.lift.goTo("high")` | `Controls.java`, `Actions.java` |
 | `sleep 500` | `.waitSeconds(0.5)` in an Action or an autonomous | `Actions.java`, `autos/` |
-| `if` the drivers chose something before the match | `onlyIf(...)` with a menu choice ([cookbook](cookbook.md#how-do-i-let-the-drivers-choose-before-the-match)) | an autonomous |
+| `if` the drivers chose something before the match | `onlyIf(...)` with a menu choice ([cookbook](cookbook/09-autonomous.md#how-do-i-let-the-drivers-choose-before-the-match)) | an autonomous |
 
 **The stick-up sign.** In FTC Blocks (and in the plain FTC SDK) a stick pushed **up** gives a
 **negative** number, so Blocks programs put a "negative" block (or `-1 *`) in front of
@@ -129,7 +129,7 @@ G2:DPAD_LEFT button job took 512 ms: the whole robot stopped that long. No sleep
 (The warning starts with the button, `G2:DPAD_LEFT` here. For a job on a gesture or a "buzz when", it
 starts with `a button job took ...` instead.)
 
-Do this instead (the Quick start's `spitOut` in `Actions.java`):
+Do this instead (the quickstart example's `spitOut` in `Actions.java`):
 
 ```java
 public static Action spitOut(Robot r) {
@@ -226,7 +226,7 @@ after one press of X, check `expect screen has "Count : 1"`. Check a `true`/`fal
 
 ## Next
 
-- [Quick start](quick-start.md), if you have not done it yet: get the five files and drive. Then
+- [Pick your start](pick-your-start/README.md), if you have not done it yet: get the five files and drive. Then
   [The five files](five-files/README.md).
 - [Controls.java](five-files/03-controls-java.md): every kind of button job.
 - [Actions.java](five-files/04-actions-java.md): steps that wait, safely.

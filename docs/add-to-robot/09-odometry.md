@@ -224,7 +224,7 @@ show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in, heading %.0f",
 ```
 
 For a second reset spot, or a reset from an action:
-[How do I set the pose when autonomous did not run?](../cookbook.md#how-do-i-set-the-pose-when-autonomous-did-not-run).
+[How do I set the pose when autonomous did not run?](../cookbook/11-odometry.md#how-do-i-set-the-pose-when-autonomous-did-not-run).
 
 #### A button that drives to a spot in TeleOp
 

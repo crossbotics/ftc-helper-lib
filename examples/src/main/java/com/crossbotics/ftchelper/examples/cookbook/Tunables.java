@@ -3,11 +3,11 @@ package com.crossbotics.ftchelper.examples.cookbook;
 import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/reference/tunables.md)
 
 /**
- * The cookbook's numbers (docs/cookbook.md): one section per part, named after the part's configuration
+ * The cookbook's numbers (docs/cookbook/README.md): one section per part, named after the part's configuration
  * name in CamelCase ("intake_deploy" reads IntakeDeploy). One number per line with a short comment.
  * MEASURE = a number only your robot can give (INIT stops and names the tool that finds it). DEFAULT =
  * the library's starting value (in brackets in the comment). The tests write sample numbers for MEASURE.
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md: change both
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md: change both
  * together (tools/check_docs.py checks them).
  */
 public class Tunables {

@@ -2,7 +2,7 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**For:** a team with one of these starter bots (roads 1 and 2 of the [Quick start](../quick-start.md#pick-your-road)),
+**For:** a team with one of these starter bots ([A starter bot](../pick-your-start/01-starter-bot.md) in Pick your start),
 or anyone who wants a ready robot to try in the [simulator](../simulator/README.md). For each starter bot, you find
 its [configuration names](#the-configuration-names) and what its code does differently. At the end:
 [what to change when you changed the robot](#you-changed-your-starter-bot).
@@ -235,7 +235,7 @@ five files. Part by part:
 - Intake: the roller's motor is the 117 RPM Yellow Jacket (50.9:1, 5203-2402-0051). The two corner
   wheels are goBILDA Speed servos in CR mode. They run with the roller, as in goBILDA's code. The intake
   carries 4 POLLEN and no NECTAR (a NECTAR is too big for it): `.holds(4).holds(0, "NECTAR")`. So the
-  simulator's intake does not take a NECTAR. Count yours by hand ([Quick start, section 6](../quick-start.md#6-measure-the-numbers)).
+  simulator's intake does not take a NECTAR. Count yours by hand ([Tuning](../tuning/README.md)).
 - Launcher: a 312 RPM motor with its gearbox taken off (1:1, 28 counts per turn). Those are the
   6000 RPM motor's numbers, so its id is `gobilda-5203-6000`.
 - Windmill: a 2000 Series Torque servo (2000-0025-0002) in CR mode. It runs reversed, as in goBILDA's
@@ -451,7 +451,7 @@ robot file and the notes on this page all use them.
 1. **The configuration:** a name for its port (small letters, `_` between words: `intake_deploy`).
 2. **`Robot.java`:** a field at the top of the class, and an `add(...)` line in `define()`, with
    `.part(...)` for its motor or servo ([the parts](../reference/robot-java.md), [the parts catalog](parts-catalog.md),
-   short recipes in the [cookbook](../cookbook.md)). When the part is not built yet, add `.optional()`, and
+   short recipes in the [cookbook](../cookbook/README.md)). When the part is not built yet, add `.optional()`, and
    the code runs without it ([parts not on the robot yet](../reference/robot-java.md#parts-not-on-the-robot-yet)).
 3. **`Tunables.java`:** its section, named after the device in CamelCase (`intake_deploy` reads
    `Tunables.IntakeDeploy`). Write `MEASURE` for each position and limit, and `DEFAULT` for the rest
@@ -464,7 +464,7 @@ robot file and the notes on this page all use them.
    ([Actions.java](../five-files/04-actions-java.md)).
 5. **When you changed the intake, or where the pieces ride:** count again how many pieces fit (POLLEN,
    NECTAR, a mix), and change `.holds(...)` on the intake's line
-   ([Quick start, section 6, step 5](../quick-start.md#6-measure-the-numbers)).
+   ([Tuning](../tuning/README.md)).
 
 ### A part taken off
 
@@ -516,7 +516,7 @@ The table shows what they changed, and what each change needed:
 | a flywheel on a sliding mount and a ramp that sends shots out of the back | none | only shapes and the shot angle (`.shotAngle(147)`) for the simulator |
 | new buttons (B: intake on/off) | none | `Controls.java` |
 
-They worked on the robot in the Quick start's order: the Hardware Check, the Servo Finder, the Flywheel
+They worked on the robot in the tuning order: the Hardware Check, the Servo Finder, the Flywheel
 Finder, then (on a block, at 0.4 power) the motor directions and the first drive, each mechanism, then
 the Drive Tuner and the autonomous.
 

@@ -3,8 +3,8 @@
 Make autonomous moves stop where they should, and turns end on their heading.
 
 **In Tune and check:** yes, when there is a Robot.java.
-**You need:** a charged battery, the Drive Tuner done (`calibrated = true`), 5 ft of clear floor around
-the robot, a tape measure.
+**You need:** a charged battery, the Drive Tuner done (`calibrated = true`), clear floor (about 6 ft by 6
+ft of tiles; on a game field, see [On a game field](#on-a-game-field)), a tape measure.
 
 The Drive Tuner makes a move the right length. The Move Tuner makes it **stop** in the right place. A
 fast robot slides past the end of a move, and a turn can swing past its heading or stop short of it. Each
@@ -33,9 +33,37 @@ once, so you run the test again until it says OK. Every test ends about where it
 
    ![The test list with the arrow on 1 Creep and Power : 0.5: press D-pad, then A](../images/hub-move-tuner-go-choose.svg)
 
+## On a game field
+
+Spare tiles off the field are best: the same floor, with nothing in the way. On a game field, the tests fit
+between the field's parts, because each test ends where it began. Each test needs room on some sides only,
+and you can put the robot in a new spot before each test:
+
+| Test | Clear floor it needs |
+| --- | --- |
+| 1 Creep | a few inches ahead, and (mecanum) to the right |
+| 2 Stops | 24 in ahead of the robot's front edge |
+| 3 Turns | a circle as wide as the robot's diagonal (an 18 in robot: about 26 in), with the robot in its middle |
+| 4 Drift | 48 in ahead of the front edge. Mecanum: also 48 in to the right of the right edge |
+| 5 Move and turn | 24 in to the left of the left edge and 24 in to the right of the right edge, and room to turn |
+
+**BIOBUZZ:** only the HIVE frame's two feet are on the floor in the middle of the field. The HIVE is higher
+than 29 in, so the robot drives under it. Between the frame's feet and each side wall there is a clear
+strip, about 50 in wide and as long as the field. In that strip:
+
+- **Creep, Stops, Turns and Drift:** the robot's front points along the strip (along the side wall). On a
+  mecanum, Drift's 48 in move to the right does not fit. Drift only gives a report, so do it on spare tiles,
+  or skip it.
+- **Move and turn:** the robot's front points at the side wall, in the middle of the strip. Then its moves
+  to the left and right go along the strip.
+
+Keep the robot away from the FLOWERs on the walls, and from the frame's feet.
+
 ## Steps
 
 Run the tests in this order. Each one uses the numbers that the tests before it found.
+
+![The five tests from above, in order: 1 Creep rolls a few inches forward, then right, and finds moveMinPower. 2 Stops drives 6, 12 and 24 in out and back, and finds slowDownIn. 3 Turns turns left and back, and finds the turn numbers. 4 Drift drives 48 in forward and back, a report only. 5 Move and turn slides 24 in sideways while it turns 90 degrees left, and finds moveTurnScale and moveMaxTurnPower](../images/move-tuner-tests.svg)
 
 1. **1 Creep** (finds `moveMinPower`): the robot creeps forward, then (mecanum) to the right, with a little
    more power each step. It stops when the robot rolls. The tuner sets `moveMinPower` to that power x 1.3,
@@ -48,6 +76,9 @@ Run the tests in this order. Each one uses the numbers that the tests before it 
    again with a bigger `slowDownIn` (0, 3, 6, 9, 12) until every move slides 0.5 in or less past its end.
    The screen shows a line for each try: the worst slide, and how long the 24 in move took. A bigger
    `slowDownIn` stops better, but every move takes longer, so the tuner keeps the smallest one that is good.
+
+   ![A 24 in move's power: full power, then down to moveMinPower at the end. With slowDownIn 0 it slows down over the last 2.4 in only, arrives fast and slides past the end. With slowDownIn 6 it slows down over the last 6 in and stops on the end](../images/move-tuner-slowdown.svg)
+
    - `STUCK`: a move stalled before its end. Run Creep first, or clear the path.
    - `slowDownIn does not help`: every move already ends at `moveMinPower`. Run Creep, then Stops again.
 
@@ -63,6 +94,8 @@ Run the tests in this order. Each one uses the numbers that the tests before it 
    | rock in and out, just outside the tolerance | `turnToleranceDeg` + 0.5 (up to 3) |
    | swing past the target, or back and forth | `turnKd` up (more brake), or `turnKp` down (less push) |
    | end on target, but a 90-degree turn takes more than 2 s | `turnKp` up |
+
+   ![Four turn shapes, heading over time, with the target band: 1 stops off target and stays, turnMinPower up then turnKp up. 2 rocks in and out at the band's edge, turnToleranceDeg up. 3 swings past and back and forth, turnKd up or turnKp down. 4 ends on target but slowly, turnKp up](../images/move-tuner-turns.svg)
 
    **Why `turnMinPower` first:** near the target, the push (`turnKp` x the degrees left) is too weak to move
    the robot at all. More `turnKp` would also make the turn come in faster and swing more. Run Turns again
@@ -86,9 +119,21 @@ Run the tests in this order. Each one uses the numbers that the tests before it 
    ![Press A with the arrow on 5 Move and turn: the Driver Hub shows the heading at the end of each move and moveTurnScale now 0.94](../images/hub-move-tuner-step-move-turn.svg)
 
 6. **Check with a tape:** without odometry, the tuner measures with the wheel counts. A robot can slide with
-   its wheels locked, and the wheel counts do not see that. Run one 24 in move in an autonomous and measure
-   where it ends. With an `odometry(...)` line, the tuner measures with the odometry, which sees a skid
-   (`Measures with : the odometry`).
+   its wheels locked, and the wheel counts do not see that. So check one move with a tape. Use the Drive
+   Tuner's tape line ([Set up the floor](08-drive-tuner.md#steps)): the front left wheel's front edge on
+   **0**. Run a 24 in forward move in an autonomous, at your autonomous's power. Read where that wheel edge
+   stops. Within 0.5 in of 24: done. Else, find what you see in the table:
+
+   | The tape shows | Why | Do this |
+   | --- | --- | --- |
+   | short or long by the same share on every move (run a 48 in move too: 1 in short on 24 and 2 in short on 48) | the wheel size number is wrong | run the [Drive Tuner](08-drive-tuner.md) again, then the Move Tuner again |
+   | past the end, by more than the tuner's screen said | the wheels skid when the move stops, and the wheel counts miss it | in `Tunables.Drive`, make `slowDownIn` 3 bigger. Install, then run the move again |
+   | still past the end with `slowDownIn = 12` | the robot is too fast for this floor | use a lower power for the move (0.6 to 0.5), and run the Move Tuner at that power. Clean the tiles and check the wheels |
+
+   **Why `slowDownIn`, and not the tuner:** the tuner cannot see the skid, so it thinks the stops are good.
+   A bigger `slowDownIn` makes the robot slower at the end, so it skids less. With an `odometry(...)` line,
+   the tuner measures with the odometry, which sees a skid (`Measures with : the odometry`). Then the tuner
+   finds this number by itself.
 
 ## Fix a mistake
 

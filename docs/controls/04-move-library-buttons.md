@@ -109,4 +109,4 @@ stays as it starts. With one gamepad, a library job that you put on `g2` goes on
 **Next:** [Building autos](../building-autos/README.md).
 
 **Look it up:** [Moving the library's buttons](../reference/controls.md#moving-the-librarys-buttons) (the reference).
-**Go deeper:** [the cookbook's button recipes](../cookbook.md#buttons-and-gestures).
+**Go deeper:** [the cookbook's button recipes](../cookbook/03-buttons.md).

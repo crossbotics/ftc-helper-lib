@@ -14,10 +14,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
- * Cookbook: Pedro Pathing paths (docs/cookbook.md#pedro-paths). Needs the pedro folder in your project
+ * Cookbook: Pedro Pathing paths (docs/cookbook/12-pedro-paths.md). Needs the pedro folder in your project
  * (docs/modules/pedro.md) and a mecanum drive. Paths use our field numbers, the same as driveTo.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class PedroRecipes {

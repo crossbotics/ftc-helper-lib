@@ -12,11 +12,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
- * Cookbook: autonomous (docs/cookbook.md#autonomous). An autonomous is one file in autos/: a list of
+ * Cookbook: autonomous (docs/cookbook/09-autonomous.md). An autonomous is one file in autos/: a list of
  * named steps, read in INIT (for the menu and the start note, again when a choice changes; nothing runs)
  * and after ▶ (start on the Driver Hub). Inches, degrees (counterclockwise: 0 forward, 90 left), power 0 to 1. The robot only drives after the
  * Drive Tuner (Tunables.Drive.calibrated = true); the simulator runs it anyway.
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class AutonomousRecipes {

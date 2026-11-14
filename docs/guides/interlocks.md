@@ -11,7 +11,7 @@ once, in `Robot.java`. The library keeps to it every loop, in TeleOp and in auto
 what moves the part: a button, a stick, an action, a turret following the goal, an autonomous step.
 
 Reference: [Interlock in the robot module](../reference/parts/interlock.md). Quick recipe:
-[How do I stop two parts from hitting each other?](../cookbook.md#how-do-i-stop-two-parts-from-hitting-each-other)
+[How do I stop two parts from hitting each other?](../cookbook/07-turrets-and-interlocks.md#how-do-i-stop-two-parts-from-hitting-each-other)
 
 ## The idea, with a turret and a lift
 

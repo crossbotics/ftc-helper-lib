@@ -115,19 +115,19 @@ replacement for learning.
    Skip them if your robot project already builds and installs.
 2. [From Blocks to Java](docs/blocks-to-java.md) (used Scratch or Blocks before): where each block you
    know went, and why you never write the loop.
-3. [Quick start](docs/quick-start.md): add the library, get five files, and drive.
+3. [Pick your start](docs/pick-your-start/README.md): a starter bot, a common setup, or a blank slate.
 4. [The five files](docs/five-files/README.md): what each file is for.
 5. [Add to your robot](docs/add-to-robot/README.md): one page per part (a lift, a launcher, odometry, ...).
    Then [Controls](docs/controls/README.md), [Building autos](docs/building-autos/README.md), [Simulator](docs/simulator/README.md) and [Tuning](docs/tuning/README.md).
 
-**For a question like "how do I add a lift?":** the [Cookbook](docs/cookbook.md) has more than 100
+**For a question like "how do I add a lift?":** the [Cookbook](docs/cookbook/README.md) has more than 100
 short answers, each with code to copy. The build tests that code with every change.
 
 Everything else, by what you want to do:
 
 | I want to... | Read |
 | --- | --- |
-| **A quick answer: "how do I...?"** (a few lines of tested code to copy, by topic) | [Cookbook](docs/cookbook.md) |
+| **A quick answer: "how do I...?"** (a few lines of tested code to copy, by topic) | [Cookbook](docs/cookbook/README.md) |
 | **Install Android Studio and get the robot project** (no Java needed) | [Set up](docs/setup/README.md) |
 | Know Scratch or Blocks: see where each block went in Java | [From Blocks to Java](docs/blocks-to-java.md) |
 | **Get a robot driving, then a first autonomous** (a starter bot, a robot like an example, or your own design) | [Pick your start](docs/pick-your-start/README.md), then [the five files](docs/five-files/README.md) |

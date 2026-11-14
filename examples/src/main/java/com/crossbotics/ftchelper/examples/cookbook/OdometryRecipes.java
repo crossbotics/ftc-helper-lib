@@ -18,11 +18,11 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.Locale;
 
 /**
- * Cookbook: odometry and driveTo (docs/cookbook.md#odometry-and-driveto). Odometry tells the robot
+ * Cookbook: odometry and driveTo (docs/cookbook/11-odometry.md). Odometry tells the robot
  * where it is on the field. Field numbers: x inches right of the center line, y inches away from your
  * wall (negative = your half), heading 0 = facing away from you, counterclockwise +.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class OdometryRecipes {

@@ -25,7 +25,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | 1 | [Start it and drive](01-start-and-drive.md) | Start the simulator, read the page, and drive with a gamepad, the keyboard or a phone. | when you have the library in your project |
 | 2 | [Your robot file](02-your-robot-file.md) | The text file that tells the simulator about your robot. The simulator makes it from `Robot.java`, and marks what it guessed. | when your robot has the five files |
-| 3 | [Make it match your robot](03-make-it-match-your-robot.md) | Size and wheels, then the parts and their shapes, where the pieces go in and out, and CAD. Worked examples for the common setups. | when you want the pretend robot to act like yours |
+| 3 | [Make it match your robot](03-make-it-match-your-robot.md) | Size and wheels, then the parts and their shapes, where the pieces go in and out, and CAD (your robot's 3D design files). Worked examples for the common setups. | when you want the pretend robot to act like yours |
 | 4 | [Watch an autonomous](04-watch-an-autonomous.md) | Run your autonomous, watch the score, and read the report. | after each change to an autonomous |
 
 **Tests:** the simulator can also check your code after every change. That is its own section:

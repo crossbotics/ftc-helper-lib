@@ -46,10 +46,10 @@ flowchart TB
 | 3 | [Servo Finder](03-servo-finder.md) | ends and positions | a servo pushed past its end breaks, so find the ends before code moves it |
 | 4 | [Hood Finder](04-hood-finder.md) | a hood's two stops | the Shot Tuner writes hood positions, so the hood needs its stops first |
 | 5 | [Motor Finder](05-motor-finder.md) | limits and positions | a wrong limit breaks parts, so do it before you drive a mechanism with code |
-| 6 | [Flywheel Finder](06-flywheel-finder.md) | gains and recovery | the shot table is only true when the wheel holds its speed |
+| 6 | [Flywheel Finder](06-flywheel-finder.md) | gains (the numbers that hold its speed) and recovery | the shot table is only true when the wheel holds its speed |
 | 7 | [Feed Stop Finder](07-feed-stop-finder.md) | hold and release | the launcher must feed one piece at a time before you tune shots |
 | 8 | [Drive Tuner](08-drive-tuner.md) | wheel size and strafe | autonomous moves need the right distances. Autonomous stays off until it passes |
-| 9 | [Odometry Tuner](09-odometry-tuner.md) | pod directions and offsets | `driveTo` and the shot distance need a true pose. Path steps stay off until it passes |
+| 9 | [Odometry Tuner](09-odometry-tuner.md) | pod directions and offsets (a pod is a small free wheel that measures how far the robot rolls) | `driveTo` and the shot distance need a true pose (where the robot is on the field, and which way it faces). Path steps stay off until it passes |
 | 10 | [Move Tuner](10-move-tuner.md) | where moves stop, how turns end | it needs the right distances (Drive Tuner) and, with odometry, a true pose to measure with |
 | 11 | [Camera lighting](11-camera-lighting.md) (a setup, not a tool) | the camera setting for each kind of light | the camera must see the tags well before you aim or tune shots |
 | 12 | [Aim Tuner (own file)](12-aim-tuner.md) | camera offset | aim first, so you build the shot table with straight shots |

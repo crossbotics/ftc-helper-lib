@@ -10,10 +10,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: driving (docs/cookbook.md#driving). Each small robot below shows one way to write the
+ * Cookbook: driving (docs/cookbook/02-driving.md). Each small robot below shows one way to write the
  * drive line in Robot.java. In your own code there is only ONE Robot.java with ONE drive line.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class DrivingRecipes {
