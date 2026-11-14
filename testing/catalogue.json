@@ -1208,7 +1208,7 @@
    "kit_bots": [
     "gobilda-strafer"
    ],
-   "since": "unreleased",
+   "since": "v0.41.0",
    "docs": [
     {
      "path": "docs/tuning/10-move-tuner.md",

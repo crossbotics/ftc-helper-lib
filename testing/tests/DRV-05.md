@@ -7,7 +7,7 @@ where: both
 minutes: 30
 needs: []
 kit_bots: [gobilda-strafer]
-since: unreleased
+since: v0.41.0
 docs: [tuning/10-move-tuner.md, reference/parts/drive.md#in-tunablesjava]
 ---
 
