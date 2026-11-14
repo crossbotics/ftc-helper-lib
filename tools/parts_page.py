@@ -76,7 +76,7 @@ def page(cat):
     w("")
     w(f"Every number comes from the seller's page or the seller's own documents (motors and servos read on "
       f"**{cat['checked']}**; wheels and rollers on the date in their Checked column; the link is in each row). A dash (-) means the seller does not publish that number. "
-      f"{len(motors)} motors and {len(servos)} servos. See also: [the simulator guide](simulator.md).")
+      f"{len(motors)} motors and {len(servos)} servos. See also: [the simulator guide](../simulator/README.md).")
     w("")
     w("## Use a part")
     w("")
