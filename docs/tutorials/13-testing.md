@@ -2,12 +2,15 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**You will build:** six small tests, most of them for the `LiftHeights` class from Tutorial 12, which run on a laptop.
+**In the five files:** simulator tests check your whole robot with no Java to write
+([Run all your tests](../tests/02-run-all-your-tests.md)).
+**Build it by hand** to test one piece of your code in a fraction of a second: small automatic tests
+(JUnit) that run on a laptop. This page is the only one that teaches them.
 
-**You will learn:** how to write small automatic tests (JUnit) for your team's code, run them on a
-laptop in seconds, and which parts of robot code can be tested this way.
+**You will build:** six small tests that run on a laptop. Most of them test the `LiftHeights` class from
+Tutorial 12.
 
-**You need:** Tutorial 12 (the `LiftHeights` class). No robot.
+**You need:** Tutorial 12 done (the `LiftHeights` class). You need no robot.
 
 **Full program:** [`LiftHeightsTest.java`](../../examples/src/test/java/com/crossbotics/ftchelper/examples/tutorials/robot/LiftHeightsTest.java)
 
@@ -15,23 +18,20 @@ laptop in seconds, and which parts of robot code can be tested this way.
 
 ## 1. Why test without a robot?
 
-The robot is shared, the battery runs out, and the build team needs it too. Many bugs are not
-about hardware at all: a wrong list index, a sign error, a height out of range. A test finds those
-in one second, on any laptop, every time you change the code.
-
-The library itself has over 250 such tests. They found real bugs before any robot moved.
+The whole team shares the robot, and the battery runs out. Many bugs have nothing to do with hardware:
+a wrong list index, a sign error, a height out of range. A test finds those in one second, on any
+laptop, every time you change the code.
 
 ## 2. What you can test
 
 | Testable on a laptop | Needs the robot |
 | --- | --- |
-| math, lists, choices (`LiftHeights.up()`) | does the motor turn? |
-| "with these numbers, the PID gives this power" | is the PID tuned well? |
-| button logic (`ControllerBindings` with a pretend `Gamepad`) | does the driver like it? |
-| limits (`SoftLimits.limit(...)`) | is the hard stop in the right place? |
+| math, lists, choices (`LiftHeights.up()`) | whether the motor turns |
+| "with these numbers, the PID gives this power" | whether the PID is tuned well |
+| button logic (`ControllerBindings` with a pretend `Gamepad`) | whether the driver likes it |
+| limits (`SoftLimits.limit(...)`) | whether the hard stop is in the right place |
 
-**Tip:** keep logic in small classes with no hardware (like `LiftHeights`), and keep hardware in
-the subsystem classes. Then the logic is easy to test.
+**Tip:** keep logic in small classes with no hardware (like `LiftHeights`), so it is easy to test.
 
 ## 3. Set up TeamCode for tests (once)
 
@@ -43,7 +43,8 @@ Gradle is the tool that builds your code. `build.gradle` is its settings file.
 testImplementation 'junit:junit:4.13.2'
 ```
 
-2. Inside `android { ... }`, add (so Android classes give default values in tests instead of crashing):
+2. In tests, Android classes crash unless you tell them to give default values. So add this inside
+   `android { ... }`:
 
 ```groovy
 testOptions {
@@ -52,7 +53,7 @@ testOptions {
 ```
 
 3. Make the folder `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/` (next to `main`).
-   Tests live in `test`, so they never go onto the robot.
+   The tests live in `test`, so they never go onto the robot.
 4. Sync Gradle (the elephant button in Android Studio).
 
 ## 4. A first test
@@ -74,7 +75,8 @@ public class LiftHeightsTest {
 ```
 
 - Each method marked `@Test` is one test.
-- `assertEquals(expected, actual)` fails the test if they differ. `assertTrue(x)` fails it if `x` is false.
+- `assertEquals(expected, actual)` fails the test when the two are different. `assertTrue(x)` fails it
+  when `x` is false.
 - Name tests as sentences about what should be true. When one fails, the name tells you what broke.
 
 A test that protects a safety rule:
@@ -87,7 +89,7 @@ A test that protects a safety rule:
 }
 ```
 
-If someone later sets HIGH above the lift's limit, this test fails before the code reaches the robot.
+When someone later sets HIGH above the lift's limit, this test fails before the code reaches the robot.
 
 ## 5. Testing with library pieces and your numbers
 
@@ -99,36 +101,39 @@ If someone later sets HIGH above the lift's limit, this test fails before the co
 }
 ```
 
-Library classes that use time (`PidController`, `SlewRateLimiter`, `LoopTimer`, the rumble classes)
-have a second constructor that takes a **clock**. In a test you control time: `now[0] += 20_000_000L`
-moves it 20 ms forward. No waiting, and the result is the same every run.
+Some library classes use time: `PidController`, `SlewRateLimiter`, `LoopTimer`, the rumble classes.
+They have a second constructor that takes a **clock**. In a test, you control time:
+`now[0] += 20_000_000L` moves it 20 ms forward. The test does not wait, and the result is the same every
+run.
 
 The third number in `assertEquals(a, b, 1e-9)` is the allowed difference for decimal numbers.
 
 ### A real lesson from writing this test
 
-The first version jumped one controller from position 0 to 2400 in 20 ms and expected only the
-F push. It got -1.0 instead: the D part saw a huge, sudden "movement" and pushed back hard. The
-test was wrong, not the PID: no real lift moves that fast. Tests teach you how your code really
-behaves.
+The first version jumped from position 0 to 2400 in 20 ms, and expected only the F push. It got -1.0:
+the D part saw a huge, sudden "movement" and pushed back hard. The PID was right, and the test was
+wrong: no real lift moves that fast. Tests teach you how your code really behaves.
 
 ## 6. Run the tests
 
-- **In Android Studio:** open the test file, click the green arrow next to `class` (all tests)
-  or next to one `@Test`. Green = pass, red = fail with the reason.
+- **In Android Studio:** open the test file. Click the green arrow next to `class` (all tests) or next
+  to one `@Test`. Green = pass, red = fail with the reason.
 - **In the Terminal tab:**
+
+**Where:** the Terminal tab, in your robot project's folder (the one with `TeamCode` in it).
 
 ```bash
 ./gradlew :TeamCode:testDebugUnitTest
 ```
 
-Run them before every commit (each time you save a version of the code in git), and always before an event.
+Run them before every commit (a version of the code that you save in git) and before every event
+([When to run them](../tests/02-run-all-your-tests.md#3-when-to-run-them)).
 
 ## 7. Test your robot in five files
 
 With the robot in five files (`Robot.java`, `Tunables.java`, ...), the library's **test kit** gives your
-robot pretend devices: motors whose encoder you set, servos that remember where they were sent. The
-test does INIT, ▶ (start on the Driver Hub) and a loop, then checks what each motor got:
+robot pretend devices: motors whose encoder you set, and servos that remember where your code sent them.
+The test does INIT, ▶ (start on the Driver Hub) and a loop. Then it checks what each motor got:
 
 ```java
 import com.crossbotics.ftchelper.testkit.PretendDevices;
@@ -149,13 +154,13 @@ import com.crossbotics.ftchelper.testkit.PretendDevices;
 }
 ```
 
-**Why:** a typo in `Tunables.java` stops INIT on the robot; here it fails on the laptop first. And a
-change to `Robot.java` (a second lift motor, a new interlock rule) is checked in a second. The test
-cannot see how the real robot moves (gravity): that is what the
-[simulator](../guides/simulator.md) is for.
+**Why:** a typo in `Tunables.java` stops INIT on the robot. With a test, it fails on the laptop first.
+The test also checks a change to `Robot.java` (a second lift motor, a new interlock rule) in a second.
+The test cannot see how the real robot moves (gravity): use a
+[simulator test](../tests/01-record-a-test.md) for that.
 
-**Time passing:** for a test of timing ("the arm pushes 0.2 s after fire"), use a pretend clock. The test moves
-the time by hand, so it does not wait, and a slow laptop cannot make it fail:
+**Time passing:** for a test of timing ("the arm pushes 0.2 s after fire"), use a pretend clock. The test
+moves the time by hand. So it does not wait, and a slow laptop cannot make it fail:
 
 ```java
 PretendClock clock = PretendClock.use();   // and PretendClock.stopUsing() in @After
@@ -164,35 +169,36 @@ clock.addSec(0.25);                         // 0.25 s later, at once
 robot.all().update();
 ```
 
-A pretend motor does not speed up by itself: for a flywheel, set `fly.velocity = fly.velocityCommand` in each
-loop, or it is never ready ([PretendClock](../modules/testkit.md#pretendclock) has a whole example).
- A whole example: `examples/src/test/.../v2bot/V2botTest.java`.
-More: [test kit](../modules/testkit.md).
+A pretend motor does not speed up by itself. For a flywheel, set `fly.velocity = fly.velocityCommand` in
+each loop, or the flywheel is never ready ([PretendClock](../modules/testkit.md#pretendclock)). A whole
+robot test: `examples/src/test/.../v2bot/V2botTest.java`.
 
 ## Run it
 
-1. Set up section 3, copy `LiftHeights` and the test (fix the package names).
-2. Run: 6 tests pass.
-3. Break something on purpose: make `up()` return `this`. Run again: a test fails, and its name says what broke.
-   Fix it.
+1. Do the setup in section 3. Copy `LiftHeights` and the test (fix the package names).
+2. Run the tests: 6 tests pass.
+3. Break something on purpose: make `up()` return `this`. Run again: a test fails, and its name says what
+   broke. Fix it.
 
 ## If something goes wrong
 
 | Problem | Fix |
 | --- | --- |
-| `Cannot resolve symbol 'Test'` | `testImplementation 'junit:junit:4.13.2'` is missing, or Gradle was not synced. |
+| `Cannot resolve symbol 'Test'` | `testImplementation 'junit:junit:4.13.2'` is missing, or you did not sync Gradle. |
 | "Method ... not mocked" | `unitTests.returnDefaultValues = true` is missing. |
 | Test cannot find your class | The test's `package` line must match the class's package. |
 
 ## Try this
 
-1. Test `LiftHeights.closestTo` with a position exactly halfway between two heights. Which one
-   should win? Decide, write the test, and change the code if needed.
-2. Test a `ControllerBindings` setup: make `new Gamepad()`, set `gamepad.a = true`, call
-   `update`, check your counter. (The library's `GamepadTest` shows how.)
+1. Test `LiftHeights.closestTo` with a position exactly halfway between two heights. Decide which one
+   should win, write the test, and change the code when it does not match.
+2. Test a `ControllerBindings` setup: make `new Gamepad()`, set `gamepad.a = true`, call `update`, and
+   check your counter. The library's `GamepadTest` shows how.
 3. Write a test for a mirror function `double side(boolean red)` from Tutorial 10.
 
-## Next
+---
 
-[Tutorial 14: Mechanism helpers](14-mechanisms.md): the ready-made versions of everything you built
-in tutorials 07-12.
+**Next:** [Tutorial 14: Mechanism helpers](14-mechanisms.md).
+
+**Look it up:** [Test kit](../modules/testkit.md) (`PretendDevices`, `PretendClock`),
+[Control module](../modules/control.md) (`PidController` with a clock).

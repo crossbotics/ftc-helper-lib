@@ -54,7 +54,7 @@ import java.util.function.LongSupplier;
  * (no rule against it); the ROBOT SIGNS must still show the alliance color (R402). Keep your other
  * rules' colors away from red and blue, so nobody reads them as the alliance.
  *
- * Docs: docs/modules/robot.md (section "Lights")
+ * Docs: docs/reference/robot-java.md (section "Lights")
  */
 public final class Lights extends Module<Lights> {
     /** A flash's length when none is given: half a second. */
@@ -83,6 +83,8 @@ public final class Lights extends Module<Lights> {
     }
 
     private Output output;
+    // More lights of the same kind that show the same as the first (alsoLight).
+    private final List<String> alsoLights = new ArrayList<>();
     // The time in nanoseconds (tests use a pretend clock).
     LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
 
@@ -143,6 +145,37 @@ public final class Lights extends Module<Lights> {
      */
     public static Lights blinkin(String name) {
         return new Lights(name, Kind.BLINKIN);
+    }
+
+    /**
+     * More lights of the same kind that always show the same as this one: the same color, blinking and
+     * flashes, every loop. For example a light on each side of the robot. The rules are written once.
+     *
+     * <pre>{@code
+     * lights = add(Lights.gobilda("light").alsoLight("light_right"));
+     * }</pre>
+     *
+     * Two lights that show different things: two parts instead, each with its own rules
+     * ({@code leftLight = add(Lights.gobilda("light_left"))}, {@code rightLight = add(...)}).
+     * Two goBILDA lights on one servo port (a Y-cable) also show the same color, with no code.
+     *
+     * @param names their configuration names: goBILDA lights ("Servo") or Blinkins, the same kind as this one
+     * @return this light
+     */
+    public Lights alsoLight(String... names) {
+        if (names == null || names.length == 0) {
+            throw new IllegalArgumentException("Robot.java: " + device + ".alsoLight(): give the other light's name");
+        }
+        for (String n : names) {
+            if (n == null || n.trim().isEmpty()) {
+                throw new IllegalArgumentException("Robot.java: " + device + ".alsoLight(...): a name is empty");
+            }
+            if (n.equals(device) || alsoLights.contains(n)) {
+                throw new IllegalArgumentException("Robot.java: " + device + ".alsoLight(\"" + n + "\"): that light is already in this part");
+            }
+            alsoLights.add(n);
+        }
+        return this;
     }
 
     // ----------------------------- rules -----------------------------
@@ -388,15 +421,30 @@ public final class Lights extends Module<Lights> {
     @Override
     void build(Devices devices, TunableSection t) {
         // Only find the device: nothing is shown until the first loop.
-        if (kind == Kind.GOBILDA) {
-            final Servo servo = devices.get(Servo.class, device);
-            output = c -> servo.setPosition(c.gobildaPosition());
-        } else {
-            final RevBlinkinLedDriver blinkin = devices.get(RevBlinkinLedDriver.class, device);
-            output = c -> blinkin.setPattern(patterns.containsKey(c) ? patterns.get(c) : c.blinkinPattern());
+        // The first light and every alsoLight(...) one show the same.
+        final List<Output> outs = new ArrayList<>();
+        for (String n : deviceNames()) {
+            if (kind == Kind.GOBILDA) {
+                final Servo servo = devices.get(Servo.class, n);
+                outs.add(c -> servo.setPosition(c.gobildaPosition()));
+            } else {
+                final RevBlinkinLedDriver blinkin = devices.get(RevBlinkinLedDriver.class, n);
+                outs.add(c -> blinkin.setPattern(patterns.containsKey(c) ? patterns.get(c) : c.blinkinPattern()));
+            }
         }
+        output = outs.size() == 1 ? outs.get(0) : c -> {
+            for (Output o : outs) o.show(c);
+        };
         // Optional: no "missing" note when Tunables does not have it.
         if (t != null && t.has("allianceAtInit")) allianceAtInit = t.flag("allianceAtInit", true);
+    }
+
+    @Override
+    List<String> deviceNames() {
+        List<String> all = new ArrayList<>();
+        all.add(device);
+        all.addAll(alsoLights);
+        return all;
     }
 
     /** For tests: a pretend clock (nanoseconds). */
@@ -570,6 +618,6 @@ public final class Lights extends Module<Lights> {
 
     @Override
     void simLines(List<String> out, TunableSection t) {
-        out.add("light." + device + " = " + (kind == Kind.GOBILDA ? "gobilda" : "blinkin"));
+        for (String n : deviceNames()) out.add("light." + n + " = " + (kind == Kind.GOBILDA ? "gobilda" : "blinkin"));
     }
 }

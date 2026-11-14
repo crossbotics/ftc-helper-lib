@@ -1,0 +1,94 @@
+{
+  "pictures": {
+    "shot-tuner-go-menu": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Tune and check ---",
+        "Robot: Robot",
+        "  Hardware Check: every device found, ...",
+        "  ...",
+        "*> Shot Tuner: the shot speed by distance",
+        "  ...",
+        "D-pad up/down = pick, A = open it. Then ▶."
+      ]
+    },
+    "shot-tuner-go-start": {
+      "button": "▶ (start)",
+      "where": "Press on the Driver Hub:",
+      "lines": [
+        "Battery : 12.8 V",
+        "Shot tuner: builds the shot table (distance -> speed).",
+        "!! Nobody in the line of fire. Eye protection on.",
+        "Camera : STREAMING 30 fps",
+        "Tables : pollen, nectar (Y until > Table, D-pad to choose)",
+        "...",
+        "*The flywheel stays off until you press LB. Press ▶.",
+        "GUIDE (center button), or hold START 1 s = help."
+      ]
+    },
+    "shot-tuner-step-table": {
+      "button": "Y, then D-pad",
+      "where": "Press on gamepad 1:",
+      "order": "press-first",
+      "lines": [
+        "--- Shot tuner  (Y = what the D-pad changes) ---",
+        "  Speed : 2600 RPM, measured 0  (OFF: LB)",
+        "*> Table : POLLEN  (POLLEN, NECTAR)",
+        "  Distance : 24.2 in (camera, 12 readings), bearing ...",
+        "..."
+      ]
+    },
+    "shot-tuner-step-spin": {
+      "button": "LB",
+      "where": "At the nearest spot, press:",
+      "order": "press-first",
+      "lines": [
+        "--- Shot tuner  (Y = what the D-pad changes) ---",
+        "*  Speed : 2600 RPM, measured 2594",
+        "> Table : POLLEN  (POLLEN, NECTAR)",
+        "*  Distance : 24.2 in (camera, 12 readings), bearing ...",
+        "*Ready : YES",
+        "..."
+      ]
+    },
+    "shot-tuner-step-shoot": {
+      "button": "RB",
+      "where": "Press on gamepad 1:",
+      "order": "press-first",
+      "lines": [
+        "> Speed : 2600 RPM, measured 2591",
+        "...",
+        "Ready : YES",
+        "*Shots fired : 1, 1 to mark (A hit / B miss)",
+        "Hits at 2600 : 0/0  (shoot 3-5)",
+        "..."
+      ]
+    },
+    "shot-tuner-step-mark": {
+      "button": "A = HIT or B = MISS",
+      "where": "After each shot, press:",
+      "order": "press-first",
+      "lines": [
+        "> Speed : 2600 RPM, measured 2596",
+        "...",
+        "Shots fired : 7",
+        "*Hits at 2600 : 3/4",
+        "*Tried here : 2500: 1/3, 2600: 3/4 (best)",
+        "..."
+      ]
+    },
+    "shot-tuner-step-save": {
+      "button": "X",
+      "where": "Press on gamepad 1:",
+      "order": "press-first",
+      "lines": [
+        "Points : POLLEN 1, NECTAR 0  (4-6 per table)",
+        "...",
+        "*Saved 24.2 in -> 2600 RPM (3/4 in) POLLEN.",
+        "  24.2 in: 2600 RPM (3/4 in, measured 2596 RPM)",
+        "..."
+      ]
+    }
+  }
+}

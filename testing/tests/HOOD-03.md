@@ -8,7 +8,7 @@ minutes: 40
 needs: [flywheel, hood-servo|hood-motor]
 kit_bots: []
 since: v0.17.0
-docs: [tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle, guides/finders.md#shot-tuner-the-shot-table]
+docs: [add-to-robot/05-launcher.md#a-hood-the-shot-angle, tuning/13-shot-tuner.md]
 ---
 
 ## Why
@@ -24,7 +24,7 @@ speed. The operator's left stick adds a hood trim. INIT must stop on a row outsi
 
 - HOOD-01 or HOOD-02 done. A table with three numbers per row, `{inches, rpm, hood}`.
 - Speed from distance (camera or odometry).
-- Simulator: your robot from `Robot.java` (`:sim:fromRobot` writes the hood), or `turretbot` from lesson 9.
+- Simulator: your robot from `Robot.java` (`:sim:fromRobot` writes the hood), or `turretbot` ([Add a camera: Try it in the simulator](../../docs/add-to-robot/07-camera.md#try-it-in-the-simulator)).
 
 ## Steps
 

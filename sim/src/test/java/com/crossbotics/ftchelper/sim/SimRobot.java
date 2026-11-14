@@ -578,6 +578,11 @@ final class SimRobot {
         devices.put("Control Hub battery", voltageSensor());
     }
 
+    /** Every device name in the robot file (motors, servos, sensors, the IMU, odometry, cameras), as the code finds them. */
+    synchronized java.util.Set<String> deviceNames() {
+        return new java.util.LinkedHashSet<>(devices.keySet());
+    }
+
     /**
      * A new hardware map with every device, for one OpMode run (like the FTC app makes at INIT). The
      * missing devices ({@link #setMissing}) are left out, like a part not in the configuration yet.

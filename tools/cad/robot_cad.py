@@ -14,7 +14,7 @@ Three steps, each a command (run them with the Python that has build123d: see to
                            frame with a suggested shape line, to compare with the robot file.
 
 Coordinates: parts.json keeps the CAD's own (mm). The robot frame is forward, left, up in inches from the robot's
-centre on the floor (docs/guides/simulator.md, "CAD models of the parts").
+centre on the floor (docs/simulator/03-make-it-match-your-robot.md#5-cad-models-optional).
 """
 import json
 import math

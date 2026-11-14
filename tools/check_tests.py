@@ -402,7 +402,7 @@ def read_test(path, vocab):
     if isinstance(docs, str):
         docs = [docs]
     if not isinstance(docs, list) or not docs:
-        problem(where, "docs must list at least one docs page, like [guides/finders.md#hood-finder]")
+        problem(where, "docs must list at least one docs page, like [tuning/04-hood-finder.md]")
         docs = []
     doc_links = []
     for d in docs:

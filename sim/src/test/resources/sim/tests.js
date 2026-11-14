@@ -1,4 +1,4 @@
-// The simulator page's tests (start lesson 10, "Test your robot code"): record a test, choose its checks,
+// The simulator page's tests (docs/tests/: "Record a test"): record a test, choose its checks,
 // save it in the robot project's simulator/scenarios folder (or download it), run it (or all of them) on the
 // page, and, after a planned change, update it. The simulator does the work (SimRecorder, SimTests); this file is
 // the menu, the recording bar and the dialog.
@@ -6,7 +6,7 @@
 (() => {
   const $ = (s) => document.querySelector(s);
   const esc = (t) => String(t == null ? "" : t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const LESSON = "https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/tutorials/start/10-test-your-robot-code.md";
+  const LESSON = "https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/tests/01-record-a-test.md";
 
   // ------------------------------------------------------------ talking to the simulator
   async function getJSON(url) {
@@ -119,7 +119,7 @@
   function fileText(name) {
     const out = [`# ${name}.sim: made by the simulator's test recorder on ${rec.date}, from "${rec.opMode}".`,
       `# The steps replay what was done on the page; the "expect" lines at the end are the checks.`,
-      `# Change a check's number or tolerance to make it looser or stricter (start lesson 10).`];
+      `# Change a check's number or tolerance to make it looser or stricter (docs/tests/01-record-a-test.md, "Tolerances").`];
     if (info.runLine) out.push("# Run it: " + info.runLine.replace("NAME", name));
     if (info.canSave && info.robotLine) out.push(info.robotLine);
     out.push(...rec.steps, "# The checks");
@@ -159,7 +159,7 @@
     open(head("Your test: choose the checks")
       + `<p class="muted">The steps replay what you did (${rec.steps.length} lines). The checks say what must be true at the end.
          <b>Goal checks</b> are ticked: they are what the test is for. <b>Details</b> are not: tick one only if it matters,
-         because a test full of details breaks with every small change. <a href="${LESSON}" target="_blank" rel="noopener">How to choose</a></p>`
+         because a test full of details breaks with every small change. <a href="${LESSON}#5-check-goals-not-details" target="_blank" rel="noopener">How to choose</a></p>`
       + rec.notes.map((n) => `<p class="td-note">${esc(n)}</p>`).join("")
       + `<h3>Goal checks</h3>${goals.map(([c, i]) => checkRow(c, i)).join("") || '<p class="muted">None found: tick a detail below.</p>'}`
       + `<h3>Details</h3>${details.map(([c, i]) => checkRow(c, i)).join("") || '<p class="muted">None.</p>'}`

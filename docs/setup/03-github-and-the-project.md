@@ -1,8 +1,8 @@
 # Set up 3: GitHub and the robot project
 
-**Set up, page 3 of 9.** Do it on each laptop.
+Do it on each laptop.
 
-You get the **robot project** onto the laptop and open it in Android Studio. Each step is shown two
+You get the **robot project** onto the laptop and open it in Android Studio. Each step has two
 ways. Use the one your team likes:
 
 - **GitHub Desktop:** a free app with buttons ([desktop.github.com](https://desktop.github.com)).
@@ -33,7 +33,7 @@ ways. Use the one your team likes:
    git config --global pull.rebase false
    ```
 
-   - `git --version` must print `git version 2...`. It says `not recognized`? See
+   - `git --version` must print `git version 2...`. If it says `not recognized`, read
      [git is not recognized](../troubleshooting.md#autonomous-choice-and-git-problems).
    - **Why the private email and a first name:** a public project's history is public.
 
@@ -104,5 +104,7 @@ A mentor or code lead does this once for the team.
 
 The project is open in Android Studio, the sync is finished, and you can see the `teamcode` folder.
 
-**Next:** [Add the library](04-add-the-library.md). Is there already an `ftc-helper-lib` folder with
-files in it? Skip to [Update the hubs](05-update-the-hubs.md).
+**Next:** [Add the library](04-add-the-library.md). If there is already an `ftc-helper-lib` folder
+with files in it, skip to [Update the hubs](05-update-the-hubs.md).
+
+**Look it up:** [Git and GitHub for FTC teams](../guides/github.md) and [Troubleshooting: git problems](../troubleshooting.md#autonomous-choice-and-git-problems).

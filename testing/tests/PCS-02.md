@@ -8,7 +8,7 @@ minutes: 30
 needs: [intake, color-sensor|distance-sensor]
 kit_bots: []
 since: v0.17.0
-docs: [tutorials/start/09-shooter-and-camera.md#12-extra-know-which-piece-fires-next, cookbook.md#game-pieces]
+docs: [add-to-robot/05-launcher.md#know-which-piece-fires-next, cookbook/05-game-pieces.md]
 ---
 
 ## Why
@@ -25,7 +25,7 @@ a bounce): we want to know how often.
 
 - PCS-01 done (each kind tuned).
 - `pieces = add(Pieces.kinds(...).comingIn(...).max(4))` before the launcher line; for the table, `.tableFrom(pieces.nextKind())` on the launcher.
-- Simulator: sensor lines in your robot file (`color.NAME = at=intake`, see [game pieces](../../docs/guides/simulator.md#game-pieces)).
+- Simulator: sensor lines in your robot file (`color.NAME = at=intake`, see [game pieces](../../docs/reference/robot-file.md#game-pieces)).
 
 ## Steps
 

@@ -95,7 +95,7 @@ public final class SimFromRobot {
             System.out.println("  kept your " + k + (k.contains(" = ") ? "" : " (it is not marked " + MARK + ")"));
         }
         printChanged(r, file);
-        if (r.text.contains("TODO")) System.out.println("  Lines with TODO are guesses: measure them (docs/guides/simulator.md).");
+        if (r.text.contains("TODO")) System.out.println("  Lines with TODO are guesses: measure them (docs/simulator/03-make-it-match-your-robot.md).");
         int standIns = 0;
         for (String line : r.text.split("\n")) if (line.startsWith("tunable.")) standIns++;
         if (standIns > 0) {
@@ -169,7 +169,7 @@ public final class SimFromRobot {
             }
             System.out.println("Robot file NOT made from " + javaFile + ": it and " + shown + " disagree:");
             for (String p : r.problems) System.out.println("  " + p);
-            System.out.println("  The simulator uses " + shown + " as it is. Fix one of them (docs/guides/simulator.md).");
+            System.out.println("  The simulator uses " + shown + " as it is. Fix one of them (docs/simulator/02-your-robot-file.md).");
         } catch (Exception | LinkageError e) {
             System.out.println("Robot file NOT made from " + javaFile + " (" + e + "). The simulator uses " + shown + " as it is.");
         }
@@ -273,11 +273,11 @@ public final class SimFromRobot {
     // The size and start lines a new file gets when the code does not give them: guesses. A later run
     // replaces a guess (the exact same text, unmarked) when the code gives that number (chassisMm, heightMm).
     private static final String[][] GUESSES = {
-        {"# TODO measure: the robot's size in inches, and a legal start (inches from the field centre).", null},
+        {"# TODO measure: the robot's size in inches, and a legal start (inches from the field center).", null},
         {"robot.lengthIn = 18", "robot.lengthIn"}, {"robot.widthIn = 18", "robot.widthIn"},
         {"robot.heightIn = 18", "robot.heightIn"}, {"robot.chassisHeightIn = 4", "robot.chassisHeightIn"},
         {"start.x = -56", null}, {"start.y = -61.55", null}, {"start.heading = 0", null},
-        {"# TODO measure: wheel centres side to side, and front to back.", "drive.trackWidthIn"},
+        {"# TODO measure: wheel centers side to side, and front to back.", "drive.trackWidthIn"},
         {"drive.trackWidthIn = 15", "drive.trackWidthIn"}, {"drive.wheelBaseIn = 13", "drive.wheelBaseIn"}};
 
     // True for an unmarked line that is still exactly a guess a new file got, now given by the code.
@@ -312,7 +312,7 @@ public final class SimFromRobot {
             sb.append("# The simulator's robot, made from ").append(robotName).append(" (again at each start of the simulator).\n");
             sb.append("# Lines marked \"").append(MARK).append("\" come from the code and are rewritten each time.\n");
             sb.append("# Change any other line (or unmark a generated one to keep your own value): measure the\n");
-            sb.append("# robot, or ask the robot-file skill (skills/robot-file). See docs/guides/simulator.md.\n\n");
+            sb.append("# robot, or ask the robot-file skill (skills/robot-file). See docs/simulator/02-your-robot-file.md.\n\n");
             sb.append("battery = 12.8\n");
             sb.append("field = ").append(field).append("\n");
             // The size and start lines, unless the code gives them (then they come with the code's lines).

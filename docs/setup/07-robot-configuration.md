@@ -1,8 +1,8 @@
 # Set up 7: make the robot configuration
 
-**Set up, page 7 of 9.** Do it once per robot, and again when you add a part.
+Do it once per robot, and again when you add a part.
 
-**Only using the simulator on this laptop?** Skip this page. The simulator needs no hubs. Go to [Every practice](08-every-practice.md).
+**If you use only the simulator on this laptop,** skip this page: the simulator needs no hubs. Go to [Every practice](08-every-practice.md).
 
 The **robot configuration** tells the Control Hub which device is in which port, and its name. Your
 code finds each device by that name.
@@ -24,20 +24,20 @@ code finds each device by that name.
    1. Pick its kind: a motor type, **Servo**, **Continuous Rotation Servo**, or a sensor.
    2. Type its name.
 
-   A motor type is not in the list? Pick the closest one. The library takes the motor's real numbers
+   If a motor type is not in the list, pick the closest one. The library takes the motor's real numbers
    from your code.
 5. Leave the **imu** line as it is. It is the Control Hub's own IMU (the sensor that knows which way
    the robot faces).
-6. **Save**. Give the configuration a name, for example `MyRobot`.
-7. **Activate** it.
+6. Tap **Save**. Give the configuration a name, for example `MyRobot`.
+7. Tap **Activate**.
 
 ## Done when
 
 The Driver Hub shows your configuration's name at the top, and each port with a device has a name.
 
-**Set up is done.** Next you start using the library: pick the code you start from,
-[Quick start: pick your road](../quick-start.md#pick-your-road).
-Keep [Every practice](08-every-practice.md) open: you use it from now on.
+**Next:** [Every practice: pull, change, commit, push](08-every-practice.md). You use it from now on.
 
 **A wrong name** stops the program at INIT, and the Driver Hub then lists the names that do exist.
 More: [hardware names](../modules/hardware.md).
+
+**Look it up:** [Robot.java](../reference/robot-java.md) and [Parts catalog: motors, servos, wheels and rollers](../guides/parts-catalog.md).

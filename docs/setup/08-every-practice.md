@@ -1,6 +1,6 @@
 # Set up 8: every practice: pull, change, commit, push
 
-**Set up, page 8 of 9.** Everyone who changes code does this, every practice.
+Everyone who changes code does this, every practice.
 
 **Why:** git keeps every saved version of the code. You can undo a mistake, share code between
 laptops, and get back the exact code that ran at the last event.
@@ -24,7 +24,7 @@ git submodule update
 
 ### 2. Change, build, test
 
-One change at a time. Build (hammer), install (Run), test on the robot.
+Make one change at a time. Build (hammer), install (Run), and test on the robot.
 
 ### 3. Commit: save a snapshot each time a small change works
 
@@ -34,7 +34,9 @@ One change at a time. Build (hammer), install (Run), test on the robot.
 2. Type a message in **Summary** (bottom left).
 3. Click **Commit to main**.
 
-**Command line** (the same place):
+**Command line:**
+
+**Where:** the same Terminal tab, in the **project folder**.
 
 ```bash
 git status
@@ -42,7 +44,7 @@ git add TeamCode
 git commit -m "Auto: park 2 in further left"
 ```
 
-Read what `git status` lists, so you only commit what you meant to.
+Read what `git status` lists, so you commit only what you meant to.
 
 **A good message** says what changed and why: `Lift: high step 2400 -> 2350 (it hit the stop)`.
 Not `stuff` or `fix`.
@@ -51,9 +53,13 @@ Not `stuff` or `fix`.
 
 **GitHub Desktop:** click **Push origin**.
 
-**Command line** (the same place): `git push`
+**Command line:**
 
-The push is refused (`rejected ... fetch first`)? A teammate pushed first. Pull (step 1), then push again.
+**Where:** the same Terminal tab, in the **project folder**.
+
+`git push`
+
+When the push is refused (`rejected ... fetch first`), a teammate pushed first. Pull (step 1), then push again.
 
 ## Team rules
 
@@ -65,8 +71,10 @@ The push is refused (`rejected ... fetch first`)? A teammate pushed first. Pull 
 
 ## Done when
 
-You pulled at the start, and your work is pushed at the end.
+You pulled at the start, and you pushed your work at the end.
 
 **More git** (branches, conflicts, undo, before an event): [Git and GitHub for FTC teams](../guides/github.md).
 
-**Set up is done.** Next you start using the library: [Quick start: pick your road](../quick-start.md#pick-your-road).
+**Set up is done.** **Next:** [Pick your start](../pick-your-start/README.md): the code you start from.
+
+**Look it up:** [Troubleshooting: git problems](../troubleshooting.md#autonomous-choice-and-git-problems).

@@ -390,7 +390,7 @@ public class HoodTest {
         assertEquals(0, kit.motors.get("hood").power, 1e-9);
     }
 
-    // Codex 7: cancelling an action that moves a motor hood leaves it holding where it is.
+    // Codex 7: canceling an action that moves a motor hood leaves it holding where it is.
     @Test public void aCancelledActionLeavesAMotorHoodHoldingWhereItIs() {
         HoodBot r = bot(MotorTicks.class, true);   // no pose yet: no distance, so the angle is by hand
         Hood h = r.launcher.hood();

@@ -1,11 +1,9 @@
 // recipe: autos-choose-in-init
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
-// and the first two imports below to:  import org.firstinspires.ftc.teamcode.Robot;
-//   import org.firstinspires.ftc.teamcode.Tunables;
+// and the first import below to:  import org.firstinspires.ftc.teamcode.Robot;
 
 import com.crossbotics.ftchelper.examples.cookbook.Robot;
-import com.crossbotics.ftchelper.examples.cookbook.Tunables;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -29,13 +27,13 @@ public class ChooseInInit extends Auto<Robot> {
 
         // The start spot follows the "Start" line: the note and the simulator's robot change with it.
         s.onlyIf("Start", "Near")
-             .start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0)
+             .start("NEAR: against our wall, 2nd tile left of center, facing the field", -36, -61, 0)
          .end()
          .onlyIf("Start", "Far")
-             .start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -61, 0)
+             .start("FAR: against our wall, 2nd tile right of center, facing the field", 36, -61, 0)
              // Off the wall first: the FLOWER on our wall stands between the two start spots.
-             .forward("Off the wall", Tunables.Auto.offWallInches, 0.5)
-             .left("Across to the near side", Tunables.Auto.farToNearInches, 0.7)
+             .forward("Off the wall", 12, 0.5)
+             .left("Across to the near side", 72, 0.7)
          .end();
 
         // The plan: plain Java "if". choice(...) = the option chosen, as text.

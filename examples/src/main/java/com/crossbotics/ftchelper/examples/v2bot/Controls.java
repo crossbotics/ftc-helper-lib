@@ -42,7 +42,7 @@ public class Controls extends ControlMap<Robot> {
         // The hood's and the turret's own buttons.
         g2.leftStickY.use(robot.launcher.hood()::byHand).says("hood trim while it follows the table, else the hood (up = bigger angle)");
         g2.rightStickX.use(v -> robot.turret.manual(-v)).says("by hand (right = clockwise)");
-        g2.back.toggle(robot.turret.followMode()).says("follow the goal on/off");
+        g2.rightStickButton.toggle(robot.turret.followMode()).rumble().says("follow the goal on/off");
 
         // Ours.
         // The lifter's steps (each is an Action: it runs over many loops and never blocks the robot).

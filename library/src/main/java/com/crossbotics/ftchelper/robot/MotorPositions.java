@@ -256,10 +256,10 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
 
     @Override
     String toolFor(String field) {
-        if (field.equals("min")) return "the Motor Finder ({X} at the bottom stop), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
-        if (field.equals("max")) return "the Motor Finder ({B} at the top stop), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
+        if (field.equals("min")) return "the Motor Finder ({X} at the bottom stop), docs/tuning/05-motor-finder.md";
+        if (field.equals("max")) return "the Motor Finder ({B} at the top stop), docs/tuning/05-motor-finder.md";
         if (KNOWN.contains(field)) return "test it, live in the tuning menu (PRACTICE, hold {GUIDE})";
-        return "the Motor Finder (a position: P1, P2...), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
+        return "the Motor Finder (a position: P1, P2...), docs/tuning/05-motor-finder.md";
     }
 
     // ----------------------------- commands -----------------------------

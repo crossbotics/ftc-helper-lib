@@ -188,7 +188,7 @@ final class SimEngine {
     private java.util.Properties spotCache = new java.util.Properties();
 
     // A spot is saved as RED's (as the robot file's start is written). BLUE's is the same spot seen from the
-    // blue wall: turned half a turn about the field's centre, like defaultSpot. The same turn goes both ways.
+    // blue wall: turned half a turn about the field's center, like defaultSpot. The same turn goes both ways.
     static com.crossbotics.ftchelper.util.FieldPose forAlliance(com.crossbotics.ftchelper.util.FieldPose p,
                                                                com.crossbotics.ftchelper.match.Alliance a) {
         if (a == com.crossbotics.ftchelper.match.Alliance.RED) return p;
@@ -370,7 +370,7 @@ final class SimEngine {
 
     /**
      * The robot file's start (written for RED, at the bottom); for BLUE the same spot seen from the blue
-     * wall: turned half a turn about the field's centre (BIOBUZZ's field is turned, not mirrored, between
+     * wall: turned half a turn about the field's center (BIOBUZZ's field is turned, not mirrored, between
      * the alliances: its CAD has each red part's twin there).
      */
     com.crossbotics.ftchelper.util.FieldPose defaultSpot(com.crossbotics.ftchelper.match.Alliance a) {

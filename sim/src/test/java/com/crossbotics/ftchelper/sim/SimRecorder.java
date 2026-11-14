@@ -11,7 +11,7 @@ import java.util.Map;
  * (the OpMode chosen, INIT, START, STOP, every gamepad button and stick, how long they waited, the robot
  * or a game piece moved by hand), as scenario lines. When it stops, it suggests checks from what the
  * simulator sees now (did the autonomous finish, any error, the pieces scored, where the robot is), so a
- * student can make a test without writing one. Start lesson 10 teaches it.
+ * student can make a test without writing one. docs/tests/01-record-a-test.md teaches it.
  *
  * <p>Only scenario commands that already exist are written (SimScenario reads them), so a recorded test
  * is a normal scenario file: anyone can read it, change it and run it with ./gradlew :sim:scenario.
@@ -358,7 +358,7 @@ final class SimRecorder {
             b.append("# ").append(name).append(".sim: made by the simulator's test recorder on ").append(date)
                     .append(", from ").append(quote(opMode)).append(".\n");
             b.append("# The steps replay what was done on the page; the \"expect\" lines at the end are the checks.\n");
-            b.append("# Change a check's number or tolerance to make it looser or stricter (start lesson 10).\n");
+            b.append("# Change a check's number or tolerance to make it looser or stricter (docs/tests/01-record-a-test.md).\n");
             if (!runLine.isEmpty()) b.append("# Run it: ").append(runLine).append('\n');
             if (!robotLine.isEmpty()) b.append(robotLine).append('\n');
             for (String s : steps) b.append(s).append('\n');

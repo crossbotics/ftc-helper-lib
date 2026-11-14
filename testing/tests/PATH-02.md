@@ -8,7 +8,7 @@ minutes: 40
 needs: [mecanum, pinpoint|otos|dead-wheels, pedro]
 kit_bots: []
 since: v0.17.0
-docs: [tutorials/start/08-paths-with-pedro.md#5-write-your-first-path, modules/pedro.md#do-things-along-the-path]
+docs: [building-autos/05-pedro-paths.md#actionsjava-and-autos-make-paths-then-follow-them, modules/pedro.md#do-things-along-the-path]
 ---
 
 ## Why
@@ -24,7 +24,7 @@ ours, and that the report says when one did not fire.
 
 ## Setup
 
-- Lesson 8 done: Pedro added, `PedroConstants` tuned, `Tunables.Odometry.checked = true`.
+- [Add Pedro paths](../../docs/building-autos/05-pedro-paths.md) done: Pedro added, `PedroConstants` tuned, `Tunables.Odometry.checked = true`.
 - A path with two parts (`PedroPath.line(...).then(PedroPath.curve(...))`), about 4-6 ft long.
 - Tape marks on the floor where you expect each thing to start (real robot).
 

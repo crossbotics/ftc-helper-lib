@@ -1,0 +1,110 @@
+{
+  "pictures": {
+    "servo-finder-go-menu": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Tune and check ---",
+        "Robot: Robot",
+        "  Hardware Check: every device found, ...",
+        "  ...",
+        "*> Servo Finder: a servo's ends and positions",
+        "  ...",
+        "D-pad up/down = pick, A = open it. Then ▶."
+      ]
+    },
+    "servo-finder-go-start": {
+      "button": "▶ (start)",
+      "where": "Press on the Driver Hub:",
+      "lines": [
+        "Servo finder: finds a servo's safe ends and positions.",
+        "*Nothing moves until you nudge it. Press ▶.",
+        "GUIDE (center button), or hold START 1 s = help."
+      ]
+    },
+    "servo-finder-go-choose": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Choose a servo (D-pad, then A) ---",
+        "  arm",
+        "*> claw",
+        "  wrist",
+        "Full range (Y) : off: 600-2400 us, the SDK's normal ..."
+      ]
+    },
+    "servo-finder-step-middle": {
+      "button": "A",
+      "where": "Press on gamepad 1:",
+      "pos": 0.5,
+      "note": "holds the middle: put the arm on here",
+      "lines": [
+        "--- Servo \"claw\"  (BACK = another) ---",
+        "*Position : 0.500",
+        "Step : 0.050",
+        "End X : -",
+        "End B : -",
+        "..."
+      ]
+    },
+    "servo-finder-step-direction": {
+      "button": "D-pad up",
+      "where": "Press on gamepad 1:",
+      "pos": 0.6,
+      "frm": 0.5,
+      "note": "bigger = clockwise here",
+      "lines": [
+        "--- Servo \"claw\"  (BACK = another) ---",
+        "*Hint : bigger = clockwise (seller); test: D-pad up",
+        "*Position : 0.600",
+        "Step : 0.010",
+        "..."
+      ]
+    },
+    "servo-finder-step-end-x": {
+      "button": "X",
+      "where": "At one end, press:",
+      "pos": 0.12,
+      "frm": 0.5,
+      "note": "one end: just before the frame",
+      "lines": [
+        "--- Servo \"claw\"  (BACK = another) ---",
+        "Position : 0.120",
+        "Step : 0.010",
+        "*End X : 0.120",
+        "End B : -",
+        "..."
+      ]
+    },
+    "servo-finder-step-end-b": {
+      "button": "B",
+      "where": "At the other end, press:",
+      "pos": 0.88,
+      "frm": 0.12,
+      "note": "the other end: just before the frame",
+      "lines": [
+        "--- Servo \"claw\"  (BACK = another) ---",
+        "Position : 0.880",
+        "Step : 0.010",
+        "End X : 0.120",
+        "*End B : 0.880",
+        "..."
+      ]
+    },
+    "servo-finder-step-positions": {
+      "button": "A",
+      "where": "Press on gamepad 1:",
+      "pos": 0.77,
+      "note": "P2 saved at 0.770",
+      "lines": [
+        "Position : 0.770",
+        "...",
+        "--- Copy into your code ---",
+        "...",
+        "*Tunables.Claw: P1 = 0.210, P2 = 0.770",
+        "*    // rename P1, P2... (open, closed);",
+        "*    // keep them between 0.120 and 0.880"
+      ]
+    }
+  }
+}

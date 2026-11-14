@@ -1,0 +1,95 @@
+{
+  "pictures": {
+    "motor-finder-go-menu": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Tune and check ---",
+        "Robot: Robot",
+        "  Hardware Check: every device found, ...",
+        "  ...",
+        "*> Motor Finder: a lift's or arm's limits and positions",
+        "  ...",
+        "D-pad up/down = pick, A = open it. Then ▶."
+      ]
+    },
+    "motor-finder-go-start": {
+      "button": "▶ (start)",
+      "where": "Press on the Driver Hub:",
+      "lines": [
+        "Motor finder: finds a mechanism's limits, positions and ...",
+        "*Put the mechanism at its BOTTOM (or start) before you",
+        "*choose it. Press ▶.",
+        "GUIDE (center button), or hold START 1 s = help."
+      ]
+    },
+    "motor-finder-go-choose": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Choose a motor (D-pad, then A) ---",
+        "  ...",
+        "  intake",
+        "  launcher",
+        "*> lift"
+      ]
+    },
+    "motor-finder-step-low": {
+      "button": "X",
+      "where": "Near the bottom, press:",
+      "order": "press-first",
+      "lines": [
+        "--- Motor \"lift\"  (BACK = another) ---",
+        "Count : 0",
+        "...",
+        "Current : 0.3 A",
+        "Max power : 0.30 (D-pad up/down)",
+        "*LOW end (X) : 0",
+        "HIGH end (B) : -",
+        "..."
+      ]
+    },
+    "motor-finder-step-high": {
+      "button": "B",
+      "where": "Near the top, press:",
+      "order": "press-first",
+      "lines": [
+        "--- Motor \"lift\"  (BACK = another) ---",
+        "Count : 2580",
+        "...",
+        "Max power : 0.30 (D-pad up/down)",
+        "LOW end (X) : 0",
+        "*HIGH end (B) : 2580",
+        "..."
+      ]
+    },
+    "motor-finder-step-position": {
+      "button": "A",
+      "where": "At each height, press:",
+      "order": "press-first",
+      "lines": [
+        "--- Motor \"lift\"  (BACK = another) ---",
+        "*Count : 1200",
+        "...",
+        "--- Copy into your code ---",
+        "PositionMotor.create(hardwareMap, \"lift\").limits(0, 2580)",
+        "    .position(\"P1\", 1200)",
+        "*Tunables.Lift: min = 0, max = 2580, P1 = 1200",
+        "    // encoder counts: right for a Lift; an Arm's ..."
+      ]
+    },
+    "motor-finder-step-speed": {
+      "button": "RT (hold)",
+      "where": "Hold on gamepad 1:",
+      "order": "press-first",
+      "lines": [
+        "--- Motor \"lift\"  (BACK = another) ---",
+        "Count : 2193",
+        "...",
+        "*Top speed : 2310 counts/s",
+        "Speed test done. Bring it back down with the stick.",
+        "..."
+      ]
+    }
+  }
+}

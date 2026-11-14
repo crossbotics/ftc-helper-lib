@@ -8,7 +8,7 @@ minutes: 20
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.39.0
-docs: [guides/finders.md#encoder-check-each-encoder-cable-in-its-own-port, modules/finders.md#encodercheckopmode]
+docs: [tuning/02-wiring-checks.md#encoder-check-each-encoder-cable-in-its-own-port, modules/finders.md#encodercheckopmode]
 ---
 
 ## Why

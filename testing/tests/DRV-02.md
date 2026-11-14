@@ -8,7 +8,7 @@ minutes: 15
 needs: [mecanum]
 kit_bots: [gobilda-strafer]
 since: v0.16.0
-docs: [tutorials/start/02-drive.md#6-the-driving-you-get-for-free, guides/buttons.md#moving-the-librarys-buttons]
+docs: [controls/01-how-buttons-work.md#the-librarys-own-buttons, controls/04-move-library-buttons.md]
 ---
 
 ## Why
@@ -19,7 +19,7 @@ way. We want to know it works on robots built differently from ours.
 
 ## Safety
 
-- Clear floor, about 6 x 6 ft. Low power (`practiceMaxPower` 0.4, PRACTICE profile).
+- Clear floor, about 6 x 6 ft. Low power (`maxPower` 0.4).
 - A hand near STOP.
 
 ## Setup

@@ -8,7 +8,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 
 /**
- * Quick start, file 1 of 5 (docs/quick-start.md): WHAT is on the robot. Change only the lines marked
+ * Quick start, file 1 of 5 (docs/pick-your-start/03-blank-slate.md): WHAT is on the robot. Change only the lines marked
  * STEP, in order. Every name in quotes must match the robot configuration on the Driver Station.
  */
 public class Robot extends RobotDefinition {

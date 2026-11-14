@@ -12,7 +12,7 @@ package com.crossbotics.ftchelper.finders;
  * double p = step.move(0.500, +1);        // 0.510
  * }</pre>
  *
- * Docs: docs/modules/finders.md. Guide: docs/guides/finders.md
+ * Docs: docs/modules/finders.md. Guide: docs/tuning/03-servo-finder.md
  */
 public final class NudgeStep {
 

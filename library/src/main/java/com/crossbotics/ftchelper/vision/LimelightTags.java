@@ -36,7 +36,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
  * group's tags in view and their 3D poses. So the same code aims with either camera. The webcam's
  * cluster target is the SDK's own aiming point, which is NOT the tag row: the SDK puts it 7.2 in toward
  * the tags' printed top and 5.6 in behind them. For BIOBUZZ (the tags' printed bottom faces the field
- * centre, manual 9.9) that is about 9 in farther from a robot in front of the CELL and 1 in higher
+ * center, manual 9.9) that is about 9 in farther from a robot in front of the CELL and 1 in higher
  * than the row (not the CELL opening). So the two cameras give about the same bearing when you face the
  * group, but different distances: make the shot table with the camera the robot uses.
  *

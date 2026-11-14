@@ -35,7 +35,7 @@ package com.crossbotics.ftchelper.robot;
  * <p>How they work: each is a "not a number" value (NaN) with its own bit pattern, which no calculation
  * makes. The library reads the bits, so no real number can be taken for one of them.
  *
- * Docs: docs/guides/tunables.md (section "DEFAULT and MEASURE")
+ * Docs: docs/reference/tunables.md (section "DEFAULT and MEASURE")
  */
 public final class Starting {
     private Starting() { }

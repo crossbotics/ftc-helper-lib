@@ -5,12 +5,12 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASU
 /**
  * Example robot 2, file 2 of 5: every number, one per line. DEFAULT = the library's default (in
  * brackets). Tune live, then copy the numbers back here: the code is the record.
- * more: https://crossbotics.com/ftc-helper/docs/guides/tunables/
+ * more: https://crossbotics.com/ftc-helper/docs/reference/tunables/
  */
 public class Tunables {
     public static class Drive {
         public static double maxPower = DEFAULT;                    // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         public static double strafeCorrection = DEFAULT;            // sideways moves: Drive Tuner (1.15)
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -21,7 +21,7 @@ public class Tunables {
 
     /**
      * Venue lighting.
-     * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#5-a-camera-that-knows-the-goal
+     * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/07-camera/
      */
     public static class Limelight {
         public static double pipeline = DEFAULT;                    // the pipeline when the test is off (0)
@@ -73,7 +73,7 @@ public class Tunables {
 
     /**
      * The hood: 25 degrees between two stops.
-     * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#a-hood-the-shot-angle
+     * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/05-launcher/#a-hood-the-shot-angle
      */
     public static class Hood {
         public static double posA = 0.20;                           // servo position at the steep stop (Hood Finder)
@@ -86,7 +86,7 @@ public class Tunables {
 
     /**
      * Aiming. With odometry, add goalX and goalY:
-     * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#9-when-the-camera-loses-the-goal-the-odometry
+     * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/07-camera/#when-the-camera-loses-the-goal-the-odometry
      */
     public static class Aim {
         public static double rumbleDeg = DEFAULT;                   // gamepad 2 buzzes this close, degrees (4)

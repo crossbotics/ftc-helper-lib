@@ -21,7 +21,7 @@ import java.util.Map;
  * every match with the arm resting on the same stop, and measure the angles from it (so {@code min}
  * is usually 0). Usual button (a line to write in Controls.java): operator right stick Y moves it by hand.
  *
- * Docs: docs/modules/robot.md (section "Arm")
+ * Docs: docs/reference/robot-java.md (section "Arm")
  */
 public final class Arm extends MotorPositions<Arm> {
     private final String motorId;

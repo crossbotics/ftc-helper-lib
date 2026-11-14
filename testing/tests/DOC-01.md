@@ -1,6 +1,6 @@
 ---
 id: DOC-01
-title: Quick start from a blank robot project
+title: Set up and a first drive from a blank robot project
 area: docs
 priority: high
 where: both
@@ -8,17 +8,17 @@ minutes: 60
 needs: [mecanum|tank]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
-docs: [quick-start.md, templates.md]
+docs: [setup/README.md, pick-your-start/README.md]
 ---
 
 ## Why
 
-The Quick start promises a driving robot in 30 minutes. A student who has never used the library
-should be able to follow it alone. Every place you get stuck is a docs fix for us.
+A student who has never used the library should be able to follow Set up, Pick your start and The five
+files alone, to a robot that drives. Every place you get stuck is a docs fix for us.
 
 ## Safety
 
-- Real robot: on a block for the first drive (the Quick start says when), low power.
+- Real robot: on a block for the first drive (the pages say when), low power.
 
 ## Setup
 
@@ -28,9 +28,9 @@ should be able to follow it alone. Every place you get stuck is a docs fix for u
 
 ## Steps
 
-1. Start the timer. Follow the [Quick start](../../docs/quick-start.md) from the top, exactly as written.
+1. Start the timer. Follow [Set up](../../docs/setup/README.md) from the top, then each page's **Next:** link, exactly as written.
 2. Each time you are stuck for more than 2 minutes, write the step and the words that confused you.
-3. Real robot: build, install, run the Hardware Check, drive. Simulator: the Quick start's simulator part.
+3. Real robot: build, install, run the Hardware Check, drive. Simulator: [Start it and drive](../../docs/simulator/01-start-and-drive.md).
 4. Stop the timer when the robot drives (or the simulator robot drives).
 
 ## Pass rule

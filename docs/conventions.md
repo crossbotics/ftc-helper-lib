@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 Robot code goes wrong most often when two parts disagree about which way is "positive".
-This library uses ONE set of rules everywhere. Learn these and you can read any of it.
+This library uses ONE set of rules everywhere. Learn these, and you can read any part of it.
 
 ## Driving
 
@@ -18,17 +18,17 @@ This library uses ONE set of rules everywhere. Learn these and you can read any 
 | `move(..., directionDeg, ...)` | counterclockwise from forward, like a heading: 0 forward, 90 **left**, 180 back, -90 **right** | `AutoDrive.move`, `Steps.move` |
 | `moveWithTurn(..., directionDeg, headingDeg, ...)` | both counterclockwise, from the start heading (the direction stays fixed on the field, because the robot turns on the way): 90 = left | `AutoDrive.moveWithTurn`, `Steps.moveWithTurn` |
 
-**In an autonomous, every angle counts the same way: counterclockwise, 90 = left.** That is a move's
-direction, a turn, and a heading. In `Steps`, words say it with no angle at all: `forward`, `back`,
+**In an autonomous, every angle counts the same way: counterclockwise, 90 = left.** This is true for a move's
+direction, a turn and a heading. In `Steps`, you can also use words with no angle at all: `forward`, `back`,
 `left`, `right`, `turnLeft`, `turnRight` ([the autos/ page](five-files/05-autos.md#more-steps)).
-Before v0.40.0 a move's direction counted clockwise (90 = right): see the CHANGELOG to update an old auto.
+Before v0.40.0, a move's direction counted clockwise (90 = right). To update an old auto, read the CHANGELOG.
 
-Why is TeleOp's turn command clockwise-positive, but every autonomous angle counterclockwise-positive?
+**Why TeleOp's turn command is clockwise-positive, but every autonomous angle is counterclockwise-positive:**
 
 - The right stick's X is positive when pushed right, and pushing right should turn the robot right.
-  So `drive(forward, strafe, gamepad1.right_stick_x)` just works.
-- The FTC SDK's IMU says heading grows when the robot turns left. That is the math rule
-  (counterclockwise = positive) and we do not fight the SDK.
+  So `drive(forward, strafe, gamepad1.right_stick_x)` works with no sign change.
+- The FTC SDK's IMU makes the heading grow when the robot turns left. That is the math rule
+  (counterclockwise = positive), and we do not fight the SDK.
 
 The names tell you which one you have: `turnClockwise`, `headingCcwDeg` ("CCW" = counterclockwise).
 
@@ -47,14 +47,14 @@ There is **no standard** for this, so the library makes no promise about it:
 - `.reversed()` in Robot.java swaps the ends (servo: 0 and 1; motor: + and -). It changes the numbers, not the
   wiring.
 
-So **check each one by test**, never by its label: in the Servo Finder press D-pad up (a bigger number) and
-watch which way the part moves; for a motor, the Motor Finder or the Hardware Check. Then choose the numbers
+So **check each one by test**, never by its label. In the Servo Finder, press D-pad up (a bigger number) and
+watch which way the part moves. For a motor, use the Motor Finder or the Hardware Check. Then choose the numbers
 (or `.reversed()`) so they read the way you think about the part. Any order is fine for named positions:
 a claw's `open` can be higher or lower than `closed`.
 
 **Two servos that face each other** (one on each side of a claw, an arm or a pinch): the same number turns them
-opposite ways, as seen from outside. That is why such a part uses `alsoServoReversed` (the second servo mirrors
-the first); two servos facing the same way use `alsoServo` ([two servos on one part](modules/robot.md#claw)).
+opposite ways, as seen from outside. So such a part uses `alsoServoReversed` (the second servo mirrors
+the first). Two servos facing the same way use `alsoServo` ([two servos on one part](reference/parts/claw.md)).
 
 ## Units
 

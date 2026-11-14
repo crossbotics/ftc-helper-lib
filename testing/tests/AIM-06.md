@@ -8,7 +8,7 @@ minutes: 30
 needs: [huskylens]
 kit_bots: []
 since: v0.23.0
-docs: [modules/vision.md#huskylenscamera, modules/robot.md#camera]
+docs: [modules/vision.md#huskylenscamera, reference/parts/camera.md]
 ---
 
 ## Why

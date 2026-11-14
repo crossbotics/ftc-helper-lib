@@ -7,7 +7,7 @@ import com.crossbotics.ftchelper.testing.HardwareCheckOpMode;
 
 /**
  * STARTER KIT, file 6 of 6: test every device in the configuration, one at a time.
- * Run it after every wiring change and before every event. See docs/guides/testing.md.
+ * Run it after every wiring change and before every event. See docs/tests/03-checks-before-practice-and-matches.md.
  *
  * Controls (gamepad 1): D-pad up/down chooses a device. Motors: right stick Y = power (at most 50%).
  * Servos: D-pad sets a start point, A moves it there, then D-pad right/left nudges it.

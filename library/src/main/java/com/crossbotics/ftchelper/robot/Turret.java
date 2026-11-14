@@ -89,7 +89,7 @@ import java.util.function.DoubleSupplier;
  * <p>Usual buttons (lines to write in Controls.java): operator right stick X turns it by hand; operator BACK switches following
  * on and off.
  *
- * Docs: docs/modules/robot.md (section "Turret"), docs/guides/turret-setup.md
+ * Docs: docs/reference/robot-java.md (section "Turret"), docs/guides/turret-setup.md
  */
 public final class Turret extends Module<Turret> {
     /** What turns the turret. */
@@ -293,7 +293,7 @@ public final class Turret extends Module<Turret> {
     /**
      * Follows the goal with NO camera: its direction comes from the odometry (where the robot is) and
      * {@code Tunables.Aim.goalX, goalY} (see {@link Aim}). Needs an {@code odometry(...)} line. Follow
-     * mode on from START. Assumes the turret turns about the robot's centre.
+     * mode on from START. Assumes the turret turns about the robot's center.
      */
     public Turret followsOdometry() {
         odometryOnly = true;
@@ -361,7 +361,7 @@ public final class Turret extends Module<Turret> {
         }
         if (odometryOnly && !robot.aim().hasGoalPoint()) {
             throw new IllegalStateException(name() + ".followsOdometry() needs the goal on the field: "
-                    + "Tunables.Aim { public static double goalX = ..., goalY = ...; } (inches, see docs/modules/robot.md#aim)");
+                    + "Tunables.Aim { public static double goalX = ..., goalY = ...; } (inches, see docs/reference/parts/aim.md)");
         }
         if (kind == Kind.CR_SERVO && encoderName == null) {
             throw new IllegalStateException("Robot.java: " + name() + " is a CR servo turret: it needs an encoder for its angle, "
@@ -636,7 +636,7 @@ public final class Turret extends Module<Turret> {
 
     @Override
     String toolFor(String field) {
-        if (field.equals("cameraOffset")) return "the Aim Tuner, docs/guides/finders.md#aim-tuner-camera-offset";
+        if (field.equals("cameraOffset")) return "the Aim Tuner, docs/tuning/12-aim-tuner.md";
         if (field.startsWith("pos") || field.startsWith("angle")) return "the Servo Finder and a protractor, docs/guides/turret-setup.md";
         if (field.equals("min") || field.equals("max") || field.equals("homeAngle") || field.equals("encoderOffset")) {
             return "measure it: turn the turret by hand and read the angle, docs/guides/turret-setup.md";
@@ -896,7 +896,7 @@ public final class Turret extends Module<Turret> {
     void suggestButtons(ButtonPlan plan) {
         Pad op = plan.operator();
         op.rightStickX.use(v -> manual(-v)).says("by hand (right = clockwise)");
-        if (follows()) op.back.toggle(follow).says("follow the goal on/off");
+        if (follows()) op.rightStickButton.toggle(follow).rumble().says("follow the goal on/off");   // like auto-aim
     }
 
     // ----------------------------- interlock rules -----------------------------

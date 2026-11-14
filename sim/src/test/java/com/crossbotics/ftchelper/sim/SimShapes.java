@@ -12,7 +12,7 @@ import java.util.Map;
  *
  * Robot frame: inches from the robot's center on the floor; f = forward, l = left, u = up.
  *
- * Types (see docs/guides/simulator.md, "Robot shapes"):
+ * Types (see docs/reference/robot-file.md#robot-shapes):
  *   box      a part that does not move
  *   slide    moves in a straight line along "axis" (lift, extension); children ride on its moving stage
  *   arm      turns about a hinge ("axis" = the hinge line); its box reaches forward from the hinge
@@ -278,7 +278,7 @@ final class SimShapes {
             return out;
         }
 
-        // The piece's own frame (its spin too, for a roller): rotation columns forward, left, up, then its centre.
+        // The piece's own frame (its spin too, for a roller): rotation columns forward, left, up, then its center.
         double[][] frame() {
             double[][] f = new double[3][4];
             double c = Math.cos(Math.toRadians(spinDeg)), sn = Math.sin(Math.toRadians(spinDeg));
@@ -679,7 +679,7 @@ final class SimShapes {
                         out.add(new Piece(s.name, "box", s.color, f, new double[] {0, 0, s.su / 2}, s.sf, s.sl, s.su, 0));
                         mounts.put(s.name, f);
                 }
-                // For the picture: how it is moving now (the page colours a running roller, a moving part).
+                // For the picture: how it is moving now (the page colors a running roller, a moving part).
                 boolean spinner = s.type.equals("roller") || s.type.equals("flywheel");
                 int inward = spinner && robot.pieces != null ? robot.pieces.inwardSign(s.motor, s.crservo) : 0;
                 for (int k = first; k < out.size(); k++) {

@@ -1,6 +1,6 @@
 # Set up 2: install Android Studio
 
-**Set up, page 2 of 9.** Do it on each laptop.
+Do it on each laptop.
 
 **Android Studio** is the program you write and build the robot code in.
 
@@ -22,3 +22,5 @@
 Android Studio opens and shows its **Welcome** window.
 
 **Next:** [GitHub and the robot project](03-github-and-the-project.md).
+
+**Look it up:** [The simulator](../simulator/README.md) and [Troubleshooting: build problems](../troubleshooting.md#build-problems).

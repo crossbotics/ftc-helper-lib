@@ -299,7 +299,7 @@ public class ControllerBindings {
             // Locale.US makes the number always print the same way, whatever the phone's language.
             slowWarning = String.format(java.util.Locale.US,
                     "%s button job took %.0f ms: the whole robot stopped that long. No sleep() or while loop in a "
-                    + "button job: use an Action with waitSeconds (lesson 5)", what, ms);
+                    + "button job: use an Action with waitSeconds (docs: Actions.java)", what, ms);
             slowWarningAt = System.nanoTime();
         }
     }

@@ -13,7 +13,7 @@ import com.qualcomm.hardware.rev.RevBlinkinLedDriver.BlinkinPattern;
  * <p>Why not just "Color"? Android already has a class called {@code Color} (color sensors use it),
  * and two classes with one name in one file do not compile.
  *
- * Docs: docs/modules/robot.md (section "Lights")
+ * Docs: docs/reference/robot-java.md (section "Lights")
  */
 public enum LightColor {
     // goBILDA RGB Indicator Light 3118-0808-0002: its seller page (Product Insight #4, checked

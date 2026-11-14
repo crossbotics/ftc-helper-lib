@@ -39,7 +39,7 @@ import java.util.function.BooleanSupplier;
  * {@code parkWithSeconds(...)} inside an {@code onlyIf} follows the choice), and once after START.
  * So write only steps here, no other code with side effects.
  *
- * Docs: docs/modules/robot.md (section "Autos")
+ * Docs: docs/reference/robot-java.md (section "Autos")
  */
 public final class Steps {
     private final AutoRoutine routine;   // null in INIT (only the menu and start are read)
@@ -102,8 +102,8 @@ public final class Steps {
 
     /**
      * Where to place the robot: the note for the drive team (shown in INIT), and the spot as seen from
-     * your drivers' wall, written for BLUE: {@code xIn} inches to the right of the field's centre line,
-     * {@code yIn} from the centre toward the far wall (negative = your half), heading 0 = facing away
+     * your drivers' wall, written for BLUE: {@code xIn} inches to the right of the field's center line,
+     * {@code yIn} from the center toward the far wall (negative = your half), heading 0 = facing away
      * from you, counterclockwise +. RED uses it like the routes: mirrored left-right, or (with
      * {@code mirrorForRed()} false, a field turned half a turn like BIOBUZZ) the same numbers from the
      * red wall. The simulator puts the robot there.
@@ -283,7 +283,7 @@ public final class Steps {
     /**
      * Drives to a point on the field, using the odometry, and turns to a heading at the same time
      * (mecanum). Seen from your drivers' wall, written for BLUE like the start spot: {@code xIn} inches
-     * right of the centre line, {@code yIn} inches from the centre toward the far wall, heading 0 =
+     * right of the center line, {@code yIn} inches from the center toward the far wall, heading 0 =
      * facing away, counterclockwise +. Waits until it is there (within 1 inch).
      *
      * <p>Needs an {@code odometry(...)} line in Robot.java, and {@code Tunables.Odometry.checked = true}
@@ -664,7 +664,7 @@ public final class Steps {
      * The steps after this are PARK steps, and they get the last {@code seconds} of autonomous: when
      * only that many seconds are left, the step running before it stops at once and the rest before
      * it are skipped; the park steps always run. The report says which were cut short or skipped.
-     * Docs: docs/modules/robot.md, "Keep time to park".
+     * Docs: docs/reference/robot-java.md, "Keep time to park".
      *
      * @param seconds how long the park steps take, plus a little (from a timed run)
      */

@@ -37,7 +37,7 @@ import java.util.function.Supplier;
  * bounced out). The drivers, not the count, are responsible for the game's limit (BIOBUZZ G407) until
  * the robot has a hardware stop.
  *
- * Docs: docs/modules/robot.md (section "Pieces and PieceSensor")
+ * Docs: docs/reference/robot-java.md (section "Pieces and PieceSensor")
  */
 public final class Pieces extends Module<Pieces> {
     /** No piece. */
@@ -209,7 +209,7 @@ public final class Pieces extends Module<Pieces> {
         } else {
             for (int i = 0; i < newOnes; i++) pieceIn(now);
             if (newOnes > 0) inRecorded = held.isEmpty() ? NONE : held.get(held.size() - 1);
-            // The same piece, now told apart (or its colour after a dip counted it): write its kind down.
+            // The same piece, now told apart (or its color after a dip counted it): write its kind down.
             else if (!now.equals(NONE) && !now.equals(UNKNOWN) && !now.equals(inRecorded) && !inRecorded.equals(NONE)
                     && !held.isEmpty() && held.get(held.size() - 1).equals(inRecorded)) {
                 held.set(held.size() - 1, now);

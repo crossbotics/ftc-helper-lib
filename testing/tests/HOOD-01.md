@@ -8,7 +8,7 @@ minutes: 30
 needs: [hood-servo]
 kit_bots: []
 since: v0.17.0
-docs: [guides/finders.md#hood-finder, tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle]
+docs: [tuning/04-hood-finder.md, add-to-robot/05-launcher.md#a-hood-the-shot-angle]
 ---
 
 ## Why
@@ -25,7 +25,7 @@ safe on hoods built differently from ours.
 ## Setup
 
 - `.hood(Hood.servo("hood"))` on the launcher in `Robot.java` (no `Tunables.Hood` numbers needed yet).
-- The Hood Finder OpMode ([recipe](../../docs/cookbook.md#how-do-i-find-my-hoods-stops-and-angles)).
+- The Hood Finder OpMode ([recipe](../../docs/cookbook/15-tuning.md#how-do-i-find-my-hoods-stops-and-angles)).
 - A phone angle app (optional, for angles).
 
 ## Steps

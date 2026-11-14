@@ -9,7 +9,7 @@ import com.crossbotics.ftchelper.hardware.Hw;
  *
  * <p>You rarely need it yourself: {@link RobotDefinition} hands it to every module.
  *
- * Docs: docs/modules/robot.md
+ * Docs: docs/reference/robot-java.md
  */
 public interface Devices {
 

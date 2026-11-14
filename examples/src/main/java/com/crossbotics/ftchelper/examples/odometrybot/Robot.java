@@ -9,9 +9,9 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 
 /**
- * Lesson 7's robot: a mecanum drive with a goBILDA Pinpoint and two odometry pods, and an intake.
+ * The odometry robot: a mecanum drive with a goBILDA Pinpoint and two odometry pods, and an intake.
  * With the odometry line, robot.pose() knows where the robot is on the field.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/07-odometry/
+ * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/09-odometry/
  */
 public class Robot extends RobotDefinition {
     public Intake intake;

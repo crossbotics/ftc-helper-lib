@@ -8,7 +8,7 @@ import com.crossbotics.ftchelper.robot.Pad;
 /**
  * Example robot 1, file 3 of 5: the buttons, and the TeleOp. Each part's buttons are written
  * out below (INIT shows the whole map), then our own.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#10-no-turret-aim-the-whole-robot
+ * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/07-camera/#controlsjava-its-buttons
  */
 @TeleOp(name = "FlywheelBot TeleOp", group = "Examples")
 @Disabled

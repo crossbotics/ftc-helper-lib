@@ -17,7 +17,7 @@ PAGE = os.path.join(ROOT, "docs", "guides", "parts-catalog.md")
 
 def num(v, digits=1):
     if v is None:
-        return "—"
+        return "-"
     if isinstance(v, bool):
         return "yes" if v else "no"
     if float(v).is_integer():
@@ -75,8 +75,8 @@ def page(cat):
       "how many encoder counts it gives per turn, and its current (motors), or its range and speed (servos).")
     w("")
     w(f"Every number comes from the seller's page or the seller's own documents (motors and servos read on "
-      f"**{cat['checked']}**; wheels and rollers on the date in their Checked column; the link is in each row). A dash (—) means the seller does not publish that number. "
-      f"{len(motors)} motors and {len(servos)} servos. See also: [the simulator guide](simulator.md).")
+      f"**{cat['checked']}**; wheels and rollers on the date in their Checked column; the link is in each row). A dash (-) means the seller does not publish that number. "
+      f"{len(motors)} motors and {len(servos)} servos. See also: [the simulator guide](../simulator/README.md).")
     w("")
     w("## Use a part")
     w("")
@@ -113,7 +113,7 @@ def page(cat):
         w("|---|---|---|---|---|---|---|---|---|")
         for m in ms:
             top = m["freeRpm"] * m["countsPerRev"] / 60 if m.get("freeRpm") and m.get("countsPerRev") else None
-            w(f"| `{m['id']}` | [{m['name']}]({m['url']}) | {m.get('partNumber') or '—'} | {num(m.get('gearRatio'), 2)}:1 "
+            w(f"| `{m['id']}` | [{m['name']}]({m['url']}) | {m.get('partNumber') or '-'} | {num(m.get('gearRatio'), 2)}:1 "
               f"| {num(m.get('freeRpm'))} | {num(m.get('countsPerRev'), 2)} | {num(top, 0)} "
               f"| {num(m.get('stallTorqueKgCm'), 2)} | {num(m.get('stallCurrentA'))} |")
     w("")
@@ -137,10 +137,10 @@ def page(cat):
         w("|---|---|---|---|---|---|---|---|---|---|---|---|")
         for s in ss:
             sec, volts = servo_5v(s)
-            used = f"{num(sec, 3)} at {num(volts)} V" if sec is not None else "—"
+            used = f"{num(sec, 3)} at {num(volts)} V" if sec is not None else "-"
             lo, hi = s.get("pulseMinUs"), s.get("pulseMaxUs")
-            pulse = f"{num(lo)}-{num(hi)}" if lo is not None and hi is not None else "—"
-            w(f"| `{s['id']}` | [{s['name']}]({s['url']}) | {s.get('partNumber') or '—'} | {num(sdk_range(s))} "
+            pulse = f"{num(lo)}-{num(hi)}" if lo is not None and hi is not None else "-"
+            w(f"| `{s['id']}` | [{s['name']}]({s['url']}) | {s.get('partNumber') or '-'} | {num(sdk_range(s))} "
               f"| {num(s.get('rangeDeg'))} | {pulse} "
               f"| {used} | {num(s.get('secPer60Deg'), 3)} at {num(s.get('voltage'))} V | {num(s.get('torqueKgCm'))} "
               f"| {num(s.get('stallCurrentA'))} | {num(s.get('continuousCapable'))} | {s.get('biggerTurns') or 'not given'} |")
@@ -157,20 +157,20 @@ def page(cat):
       "too (`pwm=500-2500` in the robot file, which `:sim:fromRobot` writes). Range on the hub = full range "
       "x 1800 / (pulse high - pulse low).")
     w("")
-    w("A servo with no range here (—) moves at the robot file's `servo.speed` (positions per second) in the "
+    w("A servo with no range here (-) moves at the robot file's `servo.speed` (positions per second) in the "
       "simulator; its range is set by programming it.")
     w("")
     w("## Wheels and rollers")
     w("")
     w("For `Robot.java` (not the robot file): a `Shape` names one of these and takes its size from here, "
-      "and `Drive.wheel(id)` its diameter ([robot module, Shapes](../modules/robot.md#shapes-and-parts)). "
-      "**Width** is along the axle; a dash (—) means the seller does not give it, so the shape gives its "
+      "and `Drive.wheel(id)` its diameter ([robot module, Shapes](../reference/robot-java.md#shapes-and-parts)). "
+      "**Width** is along the axle; a dash (-) means the seller does not give it, so the shape gives its "
       "length (`lengthMm`).")
     w("")
     w("| id | Part | Part number | Diameter (mm) | Width (mm) | Checked | Notes |")
     w("|---|---|---|---|---|---|---|")
     for x in cat.get("wheels", []):
-        w(f"| `{x['id']}` | [{x['name']}]({x['url']}) | {x.get('partNumber') or '—'} | {num(x.get('diameterMm'))} "
+        w(f"| `{x['id']}` | [{x['name']}]({x['url']}) | {x.get('partNumber') or '-'} | {num(x.get('diameterMm'))} "
           f"| {num(x.get('widthMm'))} | {x['checked']} | {x.get('notes') or ''} |")
     w("")
     w("## A part that is not in the list")
@@ -200,7 +200,7 @@ def page(cat):
     w("A number you do not know: write `Double.NaN`. It means \"I don't know this one\". "
       "(`Motors.unknown` / `Parts.unknownServo` = \"I know none of its numbers\".) The parts that need it use "
       "general defaults, and INIT says so. A launcher, an arm, a motor turret and the drive must at least have "
-      "the counts per turn. More: [Parts not in the catalog](../modules/robot.md#parts-not-in-the-catalog).")
+      "the counts per turn. More: [Parts not in the catalog](../reference/robot-java.md#parts-not-in-the-catalog).")
     w("")
     w("**In the simulator only**, three ways, from quickest to most shared:")
     w("")

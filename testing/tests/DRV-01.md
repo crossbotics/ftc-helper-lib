@@ -8,18 +8,18 @@ minutes: 30
 needs: [mecanum|tank]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
-docs: [tutorials/start/02-drive.md#7-check-the-motor-directions, quick-start.md#7-drive-then-each-mechanism]
+docs: [tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward, five-files/README.md]
 ---
 
 ## Why
 
 Driving is the first thing a team sees work. We want to know that the drive line in `Robot.java`
-works on many drivetrains, and that the motor-direction steps in lesson 2 find a wrong wheel.
+works on many drivetrains, and that the motor-direction steps in [Wiring checks](../../docs/tuning/02-wiring-checks.md#motor-direction-check-each-wheel-rolls-forward) find a wrong wheel.
 
 ## Safety
 
 - First run with the robot on a block, wheels off the ground.
-- Keep `maxPower` and `practiceMaxPower` at 0.4 in `Tunables.java` for this test.
+- Keep `maxPower` at 0.4 in `Tunables.java` for this test.
 - A clear floor and a hand near the Driver Station STOP button.
 
 ## Setup
@@ -30,7 +30,7 @@ works on many drivetrains, and that the motor-direction steps in lesson 2 find a
 ## Steps
 
 1. Robot on a block. INIT your TeleOp, then START.
-2. Push the left stick up. Every wheel must roll the way that moves the robot forward. Fix any wheel with lesson 2 section 7, and count how many fixes you needed.
+2. Push the left stick up. Every wheel must roll the way that moves the robot forward. Fix any wheel with the wiring check, and count how many fixes you needed.
 3. Put the robot on the floor. Left stick up for about 2 seconds: it drives straight.
 4. Right stick right: it turns clockwise. Mecanum only: left stick right strafes right.
 5. Pull LT all the way while driving: the robot goes slower. (One driver, `oneDriver = true`: click the left stick for slow on and off.)

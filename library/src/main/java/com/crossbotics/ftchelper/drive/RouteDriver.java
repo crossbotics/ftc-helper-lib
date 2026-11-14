@@ -59,7 +59,7 @@ public final class RouteDriver {
 
     /** Says if a straight line on the field is clear. {@link FieldMap#lineIsClear} is one. */
     public interface LineCheck {
-        /** True if the robot's centre may drive straight from (x1, y1) to (x2, y2), inches. */
+        /** True if the robot's center may drive straight from (x1, y1) to (x2, y2), inches. */
         boolean isClear(double x1, double y1, double x2, double y2);
     }
 
@@ -214,12 +214,12 @@ public final class RouteDriver {
         double tol = last ? toleranceIn : ON_POINT_IN;
         double speed;
         if (dist <= tol) speed = 0;
-        else if (dist < AutoDrive.DRIVE_TO_NEAR_IN) {
-            double near = Math.min(AutoDrive.DRIVE_TO_KP * dist, maxSpeed);
+        else if (dist < cfg.driveToNearIn) {
+            double near = Math.min(cfg.driveToKp * dist, maxSpeed);
             // With slowDownIn the slow-down goes on here too: never faster than it (but at least the least power).
             if (cfg.slowDownIn > 0) near = Math.min(near, MotionMath.taperSpeed(dist / lineStartDist,
                     cfg.moveMinPower, maxSpeed, cfg.taperFraction(lineStartDist)));
-            speed = Math.max(Math.min(1, AutoDrive.DRIVE_TO_MIN_POWER / limit), near);
+            speed = Math.max(Math.min(1, cfg.driveToMinPower / limit), near);
         } else speed = MotionMath.taperSpeed(dist / lineStartDist, cfg.moveMinPower, maxSpeed, cfg.taperFraction(lineStartDist));
 
         // The field error seen from the robot: heading h (CCW from "away") faces (-sin h, cos h).
@@ -230,10 +230,10 @@ public final class RouteDriver {
         double right = dist > 1e-6 ? speed * rightErr / dist : 0;
         // PID output is counterclockwise; the drive's turn is clockwise.
         double turn = -headingPid.calculate(headingDeg, p.headingDeg);
-        double minTurn = Math.min(1, (cfg.turnMinPower > 0 ? cfg.turnMinPower : AutoDrive.DRIVE_TO_MIN_TURN) / limit);
+        double minTurn = Math.min(1, (cfg.turnMinPower > 0 ? cfg.turnMinPower : cfg.driveToMinTurn) / limit);
         if (Math.abs(headingErr) > headingTol && Math.abs(turn) < minTurn) turn = -Math.signum(headingErr) * minTurn;
 
-        boolean near = dist <= AutoDrive.DRIVE_TO_NEAR_IN;
+        boolean near = dist <= cfg.driveToNearIn;
         if (near != wasNear) {
             stall.reset();
             nearStall.reset();

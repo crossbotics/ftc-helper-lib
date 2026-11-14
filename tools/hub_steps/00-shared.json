@@ -1,0 +1,16 @@
+{
+  "pictures": {
+    "tune-and-check-opmode": {
+      "button": "INIT",
+      "where": "Pick it, then press:",
+      "title": "Driver Hub: TeleOp list",
+      "lines": [
+        "--- TeleOp ---",
+        "  ...",
+        "Finders",
+        "*  Tune and check",
+        "  ..."
+      ]
+    }
+  }
+}

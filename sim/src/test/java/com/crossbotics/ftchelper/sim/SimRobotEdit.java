@@ -16,7 +16,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The page's Edit robot mode (docs/guides/simulator.md, "Edit robot: shape your robot"): the team moves
+ * The page's Edit robot mode (docs/simulator/03-make-it-match-your-robot.md#3-shape-the-parts-with-edit-robot): the team moves
  * and sizes the robot's shapes in the 3D view, and copies the {@code .looks(...)} Java it prints into
  * Robot.java. Robot.java stays the one record: nothing here writes a file.
  *

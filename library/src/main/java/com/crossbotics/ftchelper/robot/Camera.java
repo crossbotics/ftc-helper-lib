@@ -42,11 +42,11 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  * (0 = stop at START with the best so far), and for a webcam {@code gain} (-1 = the camera's highest).
  *
  * <p>A HuskyLens ({@link #huskyLens}) says the number it was TAUGHT, not the tag's real number: list
- * them with {@link #tag}. It can also look for taught colours or an object ({@link #colors},
+ * them with {@link #tag}. It can also look for taught colors or an object ({@link #colors},
  * {@link #objects}, {@link #label}). Tunables: {@code hfovDeg} (its view angle: measure it) and
  * {@code sizeIn} (for a rough distance). No lighting test.
  *
- * Docs: docs/modules/robot.md (section "Camera"), docs/modules/vision.md
+ * Docs: docs/reference/robot-java.md (section "Camera"), docs/modules/vision.md
  */
 public final class Camera extends Module<Camera> {
     private enum Kind { LIMELIGHT, WEBCAM, HUSKYLENS }
@@ -135,7 +135,7 @@ public final class Camera extends Module<Camera> {
         return this;
     }
 
-    /** HuskyLens: look for the colours you taught it, not AprilTags. */
+    /** HuskyLens: look for the colors you taught it, not AprilTags. */
     public Camera colors() {
         needsHuskyLens("colors()");
         huskyMode = HuskyLensCamera.Mode.COLORS;

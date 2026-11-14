@@ -8,7 +8,7 @@ minutes: 20
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.1
-docs: [guides/tunables.md#default-and-measure, modules/robot.md#parts-not-in-the-catalog]
+docs: [reference/tunables.md#default-and-measure, reference/robot-java.md#parts-not-in-the-catalog]
 ---
 
 ## Why

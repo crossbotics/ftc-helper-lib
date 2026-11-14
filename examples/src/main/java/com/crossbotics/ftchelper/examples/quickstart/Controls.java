@@ -31,7 +31,7 @@ public class Controls extends ControlMap<Robot> {
         robot.intake.outOn(g2.lt);
 
         // Ours.
-        // Runs ONCE, at INIT: each line plugs a job into a button. No if, while or sleep() here (lesson 3).
+        // Runs ONCE, at INIT: each line plugs a job into a button. No if, while or sleep() here (docs: Controls.java).
         // An example: an action on gamepad 2's D-pad left (delete it if you deleted the intake in STEP 5).
         g2.dpadLeft.press(Actions.spitOut(robot)).says("spit out");
     }

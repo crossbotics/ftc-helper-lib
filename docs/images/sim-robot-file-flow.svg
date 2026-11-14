@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" width="760" height="360" font-family="Helvetica, Arial, sans-serif" font-size="14">
+  <rect width="760" height="360" rx="12" fill="#ffffff" stroke="#d5d9e0"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker>
+  </defs>
+  <text x="20" y="32" font-size="19" font-weight="bold" fill="#101c45">Each start: Robot.java makes the robot file</text>
+
+  <!-- left: the code -->
+  <rect x="20" y="60" width="180" height="120" rx="8" fill="#eef2f8" stroke="#101c45" stroke-width="1.5"/>
+  <text x="110" y="88" text-anchor="middle" font-weight="bold" fill="#101c45">Your code</text>
+  <text x="110" y="114" text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="13" fill="#101c45">Robot.java</text>
+  <text x="110" y="134" text-anchor="middle" font-family="Menlo, Consolas, monospace" font-size="13" fill="#101c45">Tunables.java</text>
+  <text x="110" y="162" text-anchor="middle" font-size="12" fill="#4b5563">devices, parts, shapes</text>
+
+  <line x1="200" y1="120" x2="246" y2="120" stroke="#4b5563" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- middle: the robot file -->
+  <rect x="250" y="60" width="300" height="180" rx="8" fill="#ffffff" stroke="#101c45" stroke-width="1.5"/>
+  <text x="400" y="86" text-anchor="middle" font-weight="bold" fill="#101c45">simulator/robot.properties</text>
+  <rect x="262" y="100" width="276" height="34" rx="4" fill="#e6effa"/>
+  <text x="272" y="122" font-family="Menlo, Consolas, monospace" font-size="12" fill="#1f4e9c">drive.type = tank  # from Robot.java</text>
+  <rect x="262" y="142" width="276" height="34" rx="4" fill="#fdecec"/>
+  <text x="272" y="164" font-family="Menlo, Consolas, monospace" font-size="12" fill="#b03030">shape.lift = ...  # ... TODO measure</text>
+  <rect x="262" y="184" width="276" height="34" rx="4" fill="#e9f6ee"/>
+  <text x="272" y="206" font-family="Menlo, Consolas, monospace" font-size="12" fill="#1d7a46">missing = intake_deploy</text>
+
+  <line x1="550" y1="120" x2="596" y2="120" stroke="#4b5563" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- right: the simulator -->
+  <rect x="600" y="60" width="140" height="120" rx="8" fill="#eef2f8" stroke="#101c45" stroke-width="1.5"/>
+  <text x="670" y="88" text-anchor="middle" font-weight="bold" fill="#101c45">The simulator</text>
+  <text x="670" y="114" text-anchor="middle" font-size="12" fill="#4b5563">the pretend robot,</text>
+  <text x="670" y="132" text-anchor="middle" font-size="12" fill="#4b5563">its size checks,</text>
+  <text x="670" y="150" text-anchor="middle" font-size="12" fill="#4b5563">where pieces touch</text>
+
+  <!-- legend -->
+  <rect x="20" y="262" width="16" height="16" rx="3" fill="#e6effa" stroke="#1f4e9c"/>
+  <text x="44" y="275" fill="#101c45"><tspan font-weight="bold">from Robot.java:</tspan> written again at every start. Change it in the code.</text>
+  <rect x="20" y="290" width="16" height="16" rx="3" fill="#fdecec" stroke="#b03030"/>
+  <text x="44" y="303" fill="#101c45"><tspan font-weight="bold">TODO measure:</tspan> a guess. Replace it with looks(...) in Robot.java (page 3).</text>
+  <rect x="20" y="318" width="16" height="16" rx="3" fill="#e9f6ee" stroke="#1d7a46"/>
+  <text x="44" y="331" fill="#101c45"><tspan font-weight="bold">Your own line</tspan> (no note): the simulator keeps it.</text>
+</svg>

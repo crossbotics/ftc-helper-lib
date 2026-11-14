@@ -8,7 +8,7 @@ minutes: 40
 needs: [turret, limelight|webcam, pinpoint|otos|dead-wheels]
 kit_bots: []
 since: v0.17.0
-docs: [tutorials/start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry]
+docs: [add-to-robot/07-camera.md#when-the-camera-loses-the-goal-the-odometry]
 ---
 
 ## Why

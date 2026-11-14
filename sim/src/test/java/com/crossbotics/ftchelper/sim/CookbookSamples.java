@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * The cookbook's recipes write MEASURE for the numbers only a real robot can give (docs/cookbook.md:
+ * The cookbook's recipes write MEASURE for the numbers only a real robot can give (docs/cookbook/README.md:
  * "How a recipe's section reads"), so INIT stops until a team writes theirs. The tests "measure" them
  * here: each MEASURE is set to a sample number before a cookbook robot INITs. A MEASURE with no sample
  * fails loudly, so a new recipe gets one.

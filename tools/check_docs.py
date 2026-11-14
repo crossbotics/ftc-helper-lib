@@ -8,7 +8,7 @@ It fails (exit 1) when:
   2. a public library class is not named in any docs/modules/*.md page;
   3. a tutorial program (examples/.../tutorials) is not linked from any tutorial page;
   4. a tutorial page has no link to its full program;
-  5. a java code block in docs/cookbook.md is not the same as its marked region in the cookbook's Java
+  5. a java code block in docs/cookbook/ is not the same as its marked region in the cookbook's Java
      files (examples/.../cookbook: "// recipe: name" ... "// end recipe"), or a region is not shown;
      a guide that shows a recipe (the same "<!-- recipe: name -->" marker) is checked the same way;
   6. a cookbook recipe that mentions the tuning menu does not say to copy the value into Tunables.java;
@@ -18,9 +18,12 @@ It fails (exit 1) when:
      from where the recipe sits in the cookbook's Java;
   7. a recipe that shows a Tunables section (a region named "tunables-...") breaks the section style:
      one number per line with a "//" comment (a table: a comment line above it), and a safety number
-     (min, max, posA, posB, homeAngle, an interlock zone) written as MEASURE, never a number.
+     (min, max, posA, posB, homeAngle, an interlock zone) written as MEASURE, never a number;
+ 10. a skill for teams' agents (skills/*/*.md) names a library path that does not exist, or the
+     ftc-helper skill's "Where to look" table misses a docs/ folder (a new docs section must be added
+     there, so agents find it).
 
-After changing a cookbook Java file, copy its regions into docs/cookbook.md with:
+After changing a cookbook Java file, copy its regions into docs/cookbook/ with:
 
     python3 tools/check_docs.py --fix-cookbook
 """
@@ -33,7 +36,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 LIB = ROOT / "library/src/main/java"
 TUT_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials"
 TUT_TEST = ROOT / "examples/src/test/java/com/crossbotics/ftchelper/examples/tutorials"
-COOKBOOK_MD = ROOT / "docs/cookbook.md"
+COOKBOOK_DIR = ROOT / "docs/cookbook"
+COOKBOOK_PAGES = sorted(COOKBOOK_DIR.glob("*.md"))
 COOKBOOK_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook"
 # The five files walkthrough (docs/five-files/): each page shows one compiled program, marked like a recipe.
 WALK_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/firstrobot"
@@ -218,12 +222,24 @@ def remark(old_body, new_code):
 
 
 def check_cookbook():
-    if not COOKBOOK_MD.exists():
-        problems.append("docs/cookbook.md is missing")
+    if not COOKBOOK_PAGES:
+        problems.append("docs/cookbook/ is missing")
         return
     regions = cookbook_regions()
-    lines = COOKBOOK_MD.read_text().splitlines()
-    shown, pending, i = set(), None, 0
+    shown = set()
+    for page in COOKBOOK_PAGES:
+        check_cookbook_page(page, regions, shown)
+    # A region may be shown on another page instead (the Tunables reference shows each part's section).
+    elsewhere = {m.group(1) for page in marked_pages() for m in MARKED_BLOCK.finditer(page.read_text())}
+    for name in sorted(set(regions) - shown - elsewhere):
+        rel, start, _ = regions[name]
+        problems.append(f"{rel}:{start}: recipe {name} is not shown in docs/cookbook/ or another docs page")
+
+
+def check_cookbook_page(page, regions, shown):
+    md = str(page.relative_to(ROOT))
+    lines = page.read_text().splitlines()
+    pending, i = None, 0
     while i < len(lines):
         line = lines[i]
         m = RECIPE_MARK.match(line)
@@ -238,38 +254,33 @@ def check_cookbook():
             body = "\n".join(lines[i + 1:end]).strip("\n")
             if lang == "java":
                 if not pending:
-                    problems.append(f"docs/cookbook.md:{i + 1}: java block with no '<!-- recipe: name -->' line before it")
+                    problems.append(f"{md}:{i + 1}: java block with no '<!-- recipe: name -->' line before it")
                 elif pending[0] not in regions:
-                    problems.append(f"docs/cookbook.md:{pending[1]}: no recipe {pending[0]} in {COOKBOOK_CODE.relative_to(ROOT)}")
+                    problems.append(f"{md}:{pending[1]}: no recipe {pending[0]} in {COOKBOOK_CODE.relative_to(ROOT)}")
                 else:
                     rel, start, code = regions[pending[0]]
                     shown.add(pending[0])
                     if line != fence(rel, start, code):
-                        problems.append(f"docs/cookbook.md:{i + 1}: recipe {pending[0]}: the box should open with "
+                        problems.append(f"{md}:{i + 1}: recipe {pending[0]}: the box should open with "
                                         f"{fence(rel, start, code)} (python3 tools/check_docs.py --fix-cookbook)")
                     if code != strip_markers(body):
-                        page, java = strip_markers(body).splitlines(), code.splitlines()
-                        k = next((k for k in range(max(len(page), len(java)))
-                                  if k >= len(page) or k >= len(java) or page[k] != java[k]), 0)
-                        problems.append(f"docs/cookbook.md:{i + 2 + k}: recipe {pending[0]} differs from {rel}:{start + 1 + k}"
-                                        f"\n      page: {page[k] if k < len(page) else '(nothing)'}"
+                        shown_lines, java = strip_markers(body).splitlines(), code.splitlines()
+                        k = next((k for k in range(max(len(shown_lines), len(java)))
+                                  if k >= len(shown_lines) or k >= len(java) or shown_lines[k] != java[k]), 0)
+                        problems.append(f"{md}:{i + 2 + k}: recipe {pending[0]} differs from {rel}:{start + 1 + k}"
+                                        f"\n      page: {shown_lines[k] if k < len(shown_lines) else '(nothing)'}"
                                         f"\n      java: {java[k] if k < len(java) else '(nothing)'}")
             elif pending:
-                problems.append(f"docs/cookbook.md:{pending[1]}: recipe {pending[0]} is not followed by a java block")
+                problems.append(f"{md}:{pending[1]}: recipe {pending[0]} is not followed by a java block")
             pending, i = None, end
         elif pending and line.strip():
-            problems.append(f"docs/cookbook.md:{pending[1]}: recipe {pending[0]}: put the marker right before its java block")
+            problems.append(f"{md}:{pending[1]}: recipe {pending[0]}: put the marker right before its java block")
             pending = None
         i += 1
-    # A region may be shown on another page instead (the Tunables reference shows each part's section).
-    elsewhere = {m.group(1) for page in marked_pages() for m in MARKED_BLOCK.finditer(page.read_text())}
-    for name in sorted(set(regions) - shown - elsewhere):
-        rel, start, _ = regions[name]
-        problems.append(f"{rel}:{start}: recipe {name} is not shown in docs/cookbook.md or another docs page")
     # The code is the record: a recipe that tunes live must say to copy the value back.
-    for section in re.split(r"\n(?=### )", COOKBOOK_MD.read_text()):
+    for section in re.split(r"\n(?=## )", page.read_text()):
         if "tuning menu" in section and "Tunables.java" not in section:
-            problems.append(f"docs/cookbook.md: '{section.splitlines()[0]}' mentions the tuning menu "
+            problems.append(f"{md}: '{section.splitlines()[0]}' mentions the tuning menu "
                             "but not copying the value into Tunables.java")
 
 
@@ -288,7 +299,7 @@ MARKED_BLOCK = re.compile(r"<!-- recipe: ([a-z0-9-]+) -->\n(```java[^\n]*)\n(.*?
 
 def marked_pages():
     """Other pages (guides) that show a cookbook recipe: the same '<!-- recipe: name -->' marker."""
-    return [p for p in sorted((ROOT / "docs").rglob("*.md")) if p != COOKBOOK_MD and "<!-- recipe: " in p.read_text()]
+    return [p for p in sorted((ROOT / "docs").rglob("*.md")) if p.parent != COOKBOOK_DIR and "<!-- recipe: " in p.read_text()]
 
 
 def check_marked_pages():
@@ -317,7 +328,7 @@ def check_marked_pages():
 
 
 def fix_cookbook():
-    """Rewrites each marked java block of docs/cookbook.md (and of the guides that show one) from its Java region."""
+    """Rewrites each marked java block of docs/cookbook/ (and of the guides that show one) from its Java region."""
     regions = all_regions()
 
     def fill(m):
@@ -327,7 +338,7 @@ def fix_cookbook():
         # keep the annotation markers of the lines that did not change
         return f"<!-- recipe: {name} -->\n{fence(*regions[name])}\n{remark(m.group(2), regions[name][2])}\n```"
 
-    for page in [COOKBOOK_MD] + marked_pages():
+    for page in COOKBOOK_PAGES + marked_pages():
         page.write_text(re.sub(r"<!-- recipe: ([a-z0-9-]+) -->\n```java[^\n]*\n(.*?)\n?```", fill, page.read_text(),
                                flags=re.S))
 
@@ -436,36 +447,65 @@ def check_recipe_sections():
 
 
 def check_finder_order():
-    """docs/guides/finders.md keeps the Tune and check menu's order: its table, its "The order" diagram and its
-    sections. Three different orders confused readers before; the menu (TuneAndCheckOpMode) is the source."""
+    """docs/tuning/ keeps the Tune and check menu's order: the menu table (01-tune-and-check.md), the
+    "tuning order" diagram (README.md) and the tool pages (NN-*.md, in file order). Three different orders
+    confused readers before; the menu (TuneAndCheckOpMode) is the source."""
     java = ROOT / "library/src/main/java/com/crossbotics/ftchelper/finders/TuneAndCheckOpMode.java"
-    guide = ROOT / "docs/guides/finders.md"
+    folder = ROOT / "docs/tuning"
     menu = re.findall(r'new Tool\("([^"]+)"', java.read_text())
-    text = guide.read_text()
-    where = "docs/guides/finders.md"
     if not menu:
         problems.append(f"{java.relative_to(ROOT)}: no menu tools found (new Tool(\"...\"))")
         return
-    table = [m.group(1) for m in re.finditer(r"^\| ([A-Z][A-Za-z ]+?)(?: \(\*\*alpha\*\*\))? \|", text, re.M)
+    first = (folder / "01-tune-and-check.md").read_text()
+    table = [m.group(1) for m in re.finditer(r"^\| ([A-Z][A-Za-z ]+?)(?: \(\*\*alpha\*\*\))? \|", first, re.M)
              if m.group(1) in menu]
     if table != menu:
-        problems.append(f"{where}: the Tune and check table must list the menu's tools in its order: {', '.join(menu)}")
-    # the diagram and the sections: the menu's tools in the menu's order (the own-file tools may sit between)
-    block = text[text.index("## The order"):text.index("## Before you start")]
+        problems.append(f"docs/tuning/01-tune-and-check.md: the Tune and check table must list the menu's tools in its order: {', '.join(menu)}")
+    # the diagram: the menu's tools in the menu's order (the wiring checks are one box; the own-file tools may sit between)
+    readme = (folder / "README.md").read_text()
+    block = readme[readme.index("```mermaid"):]
+    block = block[:block.index("```", 3)]
     diagram = [n for n in re.findall(r'\["([A-Z][A-Za-z ]+?)(?: \(own file\))?<br/>', block) if n in menu]
-    if diagram != menu:
-        problems.append(f"{where}: \"The order\" diagram must show the menu's tools in its order: {', '.join(menu)}")
-    sections = []
-    for h in re.findall(r"^## (.+)$", text, re.M):
-        name = re.split(r":| \(", h)[0].strip()
-        if name in menu:
-            sections.append(name)
-    expected = [n for n in menu if n != "Hardware Check"]   # the Hardware Check has its own page (testing.md)
-    if sections != expected:
-        problems.append(f"{where}: the tool sections must follow the menu's order: {', '.join(expected)} (found {', '.join(sections)})")
+    wiring = ["Hardware Check", "Motor Direction Check", "Encoder Check"]
+    if diagram != [n for n in menu if n not in wiring]:
+        problems.append(f"docs/tuning/README.md: the tuning order diagram must show the menu's tools in its order: {', '.join(menu)}")
+    # the pages: in file order, each page's title and sections name the menu's tools in the menu's order
+    pages = []
+    for p in sorted(folder.glob("[0-9][0-9]-*.md")):
+        for h in re.findall(r"^#{1,2} (.+)$", p.read_text(), re.M):
+            name = re.split(r":| \(", h)[0].strip()
+            if name in menu and name not in pages:
+                pages.append(name)
+    if pages != menu:
+        problems.append(f"docs/tuning/: the tool pages must follow the menu's order: {', '.join(menu)} (found {', '.join(pages)})")
+
+
+# Skills (skills/<name>/*.md) are instructions for teams' AI agents. They name library paths; a renamed or
+# moved file would send the agent to nothing, so every path must exist. The ftc-helper skill is the agent's
+# map of the docs: every docs/ folder must be in it.
+SKILL_PATH = re.compile(r"`(?:ftc-helper-lib/)?((?:docs|examples|library|sim|skills|tools|testing)/[^`\s]*)`")
+
+
+def check_skills():
+    for md in sorted((ROOT / "skills").glob("*/*.md")):
+        rel = md.relative_to(ROOT)
+        for path in SKILL_PATH.findall(md.read_text()):
+            if "<" in path or "..." in path or "*" in path:
+                continue   # a pattern (docs/reference/parts/<part>.md), not one file
+            if not (ROOT / path.rstrip("/")).exists():
+                problems.append(f"{rel}: names `{path}`, which does not exist")
+    helper = ROOT / "skills/ftc-helper/SKILL.md"
+    if not helper.exists():
+        problems.append("skills/ftc-helper/SKILL.md is missing (the teams' agents read it)")
+        return
+    text = helper.read_text()
+    for folder in sorted(p.name for p in (ROOT / "docs").iterdir() if p.is_dir() and p.name != "images"):
+        if f"`docs/{folder}/" not in text:
+            problems.append(f"skills/ftc-helper/SKILL.md: add docs/{folder}/ to its \"Where to look\" table")
 
 
 check_links()
+check_skills()
 check_classes_documented()
 check_tutorials()
 check_cookbook()

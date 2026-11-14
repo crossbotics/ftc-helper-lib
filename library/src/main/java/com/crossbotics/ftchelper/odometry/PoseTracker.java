@@ -124,7 +124,7 @@ public abstract class PoseTracker implements Subsystem {
      * The robot's speed toward +x (to the RIGHT, seen from your drivers' wall), inches per second. With
      * {@link #velocityY()} it says which way the robot moves over the field, whichever way it faces.
      * From a Pinpoint or an OTOS directly; with dead wheels, from how far it moved between loops.
-     * Shooting on the move uses it ({@code Tunables.Aim.shootOnMove}, docs/modules/robot.md#aim).
+     * Shooting on the move uses it ({@code Tunables.Aim.shootOnMove}, docs/reference/parts/aim.md).
      */
     public final double velocityX() {
         return velX;

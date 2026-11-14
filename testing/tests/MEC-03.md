@@ -8,7 +8,7 @@ minutes: 15
 needs: []
 kit_bots: [gobilda-strafer]
 since: v0.30.0
-docs: [modules/robot.md#claw, guides/tunables.md#claw-wrist-and-positioner]
+docs: [reference/parts/claw.md, reference/parts/claw.md#in-tunablesjava]
 ---
 
 ## Why

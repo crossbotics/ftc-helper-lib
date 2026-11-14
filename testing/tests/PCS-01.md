@@ -8,12 +8,12 @@ minutes: 30
 needs: [color-sensor|distance-sensor]
 kit_bots: []
 since: v0.17.0
-docs: [guides/finders.md#piece-tuner-what-each-sensor-sees, modules/robot.md#pieces-and-piecesensor]
+docs: [tuning/14-piece-tuner.md, reference/parts/pieces.md]
 ---
 
 ## Why
 
-A colour sensor (or a distance sensor) tells the robot which piece it holds: POLLEN or NECTAR, red or
+A color sensor (or a distance sensor) tells the robot which piece it holds: POLLEN or NECTAR, red or
 blue. How well it works depends on where the sensor is mounted and the light. We want readings from
 many mounts.
 
@@ -23,8 +23,8 @@ many mounts.
 
 ## Setup
 
-- A `Pieces` or `PieceSensor` line in `Robot.java` ([lesson 9 section 12](../../docs/tutorials/start/09-shooter-and-camera.md#12-extra-know-which-piece-fires-next)).
-- The Piece Tuner file for your robot ([recipe](../../docs/cookbook.md#how-do-i-tune-the-piece-sensors)).
+- A `Pieces` or `PieceSensor` line in `Robot.java` ([Add a launcher: know which piece fires next](../../docs/add-to-robot/05-launcher.md#know-which-piece-fires-next)).
+- The Piece Tuner file for your robot ([recipe](../../docs/cookbook/05-game-pieces.md#how-do-i-tune-the-piece-sensors)).
 - One of each game piece.
 
 ## Steps
@@ -49,5 +49,5 @@ Each kind is named right at least 9 of 10 times, and EMPTY reads NONE at least 9
 
 ## If your robot is different
 
-A distance sensor tells sizes apart, not colours: test POLLEN against NECTAR only. Different light
-(a gym, a window) changes colour readings: if you can, test in two places and say where.
+A distance sensor tells sizes apart, not colors: test POLLEN against NECTAR only. Different light
+(a gym, a window) changes color readings: if you can, test in two places and say where.

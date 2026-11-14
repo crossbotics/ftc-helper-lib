@@ -4,12 +4,12 @@
 
 Package: `com.crossbotics.ftchelper.testkit`
 
-Learn it hands-on: [13 Testing](../tutorials/13-testing.md#7-test-your-robot-in-five-files). Guide: [Testing procedures](../guides/testing.md#test-your-robotjava-with-pretend-devices).
+Learn it hands-on: [13 Testing](../tutorials/13-testing.md#7-test-your-robot-in-five-files). Guide: [Run all your tests: laptop tests](../tests/02-run-all-your-tests.md#4-for-programmers-laptop-tests-in-java-optional).
 
-Pretend motors, servos and switches for **JUnit tests on a laptop**: your `Robot.java` (the robot in
-five files) runs on them instead of the real hardware. A test sets the robot up (INIT), presses ▶ (start on the Driver Hub),
-runs a loop, and checks what each motor and servo was sent. No robot, no Control Hub: a test takes a
-second, so you can run them after every change.
+The test kit gives you pretend motors, servos and switches for **JUnit tests on a laptop**. Your `Robot.java`
+(the robot in five files) runs on them instead of the real hardware. A test sets the robot up (INIT), presses ▶
+(start on the Driver Hub), runs a loop, and checks what the robot sent to each motor and servo. A test needs no
+robot and no Control Hub, and it takes a second. So you can run the tests after every change.
 
 | Class | Use it to |
 | --- | --- |
@@ -21,9 +21,9 @@ second, so you can run them after every change.
 | [`PretendTelemetry`](#pretendtelemetry) | read what the Driver Station would show |
 | [`PretendClock`](#pretendclock) | move the time forward by hand: a timing test does not wait |
 
-**Why in the library:** a team's tests (in `TeamCode/src/test`) can use it with no extra Gradle lines
+**Why it is in the library:** a team's tests (in `TeamCode/src/test`) can use it with no extra Gradle lines
 (only JUnit, [tutorial 13](../tutorials/13-testing.md#3-set-up-teamcode-for-tests-once)). It is a few
-small classes; nothing in it runs on the robot unless a test makes it.
+small classes. Nothing in it runs on the robot unless a test makes it.
 
 ## PretendDevices
 
@@ -41,35 +41,35 @@ devices.press("lift_bottom", true);              // a pretend switch pressed
 
 | Method | What it does |
 | --- | --- |
-| `new PretendDevices()` | a pretend configuration where every name asked for exists. It also forgets what the library keeps between programs (tuned numbers in memory, a turret's last angle, a launcher's last trim, autonomous's alliance: `RobotDefinition.freshRobotApp()`), uses an empty temporary settings file, and makes motors read their pretend encoder every time (no 3 ms reuse): each test starts like a robot just turned on |
-| `motor(name)`, `servo(name)`, `crServo(name)`, `pinpoint(name)` | the pretend device with that name (made now if needed) |
+| `new PretendDevices()` | a pretend configuration where every name the robot asks for exists. Each test starts like a robot that you turned on a moment ago. For that, it forgets what the library keeps between programs (tuned numbers in memory, a turret's last angle, a launcher's last trim, autonomous's alliance: `RobotDefinition.freshRobotApp()`). It uses an empty temporary settings file. Its motors read their pretend encoder every time (no 3 ms reuse) |
+| `motor(name)`, `servo(name)`, `crServo(name)`, `pinpoint(name)` | the pretend device with that name. It makes the device now when there is none yet |
 | `press(name, pressed)` | press or let go of a pretend switch (a touch sensor, or a magnetic switch on a digital port) |
 | `analog(name, volts, maxVolts)` | a pretend analog input (an absolute encoder) |
-| `notConfigured(names...)` | these names are NOT in the configuration (test an `optional()` part, or `checkConfiguration`) |
+| `notConfigured(names...)` | takes these names out of the configuration. Use it to test an `optional()` part, or `checkConfiguration` |
 | `battery(volts)` | the battery the hubs read |
-| `get`, `tryGet`, `has` | what the robot asks ([`Devices`](robot.md#robotdefinition)). A kind the kit has no pretend one for (a camera, a color sensor) counts as not plugged in: parts that can do without it warn and go on |
+| `get`, `tryGet`, `has` | what the robot asks ([`Devices`](../reference/robot-java.md#robotdefinition)). The kit has no pretend camera or color sensor. Such a device counts as not plugged in: a part that can do without it warns and goes on |
 
 With the robot: `robot.setup(devices)` (INIT), `robot.startForTests()` (what ▶ does), `robot.all().update()`
 (one loop), `robot.pauseAll()` / `robot.resume()` (BACK), `robot.all().stop()` (STOP),
-`robot.checkTunables()` (the Tunables name checks, no devices needed). See [RobotDefinition](robot.md#robotdefinition).
+`robot.checkTunables()` (the Tunables name checks, with no devices). More: [RobotDefinition](../reference/robot-java.md#robotdefinition).
 
-**What it cannot do:** move anything. A pretend motor's encoder stays where your test puts it, time does
-not pass by itself (an action's `waitSeconds` never ends in a test), and there is no camera picture. For
-that, use the [simulator](../guides/simulator.md) (a scenario file is a test too).
+**What it cannot do:** move anything. A pretend motor's encoder stays where your test puts it. Time does
+not pass by itself, so an action's `waitSeconds` never ends in a test. There is no camera picture. For
+these, use the [simulator](../simulator/README.md). A scenario file is a test too.
 
 ## PretendMotor, PretendServo, PretendCRServo
 
-Plain fields your test reads and sets:
+Each pretend device has plain fields. Your test reads and sets them:
 
 | Class | Fields |
 | --- | --- |
-| `PretendMotor` | `power` (last sent), `position` (the encoder: set it), `velocity`, `currentAmps`, `direction`, `zeroPower`, `mode`, `powerWrites`, `maxAbsPower`, `failSetPower` (true: `setPower` throws, like an unplugged motor), `motor` (the SDK `DcMotorEx`) |
+| `PretendMotor` | `power` (last sent), `position` (the encoder: set it), `velocity`, `currentAmps`, `direction`, `zeroPower`, `mode`, `powerWrites`, `maxAbsPower`, `failSetPower` (true: `setPower` throws an error, like an unplugged motor), `motor` (the SDK `DcMotorEx`) |
 | `PretendServo` | `position` (last sent; NaN = never), `writes`, `direction`, `pulseUs` (set by `.fullRange()`), `servo` (the SDK `Servo`) |
 | `PretendCRServo` | `power`, `writes`, `direction`, `servo` (the SDK `CRServo`) |
 
 ## PretendPinpoint
 
-A robot with `odometry(Odometry.pinpoint("pinpoint"))` gets one at INIT. It never moves by itself:
+A robot with `odometry(Odometry.pinpoint("pinpoint"))` gets one at INIT. It moves only when your test moves it:
 
 ```java
 devices.pinpoint("pinpoint").moveTo(10, 0, 90);   // the device's own frame: x forward, y left (inches), degrees
@@ -95,15 +95,15 @@ assertTrue(screen.has("Lift : high"));
 | --- | --- |
 | `telemetry` | the SDK `Telemetry` to hand over |
 | `lastScreen` | the last screen sent, one line per entry (`"Lift : high  900 ticks"`, `"!! warning"`) |
-| `has(words)` | true if a line of the last screen contains them |
-| `updates` | how many screens were sent |
+| `has(words)` | whether a line of the last screen contains them |
+| `updates` | how many screens the robot sent |
 
 ## PretendClock
 
-A clock that moves only when your test says so. The robot's parts read the library's clock
-([`Time`](core.md#time)), so with a pretend clock a test of timing ("the arm pushes 0.2 s after fire") runs at
-once and gives the same result on every computer. With the real clock, a test must wait, and a slow computer
-can make it fail when the code is fine.
+With the real clock, a timing test must wait, and a slow computer can make it fail when the code is fine.
+The pretend clock moves only when your test moves it. The robot's parts read the library's clock
+([`Time`](core.md#time)). So with a pretend clock, a timing test ("the arm pushes 0.2 s after fire") runs at
+once and gives the same result on every computer.
 
 ```java
 @After public void realClock() {
@@ -129,21 +129,21 @@ can make it fail when the code is fine.
 ```
 
 1. The next test gets the real clock again.
-2. 5 ms later, at once: nothing waits. The whole loop takes far less than a second.
-3. A pretend motor does not speed up by itself: the test says the wheel reached the speed asked. Without
-   this line the flywheel is never ready, and nothing fires.
+2. The clock is 5 ms later at once, and nothing waits. The whole loop takes far less than a second.
+3. A pretend motor does not speed up by itself. This line says that the wheel reached the speed the robot asked
+   for. Without it, the flywheel is never ready, and nothing fires.
 
 | Member | What it does |
 | --- | --- |
 | `PretendClock.use()` | makes a pretend clock and has the robot's parts use it (the only way to make one) |
-| `PretendClock.stopUsing()` | the real clock again (in `@After`) |
+| `PretendClock.stopUsing()` | goes back to the real clock (in `@After`) |
 | `addSec(sec)` | moves the time forward (seconds, 0 or more) |
 | `sec()` | the time now, seconds (it starts at 1) |
 
 A part that waits for a helper thread (a camera, a distance sensor on the library's helper thread) still
-needs real time: the thread runs on its own. The camera aim keeps the real clock too (the camera stamps its
-pictures with it).
+needs real time, because the thread runs on its own. The camera aim also keeps the real clock, because the
+camera stamps its pictures with it.
 
-**Always** call `PretendClock.stopUsing()` in `@After`. A pretend clock left in use stops time for every later
-test: their flywheels are never ready and their time limits never end.
+**Always** call `PretendClock.stopUsing()` in `@After`. A pretend clock that stays in use stops time for every
+later test. Their flywheels are never ready, and their time limits never end.
 

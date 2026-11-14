@@ -14,11 +14,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: a launcher's hood (docs/cookbook.md#how-do-i-add-a-hood-to-my-launcher). The hood tilts
+ * Cookbook: a launcher's hood (docs/cookbook/06-aiming-and-shooting.md#how-do-i-add-a-hood-to-my-launcher). The hood tilts
  * to make the shot steeper or flatter; its angle comes from the shot table's third column. Every hood
  * design fits: a servo or a motor with an encoder, a straight gear or a linkage, real angles or plain
  * servo positions.
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class HoodRecipes {

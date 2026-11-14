@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 430" width="760" height="430" font-family="Helvetica, Arial, sans-serif" font-size="14">
+  <rect width="760" height="430" rx="12" fill="#ffffff" stroke="#d5d9e0"/>
+  <defs>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b03030"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4b5563"/></marker>
+  </defs>
+  <text x="20" y="32" font-size="19" font-weight="bold" fill="#101c45">Measure from the edges, then work out the numbers</text>
+
+  <!-- robot from above: 400 x 400 mm at 0.65 px/mm = 260 px; front up -->
+  <text x="210" y="70" text-anchor="middle" fill="#4b5563" font-weight="bold">FRONT</text>
+  <text x="62" y="225" text-anchor="end" fill="#4b5563" font-weight="bold">LEFT</text>
+  <rect x="80" y="90" width="260" height="260" rx="6" fill="#eef2f8" stroke="#101c45" stroke-width="2"/>
+  <text x="210" y="372" text-anchor="middle" fill="#4b5563" font-size="13">chassis 400 x 400 mm, seen from above</text>
+
+  <!-- the middle (where the numbers start) -->
+  <circle cx="210" cy="220" r="4" fill="#4b5563"/>
+  <text x="218" y="238" font-size="12" fill="#4b5563">the middle: 0, 0</text>
+
+  <!-- intake roller across the front, 30 mm in from the front edge -->
+  <rect x="190" y="104" width="110" height="12" rx="6" fill="#1f4e9c"/>
+  <text x="245" y="134" text-anchor="middle" fill="#1f4e9c" font-weight="bold" font-size="13">intake roller</text>
+  <line x1="318" y1="90" x2="318" y2="110" stroke="#b03030" stroke-width="2" marker-start="url(#r)" marker-end="url(#r)"/>
+  <text x="318" y="126" font-size="12" fill="#b03030" text-anchor="middle">30</text>
+
+  <!-- flywheel: 250 from the front edge, 140 from the left edge -->
+  <rect x="164" y="242" width="14" height="40" rx="3" fill="#1f4e9c"/>
+  <text x="186" y="276" fill="#1f4e9c" font-weight="bold" font-size="13">flywheel</text>
+  <line x1="171" y1="90" x2="171" y2="252" stroke="#b03030" stroke-width="1.5" stroke-dasharray="4 3" marker-start="url(#r)" marker-end="url(#r)"/>
+  <text x="163" y="190" font-size="12" fill="#b03030" text-anchor="end">250</text>
+  <line x1="80" y1="300" x2="171" y2="300" stroke="#b03030" stroke-width="1.5" marker-start="url(#r)" marker-end="url(#r)"/>
+  <text x="125" y="318" font-size="12" fill="#b03030" text-anchor="middle">140</text>
+
+  <!-- the math -->
+  <text x="390" y="90" font-weight="bold" fill="#101c45">You measure, in mm, to each part's middle</text>
+  <text x="390" y="114" font-size="13" fill="#b03030">roller: 30 from the front edge</text>
+  <text x="390" y="134" font-size="13" fill="#b03030">flywheel: 250 from the front edge,</text>
+  <text x="390" y="152" font-size="13" fill="#b03030">          140 from the left edge</text>
+
+  <text x="390" y="192" font-weight="bold" fill="#101c45">The numbers for atMm(forward, left, up)</text>
+  <text x="390" y="216" font-family="Menlo, Consolas, monospace" font-size="13" fill="#101c45">forward = 400/2 - from front</text>
+  <text x="390" y="236" font-family="Menlo, Consolas, monospace" font-size="13" fill="#101c45">left    = 400/2 - from left</text>
+  <text x="390" y="256" font-family="Menlo, Consolas, monospace" font-size="13" fill="#101c45">up      = from the floor</text>
+
+  <text x="390" y="296" font-size="13" fill="#101c45">roller:   forward = 200 - 30  = 170</text>
+  <text x="390" y="316" font-size="13" fill="#101c45">flywheel: forward = 200 - 250 = -50</text>
+  <text x="390" y="336" font-size="13" fill="#101c45">          left    = 200 - 140 = 60</text>
+  <text x="390" y="372" font-size="13" fill="#4b5563">A minus number: behind the middle,</text>
+  <text x="390" y="390" font-size="13" fill="#4b5563">or right of the middle.</text>
+</svg>

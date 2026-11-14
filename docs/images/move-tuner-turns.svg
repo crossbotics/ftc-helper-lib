@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 640" width="760" height="640" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <rect width="760" height="640" rx="12" fill="#ffffff" stroke="#d5d9e0"/>
+  <text x="20" y="36" font-size="20" font-weight="bold" fill="#101c45">Turns: what the robot does, and what the tuner changes</text>
+  <text x="20" y="60" fill="#2d3446">Heading (up) over time (right). The green band is the target ± turnToleranceDeg.</text>
+  <g transform="translate(20,70)">
+    <text x="0" y="22" font-weight="bold" fill="#101c45">1. Stops off target, and stays there</text>
+    <rect x="20" y="78" width="300" height="24" fill="#e3f1e3"/>
+    <line x1="20" y1="90" x2="320" y2="90" stroke="#2d7a32" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <line x1="20" y1="40" x2="20" y2="200" stroke="#4b5563"/><line x1="20" y1="200" x2="320" y2="200" stroke="#4b5563"/>
+    <text x="316" y="74" text-anchor="end" font-size="12" fill="#2d7a32">target</text>
+    <text x="316" y="216" text-anchor="end" font-size="12" fill="#4b5563">time →</text>
+    <path d="M20,200 C100,200 120,115 180,114 H320" fill="none" stroke="#2b3a9a" stroke-width="3"/>
+    <text x="0" y="240" fill="#2d3446">The tuner: <tspan font-weight="bold" fill="#101c45">turnMinPower up, then turnKp up</tspan></text>
+  </g>
+  <g transform="translate(400,70)">
+    <text x="0" y="22" font-weight="bold" fill="#101c45">2. Rocks in and out at the band's edge</text>
+    <rect x="20" y="78" width="300" height="24" fill="#e3f1e3"/>
+    <line x1="20" y1="90" x2="320" y2="90" stroke="#2d7a32" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <line x1="20" y1="40" x2="20" y2="200" stroke="#4b5563"/><line x1="20" y1="200" x2="320" y2="200" stroke="#4b5563"/>
+    <text x="316" y="74" text-anchor="end" font-size="12" fill="#2d7a32">target</text>
+    <text x="316" y="216" text-anchor="end" font-size="12" fill="#4b5563">time →</text>
+    <path d="M20,200 C100,200 120,108 160,106 Q175,88 190,106 Q205,120 220,106 Q235,88 250,106 Q265,120 280,106 Q295,88 310,106" fill="none" stroke="#2b3a9a" stroke-width="3"/>
+    <text x="0" y="240" fill="#2d3446">The tuner: <tspan font-weight="bold" fill="#101c45">turnToleranceDeg + 0.5 (up to 3)</tspan></text>
+  </g>
+  <g transform="translate(20,330)">
+    <text x="0" y="22" font-weight="bold" fill="#101c45">3. Swings past, then back and forth</text>
+    <rect x="20" y="78" width="300" height="24" fill="#e3f1e3"/>
+    <line x1="20" y1="90" x2="320" y2="90" stroke="#2d7a32" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <line x1="20" y1="40" x2="20" y2="200" stroke="#4b5563"/><line x1="20" y1="200" x2="320" y2="200" stroke="#4b5563"/>
+    <text x="316" y="74" text-anchor="end" font-size="12" fill="#2d7a32">target</text>
+    <text x="316" y="216" text-anchor="end" font-size="12" fill="#4b5563">time →</text>
+    <path d="M20,200 C80,200 90,50 140,58 C180,66 180,124 215,114 C245,104 250,84 280,88 L320,90" fill="none" stroke="#2b3a9a" stroke-width="3"/>
+    <text x="0" y="240" fill="#2d3446">The tuner: <tspan font-weight="bold" fill="#101c45">turnKd up (more brake), or turnKp down</tspan></text>
+  </g>
+  <g transform="translate(400,330)">
+    <text x="0" y="22" font-weight="bold" fill="#101c45">4. Ends on target, but slowly</text>
+    <rect x="20" y="78" width="300" height="24" fill="#e3f1e3"/>
+    <line x1="20" y1="90" x2="320" y2="90" stroke="#2d7a32" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <line x1="20" y1="40" x2="20" y2="200" stroke="#4b5563"/><line x1="20" y1="200" x2="320" y2="200" stroke="#4b5563"/>
+    <text x="316" y="74" text-anchor="end" font-size="12" fill="#2d7a32">target</text>
+    <text x="316" y="216" text-anchor="end" font-size="12" fill="#4b5563">time →</text>
+    <line x1="200" y1="40" x2="200" y2="200" stroke="#b42318" stroke-dasharray="4 4"/>
+    <text x="194" y="54" text-anchor="end" font-size="12" fill="#b42318">2 s (a 90-degree turn)</text>
+    <path d="M20,200 C220,200 270,92 320,90" fill="none" stroke="#2b3a9a" stroke-width="3"/>
+    <text x="0" y="240" fill="#2d3446">The tuner: <tspan font-weight="bold" fill="#101c45">turnKp up</tspan></text>
+  </g>
+  <text x="20" y="618" fill="#2d7a32" font-weight="bold">Good:</text>
+  <text x="76" y="618" fill="#2d3446">the turn comes in fast, stops inside the band and stays there. The tuner says OK.</text>
+</svg>

@@ -14,7 +14,7 @@ package com.crossbotics.ftchelper.vision;
  * length sideways and forward (the height left out). With a tilt of 0 nothing changes.
  *
  * <p>The tilt: {@code pitchDeg} in the camera's Tunables section (degrees, + = tilted UP, as in the
- * simulator's robot file). Measure it on the robot: docs/modules/robot.md#camera.
+ * simulator's robot file). Measure it on the robot: docs/reference/parts/camera.md.
  *
  * <pre>
  * double b = CameraTilt.bearingDeg(right, forward, up, 35);   // + = LEFT, along the floor

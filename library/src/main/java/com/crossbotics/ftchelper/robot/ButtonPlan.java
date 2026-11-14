@@ -189,7 +189,7 @@ final class ButtonPlan {
         if (old != null && TEAM.equals(old.source) && old.kind == Kind.SHIFT && e.kind == Kind.SHIFT) return old;
         if (old != null && old.kind == Kind.RESERVED) {
             throw new IllegalStateException("Controls.java: " + input + " is the library's \"" + old.says
-                    + "\" button. Pick another button, or move the library's job (libraryButtons, docs/guides/buttons.md)."
+                    + "\" button. Pick another button, or move the library's job (libraryButtons, docs/controls/04-move-library-buttons.md)."
                     + (oneDriver ? " One driver: your g2 lines are on gamepad 1 too, where the library drives." : ""));
         }
         if (old != null && TEAM.equals(old.source) && old.kind != Kind.FREE && e.kind != Kind.FREE
@@ -267,7 +267,7 @@ final class ButtonPlan {
         List<String> out = new ArrayList<>();
         for (Map.Entry<String, StringBuilder> b : byPart.entrySet()) {
             out.add(b.getKey() + ": usual buttons not in Controls.java: " + b.getValue()
-                    + ". The lines: docs/modules/robot.md, \"Buttons to add\"");
+                    + ". The lines: docs/reference/robot-java.md, \"Buttons to add\"");
         }
         return out;
     }
@@ -416,7 +416,7 @@ final class ButtonPlan {
             double ms = (System.nanoTime() - start) / 1e6;
             if (ms > ControllerBindings.SLOW_ACTION_MS) {
                 slowWarning = String.format(java.util.Locale.US, "a button job took %.0f ms: the whole robot stopped "
-                        + "that long. No sleep() or while loop in a button job: use an Action with waitSeconds (lesson 5)", ms);
+                        + "that long. No sleep() or while loop in a button job: use an Action with waitSeconds (docs: Actions.java)", ms);
                 slowWarningAt = System.nanoTime();
             }
         }

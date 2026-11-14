@@ -11,7 +11,7 @@ import com.crossbotics.ftchelper.robot.Steps;
  * into range, get ready, wait for the turret to aim, and fire. Each shot waits for the right speed
  * and the turret aimed. The goal is our HIVE's up CELL: at the start it is on the HIVE's right side
  * (seen from our wall), so the robot starts to the right of it.
- * more: https://crossbotics.com/ftc-helper/docs/guides/autonomous-builder/
+ * more: https://crossbotics.com/ftc-helper/docs/building-autos/01-what-an-auto-can-do/
  */
 @Autonomous(name = "TurretBot Shoot from Start", group = "Examples", preselectTeleOp = "TurretBot TeleOp")
 @Disabled
@@ -19,8 +19,8 @@ public class ShootFromStart extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        // Inches: x 44 = the 2nd tile right of the centre line; y -61.5 = back against our wall.
-        s.start("Back against our wall, 2nd tile right of the centre line, facing the field", 44, -61.5, 0)
+        // Inches: x 44 = the 2nd tile right of the center line; y -61.5 = back against our wall.
+        s.start("Back against our wall, 2nd tile right of the center line, facing the field", 44, -61.5, 0)
          .forward("Into range", 20, 0.6)
          .turn("Face the HIVE", 45, 0.5)               // 45 degrees left: the camera sees the up CELL
          .readyToLaunch("Ready", 3)                    // spins up, waits until at speed

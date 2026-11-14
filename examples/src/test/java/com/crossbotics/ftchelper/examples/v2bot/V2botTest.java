@@ -13,7 +13,7 @@ import org.junit.Test;
  * ▶, a loop) and checks what the motors and servos were sent. Run them:
  *   ./gradlew :examples:testDebugUnitTest
  * Your own: copy this file into TeamCode/src/test/java/org/firstinspires/ftc/teamcode/ (fix the package
- * line) and change the names to your robot's. Guide: docs/guides/testing.md. Tutorial 13, section 7.
+ * line) and change the names to your robot's. Guide: docs/tests/03-checks-before-practice-and-matches.md. Tutorial 13, section 7.
  */
 public class V2botTest {
 

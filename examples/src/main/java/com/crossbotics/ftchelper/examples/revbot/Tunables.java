@@ -1,18 +1,18 @@
 package com.crossbotics.ftchelper.examples.revbot;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/reference/tunables.md)
 
 /**
  * REV starter bot, file 2 of 5: the numbers, one per line. DEFAULT = the library's default (in
  * brackets). The flywheel speed and poker spots are guesses: measure them with the finders.
  * Tuned a number live? Copy it back here, or it is lost at the next build.
- * more: https://crossbotics.com/ftc-helper/docs/guides/finders/
+ * more: https://crossbotics.com/ftc-helper/docs/tuning/
  */
 public class Tunables {
     /** calibrated: set true after the Drive Tuner (autonomous refuses to run before). */
     public static class Drive {
         public static double maxPower = DEFAULT;                    // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         public static double strafeCorrection = DEFAULT;            // not used: a tank drive cannot strafe (1.15)
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -50,10 +50,5 @@ public class Tunables {
         // MEASURE: INIT stops until the Servo Finder gives these two (a guess could push the arm into the frame).
         public static double up = MEASURE;                          // servo position, folded along the side (Servo Finder)
         public static double down = MEASURE;                        // servo position, out over a FLOWER (Servo Finder)
-    }
-
-    public static class Auto {
-        public static double leaveInches = 20;                      // drive off the start line
-        public static double leavePower = 0.5;                      // power for that move
     }
 }

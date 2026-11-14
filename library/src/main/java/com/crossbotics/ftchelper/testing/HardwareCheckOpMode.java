@@ -62,7 +62,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
  * every motor and CR servo is stopped and the buttons do nothing.
  * (A CR servo is a "continuous rotation" servo: it spins like a small motor instead of going to a position.)
  *
- * Steps: docs/guides/testing.md. Docs: docs/modules/testing.md
+ * Steps: docs/tests/03-checks-before-practice-and-matches.md. Docs: docs/modules/testing.md
  */
 public abstract class HardwareCheckOpMode extends LinearOpMode {
     // The HuskyLens being shown, and its last answers (the helper thread writes these).
@@ -223,7 +223,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             "  right/left = +/-0.01, bumpers = +/-0.1, {X} = 0.5.",
             "IMU: turn the robot left, yaw must go UP.",
             "Sensors: just read the values.",
-            "Steps: docs/guides/testing.md",
+            "Steps: docs, Tests > Checks before practice",
         };
     }
 

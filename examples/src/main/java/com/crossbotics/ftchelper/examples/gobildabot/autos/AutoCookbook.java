@@ -2,7 +2,6 @@ package com.crossbotics.ftchelper.examples.gobildabot.autos;
 
 import com.crossbotics.ftchelper.examples.gobildabot.Actions;
 import com.crossbotics.ftchelper.examples.gobildabot.Robot;
-import com.crossbotics.ftchelper.examples.gobildabot.Tunables;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -11,7 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 /**
  * goBILDA starter bot: every part of the autonomous builder in one program, numbered. The guide
  * explains each number.
- * more: https://crossbotics.com/ftc-helper/docs/guides/autonomous-builder/
+ * more: https://crossbotics.com/ftc-helper/docs/building-autos/01-what-an-auto-can-do/
  */
 @Autonomous(name = "goBILDA Bot Auto Cookbook", group = "Examples", preselectTeleOp = "goBILDA Bot TeleOp")
 @Disabled
@@ -43,9 +42,9 @@ public class AutoCookbook extends Auto<Robot> {
          // 5. A branch: these steps run only when "Collect more" was chosen.
          .onlyIf("Then", "Collect more")
              .run("Intake in", robot.intake::in)
-             .forward("To the pieces", Tunables.Auto.collectInches, 0.5)
+             .forward("To the pieces", 24, 0.5)
              .waitSeconds("Let them in", 0.5)
-             .back("Back to the goal", Tunables.Auto.collectInches, 0.5)
+             .back("Back to the goal", 24, 0.5)
              .run("Intake off", robot.intake::stop)
              .action(Actions.fireAllWithIntake(robot), 8)
          .end()
@@ -60,7 +59,7 @@ public class AutoCookbook extends Auto<Robot> {
          // 7. Parking: the steps below always get the last 3 seconds of autonomous.
          .parkWithSeconds(3)
          .onlyIf("Then", "Leave")
-             .forward("Leave the launch zone", Tunables.Auto.leaveInches, 0.7)
+             .forward("Leave the launch zone", 20, 0.7)
          .end();
     }
 }

@@ -6,12 +6,12 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASU
  * Example robot 1, file 2 of 5: every number, one per line. Section name = the part's name in
  * CamelCase ("intake_deploy" reads IntakeDeploy). DEFAULT = the library's default (in brackets).
  * Tune live, then copy the numbers back here: the code is the record.
- * more: https://crossbotics.com/ftc-helper/docs/guides/tunables/
+ * more: https://crossbotics.com/ftc-helper/docs/reference/tunables/
  */
 public class Tunables {
     public static class Drive {
         public static double maxPower = DEFAULT;                    // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         public static double strafeCorrection = DEFAULT;            // not used: a tank drive cannot strafe (1.15)
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -51,7 +51,7 @@ public class Tunables {
         public static double travelSec = 1.0;                       // time for a full move, seconds (timed)
     }
 
-    /** Whole-robot aim (G1 RB). more: https://crossbotics.com/ftc-helper/docs/guides/tunables/#aim */
+    /** Whole-robot aim (G1 RB). more: https://crossbotics.com/ftc-helper/docs/reference/parts/aim/#in-tunablesjava */
     public static class Aim {
         public static double turnKp = DEFAULT;                      // turn power per degree off (0.02)
         public static double turnKd = DEFAULT;                      // brake the turn near the goal (0.002)
@@ -59,11 +59,5 @@ public class Tunables {
         public static double toleranceDeg = DEFAULT;                // "aimed" within this, degrees (2)
         public static double cameraOffset = DEFAULT;                // aims a little to one side: Aim Tuner (0)
         public static double rumbleDeg = DEFAULT;                   // gamepad 2 buzzes this close, degrees (4)
-    }
-
-    /** The autonomous's distances. Also in the tuning menu: tune, then copy them back here. */
-    public static class Auto {
-        public static double leaveInches = 24;                      // drive off the start line
-        public static double leavePower = 0.6;                      // power for that move
     }
 }

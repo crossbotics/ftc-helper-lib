@@ -1,6 +1,6 @@
 ---
 id: DOC-04
-title: Lesson 10 from start to finish - record, break and update a test
+title: The Tests pages from start to finish - record, break and update a test
 area: docs
 priority: medium
 where: sim
@@ -8,13 +8,13 @@ minutes: 45
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.1
-docs: [tutorials/start/10-test-your-robot-code.md]
+docs: [tests/01-record-a-test.md, tests/02-run-all-your-tests.md]
 ---
 
 ## Why
 
-Lesson 10 teaches simulator tests with the new "Record a test" button. Most students never wrote a
-test before. We need to know if the lesson is clear enough to follow alone, on a robot that is not
+The Tests pages teach simulator tests with the "Record a test" button. Most students never wrote a
+test before. We need to know if the pages are clear enough to follow alone, on a robot that is not
 ours.
 
 ## Setup
@@ -24,8 +24,9 @@ ours.
 
 ## Steps
 
-1. Start a timer. Follow [lesson 10](../../docs/tutorials/start/10-test-your-robot-code.md) from the top,
-   exactly as written, with your own robot (or its "Try it with goBILDA's starter bot").
+1. Start a timer. Follow [Record a test](../../docs/tests/01-record-a-test.md) from the top,
+   exactly as written, with your own robot (or
+   [Try it with goBILDA's starter bot](../../docs/tests/02-run-all-your-tests.md#try-it-with-gobildas-starter-bot)).
 2. Record one TeleOp test and one autonomous test, and save both.
 3. Run each one: both should say `PASSED`.
 4. Change one number in `Tunables.java` that the test should notice (for example a slower drive), build,
@@ -37,7 +38,7 @@ ours.
 ## Pass rule
 
 Both tests pass, fail after the change in step 4, and pass again after the update, within 45 minutes,
-with no help from outside the lesson.
+with no help from outside the pages.
 
 ## Record
 

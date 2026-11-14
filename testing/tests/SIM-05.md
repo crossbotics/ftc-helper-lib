@@ -8,7 +8,7 @@ minutes: 15
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.18.2
-docs: [tutorials/start/10-test-your-robot-code.md, guides/simulator.md#scenario-files-test-without-a-browser]
+docs: [tests/01-record-a-test.md, reference/scenario-files.md]
 ---
 
 ## Why
@@ -21,7 +21,7 @@ gives a message a student understands.
 ## Setup
 
 - Your robot project with the simulator running your code, and one test of yours in `simulator/scenarios/`
-  (record one first: [start lesson 10](../../docs/tutorials/start/10-test-your-robot-code.md)).
+  (record one first: [Record a test](../../docs/tests/01-record-a-test.md)).
 
 ## Steps
 

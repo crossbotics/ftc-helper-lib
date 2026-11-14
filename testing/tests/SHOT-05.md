@@ -8,7 +8,7 @@ minutes: 40
 needs: [flywheel]
 kit_bots: [gobilda, gobilda-strafer, rev, studica]
 since: v0.17.0
-docs: [tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery, modules/robot.md#speed-trim-and-battery-compensation]
+docs: [add-to-robot/05-launcher.md#speed-trim-and-a-low-battery, reference/parts/launcher.md#speed-trim-and-battery-compensation]
 ---
 
 ## Why

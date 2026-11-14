@@ -20,7 +20,7 @@ import java.util.Map;
  * lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));
  * }</pre>
  *
- * Docs: docs/modules/robot.md
+ * Docs: docs/reference/robot-java.md
  */
 public final class Motors {
     private Motors() { }
@@ -128,7 +128,7 @@ public final class Motors {
         if (k == null) {
             throw new IllegalArgumentException("Unknown motor \"" + id + "\". Known: " + ALL.keySet()
                     + " (docs/guides/parts-catalog.md). A motor that is not in the catalog: Motors.custom(\"" + id
-                    + "\", countsPerRev, freeRpm) in Robot.java (docs/modules/robot.md#parts-not-in-the-catalog)");
+                    + "\", countsPerRev, freeRpm) in Robot.java (docs/reference/robot-java.md#parts-not-in-the-catalog)");
         }
         return k;
     }

@@ -8,7 +8,7 @@ minutes: 15
 needs: [pinpoint|otos|dead-wheels]
 kit_bots: []
 since: v0.16.0
-docs: [tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended]
+docs: [add-to-robot/09-odometry.md#teleop-starts-where-autonomous-ended]
 ---
 
 ## Why
@@ -23,7 +23,7 @@ field-centric driving and the odometry aim are right from the first second of Te
 ## Setup
 
 - A robot with odometry and any autonomous that drives and ends somewhere you can measure.
-- Simulator: lesson 7's commands (`odometrybot`, "Odometry Bot To the Goal", then "Odometry Bot TeleOp"), or your own robot.
+- Simulator: the `odometrybot` commands ([Drive to points: Try it in the simulator](../../docs/building-autos/04-drive-to-points.md#try-it-in-the-simulator): "Odometry Bot To the Goal", then "Odometry Bot TeleOp"), or your own robot.
 
 ## Steps
 

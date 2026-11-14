@@ -8,9 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.Locale;
 
 /**
- * Lesson 7's TeleOp: the intake's own buttons, the robot's place on the field on the Driver Station, and
+ * The odometry robot's TeleOp: the intake's own buttons, the robot's place on the field on the Driver Station, and
  * a drive to the park spot by itself.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/07-odometry/#7-teleop-starts-where-autonomous-ended
+ * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/09-odometry/#teleop-starts-where-autonomous-ended
  */
 @TeleOp(name = "Odometry Bot TeleOp", group = "Examples")
 @Disabled
@@ -30,7 +30,7 @@ public class Controls extends ControlMap<Robot> {
         // Ours.
         show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in", robot.pose().x, robot.pose().y));
         // Drives to the park spot by itself, around the HIVE frames. Any drive stick stops it.
-        Runnable park = route("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+        Runnable park = route("Park", -56, -36, 0, 0.8);
         g1.dpadLeft.tap(park).says("drive to the park spot (a drive stick stops it)");
         atSecondsLeft(10, park);
     }

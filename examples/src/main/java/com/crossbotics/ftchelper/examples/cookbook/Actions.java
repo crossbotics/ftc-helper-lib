@@ -3,7 +3,7 @@ package com.crossbotics.ftchelper.examples.cookbook;
 import com.crossbotics.ftchelper.robot.Action;
 
 /*
- * Cookbook (docs/cookbook.md): a whole file, as it looks in your TeamCode. The lines between
+ * Cookbook (docs/cookbook/README.md): a whole file, as it looks in your TeamCode. The lines between
  * "// recipe: name" and "// end recipe" are shown on the page; tools/check_docs.py keeps them the same.
  */
 // recipe: file-actions

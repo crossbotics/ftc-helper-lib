@@ -6,9 +6,9 @@ Package: `com.crossbotics.ftchelper.control`
 
 Learn it hands-on: [07 PID lift](../tutorials/07-pid-lift.md), [11 Driver assists](../tutorials/11-driver-assists.md).
 
-The math that turns "where I want to be" into a motor power. Use it when you build a mechanism by
-hand: a lift that holds a height, a turn to a heading, a smooth start. The ready-made mechanisms
-([`PositionMotor`](mechanism.md#positionmotor), the [robot in five files](robot.md)) already use it,
+These classes do the math that turns "where I want to be" into a motor power. Use them when you build a
+mechanism by hand: a lift that holds a height, a turn to a heading, a smooth start. The ready-made mechanisms
+([`PositionMotor`](mechanism.md#positionmotor), the [robot in five files](../reference/robot-java.md)) already use them,
 so you only set their numbers. To learn what PID means, start with tutorial 07.
 
 | Class | Use it to |
@@ -26,12 +26,13 @@ so you only set their numbers. To learn what PID means, start with tutorial 07.
 You have a **target** (lift at 1500 ticks) and a **measurement** (lift is at 900 now). Ticks are
 counts from the motor's **encoder**, a sensor that counts how far the motor has turned.
 The difference is the **error** (600). Each loop, the controller turns the error into a power.
-It adds up to four parts. Each part has a number you tune, called a **gain** (kP, kI, kD, kF):
+The power is the sum of up to four parts. Each part has a number you tune, called a **gain** (kP, kI, kD, kF):
 
 - **P (proportional):** power = kP x error. Far away = push hard. Close = push gently.
-- **I (integral):** adds up error over time. Fixes a small error that P alone never closes
+- **I (integral):** adds up the error over time. It fixes a small error that P alone never closes
   (for example gravity pulling a lift down). Start with 0.
-- **D (derivative):** looks at how fast the error shrinks and pushes back, so you do not overshoot.
+- **D (derivative):** looks at how fast the error shrinks and pushes back. This keeps the mechanism from
+  going past the target (overshooting).
 - **F (feedforward):** a fixed extra push every loop, for example 0.1 to hold an arm up against gravity.
 
 ### Example: a lift
@@ -46,8 +47,8 @@ double power = liftPid.calculate(liftTarget, lift.getCurrentPosition());
 lift.setPower(power);   // send it every loop: that is what holds the lift up
 ```
 
-Make the controller ONCE (in INIT), not in the loop: it remembers past errors.
-With a [`SafeMotor`](safety.md), use `safeLift.moveTo(target, liftPid)` instead: it does the same and keeps the limits.
+The controller remembers past errors. So make it once, in INIT, and not in the loop.
+With a [`SafeMotor`](safety.md), use `safeLift.moveTo(target, liftPid)` instead. It does the same, and it also keeps the limits.
 
 ### Methods
 
@@ -55,32 +56,32 @@ With a [`SafeMotor`](safety.md), use `safeLift.moveTo(target, liftPid)` instead:
 | --- | --- |
 | `new PidController(kP, kI, kD)` | make one, no feedforward |
 | `new PidController(kP, kI, kD, kF)` | make one, with a fixed feedforward push |
-| `calculate(target, measured)` | **call every loop.** Returns the power, inside the output limits. |
+| `calculate(target, measured)` | **call every loop.** It gives the power, inside the output limits. |
 | `setGains(kP, kI, kD, kF)` | change the gains (for live tuning) |
 | `setOutputLimits(min, max)` | limit the output. Default -1 to 1. |
-| `setIntegralLimit(max)` | the most power the I part may add (stops "windup": see below) |
+| `setIntegralLimit(max)` | the most power the I part may add. This stops "windup" (see below) |
 | `setTolerance(value)` | how close counts as "at target" |
 | `setAngleMode(true)` | for headings in degrees: the error takes the short way around (170 to -170 = +20) |
-| `atTarget()` | true if the last error was within the tolerance |
+| `atTarget()` | whether the last error was within the tolerance |
 | `getLastError()` | the last error (target minus measured) |
-| `reset()` | clear the memory. **Call it when you set a new target.** |
+| `reset()` | clears the memory. **Call it when you set a new target.** |
 | `getKP()`, `getKI()`, `getKD()`, `getKF()` | read the gains |
 
-The `set...` methods return the controller, so you can chain them.
+Each `set...` method gives back the controller. So you can chain them: write one after the other, as in the example.
 
 ### How to tune (do it in this order)
 
-1. Set kI = 0, kD = 0. Start kP small: `1 / (a big error)`. For a lift with 2000 ticks of travel,
+1. Set kI = 0 and kD = 0. Start with a small kP: `1 / (a big error)`. For a lift with 2000 ticks of travel,
    try 0.002.
-2. Raise kP until the mechanism gets close to the target quickly. If it shakes back and forth
-   ("oscillates") around the target, kP is too big: go back a step.
-3. If it overshoots, add a little kD (start at kP / 20) and raise it slowly.
-4. If it stops a bit short and stays there (often on a lift), add a small kF (lift) or
+2. Raise kP until the mechanism gets close to the target fast. When it shakes back and forth
+   around the target ("oscillates"), kP is too big: go back a step.
+3. When it goes past the target (overshoots), add a little kD. Start at kP / 20 and raise it slowly.
+4. When it stops a bit short and stays there (often on a lift), add a small kF (lift). Or add
    a small kI with `setIntegralLimit(0.2)`.
 5. Write the final numbers in your design log.
 
-**Integral windup:** if the mechanism is stuck (blocked by a game piece), the I part keeps
-growing. When it is free, the big build-up throws it past the target. `setIntegralLimit` caps it.
+**Integral windup:** when something blocks the mechanism (a game piece, for example), the I part keeps
+growing. When the mechanism comes free, this big build-up throws it past the target. `setIntegralLimit` caps it.
 
 ### Turning with PID
 
@@ -95,8 +96,8 @@ drive.drive(0, 0, -turnCcw);   // the drive's turn is clockwise-positive, so fli
 
 ## SlewRateLimiter
 
-Stops a value from changing too fast. Use it so a tall robot does not tip, or a heavy
-mechanism does not jerk, when the driver slams a stick.
+A slew rate limiter stops a value from changing too fast. When the driver slams a stick, it keeps a tall robot
+from tipping and a heavy mechanism from jerking.
 
 ```java
 SlewRateLimiter forwardRamp = new SlewRateLimiter(2.0, 4.0);   // speed up 2/s, slow down 4/s
@@ -110,23 +111,23 @@ With rate 2.0, going from 0 to full power takes 0.5 seconds.
 | --- | --- |
 | `new SlewRateLimiter(rate)` | same limit both ways, per second |
 | `new SlewRateLimiter(rise, fall)` | `rise` = away from zero (speeding up), `fall` = toward zero (slowing down) |
-| `calculate(input)` | **call every loop.** Moves toward the input, no faster than the limit. The first call returns the current value (0 unless you used `reset`). |
-| `reset(value)` | jump straight to a value (e.g. 0 when you stop) |
+| `calculate(input)` | **call every loop.** It moves toward the input, no faster than the limit. The first call gives the current value (0 unless you used `reset`). |
+| `reset(value)` | jumps straight to a value (for example 0 when you stop) |
 | `getValue()` | the last output |
 
 Tip: let it slow down faster than it speeds up (`fall` > `rise`), so the robot still stops quickly.
 
 ## Feedforward
 
-**Feedforward** means: work out the power a motor needs for a speed BEFORE there is an error, from
-how the motor behaves. A PID only reacts once an error has built up. The two work well together.
-The [Characterizer](finders.md#characterizeropmode) measures the numbers on your robot.
+A PID reacts only after an error builds up. **Feedforward** works out the power a motor needs for a speed
+before there is an error. It uses numbers that describe how the motor behaves. The two work well together.
+The [Characterizer](finders.md#characterizeropmode) measures these numbers on your robot.
 
 ```
 power = kS x sign(speed) + kV x speed + kA x speeding-up + kG
 ```
 
-- **kS:** the power just to start moving (to beat friction).
+- **kS:** the power to start moving (to beat friction).
 - **kV:** the extra power for each count per second of speed.
 - **kA:** the extra power for speeding up (per count per second, per second).
 - **kG:** the power that holds a lift up against gravity.

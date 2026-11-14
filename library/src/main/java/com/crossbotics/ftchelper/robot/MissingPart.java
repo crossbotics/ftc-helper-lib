@@ -19,7 +19,7 @@ import java.util.Map;
  * the part's own code needs no "is it there?" checks. The robot then leaves the part out of every
  * loop: it is never updated, and its telemetry line is "-".
  *
- * Docs: docs/modules/robot.md (section "Parts not on the robot yet")
+ * Docs: docs/reference/robot-java.md (section "Parts not on the robot yet")
  */
 final class MissingPart {
     private MissingPart() { }

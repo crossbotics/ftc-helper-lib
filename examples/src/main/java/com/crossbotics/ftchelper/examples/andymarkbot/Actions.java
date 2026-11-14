@@ -7,14 +7,14 @@ public class Actions {
 
     /**
      * Throws the pieces the robot holds (up to 4, the game's limit), one turn each. The hopper feeds
-     * the next piece by gravity, so there is a short wait between throws (Tunables.Auto).
+     * the next piece by gravity, so there is a short wait between throws.
      */
     public static Action throwAll(Robot r) {
         Action a = Action.named("Throw all");
         for (int i = 0; i < 4; i++) {
             a.then(r.catapult::feedOne)
              .waitUntil("the catapult", () -> !r.catapult.isBusy(), 3.0)
-             .waitSeconds(Tunables.Auto.secondsBetweenThrows);
+             .waitSeconds(0.5);                       // the hopper feeds the next piece
         }
         return a;
     }

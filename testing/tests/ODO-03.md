@@ -8,7 +8,7 @@ minutes: 30
 needs: [mecanum, pinpoint|otos|dead-wheels]
 kit_bots: []
 since: v0.16.0
-docs: [tutorials/start/07-odometry.md#6-drive-to-field-points, tutorials/start/07-odometry.md#check-it-on-the-robot]
+docs: [building-autos/04-drive-to-points.md#drive-to-a-point-driveto, add-to-robot/09-odometry.md#4-check-it-then-tune-it]
 ---
 
 ## Why
@@ -18,20 +18,20 @@ numbers and your odometry. We want real numbers from many robots, not only ours.
 
 ## Safety
 
-- PRACTICE profile and `Tunables.Drive.practiceMaxPower` 0.4 for the first runs.
+- PRACTICE profile and `Tunables.Drive.maxPower` 0.4 for the first runs.
 - The robot drives by itself: a clear path, everyone out of it, a hand on STOP.
 
 ## Setup
 
 - ODO-01 passed (`Tunables.Odometry.checked = true`).
-- An autonomous with one `driveTo` step, for example lesson 7's "To the Goal" (start at -56, -61; drive to -30, -30 facing 45).
+- An autonomous with one `driveTo` step, for example `odometrybot`'s "To the Goal" (start at -56, -61; drive to -30, -30 facing 45).
 - Tape on the floor at the start spot and at the target point.
 
 ## Steps
 
 1. Put the robot exactly on the start spot. INIT the autonomous, check for the odometry "ready" line.
 2. START. Let it drive to the point and stop.
-3. Measure the robot's centre against the target point (x and y error), and its heading error.
+3. Measure the robot's center against the target point (x and y error), and its heading error.
 4. Do it 3 times. Write each.
 5. Run it once more and gently push the robot sideways during the drive: it should come back on course.
 6. Read the report at the end of autonomous.

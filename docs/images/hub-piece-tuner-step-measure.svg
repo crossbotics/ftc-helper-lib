@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 288" width="520" height="288" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="520" height="288" fill="#ffffff"/>
+<text x="16" y="43" font-size="14" fill="#555">Hold the piece still, press:</text>
+<rect x="231" y="18" width="41" height="42" rx="21" fill="#ffd54d" stroke="#333" stroke-width="2"/>
+<text x="251.5" y="46" text-anchor="middle" font-size="19" font-weight="bold" fill="#222">A</text>
+<rect x="6" y="70" width="508" height="212" rx="14" fill="#2b2f36"/>
+<text x="22" y="100" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
+<rect x="16" y="114" width="488" height="158" rx="6" fill="#ffffff"/>
+<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- In front of it: &lt; POLLEN &gt;   (D-pad left/right) ---</text>
+<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">A = measure it, B = forget this sensor's, D-pad up/down ...</text>
+<rect x="20" y="167" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Measured POLLEN at intake_color.</text>
+<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
+<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Copy into your code ---</text>
+<rect x="20" y="230" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Tunables.IntakeColor: POLLEN = 74   // its color (hue, ...</text>
+</svg>

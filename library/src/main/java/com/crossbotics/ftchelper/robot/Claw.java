@@ -16,7 +16,7 @@ import java.util.Map;
  *
  * <p>Usual button (a line to write in Controls.java): operator B opens and closes it.
  *
- * Docs: docs/modules/robot.md (section "Claw")
+ * Docs: docs/reference/robot-java.md (section "Claw")
  */
 public final class Claw extends ServoPositions<Claw> implements Toggleable {
 

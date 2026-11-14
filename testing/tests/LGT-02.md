@@ -8,7 +8,7 @@ minutes: 15
 needs: [lights]
 kit_bots: []
 since: v0.17.0
-docs: [modules/robot.md#the-alliance-at-init, tutorials/start/09-shooter-and-camera.md#13-a-light-for-the-drivers]
+docs: [reference/parts/lights.md#the-alliance-at-init, add-to-robot/08-lights.md#controlsjava-the-rules]
 ---
 
 ## Why
@@ -24,7 +24,7 @@ shows the alliance. We want to know it is easy to read on real lights, from the 
 ## Setup
 
 - A light in `Robot.java` (`Lights.gobilda("light")` or `Lights.blinkin("blinkin")`), with no `allianceAtInit` line in its Tunables section.
-- Your own rules in `Controls.java` (any, for example lesson 9 section 13's).
+- Your own rules in `Controls.java` (any, for example the ones in [Add lights](../../docs/add-to-robot/08-lights.md#controlsjava-the-rules)).
 - Simulator: the light is a dot on the robot (V2 example robot, or your own robot from `Robot.java`).
 
 ## Steps
@@ -38,18 +38,18 @@ shows the alliance. We want to know it is easy to read on real lights, from the 
 
 ## Pass rule
 
-Each state shows the right colour (4 of 4: blinking white, blue, red, the flash at START), and two
+Each state shows the right color (4 of 4: blinking white, blue, red, the flash at START), and two
 people can tell red from blue from 6 ft away.
 
 ## Record
 
 - light model, and where it sits on the robot
 - whether red and blue were easy to tell apart, and from where
-- any colour that looked wrong (and which `allianceColors(...)` fixed it, if you tried)
+- any color that looked wrong (and which `allianceColors(...)` fixed it, if you tried)
 - what step 6 showed
 
 ## If your robot is different
 
 If your light shows red or blue badly, try `robot.lights.allianceColors(LightColor.PURPLE, LightColor.ORANGE);`
-in `Controls.java` (blue's colour first) and say whether it is better. A REV Blinkin with a strip of
+in `Controls.java` (blue's color first) and say whether it is better. A REV Blinkin with a strip of
 your own: say the strip and its length.

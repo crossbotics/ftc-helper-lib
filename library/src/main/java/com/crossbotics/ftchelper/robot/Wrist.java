@@ -16,7 +16,7 @@ import java.util.Map;
  *
  * <p>Usual buttons (lines to write in Controls.java): operator D-pad left/right go to the next position down/up (lowest value first).
  *
- * Docs: docs/modules/robot.md (section "Wrist")
+ * Docs: docs/reference/robot-java.md (section "Wrist")
  */
 public final class Wrist extends ServoPositions<Wrist> {
 

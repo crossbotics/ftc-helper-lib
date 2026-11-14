@@ -19,11 +19,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: turrets and interlocks (docs/cookbook.md#turrets-and-interlocks). A turret with a home
+ * Cookbook: turrets and interlocks (docs/cookbook/07-turrets-and-interlocks.md). A turret with a home
  * switch, a slip-ring turret, an interlock rule that keeps a turret and a lift apart, and the lifter's
  * steps (wrist, claw, lift) in a safe order.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class InterlockRecipes {
@@ -186,8 +186,8 @@ public class InterlockRecipes {
         public static class Aim {                                       // a fixed name: always Aim
             // Where the goal is, seen from YOUR drivers' wall (inches; the same numbers as driveTo).
             // BIOBUZZ: your HIVE's CELL that is up at the start.
-            public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
-            public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
+            public static double goalX = 13;                            // inches right of center (BIOBUZZ)
+            public static double goalY = -13;                           // inches from center, - = our half (BIOBUZZ)
             public static boolean mirrorForRed = false;                 // BIOBUZZ's field is turned, not mirrored
         }
         // end recipe

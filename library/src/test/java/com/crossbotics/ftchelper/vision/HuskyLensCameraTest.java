@@ -133,7 +133,7 @@ public class HuskyLensCameraTest {
         h.boxes = new HuskyLens.Block[] {h.box(100, 120, 20, 20, 1)};
         HuskyLensCamera c = camera(h).tag(1, 31).mode(HuskyLensCamera.Mode.COLORS);
         c.update();
-        assertNotNull("a taught colour keeps its number", c.target(1));
+        assertNotNull("a taught color keeps its number", c.target(1));
         assertNull(c.target(31));
     }
 
@@ -230,7 +230,7 @@ public class HuskyLensCameraTest {
             c.mode(HuskyLensCamera.Mode.COLORS);
         };
         c.update();
-        assertTrue("a TAGS reading is not used as colours", c.targets().isEmpty());
+        assertTrue("a TAGS reading is not used as colors", c.targets().isEmpty());
         c.update();
         assertEquals(Arrays.asList(HuskyLens.Algorithm.TAG_RECOGNITION, HuskyLens.Algorithm.COLOR_RECOGNITION), h.selected);
         assertEquals(1, c.targets().size());

@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.crossbotics.ftchelper.examples.gobildastraferbot.Actions;
 import com.crossbotics.ftchelper.examples.gobildastraferbot.Robot;
-import com.crossbotics.ftchelper.examples.gobildastraferbot.Tunables;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 
@@ -19,10 +18,10 @@ public class LaunchAndLeave extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        // Inches: y -62.95 = the back against our wall (the robot's centre is 7.5 in from it).
-        s.start("Back against our wall, left of centre, facing the field", -56, -62.95, 0)
+        // Inches: y -62.95 = the back against our wall (the robot's center is 7.5 in from it).
+        s.start("Back against our wall, left of center, facing the field", -56, -62.95, 0)
          .action(Actions.fireAllWithIntake(robot), 12)
-         .forward("Leave", Tunables.Auto.leaveInches, Tunables.Auto.leavePower);
+         .forward("Leave", 20, 0.5);                            // a starting guess
     }
 
     // BIOBUZZ's field is turned half a turn between the alliances: the same route works for both.

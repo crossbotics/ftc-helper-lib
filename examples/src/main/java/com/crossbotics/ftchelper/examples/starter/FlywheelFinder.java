@@ -9,7 +9,7 @@ import com.crossbotics.ftchelper.finders.FlywheelFinderOpMode;
  * STARTER KIT finder: finds a flywheel's top speed, speed-control gains and recovery after a shot.
  * Nothing to fill in: it lists the devices in the robot configuration. It shows the code lines to
  * copy, and saves them on the hub (/sdcard/FIRST/ftc-helper/finder-results.txt) when you press STOP.
- * How to use it: docs/guides/finders.md.
+ * How to use it: docs/tuning/README.md.
  */
 @TeleOp(name = "Flywheel Finder", group = "Finders")
 // @Disabled hides it from the list. Delete this line in your copy, or you will not see it.

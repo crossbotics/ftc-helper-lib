@@ -8,7 +8,7 @@ minutes: 30
 needs: [limelight|webcam|pinpoint|otos|dead-wheels]
 kit_bots: []
 since: v0.17.0
-docs: [tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot]
+docs: [add-to-robot/07-camera.md#controlsjava-its-buttons]
 ---
 
 ## Why
@@ -26,7 +26,7 @@ the driver drives, and the turn stick always wins. Drive trains turn very differ
 
 - A camera with `.goal(...)`, or odometry with `Tunables.Aim.goalX`, `goalY`.
 - In `Controls.java`: `g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();`
-- Simulator: lesson 9's `flywheelbot` commands, then "FlywheelBot TeleOp".
+- Simulator: the `flywheelbot` commands ([Add a camera: Try it in the simulator](../../docs/add-to-robot/07-camera.md#try-it-in-the-simulator)), then "FlywheelBot TeleOp".
 
 ## Steps
 

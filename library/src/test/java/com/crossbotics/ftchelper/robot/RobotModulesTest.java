@@ -551,4 +551,24 @@ public class RobotModulesTest {
         closeToTwo.others(gains);
         assertTrue(closeToTwo.note(), closeToTwo.note().contains("kDI looks like kD"));
     }
+
+    public static class OnlyMaxPower { public static class Drive { public static double maxPower = 0.7; } }
+    public static class BothPowers { public static class Drive { public static double maxPower = 0.9, practiceMaxPower = 0.5; } }
+
+    // PRACTICE drives at the same top power as COMPETITION unless practiceMaxPower is written: drivers
+    // practice at match speed.
+    @Test public void practiceUsesMaxPowerUnlessPracticeMaxPowerIsWritten() {
+        com.crossbotics.ftchelper.core.Profile.set(com.crossbotics.ftchelper.core.Profile.PRACTICE);
+        try {
+            Drive d = Drive.mecanum("fl", "fr", "bl", "br");
+            assertEquals(0.7, d.config(TunableSection.of(OnlyMaxPower.class, "Drive")).drive().powerLimit, 1e-9);
+            TuningReset.clear();
+            assertEquals(0.5, d.config(TunableSection.of(BothPowers.class, "Drive")).drive().powerLimit, 1e-9);
+            com.crossbotics.ftchelper.core.Profile.set(com.crossbotics.ftchelper.core.Profile.COMPETITION);
+            TuningReset.clear();
+            assertEquals(0.9, d.config(TunableSection.of(BothPowers.class, "Drive")).drive().powerLimit, 1e-9);
+        } finally {
+            com.crossbotics.ftchelper.core.Profile.set(com.crossbotics.ftchelper.core.Profile.COMPETITION);
+        }
+    }
 }

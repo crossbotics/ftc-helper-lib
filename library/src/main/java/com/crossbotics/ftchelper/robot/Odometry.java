@@ -19,6 +19,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  *
  * <pre>{@code
  * odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));          // goBILDA Pinpoint, 4-bar pods
+ * odometry(Odometry.pinpoint("pinpoint").robotSizeMm(430, 400).podsFromEdgesMm(284, 383));   // the same, from the edges
  * odometry(Odometry.otos("otos").mountIn(0, -3, 0));                     // SparkFun OTOS
  * odometry(Odometry.threeWheels("par_left", "par_right", "perp")          // three dead wheels
  *         .trackWidthIn(13.2).perpForwardIn(-6));
@@ -44,6 +45,11 @@ public final class Odometry {
     double ticksPerMm = FOUR_BAR_TICKS_PER_MM;
     boolean swingarm = false, customPods = false;
     double forwardIn = 0, leftIn = 0, mountHeadingDeg = 0;   // OTOS
+    // Measured from the robot's edges (podsFromEdgesMm, mountFromEdgesMm): turned into the center
+    // numbers above at INIT, once robotSizeMm is known. NaN = not used.
+    double lengthMm = Double.NaN, widthMm = Double.NaN;
+    double podFromLeftMm = Double.NaN, podFromFrontMm = Double.NaN;
+    double mountFromFrontMm = Double.NaN, mountFromLeftMm = Double.NaN;
     double trackWidthIn = Double.NaN, parallelLeftIn = 0, perpForwardIn = 0;   // dead wheels
     final List<String> reversed = new ArrayList<>();
 
@@ -81,7 +87,7 @@ public final class Odometry {
     }
 
     /**
-     * Three dead wheels on encoder ports: two that measure forward (left and right of the centre) and
+     * Three dead wheels on encoder ports: two that measure forward (left and right of the center) and
      * one that measures sideways. The names are the motor ports' configuration names.
      */
     public static Odometry threeWheels(String leftParallel, String rightParallel, String perpendicular) {
@@ -95,14 +101,102 @@ public final class Odometry {
 
     /**
      * Pinpoint: where the pods sit, in mm (the Odometry Tuner measures them). {@code xPodLeftMm}: how
-     * far LEFT of the robot's centre the forward-measuring pod is (right = negative);
-     * {@code yPodForwardMm}: how far FORWARD of the centre the sideways-measuring pod is (back = negative).
+     * far LEFT of the robot's center the forward-measuring pod is (right = negative);
+     * {@code yPodForwardMm}: how far FORWARD of the center the sideways-measuring pod is (back = negative).
      */
     public Odometry offsetsMm(double xPodLeftMm, double yPodForwardMm) {
         need(Kind.PINPOINT, "offsetsMm");
         xOffsetMm = xPodLeftMm;
         yOffsetMm = yPodForwardMm;
+        podFromLeftMm = podFromFrontMm = Double.NaN;   // the last one written wins (podsFromEdgesMm)
         return this;
+    }
+
+    /**
+     * The robot's frame size, in mm: length front to back, width side to side (a tape across the frame,
+     * bumpers off). {@link #podsFromEdgesMm} and {@link #mountFromEdgesMm} need it: the library takes
+     * the middle of this box as the robot's center.
+     *
+     * @param lengthMm front edge to back edge, mm (more than 0)
+     * @param widthMm left edge to right edge, mm (more than 0)
+     * @return this odometry
+     */
+    public Odometry robotSizeMm(double lengthMm, double widthMm) {
+        if (!(lengthMm > 0) || !(widthMm > 0)) {
+            throw new IllegalArgumentException("Robot.java: robotSizeMm(length, width) needs two sizes more than 0 mm");
+        }
+        this.lengthMm = lengthMm;
+        this.widthMm = widthMm;
+        return this;
+    }
+
+    /**
+     * Pinpoint: where the pods sit, measured from the robot's EDGES (easier than from the center). Also
+     * write {@link #robotSizeMm}; the library works out the center numbers of {@link #offsetsMm}. Measure
+     * to the middle of each pod's wheel. The Odometry Tuner then checks them and prints exact offsets.
+     *
+     * <pre>{@code
+     * odometry(Odometry.pinpoint("pinpoint").robotSizeMm(430, 400).podsFromEdgesMm(284, 383));
+     * // = offsetsMm(-84, -168): the forward pod 84 mm right of the center, the sideways pod 168 mm behind it
+     * }</pre>
+     *
+     * @param forwardPodFromLeftMm the forward-measuring (X) pod's wheel, mm from the robot's LEFT edge
+     * @param sidewaysPodFromFrontMm the sideways-measuring (Y) pod's wheel, mm from the robot's FRONT edge
+     * @return this odometry
+     */
+    public Odometry podsFromEdgesMm(double forwardPodFromLeftMm, double sidewaysPodFromFrontMm) {
+        need(Kind.PINPOINT, "podsFromEdgesMm");
+        podFromLeftMm = forwardPodFromLeftMm;
+        podFromFrontMm = sidewaysPodFromFrontMm;
+        return this;
+    }
+
+    /**
+     * OTOS: where it sits, measured from the robot's EDGES (easier than from the center), and its arrow's
+     * direction. Also write {@link #robotSizeMm}; the library works out the numbers of {@link #mountIn}.
+     * Measure to the middle of the sensor.
+     *
+     * <pre>{@code
+     * odometry(Odometry.otos("otos").robotSizeMm(430, 400).mountFromEdgesMm(291, 200, 0));
+     * // = mountIn(-3, 0, 0): 3 inches behind the center, in the middle side to side
+     * }</pre>
+     *
+     * @param fromFrontMm the sensor's middle, mm from the robot's FRONT edge
+     * @param fromLeftMm the sensor's middle, mm from the robot's LEFT edge
+     * @param headingDeg the direction of its arrow, counterclockwise degrees (0 = forward)
+     * @return this odometry
+     */
+    public Odometry mountFromEdgesMm(double fromFrontMm, double fromLeftMm, double headingDeg) {
+        need(Kind.OTOS, "mountFromEdgesMm");
+        mountFromFrontMm = fromFrontMm;
+        mountFromLeftMm = fromLeftMm;
+        mountHeadingDeg = headingDeg;
+        return this;
+    }
+
+    // Edge measurements -> center numbers. The center is the middle of the robotSizeMm box, so a part
+    // d mm from the left edge is (width / 2 - d) mm LEFT of the center, and the same front to back.
+    void fromEdges() {
+        boolean pods = !Double.isNaN(podFromLeftMm), mount = !Double.isNaN(mountFromFrontMm);
+        if (!pods && !mount) return;
+        String what = pods ? "podsFromEdgesMm" : "mountFromEdgesMm";
+        if (Double.isNaN(lengthMm)) {
+            throw new IllegalStateException("Robot.java: odometry " + what + "(...) needs robotSizeMm(length, width) too, "
+                    + "so the library can find the robot's center");
+        }
+        double[] in = {pods ? podFromLeftMm : mountFromLeftMm, pods ? podFromFrontMm : mountFromFrontMm};
+        if (in[0] < 0 || in[0] > widthMm || in[1] < 0 || in[1] > lengthMm) {
+            throw new IllegalStateException("Robot.java: odometry " + what + "(...): a distance is outside the robot ("
+                    + Shape.n(lengthMm) + " x " + Shape.n(widthMm) + " mm). Measure from the LEFT and FRONT edges");
+        }
+        double leftMm = widthMm / 2 - in[0], forwardMm = lengthMm / 2 - in[1];
+        if (pods) {
+            xOffsetMm = leftMm;
+            yOffsetMm = forwardMm;
+        } else {
+            leftIn = leftMm / 25.4;
+            forwardIn = forwardMm / 25.4;
+        }
     }
 
     /** goBILDA swingarm pods instead of 4-bar pods. */
@@ -144,12 +238,13 @@ public final class Odometry {
         }
     }
 
-    /** OTOS: where it sits: inches forward of the centre, inches left, and its arrow's direction (CCW deg). */
+    /** OTOS: where it sits: inches forward of the center, inches left, and its arrow's direction (CCW deg). */
     public Odometry mountIn(double forwardIn, double leftIn, double headingDeg) {
         need(Kind.OTOS, "mountIn");
         this.forwardIn = forwardIn;
         this.leftIn = leftIn;
         this.mountHeadingDeg = headingDeg;
+        mountFromFrontMm = mountFromLeftMm = Double.NaN;   // the last one written wins (mountFromEdgesMm)
         return this;
     }
 
@@ -160,14 +255,14 @@ public final class Odometry {
         return this;
     }
 
-    /** Two dead wheels: how far LEFT of the centre the forward-measuring pod is, inches (right = negative). */
+    /** Two dead wheels: how far LEFT of the center the forward-measuring pod is, inches (right = negative). */
     public Odometry parallelLeftIn(double inches) {
         need(Kind.TWO, "parallelLeftIn");
         parallelLeftIn = inches;
         return this;
     }
 
-    /** Dead wheels: how far FORWARD of the centre the sideways-measuring pod is, inches (back = negative). */
+    /** Dead wheels: how far FORWARD of the center the sideways-measuring pod is, inches (back = negative). */
     public Odometry perpForwardIn(double inches) {
         if (kind != Kind.THREE && kind != Kind.TWO) throw new IllegalStateException("Robot.java: perpForwardIn is for dead wheels");
         perpForwardIn = inches;
@@ -194,6 +289,11 @@ public final class Odometry {
         return java.util.Collections.unmodifiableList(names);
     }
 
+    /** True if the Pinpoint pods are written with {@link #podsFromEdgesMm} (for the Odometry Tuner's advice). */
+    public boolean podsFromEdges() {
+        return !Double.isNaN(podFromLeftMm);
+    }
+
     /** Pod encoder counts per mm. */
     public double podTicksPerMm() {
         return ticksPerMm;
@@ -212,6 +312,7 @@ public final class Odometry {
     // Makes the real thing at INIT.
     PoseTracker build(Devices devices, TunableSection t, Drive drive) {
         checkReversed();
+        fromEdges();
         switch (kind) {
             case CUSTOM: {
                 PoseTracker p = custom.apply(devices);
@@ -257,6 +358,7 @@ public final class Odometry {
 
     /** Lines for the simulator's robot file. */
     void simLines(List<String> out) {
+        fromEdges();
         switch (kind) {
             case CUSTOM:
                 out.add("# odometry: a custom pose source (the simulator has no pretend device for it)");

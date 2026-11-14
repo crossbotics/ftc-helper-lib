@@ -8,17 +8,17 @@ minutes: 20
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.16.0
-docs: [tutorials/start/08-paths-with-pedro.md#6-try-it-in-the-simulator-first]
+docs: [building-autos/05-pedro-paths.md#4-check-it-then-tune-it]
 ---
 
 ## Why
 
-Lesson 8 says "try it in the simulator first". This checks that the commands and what the lesson
-says you will see are right on your laptop. No robot needed.
+[Add Pedro paths](../../docs/building-autos/05-pedro-paths.md) says "try every path in the simulator first". This checks that the
+commands and what the docs say you will see are right on your laptop. No robot needed.
 
 ## Setup
 
-- A laptop with the library and the simulator set up ([laptop setup](../../docs/guides/simulator.md#laptop-setup-once)).
+- A laptop with the library and the simulator set up ([laptop setup](../../docs/simulator/01-start-and-drive.md#laptop-setup-once)).
 - A terminal in the `ftc-helper-lib` folder.
 
 ## Steps
@@ -40,9 +40,9 @@ within about 2 in of the orange plan, and the intake starts within about 6 in of
 - your computer (Windows, Mac, Linux, Chromebook) and browser
 - the report lines
 - how long the two Gradle commands took the first time (minutes)
-- anything on screen that did not match lesson 8
+- anything on screen that did not match the docs
 
 ## If your robot is different
 
 This test uses the library's example robot, so your robot does not matter. If you have Pedro in your
-own project, also try your own autonomous (lesson 8 section 6, "Your own robot") and say so.
+own project, also try your own autonomous ([Add Pedro paths](../../docs/building-autos/05-pedro-paths.md)) and say so.

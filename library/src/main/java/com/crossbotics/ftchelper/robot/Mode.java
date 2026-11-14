@@ -7,7 +7,7 @@ package com.crossbotics.ftchelper.robot;
  *
  * <p>Modes are for "always" rules; an {@link Action} is for steps that end.
  *
- * Docs: docs/modules/robot.md (section "Modes")
+ * Docs: docs/reference/robot-java.md (section "Modes")
  */
 public final class Mode implements Toggleable {
     private final String name;

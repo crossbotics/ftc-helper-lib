@@ -80,8 +80,21 @@ public class AutoDriveConfig {
     public double slowDownIn = 0;
     /** moveWithTurn: heading correction is multiplied by this before mixing. */
     public double moveTurnScale = 0.60;
-    /** moveWithTurn: largest heading-correction power, so moving stays the main job. */
+    /** moveWithTurn: largest heading-correction power, so moving stays the main job. Routes use it too. */
     public double moveMaxTurnPower = 0.35;
+
+    // --- driveTo and routes (odometry): the last few inches ---
+    // Far from the point, driveTo slows down like move(). In the last driveToNearIn inches its speed is
+    // driveToKp x the inches left (at least driveToMinPower), so it settles on the point instead of
+    // circling it. Most teams never change these.
+    /** driveTo and routes: the last part (inches) where the speed follows the distance left. */
+    public double driveToNearIn = 8;
+    /** driveTo and routes: power per inch left, inside {@link #driveToNearIn}. */
+    public double driveToKp = 0.04;
+    /** driveTo and routes: the smallest power inside {@link #driveToNearIn}, so the robot does not stall short. */
+    public double driveToMinPower = 0.12;
+    /** driveTo and routes: the smallest turn power while the heading is off, when {@link #turnMinPower} is 0. */
+    public double driveToMinTurn = 0.08;
 
     // --- Safety ---
     /**

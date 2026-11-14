@@ -14,7 +14,7 @@ import com.crossbotics.ftchelper.robot.Shape;
  * Example robot 1, file 1 of 5: what is on the robot. A tank drive, an intake that runs from ▶ and
  * a servo that deploys it, a flywheel launcher with a servo feeder, and a webcam: the whole robot
  * turns to face the goal (no turret). Each part has its shapes for the simulator.
- * more: https://crossbotics.com/ftc-helper/docs/modules/robot/#shapes-and-parts
+ * more: https://crossbotics.com/ftc-helper/docs/reference/robot-java/#shapes-and-parts
  */
 public class Robot extends RobotDefinition {
     // One field per mechanism, so the other files can reach it: robot.intake.

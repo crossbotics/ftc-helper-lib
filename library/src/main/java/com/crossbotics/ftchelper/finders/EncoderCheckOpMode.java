@@ -43,7 +43,7 @@ import java.util.Set;
  * }
  * }</pre>
  *
- * Docs: docs/modules/finders.md. Guide: docs/guides/finders.md, "Encoder Check"
+ * Docs: docs/modules/finders.md. Guide: docs/tuning/02-wiring-checks.md, "Encoder Check"
  */
 public abstract class EncoderCheckOpMode extends FinderOpMode {
 
@@ -152,7 +152,7 @@ public abstract class EncoderCheckOpMode extends FinderOpMode {
         t.text("Watch each part: a lift or arm must move UP, away from its stop. Wrong way? Fix reversed() in Robot.java.");
         if (check.done()) {
             if (bad == 0) t.text("Done: every encoder is in its own port and counts up.");
-            else t.warn(bad + " problem(s). Fix the cables, then {Y} to check again. Steps: docs/guides/finders.md");
+            else t.warn(bad + " problem(s). Fix the cables, then {Y} to check again. Steps: docs/tuning/02-wiring-checks.md");
         }
     }
 

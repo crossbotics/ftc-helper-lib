@@ -41,7 +41,7 @@ final class ActionRunner implements Subsystem {
 
     /** Starts it, or stops it if it is running ("press again to cancel"). */
     void toggle(Action a) {
-        if (a.isRunning()) stop(a, "cancelled");
+        if (a.isRunning()) stop(a, "canceled");
         else start(a);
     }
 
@@ -54,7 +54,7 @@ final class ActionRunner implements Subsystem {
         running.remove(a);
     }
 
-    // An action that did not finish ("cancelled", "stopped: ...", "timed out ..."): each part it still
+    // An action that did not finish ("canceled", "stopped: ...", "timed out ..."): each part it still
     // owns stops what the action told it to do, safely (a lift holds where it is, queued shots are
     // dropped, an intake stops). A part the driver or another action has taken is left alone: its new
     // command comes right after this. A finished action ("done") keeps its last commands.

@@ -1,6 +1,6 @@
 package com.crossbotics.ftchelper.examples.studicabot;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/reference/tunables.md)
 
 /**
  * Studica starter bot, file 2 of 5: the numbers, one per line. DEFAULT = the library's
@@ -11,7 +11,7 @@ public class Tunables {
     /** calibrated: set true after the Drive Tuner (autonomous refuses to run before). */
     public static class Drive {
         public static double maxPower = DEFAULT;                    // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         public static double strafeCorrection = DEFAULT;            // not used: a tank drive cannot strafe (1.15)
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -44,10 +44,5 @@ public class Tunables {
         public static double push = 0.2;                            // servo position, piece pushed: Studica (A)
         public static double pushSec = 0.3;                         // time to push, seconds: a guess
         public static double returnSec = 0.3;                       // time to come back, seconds: a guess
-    }
-
-    public static class Auto {
-        public static double leaveInches = 20;                      // drive off the start line
-        public static double leavePower = 0.5;                      // power for that move
     }
 }

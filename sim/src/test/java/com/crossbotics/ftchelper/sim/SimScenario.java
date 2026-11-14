@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Runs a scenario file: a short script that drives the simulator like a person would (INIT, START,
  * buttons, sticks, pushes) and checks what happens ("expect ..."). No browser needed, so a student, a
- * test or Claude can run it and read the report. The language is in docs/guides/simulator.md.
+ * test or Claude can run it and read the report. The language is in docs/reference/scenario-files.md.
  *
  * <pre>
  * init "Motor Finder"

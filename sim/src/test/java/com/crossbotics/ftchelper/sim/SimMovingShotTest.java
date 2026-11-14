@@ -91,7 +91,7 @@ public class SimMovingShotTest {
         double missPlain = Math.hypot(plain.landed[0] - goal[0], plain.landed[1] - goal[1]);
 
         // 3. The same, aimed with the lead: the robot faces the virtual goal (whole-robot aim, the
-        //    launcher about 1 in behind the centre). The robot's speed from step 2 (the same drive).
+        //    launcher about 1 in behind the center). The robot's speed from step 2 (the same drive).
         double[] v = MovingShot.toRobotFrame(plain.robotVel[0], plain.robotVel[1], 0);
         MovingShot.Result lead = new MovingShot().shooterAt(-1, 0).flightSec(still.flightSec, 0).maxLeadIn(0)
                 .solve(range, 0, v[0], v[1], 0, 0);

@@ -9,9 +9,9 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 
 /**
- * Lesson 7's robot plus Pedro Pathing: with the follower line, autonomous can follow(...) curved
+ * The odometry robot plus Pedro Pathing: with the follower line, autonomous can follow(...) curved
  * paths; driveTo(...) still works too.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/08-paths-with-pedro/
+ * more: https://crossbotics.com/ftc-helper/docs/building-autos/05-pedro-paths/
  */
 public class Robot extends RobotDefinition {
     public Intake intake;

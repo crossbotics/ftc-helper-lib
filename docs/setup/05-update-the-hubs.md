@@ -1,11 +1,11 @@
 # Set up 5: update the hubs
 
-**Set up, page 5 of 9.** Do it **once a season**, and again before an event if REV releases an update.
+Do it **once a season**, and again before an event if REV releases an update.
 
-**Only using the simulator on this laptop?** Skip this page. The simulator needs no hubs. Go to [Every practice](08-every-practice.md).
+**If you use only the simulator on this laptop,** skip this page: the simulator needs no hubs. Go to [Every practice](08-every-practice.md).
 
 **Why:** the Driver Station app and the Robot Controller app must have the same version: **12.0** for
-the 2026-27 season. If not, the Driver Hub shows a version warning, or the two do not connect. Robot
+the 2026-27 season. If the versions differ, the Driver Hub shows a version warning, or the two do not connect. Robot
 inspectors check this at events.
 
 ## The Driver Hub (no laptop needed)
@@ -26,7 +26,7 @@ inspectors check this at events.
 
 REV's own steps: [Updating the Driver Hub](https://docs.revrobotics.com/duo-control/managing-the-control-system/updating-the-driver-hub).
 
-The **Robot Controller app** is not updated here. The next page installs it from Android Studio,
+This page does not update the **Robot Controller app**. The next page installs it from Android Studio,
 because your code is part of it.
 
 ## Done when
@@ -35,3 +35,5 @@ The Software Manager says the Driver Hub is up to date, and the REV Hardware Cli
 for the Control Hub.
 
 **Next:** [Build and install](06-build-and-install.md).
+
+**Look it up:** [Troubleshooting: Driver Station errors](../troubleshooting.md#driver-station-errors).

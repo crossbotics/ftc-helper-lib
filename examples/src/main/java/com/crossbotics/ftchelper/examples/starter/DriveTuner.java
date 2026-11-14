@@ -9,7 +9,7 @@ import com.crossbotics.ftchelper.finders.DriveTunerOpMode;
 /**
  * STARTER KIT finder: finds the autonomous drive numbers in RobotSettings.auto() (wheel size and
  * strafe correction), with a push test and measured drive tests. Tape on the floor; 5 ft of space.
- * It shows the lines to copy into RobotSettings. How to use it: docs/guides/finders.md.
+ * It shows the lines to copy into RobotSettings. How to use it: docs/tuning/README.md.
  */
 @TeleOp(name = "Drive Tuner", group = "Finders")
 // @Disabled hides it from the list. Delete this line in your copy, or you will not see it.

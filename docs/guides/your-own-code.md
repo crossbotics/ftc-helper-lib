@@ -4,7 +4,7 @@
 
 **For:** students who want to write their own code in the steps of an FTC OpMode, and students who
 want to write a whole OpMode themselves. **You need:** the five files
-([lesson 1](../tutorials/start/01-robot-in-five-files.md)) and a first look at
+([The five files](../five-files/README.md)) and a first look at
 [non-blocking code](non-blocking.md).
 
 ## The five steps of every FTC OpMode
@@ -22,18 +22,18 @@ you can add your own code to each one:
 
 Two rules for all of them:
 
-- **Nothing moves before ▶.** Code in `atInit` and `duringInit` may read sensors and show
-  things. It must not give a motor power or move a servo. **Why:** the game rules say the robot
-  stays still until the match starts, and a robot that moves in INIT can hurt someone setting it up.
-- **Never wait.** Each piece of code must be quick: no `sleep()`, no `while` that waits for
-  something. **Why:** while your code waits, the whole robot freezes, STOP included
-  ([Non-blocking code](non-blocking.md)). To do things one after another, use an
-  [action](../tutorials/start/05-actions.md).
+- **Nothing moves before ▶.** The game rules say the robot stays still until the match starts. A robot
+  that moves in INIT can also hurt someone who is setting it up. So code in `atInit` and `duringInit` may read sensors and show
+  things, but it must not give a motor power or move a servo.
+- **Never wait.** While your code waits, the whole robot freezes, STOP included
+  ([Non-blocking code](non-blocking.md)). So each piece of code must be quick: no `sleep()`, no `while` that waits for
+  something. To do things one after another, use an
+  [action](../five-files/04-actions-java.md).
 
 ## Road 1: your code in the five files
 
-This is the usual road: you keep everything the library does (the buttons, the menus, the safety
-stops) and add your own code where you need it.
+This is the usual road. You keep everything the library does (the buttons, the menus, the safety
+stops), and you add your own code where you need it.
 
 **For every OpMode** (TeleOp and every autonomous): put it in `Robot.java`'s `define()`.
 
@@ -63,8 +63,8 @@ protected void buttons(Robot robot, Pad g1, Pad g2) {
 }
 ```
 
-**For one autonomous only:** put it in its `atInit(robot)`. (Not in `steps(...)`: the library reads
-the steps several times in INIT, so the code would be added several times.)
+**For one autonomous only:** put it in its `atInit(robot)`. Do not put it in `steps(...)`: the library reads
+the steps several times in INIT, so it would add the code several times.
 
 ```java title="autos/ScoreAndPark.java"
 @Override
@@ -74,35 +74,35 @@ protected void atInit(Robot robot) {
 }
 ```
 
-- `atStart(...)` takes an [action](../tutorials/start/05-actions.md), for example
+- `atStart(...)` takes an [action](../five-files/04-actions-java.md), for example
   `atStart(() -> Actions.deployIntake(this))`.
-- `show("label", value)` puts one line on the Driver Hub, under the library's warnings. Call it in
-  every loop: the screen starts empty each loop.
-- Code that moves a motor every loop belongs in a part of your own: `addOwn(...)`
-  ([the robot module](../modules/robot.md)). **Why:** STOP and the pause button then stop its motor
+- `show("label", value)` puts one line on the Driver Hub, under the library's warnings. The screen starts
+  empty each loop, so call it in every loop.
+- Put code that moves a motor every loop in a part of your own: `addOwn(...)`
+  ([the robot module](../reference/robot-java.md)). Then STOP and the pause button stop its motor
   too.
-- If one `atStop` fails, the others still run, and the Driver Station shows the first error.
-- `atStop` runs at every end, also when STOP is pressed in INIT. `wasStarted()` tells them apart:
+- When one `atStop` fails, the others still run, and the Driver Station shows the first error.
+- `atStop` runs at every end, also when the driver presses STOP in INIT. `wasStarted()` tells them apart:
   `atStop(() -> { if (wasStarted()) savedCount = piecesScored; })`.
-- In `Controls.java`, write `robot.show(...)`: plain `show(...)` there is the TeleOp's own `show`, which
+- In `Controls.java`, write `robot.show(...)`. There, plain `show(...)` is the TeleOp's own `show`. It
   takes a value to read again every loop (`show("Lift", robot.lift::position)`).
 
 ## Road 2: your own OpMode, with the library's robot
 
 Some students want to write the whole OpMode themselves, the way FTC teaches it: their own `INIT`,
-their own loop, their own buttons. You can, and still use your `Robot.java`, `Tunables.java` and
+their own loop, their own buttons. You can do that and still use your `Robot.java`, `Tunables.java` and
 `Actions.java`. Five lines connect them:
 
 | In your OpMode | What it does |
 | --- | --- |
 | `robot.init(this)` | INIT: makes every part, turns on bulk reads (faster loops), runs the INIT checks. Moves nothing. |
 | `robot.initLoop()` | one pass of the INIT loop: the parts' INIT work, your `duringInit`, then it sends the screen |
-| `robot.start()` | ▶: each part's start and your `atStart` actions (nothing if STOP was pressed in INIT) |
+| `robot.start()` | ▶: each part's start and your `atStart` actions (nothing when the driver pressed STOP in INIT) |
 | `robot.update()` | one loop: every part and action moves a little, your `everyLoop`, then it sends the screen |
 | `robot.stop()` | STOP: stops the wheels and every part, then your `atStop`. Put it in a `finally`. |
 
-Two more help you drive: `robot.driveWith(gamepad1)` drives with the sticks (the left trigger drives
-slowly), and `robot.driveWith(forward, strafeRight, turnRight)` drives with numbers from -1 to 1.
+Two more lines help you drive. `robot.driveWith(gamepad1)` drives with the sticks (the left trigger drives
+slowly). `robot.driveWith(forward, strafeRight, turnRight)` drives with numbers from -1 to 1.
 
 ```java title="OwnTeleOp.java"
 @TeleOp(name = "Own TeleOp")
@@ -144,14 +144,14 @@ public class OwnTeleOp extends LinearOpMode {
 }
 ```
 
-The whole file is in the lesson robot's example:
+The whole file is in the example robot `lessonbot`:
 [OwnTeleOp.java](https://github.com/crossbotics/ftc-helper-lib/blob/main/examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/OwnTeleOp.java).
 Try it in the simulator: **Lesson Bot: own OpMode**.
 
 - **Call `robot.update()` once in every loop.** Without it, no part moves and no action runs.
 - **Do not call `telemetry.update()` yourself.** `robot.update()` and `robot.initLoop()` send the
   screen, with your own `telemetry.addData(...)` lines and your `robot.show(...)` lines.
-- **Keep `robot.stop()` in a `finally`.** **Why:** it then runs even after an error, so no motor
+- **Keep `robot.stop()` in a `finally`.** Then it runs even after an error, so no motor
   keeps its power.
 
 **What you keep:** every part's safety (lift and arm limits, soft stops, jam back-out), the actions,
@@ -164,9 +164,9 @@ position. INIT shows the PRACTICE and "tuned values differ" warnings.
 **What you do yourself now:** the buttons (the library's taps, double-taps and holds are in
 [Use only what you need](use-only-what-you-need.md#controllerbindings)), the alliance choice, the
 pause button, field-centric driving, the tuning menu, the button list on the Driver Hub, and the
-match timer's buzzes. For an autonomous: the steps one after another, the alliance choice, the
-RED/BLUE mirroring, the start spot, and handing the alliance and the end pose to the TeleOp (the
-library's `Auto` does all of these for you).
+match timer's buzzes. In an autonomous, you also do the steps one after another, the alliance choice, the
+RED/BLUE mirroring, the start spot, and handing the alliance and the end pose to the TeleOp. The
+library's `Auto` does all of these for you.
 
 ## Which road?
 
@@ -177,7 +177,7 @@ library's `Auto` does all of these for you).
 | To learn how an FTC OpMode works from the inside | Road 2 |
 | A TeleOp written the way your old code was, with the library's parts | Road 2 |
 
-You can mix them: one team TeleOp on road 1 and a practice OpMode on road 2, both with the same
+You can mix them, for example one team TeleOp on road 1 and a practice OpMode on road 2, both with the same
 `Robot.java`.
 
 ## See also

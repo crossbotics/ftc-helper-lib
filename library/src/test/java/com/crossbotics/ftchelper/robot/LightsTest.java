@@ -429,4 +429,120 @@ public class LightsTest {
         assertFalse("an optional line: no \"not written\" note", bot.notes().toString().contains("Light:"));
         com.crossbotics.ftchelper.match.MatchMemory.clear();
     }
+
+    // ----------------------------- two lights -----------------------------
+
+    /** A robot with two lights: one part that drives both (alsoLight), or two parts with their own rules. */
+    static class TwoLightBot extends RobotDefinition {
+        final boolean synced, blinkin;
+        Lights lights, rightLight;
+
+        TwoLightBot(boolean synced, boolean blinkin) {
+            this.synced = synced;
+            this.blinkin = blinkin;
+        }
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("fl", "fr", "bl", "br"));
+            if (synced) {
+                lights = add(blinkin ? Lights.blinkin("blinkin").alsoLight("blinkin_right")
+                        : Lights.gobilda("light").alsoLight("light_right"));
+            } else {
+                lights = add(Lights.gobilda("light"));
+                rightLight = add(Lights.gobilda("light_right"));
+            }
+        }
+    }
+
+    private TwoLightBot two(boolean synced, boolean blinkin) {
+        TwoLightBot b = new TwoLightBot(synced, blinkin);
+        b.describe();
+        b.lights.useClock(() -> now);
+        if (b.rightLight != null) b.rightLight.useClock(() -> now);
+        kit = new RobotTestKit();
+        b.setup(kit);
+        return b;
+    }
+
+    @Test public void alsoLightShowsTheSameColorBlinkAndFlash() {
+        TwoLightBot b = two(true, false);
+        Lights l = b.lights;
+        l.show(LightColor.GREEN).blinking(2).when(() -> true);
+        b.all().update();
+        assertEquals(LightColor.GREEN.gobildaPosition(), kit.servos.get("light").position, 1e-9);
+        assertEquals(LightColor.GREEN.gobildaPosition(), kit.servos.get("light_right").position, 1e-9);
+        at(0.3);   // the second half of a 2-per-second blink: off on both
+        b.all().update();
+        assertEquals(0.0, kit.servos.get("light").position, 1e-9);
+        assertEquals(0.0, kit.servos.get("light_right").position, 1e-9);
+        at(0.5);
+        l.flash(LightColor.WHITE);
+        b.all().update();
+        assertEquals(LightColor.WHITE.gobildaPosition(), kit.servos.get("light_right").position, 1e-9);
+        b.all().stop();
+        assertEquals("STOP: both dark", 0.0, kit.servos.get("light_right").position, 1e-9);
+    }
+
+    @Test public void alsoLightWorksWithTwoBlinkins() {
+        TwoLightBot b = two(true, true);
+        b.lights.otherwise(LightColor.GREEN);
+        b.all().update();
+        double green = 0.2525 + 0.005 * BlinkinPattern.GREEN.ordinal();
+        assertEquals(green, kit.blinkins.get("blinkin")[0], 1e-9);
+        assertEquals(green, kit.blinkins.get("blinkin_right")[0], 1e-9);
+    }
+
+    @Test public void alsoLightIsInTheDeviceListAndTheSimulatorFile() {
+        TwoLightBot b = new TwoLightBot(true, false);
+        assertTrue(b.simLines().toString(), b.simLines().contains("light.light = gobilda"));
+        assertTrue(b.simLines().toString(), b.simLines().contains("light.light_right = gobilda"));
+        assertEquals(java.util.Arrays.asList("light", "light_right"), b.lights.deviceNames());
+    }
+
+    @Test public void aMissingSecondLightStopsInit() {
+        kit = new RobotTestKit();
+        kit.absent.add("light_right");
+        try {
+            new TwoLightBot(true, false).setup(kit);
+            fail("expected a stop at INIT");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("light_right"));
+        }
+    }
+
+    @Test public void alsoLightMistakesAreClear() {
+        try {
+            Lights.gobilda("light").alsoLight();
+            fail("no name");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("alsoLight"));
+        }
+        try {
+            Lights.gobilda("light").alsoLight("light");
+            fail("the same light twice");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("already"));
+        }
+        try {
+            Lights.gobilda("light").alsoLight("a", "a");
+            fail("a name twice");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("already"));
+        }
+    }
+
+    @Test public void twoLightPartsKeepTheirOwnRules() {
+        TwoLightBot b = two(false, false);
+        b.lights.otherwise(LightColor.GREEN);
+        b.rightLight.show(LightColor.PURPLE).when(() -> true);
+        b.all().update();
+        assertEquals(LightColor.GREEN.gobildaPosition(), kit.servos.get("light").position, 1e-9);
+        assertEquals(LightColor.PURPLE.gobildaPosition(), kit.servos.get("light_right").position, 1e-9);
+        b.lights.flash(LightColor.WHITE);
+        at(0.2);
+        b.all().update();
+        assertEquals("a flash on one part only", LightColor.WHITE.gobildaPosition(), kit.servos.get("light").position, 1e-9);
+        assertEquals(LightColor.PURPLE.gobildaPosition(), kit.servos.get("light_right").position, 1e-9);
+    }
 }

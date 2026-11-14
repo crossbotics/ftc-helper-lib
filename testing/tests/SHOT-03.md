@@ -8,7 +8,7 @@ minutes: 60
 needs: [flywheel, limelight|webcam|pinpoint|otos|dead-wheels]
 kit_bots: []
 since: v0.17.0
-docs: [guides/finders.md#shot-tuner-the-shot-table, tutorials/start/09-shooter-and-camera.md#8-two-game-pieces-two-shot-tables]
+docs: [tuning/13-shot-tuner.md, add-to-robot/05-launcher.md#two-kinds-of-pieces-two-shot-tables]
 ---
 
 ## Why
@@ -24,7 +24,7 @@ done it can fill a table that scores, in about an hour.
 ## Setup
 
 - SHOT-01 done (gains). A camera that sees the goal, or odometry with `Tunables.Aim.goalX`, `goalY`.
-- A Shot Tuner file for your robot ([recipe](../../docs/cookbook.md#how-do-i-build-a-shot-table-speed-for-each-distance)).
+- A Shot Tuner file for your robot ([recipe](../../docs/cookbook/15-tuning.md#how-do-i-build-a-shot-table-speed-for-each-distance)).
 - 10 or more game pieces, a tape measure, a charged battery.
 
 ## Steps

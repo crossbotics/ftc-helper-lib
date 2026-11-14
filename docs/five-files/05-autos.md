@@ -1,14 +1,15 @@
 # autos/: your autonomous programs
 
-**The five files, page 5 of 5.**
-
 An **autonomous** (auto) is the program the robot runs by itself, in the first 30 seconds of a match.
 `autos/` is a folder. Each file in it is one autonomous, with its own name on the Driver Station.
 
-This page makes the smallest auto: the robot drives out of its start spot. With it, your robot is
-the **smallest robot that works**: it drives in TeleOp, and it runs an autonomous.
+On this page you make the smallest auto: the robot drives out of its start spot. With it, your robot is
+the **smallest robot that works**. It drives in TeleOp, and it runs an autonomous.
 
 ## Make the folder
+
+**If you started from [Pick your start](../pick-your-start/README.md):** you already have the `autos`
+folder and an autonomous in it. Do not make them again. Read this page, and compare your file with the one below.
 
 In Android Studio's **Project** panel, right-click the `teamcode` folder, then **New > Package**. Type
 `autos` after the `teamcode.` that is already there.
@@ -63,8 +64,8 @@ package org.firstinspires.ftc.teamcode.autos;
 import org.firstinspires.ftc.teamcode.Robot;
 ```
 
-**Why the extra import:** `Robot.java` is in the folder above (`teamcode`), not in `autos`. This line
-says where it is. `Controls.java` needs no such line, because it is in the same folder as `Robot.java`.
+**Why the extra import:** `Robot.java` is in the folder above `autos`, called `teamcode`. This line tells
+Java where it is. `Controls.java` needs no such line, because it is in the same folder as `Robot.java`.
 
 ## The numbers are in the step
 
@@ -73,7 +74,7 @@ Write each distance in the step: `12`, not a name from `Tunables.java`.
 **Why:**
 
 - Each auto has its own numbers. When you change one auto, the others do not change.
-- The [auto builder](../guides/simulator.md#the-auto-builder) can read the auto, change a number, and
+- The [auto builder](../building-autos/06-auto-builder-steps.md) can read the auto, change a number, and
   give you the new file.
 
 `Tunables.java` keeps the **robot's** numbers: speeds, positions and gains. They are the same in
@@ -87,7 +88,7 @@ says `AUTONOMOUS IS OFF: the drive is not tuned yet`.
 **Why:** the robot only knows how far its wheels turned. If the wheel size is a little wrong, every
 move is a little wrong. The library stops a robot that could drive much too far.
 
-1. On the Driver Hub, pick **Tune and check** (TeleOp list, group "Finders"). No file is needed.
+1. On the Driver Hub, pick **Tune and check** (TeleOp list, group "Finders"). You need no file for it.
 2. Pick **Drive Tuner**, then run its **Drive** test, and its **Strafe** test for a mecanum robot.
    Each one drives 48 inches. Measure, and enter what you measured.
 3. Copy the lines it shows into your files. The wheel size goes in `Robot.java`, and the strafe
@@ -95,7 +96,7 @@ move is a little wrong. The library stops a robot that could drive much too far.
 4. In `Tunables.java`, set `calibrated = true` in the `Drive` section.
 
 Every step, and what each screen shows:
-[the Drive Tuner](../guides/finders.md#drive-tuner-wheel-size-and-strafe-correction).
+[the Drive Tuner](../tuning/08-drive-tuner.md).
 
 **The simulator does not need this.** There, an auto runs before the Drive Tuner, with the warning
 `Drive not tuned: runs in the simulator only`.
@@ -111,12 +112,29 @@ You wrote only the list of steps. Every auto also gets these:
 | The report | One line per step at the end, like `Leave the start: done`. It is in the robot log, and on TeleOp's INIT screen too. |
 | The change to TeleOp | The alliance and the robot's heading go to TeleOp, so field-centric stays right. |
 
+### PRACTICE and COMPETITION
+
+A **profile** is a mode for the whole robot: autos and TeleOp. The Control Hub saves it, and it stays
+until someone changes it.
+
+| | PRACTICE | COMPETITION |
+| --- | --- | --- |
+| For | the shop, tests, first runs | matches |
+| Wheel power | the same: `maxPower` (unless you set `practiceMaxPower`) | `maxPower` |
+| Extra lines on the screen | yes | no |
+| The tuning menu | can open | stays closed |
+| INIT says | `!! PRACTICE profile` | nothing |
+
+**Change it** in any auto's INIT menu: the **Profile** line. COMPETITION is the default, so a new robot is
+safe at an event. **Before every match:** check that it says COMPETITION.
+More: [Profiles](../guides/profiles.md).
+
 **Red and blue:** a move straight forward or back is the same for both alliances. Moves to the side and
-turns can need a change for red: [mirrorForRed, in lesson 6](../tutorials/start/06-first-autonomous.md#2-the-file-line-by-line).
+turns can need a change for red: [red and blue](../building-autos/02-put-steps-together.md#red-and-blue).
 
 ## More steps
 
-The steps you will use first. Each one is a new line, before the `;`:
+Start with these steps. Write each one on a new line, before the `;`:
 
 | Step | What it does | Example |
 | --- | --- | --- |
@@ -134,7 +152,7 @@ other way: `back(..., -6, ...)` drives forward. Use the other word.)
 turns by any angle. Every angle in an autonomous counts the same way: **counterclockwise, 90 = left**,
 like the IMU (the hub's turn sensor). The same is true for the heading in `start(...)`.
 
-![Every angle counts counterclockwise: 0 forward, 90 left, 180 back, -90 right. move at 90 slides left; turn by 90 turns left.](../images/autonomous-angles.svg)
+More, with a picture: [every angle counts counterclockwise](../building-autos/01-what-an-auto-can-do.md#the-words-in-every-step).
 
 More: [signs and units](../conventions.md).
 
@@ -145,13 +163,13 @@ An action in an auto: [Actions.java, use it in an autonomous](04-actions-java.md
 **In the simulator:** pick **Simulator** in the run list next to Android Studio's **Run** button, and
 click **Run**. Pick **First Robot Auto** (your auto's name), INIT, ▶. The robot drives forward 12 in.
 
-**Run it again?** Press **Back to start** first (Control Hub panel, Robot tab). This auto gives no spot
+**To run it again,** press **Back to start** first (Control Hub panel, Robot tab). This auto gives no spot
 on the field, so the simulator leaves the robot where it stopped last time.
 
 **On the robot:**
 
 1. Do [Tune the drive first](#tune-the-drive-first).
-2. In INIT, pick the **PRACTICE** profile. It keeps the power low.
+2. In INIT, pick the **PRACTICE** profile ([above](#practice-and-competition)). It shows the debug lines. For a slow first run, set `maxPower` low in `Tunables.Drive`.
 3. Put the robot where the `start` words say. Keep a hand near STOP.
 4. INIT, read the words, ▶. Read the report at the end.
 5. Measure how far it went. Change the number in the step, build and install, and run it again.
@@ -164,22 +182,21 @@ Your robot now drives in TeleOp and in autonomous.
 | Problem | Why, and the fix |
 | --- | --- |
 | `AUTONOMOUS IS OFF: the drive is not tuned yet` | `calibrated` is `false`. Do [Tune the drive first](#tune-the-drive-first). |
-| The auto is not on the Driver Station | In the TeleOp list: the file needs `@Autonomous`. In no list: build and install again. |
+| The auto is not on the Driver Station | When it is in the TeleOp list, the file needs `@Autonomous`. When it is in no list, build and install again. |
 | `cannot find symbol: Robot` | The `import org.firstinspires.ftc.teamcode.Robot;` line is missing. |
 | It drives the wrong distance | The wheel size is wrong. Run the Drive Tuner's **Drive** test again. |
-| It drives the wrong way | The heading in `start(...)`, or the hub's direction in `imu(...)` in `Robot.java`. |
+| It drives the wrong way | The heading in `start(...)` is wrong, or the hub's direction in `imu(...)` in `Robot.java`. Check both. |
 | The TeleOp is not chosen after the auto | `preselectTeleOp` must be the TeleOp's name, exactly. |
 
 ---
 
 ## Next
 
-Your robot is the smallest robot that works. Now:
+Your robot is the smallest robot that works.
 
-- **Add parts, one at a time:** [Robot.java, add a part](01-robot-java.md#add-a-part).
-- **Build better autos:** turns, actions, choices in INIT, several autos, and the auto builder.
-  These pages are coming. Until then: [the autonomous builder guide](../guides/autonomous-builder.md)
-  and [several autonomous modes](../guides/autos.md).
+**Next:** [Add to your robot](../add-to-robot/README.md): add parts, one at a time. Then
+[Controls](../controls/README.md) and [Building autos](../building-autos/README.md): turns, actions,
+multiple autos, the auto builder, and choices in INIT.
 
-**Look it up:** [every step](../modules/robot.md#auto). **Go deeper:**
-[the cookbook's autonomous recipes](../cookbook.md#autonomous).
+**Look it up:** [every step](../reference/steps.md#auto). **Go deeper:**
+[the cookbook's autonomous recipes](../cookbook/09-autonomous.md).

@@ -182,6 +182,7 @@ public class FindersTest {
             new DriveTunerOpMode() {
                 @Override protected com.crossbotics.ftchelper.core.RobotConfig robotConfig() { return null; }
             },
+            new MoveTunerOpMode() { },
             new ShotTunerOpMode() {
                 @Override protected com.crossbotics.ftchelper.launcher.Launcher createLauncher() { return null; }
             },

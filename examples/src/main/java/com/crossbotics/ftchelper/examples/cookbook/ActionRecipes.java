@@ -16,11 +16,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: actions (docs/cookbook.md#actions). An action is a list of steps that use several parts,
+ * Cookbook: actions (docs/cookbook/08-actions.md). An action is a list of steps that use several parts,
  * with waits between them. It never makes the robot wait: it does a little every loop. The action
  * methods go in Actions.java; the same action works on a button and in an autonomous.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class ActionRecipes {
@@ -122,7 +122,7 @@ public class ActionRecipes {
         @Override
         protected void buttons(Robot robot, Pad g1, Pad g2) {
             // recipe: action-button
-            // Press Y: the action starts. Press Y again while it runs: it is cancelled, safely.
+            // Press Y: the action starts. Press Y again while it runs: it is canceled, safely.
             g2.y.press(Actions.scoreHigh(robot)).says("score high");
             g2.x.press(Actions.grabAndLift(robot)).says("grab and lift");
             // end recipe

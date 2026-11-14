@@ -6,9 +6,9 @@ Package: `com.crossbotics.ftchelper.telemetry`
 
 Learn it hands-on: [06 A fast, clear loop](../tutorials/06-fast-clear-loop.md).
 
-**Telemetry** is the text your program shows on the Driver Station screen. This module makes it
-easy to read during a match and useful when you hunt for a bug. [`EasyTeleOp`](teleop.md) and the
-[robot in five files](robot.md) set it up for you; every mechanism adds its own lines. Use this page
+**Telemetry** is the text your program shows on the Driver Station screen. This module makes that text
+clear during a match and useful when you hunt for a bug. [`EasyTeleOp`](teleop.md) and the
+[robot in five files](../reference/robot-java.md) set it up for you, and every mechanism adds its own lines. Use this page
 to add your own lines, or in an OpMode you write yourself. Start with tutorial 06.
 
 | Class | Use it to |
@@ -32,20 +32,20 @@ t.update();                                             // ONCE, at the end of t
 
 | Method | What it does |
 | --- | --- |
-| `section(title)` | `--- title ---` heading (standard) |
-| `debugSection(title)` | heading shown only in debug |
+| `section(title)` | a `--- title ---` heading (standard) |
+| `debugSection(title)` | a heading that shows only in debug |
 | `line(label, value)` / `line(label, format, args...)` | a driver line |
 | `text(text)` | a plain driver line |
 | `debug(label, value)` / `debug(label, format, args...)` | a programmer line (only in debug) |
-| `warn(text)` | `!! text` at the top, always; the same warning once per loop |
-| `warnFirst(text)` | a warning above every other one, even those added before it (the library: a part that is OFF in COMPETITION). Several keep their order |
-| `setDebug(on)`, `toggleDebug()`, `isDebug()` | debug level |
-| `setMinIntervalMs(ms)` | send at most every N ms (100 = 10/s is plenty) for a faster loop. Warnings from skipped loops are kept for the next send |
-| `update()` | send (warnings first) and start a fresh screen. Button marks such as `{A}` become the names on the driver's controller ([ButtonNames](gamepad.md#buttonnames)) |
-| `pending()`, `raw()` | the lines waiting (for tests); the SDK telemetry |
+| `warn(text)` | `!! text` at the top, always. The same warning shows once per loop |
+| `warnFirst(text)` | a warning above every other one, even the ones added before it. The library uses it for a part that is OFF in COMPETITION. Several `warnFirst` warnings keep their order |
+| `setDebug(on)`, `toggleDebug()`, `isDebug()` | set, switch or read the debug level |
+| `setMinIntervalMs(ms)` | for a faster loop: send at most every N ms (100 = 10 per second is enough). The next send keeps the warnings from the loops it skipped |
+| `update()` | sends the screen (warnings first) and starts a fresh one. It turns button marks such as `{A}` into the names on the driver's controller ([ButtonNames](gamepad.md#buttonnames)) |
+| `pending()`, `raw()` | the lines that wait to be sent (for tests); the SDK telemetry |
 
-**Standard or debug?** Ask: "does the DRIVER need this during a match?" Yes = `line`. No = `debug`.
-Mechanism helpers already split their lines this way.
+**To choose standard or debug:** ask whether the DRIVER needs this during a match. Yes = `line`. No = `debug`.
+The mechanism helpers already split their lines this way.
 
 ```mermaid
 flowchart TB
@@ -79,14 +79,14 @@ At bottom : no
 | `value(telemetry, label, number, decimals)` | `label : number`, with the decimals you choose |
 | `flag(telemetry, label, boolean)` | `label : yes` or `label : no` |
 | `motor(telemetry, label, motor)` | power, encoder position and speed (counts per second) on one line |
-| `servo(telemetry, label, servo)` | the servo's last commanded position. (A normal servo cannot report where it really is.) |
-| `num(number, decimals)` | the number as text, e.g. `num(0.4567, 2)` = `"0.46"`. NaN shows as `--`. |
+| `servo(telemetry, label, servo)` | the last position the code sent to the servo. A normal servo cannot report where it is. |
+| `num(number, decimals)` | the number as text, for example `num(0.4567, 2)` = `"0.46"`. NaN shows as `--`. |
 
-These only ADD lines. You still call `telemetry.update()` once at the end of the loop.
+These methods only ADD lines. You still call `telemetry.update()` once, at the end of the loop.
 
 ## Tips
 
 - One `telemetry.update()` per loop. More than one makes the screen flicker and slows the loop.
-- Show what the driver needs during a match at the top; put debug numbers lower.
+- Put what the driver needs during a match at the top. Put the debug numbers lower.
 - Show the loop speed while you test: `TelemetryHelper.value(telemetry, "Loop", loopTimer.getHz(), "Hz")`
-  (see `LoopTimer` in [util](util.md)).
+  (`LoopTimer` is in [util](util.md)).

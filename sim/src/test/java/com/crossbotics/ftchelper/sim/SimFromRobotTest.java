@@ -228,7 +228,7 @@ public class SimFromRobotTest {
         Tunables.Drive.calibrated = true;   // as if the Drive Tuner was done
         try (SimRun s = new SimRun(file.toString())) {
             s.init("FlywheelBot Shoot and Leave");
-            assertTrue(s.screenHas("Back wall, 2nd tile right of the centre line"));
+            assertTrue(s.screenHas("Back wall, 2nd tile right of the center line"));
             double y0 = s.robot().y;
             s.start();
             assertTrue("it finishes", SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 25));
@@ -336,7 +336,7 @@ public class SimFromRobotTest {
             assertFalse(String.join("\n", s.screen()), s.screenHas("not written"));
             // autoPipelines: the lighting test runs in INIT and its line is on the Driver Station.
             assertTrue(SimRun.waitFor(() -> s.screenHas("limelight lighting"), 2));
-            assertTrue(s.screenHas("G2 BACK: follow the goal on/off"));
+            assertTrue(s.screenHas("G2 right stick click: follow the goal on/off"));
             s.start();
             SimLight light = s.robot().lights.get("light");          // the light: purple while following the goal
             assertTrue(light.words(), SimRun.waitFor(() -> light.words().equals("PURPLE"), 3));
@@ -362,7 +362,7 @@ public class SimFromRobotTest {
 
     // The Limelight rides the turret (Robot.java: follows(camera)): the robot file says on=turret, so the
     // simulator's camera turns with the turret. RED, beside the HIVE and turned 20 degrees away from the
-    // goal (the Limelight sees 27 degrees each way): the turret turns about -20 degrees, centres the goal, says AIMED, and the shots go in.
+    // goal (the Limelight sees 27 degrees each way): the turret turns about -20 degrees, centers the goal, says AIMED, and the shots go in.
     @Test public void turretBotsCameraTurnsWithTheTurretAndTheShotsScore() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
         String text = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
@@ -401,7 +401,7 @@ public class SimFromRobotTest {
     }
 
     // BLUE's goal (BLUE SCORING, tags 42-45) starts high, under BLUE's raised CELL on the far side of the
-    // HIVE, facing away from the audience: seen from the far side (lesson 9's spot), the turret centres it.
+    // HIVE, facing away from the audience: seen from the far side (the camera page's spot), the turret centers it.
     @Test public void turretBotOnBlueSeesItsGoalFromTheFarSide() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
         com.crossbotics.ftchelper.match.MatchMemory.clear();
@@ -664,7 +664,7 @@ public class SimFromRobotTest {
             s.g1().left_stick_y = -1;                                 // stick forward: drive forward
             SimRun.pause(1.0);
             s.g1().left_stick_y = 0;
-            // It starts against an alliance wall facing the field: forward is toward the centre (y nearer 0).
+            // It starts against an alliance wall facing the field: forward is toward the center (y nearer 0).
             assertTrue("it drove forward: y " + y0 + " -> " + s.robot().y, Math.abs(y0) - Math.abs(s.robot().y) > 6);
             assertEquals("", s.error());
         }
@@ -753,7 +753,7 @@ public class SimFromRobotTest {
                 "Studica Bot TeleOp", "Studica Bot Shoot and Leave");
     }
 
-    // The guide's example (docs/guides/autonomous-builder.md): every builder feature runs, and the menu
+    // The guide's example (once in the autonomous builder guide): every builder feature runs, and the menu
     // choice picks the branch.
     @Test public void theAutoCookbookRunsBothBranches() throws Exception {
         try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
@@ -785,7 +785,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // The main-track lessons' robot (docs/tutorials/start/): its actions and its autonomous run.
+    // The example robot lessonbot (docs/five-files/ and docs/add-to-robot/): its actions and its autonomous run.
     @Test public void theLessonBotScoresAndParks() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.lessonbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
@@ -837,7 +837,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // Lesson 7: odometry. The simulator's pretend Pinpoint follows the robot; driveTo ends at the field
+    // Odometry. The simulator's pretend Pinpoint follows the robot; driveTo ends at the field
     // points (the start spot is the drivers' frame: x right, y away, for BLUE).
     @Test public void theOdometryBotDrivesToFieldPoints() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
@@ -897,7 +897,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // Lesson 7: the Odometry Tuner's spin test finds the Pinpoint's offsets (the robot file has -84, -168).
+    // The Odometry Tuner's spin test finds the Pinpoint's offsets (the robot file has -84, -168).
     @Test public void theOdometryTunerFindsThePinpointOffsets() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
@@ -956,7 +956,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // The finders' hookup for the robot in five files (lesson 6): robot() { return new Robot(); }, and
+    // The finders' hookup for the robot in five files (docs/tuning/): robot() { return new Robot(); }, and
     // lines for Robot.java and Tunables.java.
     @Test public void theLessonBotDriveTunerShowsFiveFilesLines() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.lessonbot.Robot.class);
@@ -1002,7 +1002,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // The quick start's template (docs/quick-start.md): it drives, its action runs, its autonomous ends.
+    // The quickstart template (docs/pick-your-start/03-blank-slate.md, way B): it drives, its action runs, its autonomous ends.
     @Test public void theQuickStartTemplateDrivesAndRuns() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.quickstart.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {

@@ -87,7 +87,7 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  * }
  * }</pre>
  *
- * Docs: docs/modules/finders.md. Guide: docs/guides/finders.md
+ * Docs: docs/modules/finders.md. Guide: docs/tuning/13-shot-tuner.md
  */
 public abstract class ShotTunerOpMode extends FinderOpMode {
 
@@ -192,7 +192,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     /**
      * Where you put the robot before INIT, for the odometry: {x, y, heading} as seen from your drivers'
-     * wall (x inches right of the field's centre line, y inches from the centre toward the far wall,
+     * wall (x inches right of the field's center line, y inches from the center toward the far wall,
      * heading 0 = facing away from you, counterclockwise +). Default {0, 0, 0}: the middle of the field,
      * facing away from you. Only used with an {@code odometry(...)} line and {@code Tunables.Aim.goalX, goalY}.
      */

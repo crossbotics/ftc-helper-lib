@@ -1,6 +1,6 @@
 // The simulator page's auto builder: build an autonomous on the field (Simple steps, or a Pedro path),
 // press Run, and the simulator runs it with the team's real code (the Built Auto). Then copy the Java, save
-// a scenario, print the setup card. Docs: docs/guides/simulator.md, "The auto builder".
+// a scenario, print the setup card. Docs: docs/building-autos/06-auto-builder-steps.md.
 //
 // The plan, its checks, the Java and the scenario come from the web builder's own files (stepscore.js,
 // pathcore.js, mapdraw.js, setupcard.js: the same files as crossbotics.com's path builder), so the Java is
@@ -50,7 +50,7 @@ const clampXY = (x, y) => [Math.max(-LIMIT, Math.min(LIMIT, x)), Math.max(-LIMIT
 
 // ------------------------------------------------------------------ the state
 
-// The web builder's examples: lesson 6's ScoreAndPark (any drive), and the Pedro example robot's path.
+// The web builder's examples: lessonbot's ScoreAndPark (any drive), and the Pedro example robot's path.
 const STEPS_EXAMPLE = {
 	drive: 'mecanum', mirror: false,
 	start: { x: -56, y: -61.1, h: 0, note: 'Our wall, left corner tile, facing the field', spot: true, noteAuto: true },
@@ -165,7 +165,7 @@ panel.innerHTML = `
   <button id="bClose" class="b-x" title="Close the auto builder" aria-label="Close">&times;</button>
 </div>
 <p class="muted b-intro">Build an autonomous on the field, press <b>Run</b>: the simulator runs it with your real code
-  (the <i>Built Auto</i>). Then copy the Java. <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/simulator.md#the-auto-builder" target="_blank" rel="noopener">Guide</a></p>
+  (the <i>Built Auto</i>). Then copy the Java. <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/building-autos/06-auto-builder-steps.md" target="_blank" rel="noopener">Guide</a></p>
 <div class="b-sec b-load" id="bFromRow"><div class="row"><b>Load an existing auto</b> <select id="bFrom" aria-label="Your autonomous"></select><button id="bFromGo">Load</button></div>
   <ul class="b-checks" id="bFromNote"></ul></div>
 <details class="b-sec" open><summary>Robot and alliance</summary>
@@ -214,7 +214,7 @@ panel.innerHTML = `
   <div id="bAddHome"></div>
   <div id="bTankNote" class="b-tanknote" hidden></div>
   <div id="bList"></div>
-  <div class="row"><button id="bClear" title="Remove every step">Remove all steps</button><button id="bExample" title="The steps from lesson 6">Load the lesson's example</button></div>
+  <div class="row"><button id="bClear" title="Remove every step">Remove all steps</button><button id="bExample" title="The example robot's auto (lessonbot ScoreAndPark)">Load the example auto</button></div>
 </div>
 <div class="b-sec" id="bPedroPane">
   <h4 class="b-h">Path</h4>
@@ -223,7 +223,7 @@ panel.innerHTML = `
   <div class="row"><label>Step label <input type="text" id="bLabel"></label><label>Path name <input type="text" id="bName"></label></div>
   <div class="row"><label><input type="checkbox" id="bHold"> Hold the end</label><label id="bLimitBox">Time limit <input type="number" step="1" min="1" id="bTimeout" placeholder="10"> s</label></div>
   <div id="bParts"></div>
-  <div class="row"><button id="bPClear" title="Remove every part">Remove all parts</button><button id="bPExample" title="The Pedro example robot's path">Load the Pedro lesson's example</button></div>
+  <div class="row"><button id="bPClear" title="Remove every part">Remove all parts</button><button id="bPExample" title="The Pedro example robot's path">Load the Pedro example</button></div>
   <h4 title="PathAt in the Java">Actions along the path <button id="bAddAct" class="small">+ Add one</button></h4>
   <div id="bActions"></div>
 </div>
@@ -382,7 +382,7 @@ function renderRobot() {
 	$('bRobotRow').hidden = robots.length <= 1;
 	$('bRobotText').textContent = info
 		? `${robots.length <= 1 ? 'Robot: ' : ''}${info.name}: ${info.drive || '?'} drive${info.odometry ? ', odometry' : ''}${info.follower ? ', Pedro follower' : ''}. Size from the robot file: ${fmt(L)} x ${fmt(W)} in.`
-			+ (robots.length > 1 ? ` Your code has ${robots.length} Robot classes: this auto drives the one picked. "Best match": the one whose motor and servo names match the simulator's robot file.` : '')
+			+ (robots.length > 1 ? ` Your code has ${robots.length} Robot classes: this auto drives the one picked. "Best match": the one that finds every device it needs in the simulator's robot file (motors, servos, sensors, odometry, cameras).` : '')
 		: (robots.length ? '' : 'Looking for your Robot class...');
 	$('bRed').classList.toggle('on', B.alliance === 'RED');
 	$('bBlue').classList.toggle('on', B.alliance === 'BLUE');

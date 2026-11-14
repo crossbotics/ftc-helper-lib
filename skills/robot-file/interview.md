@@ -1,7 +1,10 @@
 # Interview: the questions, in order
 
 Ask 3-5 at a time. Each answer becomes a line in the robot file (shown after the arrow). Units: inches,
-degrees, encoder counts. "Forward/left/up" is from the robot's centre on the floor.
+degrees, encoder counts. The file's "forward/left/up" numbers are from the robot's center on the floor, but
+**never ask a student to measure from the center:** ask from the front edge, the left edge and the floor
+(bumpers off), and work the numbers out yourself: forward = length / 2 - (from the front edge), left =
+width / 2 - (from the left edge). Students cannot find the center on a real robot.
 
 ## Size and start
 
@@ -15,7 +18,7 @@ degrees, encoder counts. "Forward/left/up" is from the robot's centre on the flo
    `heightMm(...)`, each part's `looks(...)`), not the robot file: see SKILL.md step 4.
 3. How heavy is it (kg; a bathroom scale works: weigh yourself with and without it)? -> `robot.massKg`.
 4. Where does it start a match (which tile, which way it faces)? -> `start.x`, `start.y`, `start.heading`.
-   BIOBUZZ: inches from the field centre, +y away from the red drivers, heading 0 = facing away from them.
+   BIOBUZZ: inches from the field center, +y away from the red drivers, heading 0 = facing away from them.
 
 Check: a starting robot must fit an 18 in cube. A frame longer than 18 in is a measuring mistake.
 
@@ -27,7 +30,7 @@ Check: a starting robot must fit an 18 in cube. A frame longer than 18 in is a m
    `drive.ticksPerRev` and `drive.maxTicksPerSec` if it is not there.
 7. Wheel diameter (measure it: goBILDA 104 mm = 4.09 in, REV 75 mm = 2.95 in, 96 mm = 3.78 in)?
    -> `drive.wheelDiameterIn`. Any gears or belts between motor and wheel? -> `drive.gearRatio`.
-8. Distance between the left and right wheel centres (track) and front and back wheel centres
+8. Distance between the left and right wheel centers (track) and front and back wheel centers
    (wheelbase)? -> `drive.trackWidthIn`, `drive.wheelBaseIn`. (Defaults: `drive.gearRatio = 1`,
    `drive.strafeEfficiency = 0.85`; the Drive Tuner and Characterizer measure the real ones.)
 9. Do your drive motor names and directions match RobotSettings? -> `drive.mirrored = left` (the
@@ -52,8 +55,8 @@ Check: a starting robot must fit an 18 in cube. A frame longer than 18 in is a m
     `ticksPerIn=` = (top count - bottom count) / travel (negative if the counts go down as it rises). Use `spoolIn=` only for a one-stage lift
     pulled straight by its spool: a cascade (multi-stage slide where each stage pulls the next) moves its
     top faster than its string.
-14. Lift shape: how tall is one stage, and where does its bottom sit (forward/left/up from the robot's
-    centre)? -> `size=` (ONE stage) and `at=`. A part riding on the lift: `on=lift`, `at=0,0,<stage height>`
+14. Lift shape: how tall is one stage, and where does its bottom sit (from the front edge, from the left
+    edge, and up from the floor)? -> `size=` (ONE stage) and `at=`. A part riding on the lift: `on=lift`, `at=0,0,<stage height>`
     is the top of the moving stage.
 15. Arm: what angle is it at the bottom stop, and at the top stop? Angles: 0 = level and pointing
     forward, +90 = straight up, -90 = straight down. -> `start=` (the angle at the `min=` count, usually the bottom stop), and either
@@ -81,15 +84,16 @@ need hard stops), then make sure the shapes are right before blaming the robot.
     switch part way along (a turret's home switch) -> `touch.NAME = <motor>, at=<counts>, width=<counts>`.
     An absolute encoder on a turret (analog port) -> `analog.NAME = <motor>, offsetDeg=<deg>`; an encoder
     turned by a CR servo -> `motor.NAME = lift, ..., drivenBy=<crservo>`.
-19. Colour or distance sensor that watches game pieces: does it see pieces come in (intake) or the piece
+19. Color or distance sensor that watches game pieces: does it see pieces come in (intake) or the piece
     ready to fire? -> `color.NAME = at=intake|ready` (a REV Color Sensor V3), or `distance.NAME = at=...,
     acrossMm=<mm from the sensor to the far wall>` (a REV 2m Distance Sensor across a channel). Other
-    sensors (colour or distance used for something else, a second webcam for colours): the simulator does
+    sensors (color or distance used for something else, a second webcam for colors): the simulator does
     not have them yet. Say so, and name the OpModes that use them.
 
 ## Cameras
 
-20. Each webcam / Limelight: where is its lens (forward, left, up from the robot's centre, inches),
+20. Each webcam / Limelight: where is its lens (from the front edge, from the left edge, and up from the floor, inches; you work out
+    forward and left),
     turned left or right (yaw: + = left), tilted up or down (pitch: + = up, so "15 down" = -15)? ->
     `camera.KEY = name=..., forward=, left=, up=, yaw=, pitch=` or `limelight.KEY = ...` (KEY is any short
     word; `name=` must be the configuration name). Use the same tilt as `pitchDeg` in the camera's
@@ -112,7 +116,7 @@ need hard stops), then make sure the shapes are right before blaming the robot.
 22. How does it score (shoot? lift and drop?) -> `shoot.` (`angle=` degrees up from forward, `share=`
     of the wheel's rim speed, about 0.5) or `grab.` with the lift/arm shapes. Where is the middle of the
     launcher wheel (forward/left/up)? -> its `flywheel` shape's `at=` (a roller or flywheel's `at=` is its
-    centre). What feeds it? -> `feeder=` on the flywheel motor (a motor, a CR servo, or a servo that pushes: it feeds while it is more than 0.15 from where it starts). A wheel that brings the pieces up to a push servo (Robot.java's `feedWheel(...)`) -> `stage=` that CR servo or motor: a push then sends a piece only if the wheel ran just before it. With CAD, make a
+    center). What feeds it? -> `feeder=` on the flywheel motor (a motor, a CR servo, or a servo that pushes: it feeds while it is more than 0.15 from where it starts). A wheel that brings the pieces up to a push servo (Robot.java's `feedWheel(...)`) -> `stage=` that CR servo or motor: a push then sends a piece only if the wheel ran just before it. With CAD, make a
     shot table (`cad.md` step 6). A catapult or spring launcher: make its motor a `flywheel` with
     `feeder=` itself and give the shot a fixed `speed=` (in/s, from a filmed shot).
     A hood on a servo that tilts the shot? -> `hood=SERVO, hoodAt0=A, hoodAt1=B` on the `shoot.` line: the

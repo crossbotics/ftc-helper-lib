@@ -16,8 +16,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
  * odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));   // 4-bar pods unless .podsSwingarm()
  * }</pre>
  *
- * <p>The offsets (from the SDK): x = how far to the LEFT of the robot's centre the forward-measuring
- * (X) pod is, y = how far FORWARD of the centre the sideways-measuring (Y) pod is, in mm. The
+ * <p>The offsets (from the SDK): x = how far to the LEFT of the robot's center the forward-measuring
+ * (X) pod is, y = how far FORWARD of the center the sideways-measuring (Y) pod is, in mm. The
  * Odometry Tuner measures them.
  *
  * Docs: docs/modules/odometry.md
@@ -30,8 +30,8 @@ public final class PinpointOdometry extends PoseTracker {
      *
      * @param name       the configuration name
      * @param pinpoint   the device ({@code hardwareMap.get(GoBildaPinpointDriver.class, name)})
-     * @param xOffsetMm  the X pod's distance LEFT of the centre (right = negative)
-     * @param yOffsetMm  the Y pod's distance FORWARD of the centre (back = negative)
+     * @param xOffsetMm  the X pod's distance LEFT of the center (right = negative)
+     * @param yOffsetMm  the Y pod's distance FORWARD of the center (back = negative)
      * @param pods       goBILDA 4-bar or swingarm pods, or null to use {@code ticksPerMm}
      * @param ticksPerMm encoder counts per mm, for other pods (ignored when {@code pods} is given)
      * @param xReversed  the X pod counts down when the robot drives forward

@@ -17,14 +17,14 @@ import java.util.List;
  * }</pre>
  *
  * <p>The numbers are like {@code driveTo}'s: written for BLUE, seen from your drivers' wall, x inches
- * right of the centre line, y inches from the centre toward the far wall.
+ * right of the center line, y inches from the center toward the far wall.
  *
  * <p>How a route is found: first the straight line. If it crosses a box, the robot goes around the
  * boxes' corners and your safe points, by the shortest way of straight lines. It uses only where the
  * odometry says the robot is. It cannot see anything: another robot is not on this map, and a wrong
  * pose means a wrong route.
  *
- * <p>The margin: how far the robot's CENTRE must stay from a box. Half the robot's longest corner to
+ * <p>The margin: how far the robot's CENTER must stay from a box. Half the robot's longest corner to
  * corner size, plus some for odometry drift. An 18 x 18 in robot: 13 in. A spot you choose inside a
  * margin is allowed (a place right next to a box): the robot drives to just outside the margin, then
  * straight in. A spot on the box itself is not.
@@ -52,7 +52,7 @@ public final class FieldMap {
     /**
      * Starts a map.
      *
-     * @param inches how far the robot's centre stays from every box, 0 or more (half its longest corner
+     * @param inches how far the robot's center stays from every box, 0 or more (half its longest corner
      *               to corner size, plus some for drift)
      */
     public static FieldMap margin(double inches) {
@@ -66,8 +66,8 @@ public final class FieldMap {
      * Adds a box the robot must not drive through.
      *
      * @param name a name for messages, e.g. "Left post"
-     * @param x1   one corner: inches right of the centre line
-     * @param y1   one corner: inches from the centre toward the far wall
+     * @param x1   one corner: inches right of the center line
+     * @param y1   one corner: inches from the center toward the far wall
      * @param x2   the opposite corner: inches right
      * @param y2   the opposite corner: inches toward the far wall
      */
@@ -88,8 +88,8 @@ public final class FieldMap {
      * margins) needs one at each end, because the boxes' corners do not fit in it. It must be at least 0.5 in
      * outside every margin, and inside the walls by the margin.
      *
-     * @param x inches right of the centre line
-     * @param y inches from the centre toward the far wall
+     * @param x inches right of the center line
+     * @param y inches from the center toward the far wall
      */
     public FieldMap safePoint(double x, double y) {
         checkNumbers("safePoint", x, y);
@@ -112,7 +112,7 @@ public final class FieldMap {
         return this;
     }
 
-    /** How far the robot's centre stays from every box, inches. */
+    /** How far the robot's center stays from every box, inches. */
     public double marginIn() {
         return marginIn;
     }
@@ -126,8 +126,8 @@ public final class FieldMap {
      * Why a route cannot end at this spot: on a box, boxed in, or off the field. A spot inside a margin
      * is fine if the robot can get to it from outside.
      *
-     * @param x inches right of the centre line
-     * @param y inches from the centre toward the far wall
+     * @param x inches right of the center line
+     * @param y inches from the center toward the far wall
      * @return the reason, or "" if the spot is good
      */
     public String whyBadSpot(double x, double y) {
@@ -194,11 +194,11 @@ public final class FieldMap {
     }
 
     /**
-     * True if the robot's centre may drive straight from one place to another: the line misses every box
+     * True if the robot's center may drive straight from one place to another: the line misses every box
      * with its margin. A box whose margin holds the END is checked without its margin, because a route's
      * last line goes straight in to a spot next to a box. {@link RouteDriver#checkLines} uses this.
      *
-     * @param fromX from: inches right of the centre line
+     * @param fromX from: inches right of the center line
      * @param fromY from: inches toward the far wall
      * @param toX   to: inches right
      * @param toY   to: inches toward the far wall
@@ -231,7 +231,7 @@ public final class FieldMap {
         return x > box[0] && x < box[2] && y > box[1] && y < box[3];
     }
 
-    // The nearest point just outside the margin that holds (x, y), that the robot's centre can reach
+    // The nearest point just outside the margin that holds (x, y), that the robot's center can reach
     // (inside the walls by the margin, in no other margin, and with a clear line from here). Null if
     // there is none.
     private double[] wayOut(double x, double y) {
@@ -260,12 +260,12 @@ public final class FieldMap {
         return true;
     }
 
-    // How far from the centre the robot's centre may plan to go: a point closer to a wall puts the robot in it.
+    // How far from the center the robot's center may plan to go: a point closer to a wall puts the robot in it.
     private double wallLimit() {
         return Math.max(0, halfFieldIn - marginIn);
     }
 
-    // Every grown box's four corners that the robot's centre can reach: inside the walls by the margin,
+    // Every grown box's four corners that the robot's center can reach: inside the walls by the margin,
     // and in no other box.
     private void addCorners(List<double[]> points) {
         double limit = wallLimit();
@@ -348,7 +348,7 @@ public final class FieldMap {
             }
         }
         if (Math.abs(x) > wallLimit() || Math.abs(y) > wallLimit()) {
-            throw new IllegalArgumentException("FieldMap.safePoint(" + x + ", " + y + ") is too near a wall: the robot's centre "
+            throw new IllegalArgumentException("FieldMap.safePoint(" + x + ", " + y + ") is too near a wall: the robot's center "
                     + "stays " + marginIn + " in from the walls of a " + (2 * halfFieldIn) + " in field");
         }
     }

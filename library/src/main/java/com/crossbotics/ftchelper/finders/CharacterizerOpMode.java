@@ -52,7 +52,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * }
  * }</pre>
  *
- * Docs: docs/modules/finders.md ("Characterizer"). Guide: docs/guides/simulator.md ("Real numbers")
+ * Docs: docs/modules/finders.md ("Characterizer"). Guide: docs/simulator/03-make-it-match-your-robot.md (Real speeds)
  */
 public abstract class CharacterizerOpMode extends FinderOpMode {
 

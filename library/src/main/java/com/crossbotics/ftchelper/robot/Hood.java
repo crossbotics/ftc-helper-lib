@@ -61,7 +61,7 @@ import java.util.function.LongSupplier;
  * encoder counts from where it is at INIT: start the robot with the hood at the stop you call 0 ticks.
  * Nothing moves in INIT: the hood goes to {@code startAngle} at START.
  *
- * Docs: docs/modules/robot.md (section "Hood"), lesson 9 (docs/tutorials/start/09-shooter-and-camera.md)
+ * Docs: docs/reference/robot-java.md (section "Hood"), Add a launcher (docs/add-to-robot/05-launcher.md)
  */
 public final class Hood extends Module<Hood> {
     private enum Kind { SERVO, MOTOR }
@@ -549,7 +549,7 @@ public final class Hood extends Module<Hood> {
 
     @Override
     void halt() {
-        // A cancelled action: a motor hood holds where it is now (it must not go on to the action's
+        // A canceled action: a motor hood holds where it is now (it must not go on to the action's
         // angle). A servo is already where it was sent. Not the driver's command, so no touch().
         if (part == null || kind != Kind.MOTOR) return;
         double now = part.now();
@@ -605,7 +605,7 @@ public final class Hood extends Module<Hood> {
 
     @Override
     String toolFor(String field) {
-        if (field.startsWith("pos") || field.startsWith("angle")) return "the Hood Finder, docs/guides/finders.md#hood-finder";
+        if (field.startsWith("pos") || field.startsWith("angle")) return "the Hood Finder, docs/tuning/04-hood-finder.md";
         return null;
     }
 

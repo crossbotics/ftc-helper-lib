@@ -17,11 +17,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: aiming and shooting (docs/cookbook.md#aiming-and-shooting). Things the robot can do for
+ * Cookbook: aiming and shooting (docs/cookbook/06-aiming-and-shooting.md). Things the robot can do for
  * the drivers, so they can focus on driving and firing: aim the whole robot, buzz when on target, keep
  * aiming from the odometry when the camera loses the goal, and one shot table per game piece.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class AimRecipes {
@@ -40,8 +40,8 @@ public class AimRecipes {
         /** Aiming (every line is optional; leave out what you do not use). */
         public static class Aim {                                       // a fixed name: always Aim
             // The goal on the field, in inches, seen from your drivers' wall (the same numbers as driveTo).
-            public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
-            public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
+            public static double goalX = 13;                            // inches right of center (BIOBUZZ)
+            public static double goalY = -13;                           // inches from center, - = our half (BIOBUZZ)
             public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
             public static double turnKp = DEFAULT;                      // whole-robot aim: push per degree off (0.02)
             public static double turnKd = DEFAULT;                      // brake near the goal (0.002)
@@ -84,11 +84,11 @@ public class AimRecipes {
             public static double flightSec = MEASURE;                   // seconds in the air (slow-motion video)
             public static double flightSecPerIn = DEFAULT;              // longer shots fly longer: per inch (0)
             public static double maxLeadIn = DEFAULT;                   // never lead more than this, inches (24)
-            // Where the shooter (a turret's pivot) and a camera on the body are from the robot's centre.
-            public static double shooterForwardIn = MEASURE;            // inches forward of the centre (a tape)
-            public static double shooterLeftIn = MEASURE;               // inches left of the centre (a tape)
-            public static double cameraForwardIn = MEASURE;             // inches forward of the centre (a tape)
-            public static double cameraLeftIn = MEASURE;                // inches left of the centre (a tape)
+            // Where the shooter (a turret's pivot) and a camera on the body are from the robot's center.
+            public static double shooterForwardIn = MEASURE;            // inches forward of the center (from the edges)
+            public static double shooterLeftIn = MEASURE;               // inches left of the center (from the edges)
+            public static double cameraForwardIn = MEASURE;             // inches forward of the center (from the edges)
+            public static double cameraLeftIn = MEASURE;                // inches left of the center (from the edges)
             // end recipe
         }
     }
@@ -143,7 +143,7 @@ public class AimRecipes {
         @Override
         protected void buttons(TrimRobot robot, Pad g1, Pad g2) {
             // recipe: speed-trim
-            // The launcher's own buttons already trim: gamepad 2 D-pad up/down = +/- 1%.
+            // The launcher's usual line trims too: speedOn(g2.dpadUp, g2.dpadDown) = +/- 1% a press.
             // Your own: a bigger step on a button, and a far shot that sets the trim first.
             g2.y.press(() -> robot.launcher.trimBy(+3)).says("speed trim +3%");
             g2.a.press(Action.named("Far shot +5%")

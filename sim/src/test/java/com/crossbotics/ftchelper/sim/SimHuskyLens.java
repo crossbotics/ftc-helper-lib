@@ -13,11 +13,11 @@ import java.util.Map;
  * A pretend HuskyLens (huskylens.KEY in the robot file). It is the SDK's own HuskyLens class with the I2C
  * reads replaced: it works out what the camera would see, and makes the same boxes (Block) the SDK's driver
  * makes, at most 6 at a time. taught=30|31|- says what was taught, in order: ID1 is tag 30, ID2 is tag 31,
- * nothing was taught as ID3. Colours and objects: taught= has piece names from the field file (POLLEN|NECTAR).
+ * nothing was taught as ID3. Colors and objects: taught= has piece names from the field file (POLLEN|NECTAR).
  *
  * Tags it finds report their taught number, or 0 if not taught, as the real camera does. Pieces: any piece
  * in the picture whose type was taught. Object tracking follows only the first taught type's biggest
- * piece. Not simulated: mistakes (a real colour match changes with the light), pieces hiding each other,
+ * piece. Not simulated: mistakes (a real color match changes with the light), pieces hiding each other,
  * line and face modes, the buttons. The view angle's default (60) and the smallest box it finds are guesses.
  */
 final class SimHuskyLens extends HuskyLens {

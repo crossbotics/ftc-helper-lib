@@ -27,7 +27,7 @@ minutes). If any of this goes wrong, every shot goes wide by the same angle.
 - A turret with no `.homeSwitch(...)` line, and `min`, `max` in `Tunables.Turret`.
 - A mark or a small jig that holds the turret at `startAngle` (0 = straight forward, the default).
 - An autonomous that turns the turret (it follows the goal, or a step turns it).
-- Simulator: lesson 9's turret robot ([the commands](../../docs/tutorials/start/09-shooter-and-camera.md#try-it-in-the-simulator)): "TurretBot Shoot from Start", then "TurretBot TeleOp".
+- Simulator: the turret robot `turretbot` ([the commands](../../docs/add-to-robot/07-camera.md#try-it-in-the-simulator)): "TurretBot Shoot from Start", then "TurretBot TeleOp".
 
 ## Steps
 

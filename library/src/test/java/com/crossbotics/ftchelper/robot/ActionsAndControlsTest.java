@@ -157,7 +157,7 @@ public class ActionsAndControlsTest {
         assertTrue(a.isRunning());
         robot.runner.toggle(a);
         assertFalse(a.isRunning());
-        assertEquals("cancelled", a.result());
+        assertEquals("canceled", a.result());
     }
 
     @Test public void atStartActionsRunOnlyAfterStart() {

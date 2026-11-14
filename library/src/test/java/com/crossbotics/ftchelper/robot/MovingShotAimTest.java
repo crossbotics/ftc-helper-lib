@@ -63,7 +63,7 @@ public class MovingShotAimTest {
         }
     }
 
-    // The goal 24 in left of the centre line and 48 in toward the far wall; shooting on the move ON.
+    // The goal 24 in left of the center line and 48 in toward the far wall; shooting on the move ON.
     public static class Moving {
         public static class Aim {
             public static double goalX = -24, goalY = 48;
@@ -107,7 +107,7 @@ public class MovingShotAimTest {
         }
     }
 
-    // A turret 6 in behind the centre, a camera on the body 8 in in front of it; shooting on the move on.
+    // A turret 6 in behind the center, a camera on the body 8 in in front of it; shooting on the move on.
     public static class Offsets {
         public static class Aim {
             public static double goalX = -24, goalY = 48;
@@ -121,7 +121,7 @@ public class MovingShotAimTest {
         }
     }
 
-    // A fixed launcher 4 in LEFT of the centre (no turret, whole-robot aim), odometry only.
+    // A fixed launcher 4 in LEFT of the center (no turret, whole-robot aim), odometry only.
     public static class SideLauncher {
         public static class Aim {
             public static double goalX = -24, goalY = 48;
@@ -304,7 +304,7 @@ public class MovingShotAimTest {
         cam = new AimTest.FakeCamera();
         r.camera.source = cam;
         place(r.tracker, -24, 0, 0);
-        // The body camera (8 in in front) sees the goal 4 in left, 52 in ahead: (60, 4) from the centre,
+        // The body camera (8 in in front) sees the goal 4 in left, 52 in ahead: (60, 4) from the center,
         // (66, 4) from the turret 6 in behind it.
         cam.seen = seen(Math.toDegrees(Math.atan2(4, 52)), Math.hypot(52, 4));
         TargetObservation g = r.aim().goal();
@@ -318,10 +318,10 @@ public class MovingShotAimTest {
     @Test public void anOdometryTurretOffCentreAimsFromItsPivot() {
         TurretBot r = new TurretBot(Offsets.class, false);
         r.setup(devices());
-        place(r.tracker, -24, 0, 0);                          // the goal 48 in straight ahead of the centre
+        place(r.tracker, -24, 0, 0);                          // the goal 48 in straight ahead of the center
         TargetObservation g = r.aim().fromOdometry();
         assertEquals(0, g.bearingDeg, 1e-6);
-        assertEquals("54 in from the turret 6 in behind the centre", 54, g.distanceIn, 1e-6);
+        assertEquals("54 in from the turret 6 in behind the center", 54, g.distanceIn, 1e-6);
         r.tracker.moving(30, 0, 0);                           // strafing right: lead left, from the turret
         assertEquals(Math.toDegrees(Math.atan2(15, 54)), r.aim().fromOdometry().bearingDeg, 1e-6);
     }
@@ -329,7 +329,7 @@ public class MovingShotAimTest {
     @Test public void aFixedLauncherToOneSideTurnsTheWholeRobotALittleMore() {
         FixedBot r = new FixedBot();
         r.setup(devices());
-        place(r.tracker, -24, 0, 0);                          // goal 48 in straight ahead of the centre
+        place(r.tracker, -24, 0, 0);                          // goal 48 in straight ahead of the center
         r.aimMode().on();
         // The launcher is 4 in LEFT: turn RIGHT by asin(4/48) so its line meets the goal.
         assertEquals(-Math.toDegrees(Math.asin(4.0 / 48)), r.aim().errorDeg(), 1e-6);

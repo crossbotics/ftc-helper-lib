@@ -1,7 +1,7 @@
 package com.crossbotics.ftchelper.examples.cookbook;
 
 /*
- * Cookbook (docs/cookbook.md): a whole file, as it looks in your TeamCode (under the package line that
+ * Cookbook (docs/cookbook/README.md): a whole file, as it looks in your TeamCode (under the package line that
  * Android Studio writes). The lines between "// recipe: name" and "// end recipe" are shown on the
  * page; tools/check_docs.py keeps them the same.
  *

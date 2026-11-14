@@ -1,0 +1,102 @@
+{
+  "pictures": {
+    "feed-stop-finder-go-menu": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Tune and check ---",
+        "Robot: Robot",
+        "  ...",
+        "  Flywheel Finder: the flywheel's gains",
+        "*> Feed Stop Finder: the feed stop's hold and release",
+        "  ...",
+        "D-pad up/down = pick, A = open it. Then ▶."
+      ]
+    },
+    "feed-stop-finder-go-start": {
+      "button": "▶ (start)",
+      "where": "Press on the Driver Hub:",
+      "lines": [
+        "Feed stop finder: where it holds, where it lets a piece ...",
+        "*Nothing moves until you press A. Press ▶.",
+        "The test shot (LB, RB) spins the wheel: eye protection.",
+        "GUIDE (center button), or hold START 1 s = help."
+      ]
+    },
+    "feed-stop-finder-step-start": {
+      "button": "A",
+      "where": "Press on gamepad 1:",
+      "pos": 0.5,
+      "note": "the feed stop at the start point",
+      "lines": [
+        "*Position : 0.500",
+        "Step : 0.050  (D-pad left = smaller, right = bigger)",
+        "Hold (X) : -",
+        "Release (B) : -",
+        "D-pad up/down = move, X = hold here, B = release here"
+      ],
+      "stops": []
+    },
+    "feed-stop-finder-step-hold": {
+      "button": "X",
+      "where": "Where it holds, press:",
+      "pos": 0.15,
+      "frm": 0.5,
+      "note": "hold: the piece stays back",
+      "lines": [
+        "Position : 0.150",
+        "Step : 0.010  (D-pad left = smaller, right = bigger)",
+        "*Hold (X) : 0.150",
+        "Release (B) : -",
+        "...",
+        "--- Copy into your code ---",
+        "Tunables.Launcher: feedStopHold = 0.150"
+      ],
+      "stops": []
+    },
+    "feed-stop-finder-step-release": {
+      "button": "B",
+      "where": "Where it lets go, press:",
+      "pos": 0.55,
+      "frm": 0.15,
+      "note": "release: the piece rolls through",
+      "lines": [
+        "Position : 0.550",
+        "Step : 0.010  (D-pad left = smaller, right = bigger)",
+        "Hold (X) : 0.150",
+        "*Release (B) : 0.550",
+        "D-pad up/down = move, X = hold here, B = release here, ...",
+        "--- Copy into your code ---",
+        "*Tunables.Launcher: feedStopHold = 0.150,",
+        "*    feedStopRelease = 0.550"
+      ],
+      "stops": []
+    },
+    "feed-stop-finder-step-wheel": {
+      "button": "LB",
+      "where": "Press on gamepad 1:",
+      "order": "press-first",
+      "lines": [
+        "--- Firing times ---",
+        "Opens in : about 0.25 s (gobilda-2000-speed, +25%)",
+        "*Wheel (LB = off) : 2990 / 3000 RPM, ready: RB = test shot"
+      ]
+    },
+    "feed-stop-finder-step-test": {
+      "button": "RB",
+      "where": "Press on gamepad 1:",
+      "order": "press-first",
+      "lines": [
+        "--- Firing times ---",
+        "Opens in : about 0.25 s (gobilda-2000-speed, +25%)",
+        "Wheel (LB = off) : 2995 / 3000 RPM, ready: RB = test shot",
+        "*Test shots : 0.31, 0.28, 0.35, 0.30, 0.29 s  (5)",
+        "...",
+        "--- Copy into your code ---",
+        "...",
+        "*Tunables.Launcher: feedStopMoveSec = 0.25,",
+        "*    feedStopOpenSec = 0.55"
+      ]
+    }
+  }
+}

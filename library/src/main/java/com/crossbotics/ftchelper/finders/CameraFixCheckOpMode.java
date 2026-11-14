@@ -21,6 +21,15 @@ import java.util.Locale;
  * robot's heading, and the robot's place in our frame with that turn. X saves the turn for BLUE, B for
  * RED (stand at the RED wall for that one).
  *
+ * <p>It is not in "Tune and check" (the camera fix is untested, and not for BIOBUZZ). Run it from a file
+ * of your own:
+ * <pre>{@code
+ * @TeleOp(name = "Camera Fix Check", group = "Finders")
+ * public class CameraFixCheck extends CameraFixCheckOpMode {
+ *     @Override protected RobotDefinition robot() { return new Robot(); }
+ * }
+ * }</pre>
+ *
  * Docs: docs/modules/odometry.md, "Camera fix (alpha)"
  */
 public abstract class CameraFixCheckOpMode extends FinderOpMode {
@@ -115,9 +124,9 @@ public abstract class CameraFixCheckOpMode extends FinderOpMode {
             "1. Robot on the field, FACING AWAY from your",
             "   drivers' wall, tags in view. Nothing moves.",
             "2. Read 'Turn that fits' and 'Robot's place'.",
-            "   Measure the robot's centre with a tape: x from",
-            "   the field's centre line (+ = right), y from the",
-            "   centre (+ = away from you). They should match",
+            "   Measure the robot's center with a tape: x from",
+            "   the field's center line (+ = right), y from the",
+            "   center (+ = away from you). They should match",
             "   within a few inches.",
             "3. {X} = save the turn for BLUE. At the RED wall,",
             "   {B} = save it for RED. Copy the line.",

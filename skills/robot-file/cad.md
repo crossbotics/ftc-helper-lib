@@ -3,8 +3,8 @@
 Use this when the team has CAD of the whole robot (a STEP file, or Onshape / Fusion that can export one). The CAD
 gives exact sizes, places, spin axes and seller part numbers. It does not say which configuration name drives
 which part: you guess that from clues and ask the team when you are not sure. The result is the same robot file
-as the interview makes, plus CAD models for the 3D view and the size rules ("CAD models of the parts" in
-`docs/guides/simulator.md`).
+as the interview makes, plus CAD models for the 3D view and the size rules ("CAD models" in
+`docs/simulator/03-make-it-match-your-robot.md`; every CAD line in `docs/reference/robot-file.md`).
 
 **CAD from a seller belongs to the seller.** Keep the STEP and the STL files with the team (their own repository
 or computer), never in a public repository. Commit only `cad-work/cad/*.stl` and the JSON files you write; add
@@ -92,7 +92,7 @@ Each shape gets the parts that move with it; everything else is the chassis. Wri
 ```
 
 - `"parts"`: the part index (`i` in parts.json; not the seller's part number). `"near"` + `"within"`: every part whose middle is within that
-  many inches of the point (robot frame). `"onAxis": true` keeps only parts centred on the axle line through the
+  many inches of the point (robot frame). `"onAxis": true` keeps only parts centered on the axle line through the
   point (`"axle"`; within `"axisTolIn"`, default 0.15 in): use it for anything that spins. `"names"`: a regex on the part's name. `"except"`: drop parts.
 - **A spinning group holds only the parts that spin** (wheels, hubs, shaft): the size rules count a spinning model
   as the whole circle it sweeps, so a motor or bracket in it makes the robot look bigger than it is. Keep motors in

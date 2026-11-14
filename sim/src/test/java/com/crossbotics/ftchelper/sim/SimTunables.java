@@ -24,7 +24,7 @@ import java.util.Set;
  * Which Tunables classes: the one each Robot class uses (Tunables next to Robot.java, or the class given with
  * tunables(...)), and every other class named Tunables. Every one that has the field gets the value; when a
  * team's own Tunables (not the library's example robots) has it, only the team's.
- * Docs: docs/guides/simulator.md (sections "Scenario files" and "MEASURE in the simulator").
+ * Docs: docs/reference/scenario-files.md and docs/simulator/02-your-robot-file.md (MEASURE).
  */
 final class SimTunables {
     private SimTunables() { }

@@ -25,11 +25,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * Cookbook: mechanisms (docs/cookbook.md#mechanisms). Each part is one line in Robot.java's
+ * Cookbook: mechanisms (docs/cookbook/04-mechanisms.md). Each part is one line in Robot.java's
  * {@code define()}, plus a field for it ({@code public Lift lift;}) and its numbers in Tunables.java.
  * Its buttons: its usual lines in Controls.java.
  *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class MechanismRecipes {
@@ -121,10 +121,10 @@ public class MechanismRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: intake-cr-servos
             // Two continuous-rotation (CR) servos. The one that spins the wrong way is reversed.
-            // "left_intake", "right_intake" = the servos' names in the robot configuration. Numbers: Tunables.Intake.
+            // "intake", "intake_right" = the servos' names in the robot configuration. Numbers: Tunables.Intake (the 1st name).
             // .part(...): which servo it is (optional, recommended).
-            intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-speed")
-                    .reversed("right_intake"));
+            intake = add(Intake.crServos("intake", "intake_right").part("gobilda-2000-speed")
+                    .reversed("intake_right"));
             // end recipe
         }
     }

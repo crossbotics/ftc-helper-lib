@@ -18,7 +18,8 @@ import java.util.function.LongSupplier;
  * <pre>{@code
  * Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
  *         .countsPerRev(28)            // encoder counts per FLYWHEEL turn (see below)
- *         .pidf(10, 3, 0, 12)          // the hub's speed control (start here, then tune)
+ *         .maxRpm(6000)                // the motor's top speed (a goBILDA 6000 RPM motor)
+ *         .startingGains()             // the hub's speed control: a start, then the Flywheel Finder
  *         .tolerance(75)               // within 75 RPM...
  *         .settleTime(0.15);           // ...for 0.15 s = ready
  * flywheel.setRpm(3200);

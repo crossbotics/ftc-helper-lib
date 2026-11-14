@@ -22,12 +22,12 @@ import org.ode4j.ode.OdeHelper;
 /**
  * The physics of the field: the robot as a solid body that the drivetrain pushes around, the walls
  * and the field file's solid parts as things it bumps into and slides along, and (later) game pieces.
- * It uses the ode4j physics engine (pure Java, BSD licence); only this class talks to it, so another
+ * It uses the ode4j physics engine (pure Java, BSD license); only this class talks to it, so another
  * engine could replace it here.
  *
- * Units inside are metres, kilograms and seconds (what the engine likes); the rest of the simulator
+ * Units inside are meters, kilograms and seconds (what the engine likes); the rest of the simulator
  * uses inches. World frame: x and y as the field (inches x 0.0254), z up. The robot is held flat on the
- * tiles (it moves in x, y and turns about z only): its body's centre sits at z = 0, so the field is
+ * tiles (it moves in x, y and turns about z only): its body's center sits at z = 0, so the field is
  * placed zFloor below it.
  *
  * How the robot moves: the wheels say how fast the robot wants to go (forward, right, turning); the
@@ -35,7 +35,7 @@ import org.ode4j.ode.OdeHelper;
  * hits something it stops or slides, and the wheels keep turning (they slip), like a real robot.
  */
 final class SimWorld {
-    static final double M = 0.0254;                 // metres per inch
+    static final double M = 0.0254;                 // meters per inch
     private static final double STEP = 0.004;       // the engine's fixed time step, seconds
     private static final double G = 9.81;
     private static final int MAX_CONTACTS = 8;
@@ -99,7 +99,7 @@ final class SimWorld {
 
     /**
      * @param field          the season's field
-     * @param chassisHeightIn the chassis box's height (the robot's body centre is half of it above the tiles)
+     * @param chassisHeightIn the chassis box's height (the robot's body center is half of it above the tiles)
      * @param massKg         the robot's mass
      * @param grip           how hard the wheels can push, as a share of the robot's weight (about 1 on tiles)
      */
@@ -149,7 +149,7 @@ final class SimWorld {
 
     // ---------------------------------------------------------------- game pieces
 
-    /** Adds a game piece: centre at (x, y, z) inches (z from the tiles), moving at (vx, vy, vz) inches per second. */
+    /** Adds a game piece: center at (x, y, z) inches (z from the tiles), moving at (vx, vy, vz) inches per second. */
     Ball addBall(SimField.PieceType type, double x, double y, double z, double vx, double vy, double vz) {
         double r = type.diameterIn / 2 * M;
         DBody b = OdeHelper.createBody(world);
@@ -184,7 +184,7 @@ final class SimWorld {
         return new ArrayList<>(balls);
     }
 
-    /** A piece's centre, inches (z from the tiles). */
+    /** A piece's center, inches (z from the tiles). */
     double[] ballPos(Ball b) {
         DVector3C p = b.body.getPosition();
         return new double[] {p.get0() / M, p.get1() / M, (p.get2() - zFloor) / M};
@@ -335,7 +335,7 @@ final class SimWorld {
             ((Tag) g.getData()).soft = p.soft;
             // its size too (a claw's palm widens as it opens)
             ((org.ode4j.ode.DBox) g).setLengths(Math.max(0.005, p.sf * M), Math.max(0.005, p.sl * M), Math.max(0.005, p.su * M));
-            // robot frame (f, l, u) -> body frame (x = right = -l, y = forward = f, z = up from the body centre)
+            // robot frame (f, l, u) -> body frame (x = right = -l, y = forward = f, z = up from the body center)
             g.setOffsetPosition(-p.center[1] * M, p.center[0] * M, p.center[2] * M + zFloor);
             DMatrix3 r = new DMatrix3();
             double[][] axes = {p.ef, p.el, p.eu};        // the box's own forward, left, up

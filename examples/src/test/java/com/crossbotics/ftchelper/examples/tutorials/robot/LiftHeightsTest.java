@@ -17,7 +17,7 @@ import org.junit.Test;
  * A test is a small method that runs a piece of code and CHECKS the answer. If a check fails,
  * the test turns red and tells you which number was wrong. Run them after every change: a red
  * test on the laptop is much cheaper than a lift that drives into its top at a competition.
- * More in docs/guides/testing.md and docs/tutorials/13-testing.md.
+ * More in docs/tests/03-checks-before-practice-and-matches.md and docs/tutorials/13-testing.md.
  *
  * What we test here: LiftHeights (robot/LiftHeights.java), the list of set lift heights.
  */

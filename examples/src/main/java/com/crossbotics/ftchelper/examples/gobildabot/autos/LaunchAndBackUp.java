@@ -4,7 +4,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.crossbotics.ftchelper.examples.gobildabot.Actions;
 import com.crossbotics.ftchelper.examples.gobildabot.Robot;
-import com.crossbotics.ftchelper.examples.gobildabot.Tunables;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 
@@ -19,10 +18,10 @@ public class LaunchAndBackUp extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        // Inches: y -63 = the back against our wall (the robot's centre is 7.5 in from it).
-        s.start("Back against our wall, left of centre, facing the field", -56, -63, 0)
+        // Inches: y -63 = the back against our wall (the robot's center is 7.5 in from it).
+        s.start("Back against our wall, left of center, facing the field", -56, -63, 0)
          .action(Actions.fireAllWithIntake(robot), 12)
-         .forward("Away from the wall", Tunables.Auto.backInches, Tunables.Auto.backPower);
+         .forward("Away from the wall", 4.7, 0.4);              // goBILDA's auto: 120 mm, power 0.4
     }
 
     // BIOBUZZ's field is turned half a turn between the alliances: the same route works for both.

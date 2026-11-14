@@ -15,7 +15,7 @@ import java.util.function.IntSupplier;
  * The Encoder Check's steps, without the hardware (so tests can run it): one motor at a time, wait until
  * nothing moves, read EVERY motor port's encoder, give the motor a short push, read them all again, and
  * judge which port counted. Never waits: {@link #update(boolean)} does one small step per loop.
- * The OpMode is {@link EncoderCheckOpMode}. Guide: docs/guides/finders.md, "Encoder Check".
+ * The OpMode is {@link EncoderCheckOpMode}. Guide: docs/tuning/README.md, "Encoder Check".
  */
 final class EncoderCheck {
     // The push: low power, short, so a lift moves a little and a wheel turns a little (robot on a block).

@@ -4,7 +4,7 @@ import com.crossbotics.ftchelper.robot.Action;
 
 /**
  * goBILDA starter bot, file 4 of 5: steps that use several parts together.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/01-robot-in-five-files/#4-actionsjava-steps-that-use-several-parts
+ * more: https://crossbotics.com/ftc-helper/docs/five-files/
  */
 public class Actions {
 

@@ -9,7 +9,7 @@ import com.crossbotics.ftchelper.robot.Pad;
 /**
  * Example robot 2, file 3 of 5: the buttons and the TeleOp. Each part's buttons are written out below
  * (INIT shows the map); ours: X grab, Y release into a FLOWER, the aim buzz, and the light's colors.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#13-a-light-for-the-drivers
+ * more: https://crossbotics.com/ftc-helper/docs/add-to-robot/08-lights/#controlsjava-the-rules
  */
 @TeleOp(name = "TurretBot TeleOp", group = "Examples")
 @Disabled
@@ -38,7 +38,7 @@ public class Controls extends ControlMap<Robot> {
         // The hood's and the turret's own buttons.
         g2.leftStickY.use(robot.launcher.hood()::byHand).says("hood trim while it follows the table, else the hood (up = bigger angle)");
         g2.rightStickX.use(v -> robot.turret.manual(-v)).says("by hand (right = clockwise)");
-        g2.back.toggle(robot.turret.followMode()).says("follow the goal on/off");
+        g2.rightStickButton.toggle(robot.turret.followMode()).rumble().says("follow the goal on/off");
 
         // Ours.
         g2.x.press(Actions.grab(robot)).says("grab");
@@ -52,7 +52,7 @@ public class Controls extends ControlMap<Robot> {
         robot.lights.show(LightColor.GREEN).when(() -> robot.launcher.isSpinning() && robot.launcher.isReady());
         // Purple and orange, not blue or red: those show the alliance at INIT.
         robot.lights.show(LightColor.PURPLE).when(() -> robot.turret.followMode().isOn());   // following the goal
-        robot.lights.otherwise(LightColor.ORANGE);                             // following is off (BACK)
+        robot.lights.otherwise(LightColor.ORANGE);                             // following is off (right stick click)
         // a 0.5 s flash per piece fired
         robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());
     }

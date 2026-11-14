@@ -359,13 +359,13 @@ public class SimRecorderTest {
 
     @Test public void eachTestStartsWithTheCodesTunablesNumbers() {
         SimFresh.readCodeValues();
-        double code = com.crossbotics.ftchelper.examples.gobildabot.Tunables.Auto.backInches;
+        double code = com.crossbotics.ftchelper.examples.gobildabot.Tunables.Windmill.feedSec;
         try {
-            com.crossbotics.ftchelper.examples.gobildabot.Tunables.Auto.backInches = code + 5;   // tuned on the page
+            com.crossbotics.ftchelper.examples.gobildabot.Tunables.Windmill.feedSec = code + 5;   // tuned on the page
             SimScenario.freshMatch();
-            assertEquals(code, com.crossbotics.ftchelper.examples.gobildabot.Tunables.Auto.backInches, 1e-9);
+            assertEquals(code, com.crossbotics.ftchelper.examples.gobildabot.Tunables.Windmill.feedSec, 1e-9);
         } finally {
-            com.crossbotics.ftchelper.examples.gobildabot.Tunables.Auto.backInches = code;
+            com.crossbotics.ftchelper.examples.gobildabot.Tunables.Windmill.feedSec = code;
         }
     }
 }

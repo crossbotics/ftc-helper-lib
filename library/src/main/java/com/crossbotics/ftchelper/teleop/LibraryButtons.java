@@ -54,7 +54,7 @@ import java.util.Set;
  * cancels START's own job for that press. The tuning menu's button may not be one the menu itself
  * uses on gamepad 1 (D-pad, A, B, X, Y, LB, RB).
  *
- * Docs: docs/guides/buttons.md (section "Moving the library's buttons"), docs/modules/teleop.md
+ * Docs: docs/controls/04-move-library-buttons.md, docs/modules/teleop.md
  */
 public final class LibraryButtons {
 
@@ -490,13 +490,13 @@ public final class LibraryButtons {
     // A two-button job set up wrong, with the line that fixes it.
     private static IllegalStateException pairProblem(Job job, String what) {
         return new IllegalStateException("libraryButtons: " + what + ". In Controls.java, in libraryButtons(...): lib."
-                + job.method + "(g1.start, g1.back), for example (docs/guides/buttons.md, \"Moving the library's buttons\")");
+                + job.method + "(g1.start, g1.back), for example (docs/controls/04-move-library-buttons.md)");
     }
 
     // A clash, with the line that fixes it: move that job to a free button, or turn it off.
     private static IllegalStateException clash(String what, Job fix) {
         return new IllegalStateException("libraryButtons: " + what + ". In Controls.java, in libraryButtons(...), move one to a"
                 + " free button (lib." + fix.method + "(...)), or turn it off: " + fix.off()
-                + " (docs/guides/buttons.md, \"Moving the library's buttons\")");
+                + " (docs/controls/04-move-library-buttons.md)");
     }
 }

@@ -18,7 +18,7 @@ import org.junit.rules.TemporaryFolder;
  */
 public class SimGameTest {
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
-    static final String FLOWER = "FLOWER (red wall, audience half)";   // opening centre 23.57, -68.04
+    static final String FLOWER = "FLOWER (red wall, audience half)";   // opening center 23.57, -68.04
 
     @Before public void noAllianceChosen() {
         com.crossbotics.ftchelper.match.MatchMemory.clear();      // the robot counts as red
@@ -78,7 +78,7 @@ public class SimGameTest {
         f = r.pieces.flowers().get(FLOWER);
         assertEquals("it stays in the FLOWER, on top", 5, f.size());
         assertEquals("red NECTAR", f.get(4)[0]);
-        // resting on the top POLLEN: 1.4 + 1.8 + 0.09 above its centre
+        // resting on the top POLLEN: 1.4 + 1.8 + 0.09 above its center
         assertEquals(3.29, (Double) f.get(4)[1] - (Double) f.get(3)[1], 1e-9);
         assertEquals(1, (int) r.pieces.scored().get(FLOWER));
         assertEquals(17, r.pieces.inStacks());
@@ -91,6 +91,42 @@ public class SimGameTest {
         assertEquals(10, side(r, "blue").flower, 0);
         assertEquals(0, side(r, "red").flower, 0);
         assertEquals(5, side(r, "red").bottomNectar, 0);
+    }
+
+    // G407: no more than 4 pieces at a time. The MAJOR FOUL comes once per match, and only when it looks STRATEGIC:
+    // 6 at once, or 5 for more than a moment (3 s) twice. 5 for a moment is no foul. Free play has no fouls.
+    @Test public void tooManyPiecesIsAFoulWhenStrategic() throws Exception {
+        SimRobot r = robot("");
+        r.pieces.setPreloaded(false);
+        r.pieces.clock = at("TELEOP", 90);
+        r.pieces.load("POLLEN", 5);
+        run(r, 1.0);
+        assertEquals("5 for a moment: no foul", 0, r.pieces.score.fouls().size());
+        run(r, 2.5);
+        assertEquals("5 for more than 3 s once: no foul yet", 0, r.pieces.score.fouls().size());
+        r.pieces.setPreloaded(false);
+        run(r, 0.1);
+        r.pieces.load("POLLEN", 5);
+        run(r, 3.5);
+        assertEquals("the second time: a foul", 1, r.pieces.score.fouls().size());
+        assertEquals("G407", r.pieces.score.fouls().get(0).rule);
+        assertEquals(20, side(r, "blue").fouls, 0);
+        r.pieces.load("POLLEN", 2);
+        run(r, 0.5);
+        assertEquals("once per match", 1, r.pieces.score.fouls().size());
+
+        SimRobot six = robot("");
+        six.pieces.setPreloaded(false);
+        six.pieces.clock = at("AUTO", 20);
+        six.pieces.load("POLLEN", 6);
+        run(six, 0.1);
+        assertEquals("6 at once: a foul at once", 1, six.pieces.score.fouls().size());
+
+        SimRobot free = robot("");
+        free.pieces.setPreloaded(false);
+        free.pieces.load("POLLEN", 6);
+        run(free, 0.5);
+        assertEquals("free play: no foul", 0, free.pieces.score.fouls().size());
     }
 
     // G410: NECTAR into a FLOWER before the last 60 s is a MAJOR FOUL (20 points to the other alliance). It still
@@ -258,7 +294,7 @@ public class SimGameTest {
     }
 
     // 10.5: CELL, FLOWER and GARDEN pieces and TELEOP PARK count only at the end of the match. Until then the page
-    // gets them apart ("atEnd", shown grey); when TeleOp stops, the score is held: moving after that changes nothing.
+    // gets them apart ("atEnd", shown gray); when TeleOp stops, the score is held: moving after that changes nothing.
     @Test public void endOfMatchPointsCountWhenTeleOpEnds() throws Exception {
         SimRobot r = robot("");
         run(r, 1.0);

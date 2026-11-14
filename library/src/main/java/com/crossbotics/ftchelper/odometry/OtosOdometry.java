@@ -27,8 +27,8 @@ public final class OtosOdometry extends PoseTracker {
      *
      * @param name          the configuration name
      * @param otos          the device ({@code hardwareMap.get(SparkFunOTOS.class, name)})
-     * @param forwardIn     how far FORWARD of the robot's centre it sits (back = negative)
-     * @param leftIn        how far LEFT of the centre it sits (right = negative)
+     * @param forwardIn     how far FORWARD of the robot's center it sits (back = negative)
+     * @param leftIn        how far LEFT of the center it sits (right = negative)
      * @param headingDeg    which way its arrow points, counterclockwise from the robot's front
      * @param linearScalar  distance scale (1.0 until the tuner measures it; 0.872 to 1.127)
      * @param angularScalar turn scale (1.0 until the tuner measures it; 0.872 to 1.127)

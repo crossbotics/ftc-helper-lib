@@ -4,7 +4,7 @@ import com.crossbotics.ftchelper.robot.Action;
 
 /**
  * Example robot 2, file 4 of 5: the claw's steps.
- * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/05-actions/
+ * more: https://crossbotics.com/ftc-helper/docs/five-files/04-actions-java/
  */
 public class Actions {
 

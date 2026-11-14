@@ -1,0 +1,107 @@
+{
+  "pictures": {
+    "hood-finder-go-menu": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Tune and check ---",
+        "Robot: Robot",
+        "  ...",
+        "  Servo Finder: a servo's ends and positions",
+        "*> Hood Finder: the hood's two stops",
+        "  ...",
+        "D-pad up/down = pick, A = open it. Then ▶."
+      ]
+    },
+    "hood-finder-go-start": {
+      "button": "▶ (start)",
+      "where": "Press on the Driver Hub:",
+      "lines": [
+        "Hood finder: the hood's two stops (and its angles) ...",
+        "*Servo hood: nothing moves until you choose a start",
+        "*point and press A.",
+        "Press ▶ on the Driver Hub.",
+        "GUIDE (center button), or hold START 1 s = help."
+      ]
+    },
+    "hood-finder-step-start": {
+      "button": "A",
+      "where": "Press on gamepad 1:",
+      "pos": 0.5,
+      "note": "the hood's servo at the start point",
+      "lines": [
+        "--- Hood \"hood\" (servo) ---",
+        "*Position : 0.500",
+        "Step : 0.050  (D-pad left = smaller, right = bigger)",
+        "Angle here : - (hold LB + D-pad to give one)",
+        "Stop A : - (X)",
+        "Stop B : - (B)",
+        "..."
+      ],
+      "stops": [
+        0.205,
+        0.648
+      ],
+      "stop_label": "stop"
+    },
+    "hood-finder-step-stop-a": {
+      "button": "X",
+      "where": "At one stop, press:",
+      "pos": 0.205,
+      "frm": 0.5,
+      "note": "stop A: just before the stop",
+      "lines": [
+        "--- Hood \"hood\" (servo) ---",
+        "Position : 0.205",
+        "Step : 0.005  (D-pad left = smaller, right = bigger)",
+        "...",
+        "*Stop A : 0.205",
+        "Stop B : - (B)",
+        "...",
+        "Stop A = 0.205 (no angle)"
+      ],
+      "stops": [
+        0.205,
+        0.648
+      ],
+      "stop_label": "stop"
+    },
+    "hood-finder-step-stop-b": {
+      "button": "B",
+      "where": "At the other stop, press:",
+      "pos": 0.648,
+      "frm": 0.205,
+      "note": "stop B: just before the other stop",
+      "lines": [
+        "--- Hood \"hood\" (servo) ---",
+        "Position : 0.648",
+        "...",
+        "Stop A : 0.205",
+        "*Stop B : 0.648",
+        "...",
+        "--- Copy into your code ---",
+        "*Tunables.Hood: posA = 0.205, posB = 0.648",
+        "// Copy into Tunables.java: the robot uses the file, ..."
+      ],
+      "stops": [
+        0.205,
+        0.648
+      ],
+      "stop_label": "stop"
+    },
+    "hood-finder-step-angle": {
+      "button": "LB + D-pad",
+      "where": "Press on gamepad 1:",
+      "order": "press-first",
+      "lines": [
+        "--- Hood \"hood\" (servo) ---",
+        "Position : 0.648",
+        "Step : 0.005  (D-pad left = smaller, right = bigger)",
+        "*Angle here : 25.0 (hold LB + D-pad)",
+        "Stop A : 0.205 at 0.0",
+        "Stop B : 0.648",
+        "..."
+      ]
+    }
+  }
+}

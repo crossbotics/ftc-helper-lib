@@ -1,0 +1,81 @@
+{
+  "pictures": {
+    "flywheel-finder-go-menu": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Tune and check ---",
+        "Robot: Robot",
+        "  Hardware Check: every device found, ...",
+        "  ...",
+        "*> Flywheel Finder: the flywheel's gains",
+        "  ...",
+        "D-pad up/down = pick, A = open it. Then ▶."
+      ]
+    },
+    "flywheel-finder-go-start": {
+      "button": "▶ (start)",
+      "where": "Press on the Driver Hub:",
+      "lines": [
+        "Flywheel finder: top speed, speed-control gains, ...",
+        "*!! Hands away from the wheel. Eye protection on.",
+        "Press ▶ on the Driver Hub.",
+        "GUIDE (center button), or hold START 1 s = help."
+      ]
+    },
+    "flywheel-finder-go-choose": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Choose the flywheel motor (D-pad, then A) ---",
+        "  ...",
+        "  intake",
+        "*> launcher",
+        "  lift"
+      ]
+    },
+    "flywheel-finder-step-top-speed": {
+      "button": "A (hold)",
+      "where": "Let go of A, then hold it:",
+      "order": "press-first",
+      "lines": [
+        "--- Flywheel \"launcher\"  (BACK = another) ---",
+        "Speed : 5590 RPM",
+        "Battery : 12.80 V (gains for 12.8 V)",
+        "*Top speed : 5600 RPM",
+        "F gain : 12.54 (RB/LB)",
+        "Step 2: B = hold a speed. (Or hold A again to ...",
+        "..."
+      ]
+    },
+    "flywheel-finder-step-hold": {
+      "button": "B",
+      "where": "Press on gamepad 1:",
+      "order": "press-first",
+      "lines": [
+        "--- Flywheel \"launcher\"  (BACK = another) ---",
+        "...",
+        "Top speed : 5600 RPM",
+        "F gain : 12.54 (RB/LB)",
+        "*Target : 3350 RPM (D-pad)",
+        "*Error : 40 RPM",
+        "Ready : YES",
+        "..."
+      ]
+    },
+    "flywheel-finder-step-more-f": {
+      "button": "RB",
+      "where": "When it stays too slow, press:",
+      "order": "press-first",
+      "lines": [
+        "--- Flywheel \"launcher\"  (BACK = another) ---",
+        "...",
+        "*F gain : 12.79 (RB/LB)",
+        "Target : 3350 RPM (D-pad)",
+        "*Error : 5 RPM",
+        "...",
+        "Too slow at every speed: F up (RB). Too fast: F down (LB)."
+      ]
+    }
+  }
+}

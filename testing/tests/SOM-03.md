@@ -8,7 +8,7 @@ minutes: 40
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.17.0
-docs: [tutorials/start/09-shooter-and-camera.md#14-extra-shooting-while-moving, guides/simulator.md#clean-shots-scatter-and-the-hit-rate]
+docs: [add-to-robot/07-camera.md#shooting-while-moving, guides/how-the-simulator-works.md#clean-shots-scatter-and-the-hit-rate]
 ---
 
 ## Why
@@ -26,7 +26,7 @@ whether the lead goes the right way and how much it helps. Its shots fly with re
 ## Steps
 
 1. Choose "V2 Bot TeleOp", pick the alliance (gamepad 1 X = BLUE, B = RED), START. Open the Match panel (Control Hub, "Match"): it shows each shot's verdict.
-2. Drive to a spot about 4 ft from your goal where the turret follows it (`following: camera`; lesson 9's [Try it in the simulator](../../docs/tutorials/start/09-shooter-and-camera.md#try-it-in-the-simulator) says where the tags can be seen). Write the spot (the line under the field map).
+2. Drive to a spot about 4 ft from your goal where the turret follows it (`following: camera`; [Add a camera: Try it in the simulator](../../docs/add-to-robot/07-camera.md#try-it-in-the-simulator) says where the tags can be seen). Write the spot (the line under the field map).
 3. Shooting on the move is off. Standing still, fire 4 (hold gamepad 2 RB). Count clean shots.
 4. Load 4 pieces again (drive the intake over pieces on the field, or restart the simulator) and go back to the spot. Strafe slowly past the goal (keyboard A or D, or the left stick) and fire 4 while moving. Count clean shots.
 5. Stop the simulator. In `examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Tunables.java`, class `Aim`, change `shootOnMove = false` to `true` and add `public static double flightSec = 0.8;` (your own robot: the same two lines in its `Tunables.Aim`). Start the simulator again (the Setup commands).

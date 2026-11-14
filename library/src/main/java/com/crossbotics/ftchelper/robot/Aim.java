@@ -30,8 +30,8 @@ import java.util.function.LongSupplier;
  *     public static double maxGoalDistance = 170, cameraOdometryAgree = 6;   // inches: odometry sanity checks
  *     public static boolean shootOnMove = false;              // shooting while driving: off until tuned
  *     public static double flightSec = 0.8, flightSecPerIn = 0, maxLeadIn = 24;
- *     public static double shooterForwardIn = 0, shooterLeftIn = 0;   // the shooter (turret pivot) from the centre
- *     public static double cameraForwardIn = 0, cameraLeftIn = 0;     // a camera on the body, from the centre
+ *     public static double shooterForwardIn = 0, shooterLeftIn = 0;   // the shooter (turret pivot) from the center
+ *     public static double cameraForwardIn = 0, cameraLeftIn = 0;     // a camera on the body, from the center
  *     public static boolean aimOnFire = false;                // quick turn to the goal on a fire press (off unless set)
  *     public static double aimOnFireSec = 0.5;                // the most it waits for the turn before it fires anyway
  * }
@@ -58,8 +58,8 @@ import java.util.function.LongSupplier;
  * Driver Station says which one is in use.
  *
  * <p><b>The goal point</b> is in the same numbers as {@code driveTo} and the autonomous start spots:
- * seen from your drivers' wall, x inches to the right of the field's centre line, y inches from the
- * centre toward the far wall, written for BLUE. For RED with {@code mirrorForRed = true} (the default,
+ * seen from your drivers' wall, x inches to the right of the field's center line, y inches from the
+ * center toward the far wall, written for BLUE. For RED with {@code mirrorForRed = true} (the default,
  * like autonomous) x is mirrored; a field turned half a turn between the alliances (BIOBUZZ) uses
  * {@code mirrorForRed = false}: the same numbers from the red wall. It is the robot's one setting
  * ({@link RobotDefinition#mirrorForRed()}): the autonomous and TeleOp's reset spot use it too. Put the point where the camera
@@ -81,10 +81,10 @@ import java.util.function.LongSupplier;
  * the piece keeps the robot's speed (see {@link MovingShot}). Needs odometry (the speed comes from it).
  * It works for a turret that follows the goal (camera on the turret or on the body, or odometry only)
  * and for whole-robot aim with a fixed shooter; the shooter and the camera need not be at the robot's
- * centre ({@code shooterForwardIn, shooterLeftIn, cameraForwardIn, cameraLeftIn}).
+ * center ({@code shooterForwardIn, shooterLeftIn, cameraForwardIn, cameraLeftIn}).
  * {@link #movingShotMode()} switches it with a button.
  *
- * Docs: docs/modules/robot.md (section "Aim"). Tutorial: docs/tutorials/start/09-shooter-and-camera.md
+ * Docs: docs/reference/robot-java.md (section "Aim"). Tutorial: docs/add-to-robot/05-launcher.md
  */
 public final class Aim {
     /** Where the goal's direction and distance come from now. */
@@ -131,7 +131,7 @@ public final class Aim {
     // picture age when the team writes one (NaN: the camera's own timestamp, the normal case).
     private final DoubleSupplier flightSec, flightSecPerIn, maxLeadIn, cameraLatencyMs;
     // Where the shooter (a turret's pivot, or a fixed launcher's exit) and a camera on the body are,
-    // from the robot's centre: inches forward and left. Used while shooting on the move.
+    // from the robot's center: inches forward and left. Used while shooting on the move.
     private final double shooterForwardIn, shooterLeftIn, cameraForwardIn, cameraLeftIn;
     // The last lead worked out (for the Driver Station), and when (nanoseconds).
     private MovingShot.Result lastLead = null;
@@ -238,7 +238,7 @@ public final class Aim {
     /**
      * The goal worked out from the odometry: its direction from the robot's front (degrees,
      * counterclockwise + = to the LEFT, like a camera's bearing) and its distance from the robot's
-     * centre (inches). Null if the robot has no odometry, the odometry is not ready, {@code Tunables.Aim}
+     * center (inches). Null if the robot has no odometry, the odometry is not ready, {@code Tunables.Aim}
      * has no goal point, the pose was never set (no autonomous, no {@code setPose}), or the goal would
      * be farther than {@code maxGoalDistance} (a wrong pose). {@link #odometryProblem()} says which.
      */
@@ -357,7 +357,7 @@ public final class Aim {
     //   odometry's, a camera on the body's), or how far to turn the turret (a camera ON that turret);
     // - no following turret (whole-robot aim, a fixed shooter): how far to turn the whole robot.
     // The distance is from the shooter (Tunables.Aim.shooterForwardIn, shooterLeftIn) to the virtual goal.
-    // camera: the camera that saw it (null: the odometry's goal, measured from the robot's centre).
+    // camera: the camera that saw it (null: the odometry's goal, measured from the robot's center).
     private TargetObservation moving(TargetObservation g, Camera camera) {
         if (!movingShot.isOn()) return g;
         PoseTracker tr = robot.odometry();
@@ -375,7 +375,7 @@ public final class Aim {
             // No distance: only the direction can be corrected (the robot's turn since the picture).
             return new TargetObservation(g.id, g.name, g.bearingDeg - turn * latencyMs / 1000.0, g.distanceIn, g.timeNanos);
         }
-        // Where the goal was from the robot's centre: the odometry's from the centre; a camera on the
+        // Where the goal was from the robot's center: the odometry's from the center; a camera on the
         // turret sits at the turret's pivot (the shooter) and faces where the turret points; a camera
         // on the body at Tunables.Aim.cameraForwardIn, cameraLeftIn, facing forward.
         double[] at = g.fromOdometry() ? MovingShot.seenFrom(g.bearingDeg, g.distanceIn, 0, 0, 0)

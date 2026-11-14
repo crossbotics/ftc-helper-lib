@@ -203,7 +203,7 @@
   #hubSection .tab > h3:first-child { border-top: 0; padding-top: 0; }
   /* Narrow screens, one column: the Driver Hub, then the field, the builder, the gamepads, the Control Hub. */
   #dsSection { order: 1; } #view3dSection { order: 2; } #builderSection { order: 3; } #padsSection { order: 4; } #hubSection { order: 5; }
-  /* What the robot holds, on the 3D view: a dot per piece in its colour, empty dots for the free places. */
+  /* What the robot holds, on the 3D view: a dot per piece in its color, empty dots for the free places. */
   #heldBadge { position: absolute; left: 8px; top: 8px; z-index: 2; display: none; align-items: center; gap: 6px;
     padding: 4px 9px; border-radius: 14px; background: color-mix(in srgb, var(--panel) 88%, transparent);
     border: 1px solid var(--line); font-size: 12.5px; font-weight: 600; pointer-events: none; }
@@ -531,7 +531,7 @@
       <p>On-screen, the keyboard, or your own USB or Bluetooth controller: plug it in and press one of its buttons. It goes to gamepad 1 if that one is on-screen, else gamepad 2. To change, pick it in that gamepad's list.</p>
       <p>Keyboard: left stick <code>W A S D</code>, right stick <code>arrows</code>, D-pad <code>T F G H</code>,
       A/B/X/Y <code>K L J I</code>, LB/RB <code>Q E</code>, LT/RT <code>Z C</code>, BACK <code>Backspace</code>,
-      START <code>Enter</code>, GUIDE <code>M</code>.</p>
+      START <code>Enter</code>, GUIDE <code>M</code>, left/right stick click <code>X V</code>.</p>
       <p>Real controller: plug it in, choose it above, press any of its buttons once (a browser rule).
       GUIDE/PS often does not reach the browser: click the on-screen GUIDE (it works with every source) or press <code>M</code> (keyboard source).</p>
       <p>Another page using a gamepad (a phone, a second tab)? Set that gamepad here to "Phone / other page" so they do not fight.</p>
@@ -617,7 +617,7 @@
     </div>
     <div class="tab" data-tab="match">
     <h3 style="margin-top:0">Match</h3>
-    <div id="matchOff" class="muted">No rules file for this field: no score or clock (docs/guides/simulator.md, "Game rules and the score").</div>
+    <div id="matchOff" class="muted">No rules file for this field: no score or clock (docs/guides/how-the-simulator-works.md#game-rules-and-the-score).</div>
     <div id="matchOn" hidden>
       <div class="scoreRow">
         <button class="side red" id="scoreRed" aria-expanded="false" title="Where red's points come from">RED <b>0</b></button>
@@ -683,7 +683,7 @@
           <label><input type="checkbox" data-layer="trails"> Ball trails</label>
           <label><input type="checkbox" data-layer="paths"> Path lines (plan and where it went)</label>
           <label><input type="checkbox" data-layer="size"> Robot size box (and the 18 in start cube)</label>
-          <div class="muted">What each line means: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/simulator.md#layers" target="_blank" rel="noopener">the simulator guide, "Layers"</a>.</div>
+          <div class="muted">What each line means: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/how-the-simulator-works.md#layers" target="_blank" rel="noopener">How the simulator works: Layers</a>.</div>
         </div></span>
       <span class="tools"><span class="dropdown"><button id="testsBtn" aria-haspopup="true" aria-expanded="false" title="Record a test of your code, run it, and update it after a planned change">Tests<span class="caret" aria-hidden="true">&#9662;</span></button>
         <div id="testsMenu" class="menu" hidden>
@@ -691,7 +691,7 @@
           <button data-tests="recordNow">Record from now <span class="muted">the robot stays where it is</span></button>
           <button data-tests="open">Open a test <span class="muted">run it; update it after a planned change</span></button>
           <button data-tests="runAll">Run all tests <span class="muted">every test in simulator/scenarios, one after another</span></button>
-          <div class="muted">How: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/tutorials/start/10-test-your-robot-code.md" target="_blank" rel="noopener">start lesson 10, "Test your robot code"</a>.</div>
+          <div class="muted">How: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/tests/README.md" target="_blank" rel="noopener">the Tests pages, "Record a test"</a>.</div>
         </div></span>
       <button id="editRobotBtn" aria-pressed="false" title="Shape your robot: move and size its parts, check the size rules, and get the .looks(...) Java for Robot.java (the simulator holds still meanwhile)">Edit robot</button>
       <button id="builderBtn" aria-pressed="false" title="Build an autonomous on the field and run it here with your code (it takes the Control Hub's place)">Auto builder</button></span>
@@ -863,7 +863,7 @@ function drawPad(el, n) {
 const KEYMAP = { w:["ly",-1], s:["ly",1], a:["lx",-1], d:["lx",1],
   arrowup:["ry",-1], arrowdown:["ry",1], arrowleft:["rx",-1], arrowright:["rx",1],
   t:"up", g:"down", f:"left", h:"right", k:"a", l:"b", j:"x", i:"y", q:"lb", e:"rb",
-  z:["lt",1], c:["rt",1], backspace:"back", enter:"start", m:"guide" };
+  z:["lt",1], c:["rt",1], backspace:"back", enter:"start", m:"guide", x:"ls", v:"rs" };
 const keysDown = new Set();
 function keyboardPads() { return [1,2].filter(n => source[n] === "keyboard"); }
 function applyKeys() {
@@ -1563,11 +1563,11 @@ function update3dPaths(s) {
   }
 }
 // ---------------------------------------------------------------- Match: score, clock, FLOWERs, shots, fouls
-// From the field's rules file (docs/guides/simulator.md, "Game rules and the score"). The stream sends the game
+// From the field's rules file (docs/guides/how-the-simulator-works.md#game-rules-and-the-score). The stream sends the game
 // on its own ("g") only when it changes; /state carries it as "game".
 let game = null;
 const seenShot = { id: 0, first: true }, seenFoul = { t: -1, first: true };
-const ballVerdict = new Map();          // a piece's key -> its shot's verdict (its trail takes the colour)
+const ballVerdict = new Map();          // a piece's key -> its shot's verdict (its trail takes the color)
 const VERDICT_COLOR = { clean: "#2ecc71", rim: "#f08c00", "other HIVE": "#b07ce8", frame: "#e5534b", miss: "#9aa3ab" };
 const verdictChip = v => `<span class="verdict" style="background:${VERDICT_COLOR[v] || "#6a7282"}">${escapeHtml(v)}</span>`;
 let scoreOpen = "";                     // the side whose breakdown is shown ("" none)
@@ -1586,7 +1586,7 @@ function gotGame(g) {
   const sc = g.score || {}, red = sc.red || { total: 0 }, blue = sc.blue || { total: 0 };
   const pts = v => Math.round(v || 0);
   // Like a referee (manual 10.5): TIPs, LEAVE and AUTO PARK count when they happen; CELL, FLOWER and GARDEN pieces
-  // and TELEOP PARK only at the end of the match. Until then they show grey: "+N at the end, if it ended now".
+  // and TELEOP PARK only at the end of the match. Until then they show gray: "+N at the end, if it ended now".
   const state = (g.match || {}).state || "none", over = state === "ended";
   const shown = side => over || side.counted === undefined ? side.total : side.counted;
   const later = side => !over && side.atEnd ? ` <span class="later">+${pts(side.atEnd)}</span>` : "";
@@ -1597,7 +1597,7 @@ function gotGame(g) {
     : state === "afterAuto" ? "AUTO done" : clockWords(g.clock);
   $("#clockText").textContent = when;
   const hint = over ? "(click: where the points come from)"
-    : (red.atEnd || blue.atEnd) ? "(grey: counted at the end of the match, if it ended now. Click: where)"
+    : (red.atEnd || blue.atEnd) ? "(gray: counted at the end of the match, if it ended now. Click: where)"
     : "(click: where the points come from)";
   $("#scoreBar").innerHTML = `<span class="sr">RED ${pts(shown(red))}</span>${later(red)} &middot; ${escapeHtml(when)} &middot; <span class="sb">BLUE ${pts(shown(blue))}</span>${later(blue)} <span class="hint">${hint}</span>`;
   $("#nectarNote").textContent = g.clock && g.clock.period === "TELEOP" || g.clock && g.clock.period === "AUTO"
@@ -1612,7 +1612,7 @@ function gotGame(g) {
       <span>${escapeHtml(f.name)}</span> <span class="stack">${stack || '<span class="muted">empty</span>'}</span></div>`;
   }).join("") || '<span class="muted">none</span>';
   drawFlowerMarkers(g.flowers || []);
-  // Shots: the tally and the last few; a new verdict colours that piece's trail and shows over the 3D view
+  // Shots: the tally and the last few; a new verdict colors that piece's trail and shows over the 3D view
   const counts = g.verdictCounts || {};
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   $("#verdictTally").innerHTML = total ? Object.entries(counts).filter(([, n]) => n > 0).map(([v, n]) => `${verdictChip(v)} ${n}`).join(" ") +
@@ -1704,7 +1704,7 @@ function showVerdict(x) {
   v3.scene.add(label);
   setTimeout(() => { v3.scene.remove(label); label.material.map.dispose(); label.material.dispose(); }, 2500);
 }
-// FLOWER markers in 3D: a ring over each FLOWER in its owner's colour (grey: none), with how many pieces count.
+// FLOWER markers in 3D: a ring over each FLOWER in its owner's color (gray: none), with how many pieces count.
 function drawFlowerMarkers(flowers) {
   if (!v3.ready) return;
   if (!v3.flowerGroup) { v3.flowerGroup = new THREE.Group(); v3.scene.add(v3.flowerGroup); }
@@ -2173,12 +2173,12 @@ function showHeld(stored, holds) {
   let b = $("#heldBadge");
   if (!b) { b = document.createElement("div"); b.id = "heldBadge"; b.setAttribute("role", "status"); st.appendChild(b); }
   const types = (fieldData && fieldData.pieceTypes) || [];
-  const colour = name => (types.find(t => t.name === name) || {}).color || "#999";
+  const color = name => (types.find(t => t.name === name) || {}).color || "#999";
   const held = Object.entries(stored).filter(([k, n]) => n > 0);
   const count = held.reduce((a, [k, n]) => a + n, 0);
   if (!holds && !count) { b.style.display = "none"; return; }
   let dots = "";
-  for (const [k, n] of held) for (let i = 0; i < n; i++) dots += `<i class="full" style="background:${colour(k)}" title="${escapeHtml(k)}"></i>`;
+  for (const [k, n] of held) for (let i = 0; i < n; i++) dots += `<i class="full" style="background:${color(k)}" title="${escapeHtml(k)}"></i>`;
   for (let i = count; i < holds; i++) dots += "<i></i>";
   const words = held.map(([k, n]) => `${n} ${escapeHtml(k)}`).join(", ");
   b.innerHTML = `In the robot: ${dots} <span>${count}${holds ? " / " + holds : ""}${count ? " &middot; " + words : " &middot; empty"}${holds && count >= holds ? " &middot; <b>full: it takes no more until it fires</b>" : ""}</span>`;
@@ -2366,7 +2366,7 @@ function update3d(r, cams) {
 }
 
 // ---------------------------------------------------------------- Layers (the menu over the 3D view)
-// Each is a choice remembered in this browser. What each line means is in docs/guides/simulator.md, "Layers".
+// Each is a choice remembered in this browser. What each line means is in docs/guides/how-the-simulator-works.md#layers.
 const layers = SimView.prefs("simLayers", { sight: true, cone: true, seemap: false, seemapAny: false, arc: true, trails: true, paths: true, size: false });
 function setLayer(name, on) {
   layers[name] = on; layers.save();
@@ -2392,9 +2392,12 @@ for (const [b, m] of [["#viewsBtn", "#viewsMenu"], ["#layersBtn", "#layersMenu"]
     const menu = $(m);
     menu.hidden = !menu.hidden;
     $(b).setAttribute("aria-expanded", menu.hidden ? "false" : "true");
-    // Keep it on the screen (a phone): slide it left as far as it sticks out on the right.
+    // Keep it on the screen (a phone) and inside its own panel (the next panel would cover it):
+    // slide it left as far as it sticks out on the right.
     menu.style.left = "0px";
-    const r = menu.getBoundingClientRect(), over = r.right - (document.documentElement.clientWidth - 8);
+    const panel = $(b).closest("section");
+    const edge = Math.min(document.documentElement.clientWidth, panel ? panel.getBoundingClientRect().right : Infinity) - 8;
+    const r = menu.getBoundingClientRect(), over = r.right - edge;
     if (!menu.hidden && over > 0) menu.style.left = -Math.min(over, r.left - 8) + "px";
   };
 }

@@ -18,7 +18,7 @@ import java.lang.reflect.Proxy;
  *
  * <p>The fields are public on purpose: a test reads and sets them directly.
  *
- * Docs: docs/modules/testkit.md, docs/guides/testing.md
+ * Docs: docs/modules/testkit.md, docs/tests/03-checks-before-practice-and-matches.md
  */
 public class PretendMotor {
     /** The last power sent (-1 to 1). */

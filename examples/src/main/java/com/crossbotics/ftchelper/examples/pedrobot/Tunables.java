@@ -5,12 +5,12 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT
 /**
  * The Pedro bot's numbers, one per line (Pedro's own numbers are in PedroConstants). DEFAULT = the
  * library's default (in brackets).
- * more: https://crossbotics.com/ftc-helper/docs/guides/tunables/
+ * more: https://crossbotics.com/ftc-helper/docs/reference/tunables/
  */
 public class Tunables {
     public static class Drive {
         public static double maxPower = DEFAULT;                    // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower)
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         public static double strafeCorrection = 1.1;                // sideways moves: from the Drive Tuner
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)

@@ -65,7 +65,7 @@ is under `### <question>`; `_No response_` means empty.
 1. Label the problem type: Wrong = `docs-wrong`, Unclear = `docs-unclear`, Missing = `docs-missing`,
    Broken example = `docs-broken-example` (Other: none).
 2. Find the docs file: the "Docs file" answer, or from the page address (`/ftc-helper/docs/guides/finders/`
-   = `docs/guides/finders.md`). Check it exists with Glob. Read the part of it the report names.
+   = `docs/tuning/README.md`). Check it exists with Glob. Read the part of it the report names.
 3. Ask (`needs-info`) only if you cannot tell which page or which part of it, or what they expected.
 4. Search open `docs-feedback` issues for the same page and part: `possible-duplicate` with the number.
 5. Comment only when you ask for something or found a duplicate.

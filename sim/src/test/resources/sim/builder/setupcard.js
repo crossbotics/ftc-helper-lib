@@ -40,7 +40,7 @@ export function openSetupCard(c) {
 					<p><b>Red and blue:</b> ${esc(alliance)}</p>
 					${c.delay != null ? `<p><b>Start delay:</b> ${esc(n1(c.delay))} s (set in the INIT menu)</p>` : ''}
 					${c.first ? `<p><b>First step:</b> ${esc(c.first)}</p>` : ''}
-					<p class="sc-small">Spot: x ${esc(n1(c.x))} in, y ${esc(n1(c.y))} in, heading ${esc(n1(c.h))}° (from the field's centre, seen from your wall; 0° = facing away, + = left).${c.spot === false ? ' The code gives no spot: this is the planned one.' : ''}</p>
+					<p class="sc-small">Spot: x ${esc(n1(c.x))} in, y ${esc(n1(c.y))} in, heading ${esc(n1(c.h))}° (from the field's center, seen from your wall; 0° = facing away, + = left).${c.spot === false ? ' The code gives no spot: this is the planned one.' : ''}</p>
 					<ol class="sc-check">
 						<li>Choose the auto, press INIT, and read the menu out loud.</li>
 						<li>Check the Driver Station says <b>Place robot : ${esc(c.note || '')}</b></li>
@@ -54,7 +54,7 @@ export function openSetupCard(c) {
 	const g = el('g', {}, svg);
 	const fp = footprint(c.x, c.y, c.h, c.robot[0], c.robot[1]);
 	el('polygon', { points: pts(fp), fill: '#101c45', 'fill-opacity': 0.25, stroke: '#101c45', 'stroke-width': 0.8 }, g);
-	// The heading: an arrow from the centre out past the front.
+	// The heading: an arrow from the center out past the front.
 	const r = c.h * Math.PI / 180, f = [-Math.sin(r), Math.cos(r)], s = [Math.cos(r), Math.sin(r)];
 	const L = c.robot[0] / 2 + 6;
 	const tip = [c.x + f[0] * L, c.y + f[1] * L];
@@ -117,7 +117,7 @@ export function numsLabel(nums) {
 }
 
 /**
- * Where to draw each marker's label so no two overlap: [{ ...marker, w (label width), lx, ly (label centre),
+ * Where to draw each marker's label so no two overlap: [{ ...marker, w (label width), lx, ly (label center),
  * moved (true when it had to move off its spot: draw a thin line back to it) }]. A label that would cover one
  * already placed moves down, then up, in label-height steps.
  */
@@ -186,7 +186,7 @@ export function openAutoSheet(c) {
 					<p><b>Start:</b> ${esc(c.note || '(no note yet)')}</p>
 					<p><b>Red and blue:</b> ${esc(alliance)}</p>
 					${Number.isFinite(+c.total) && steps.length ? `<p><b>Planned time:</b> about ${esc(n1(c.total))} s of the 30 s (a plan from the builder's speeds: the real robot may differ)</p>` : ''}
-					<p class="sc-small">Grey box: the start, with an arrow for the front. Thin boxes: the robot after each step that moves it. Dashed box: where it ends. Line: the route. Numbers: where each step ends.</p>
+					<p class="sc-small">Gray box: the start, with an arrow for the front. Thin boxes: the robot after each step that moves it. Dashed box: where it ends. Line: the route. Numbers: where each step ends.</p>
 				</div>
 			</div>
 			<p class="sc-label" style="margin-top:10px">${c.kind === 'path' ? 'The path' : 'The steps'}</p>

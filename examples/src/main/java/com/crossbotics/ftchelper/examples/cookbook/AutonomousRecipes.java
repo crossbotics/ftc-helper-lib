@@ -12,11 +12,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
- * Cookbook: autonomous (docs/cookbook.md#autonomous). An autonomous is one file in autos/: a list of
+ * Cookbook: autonomous (docs/cookbook/09-autonomous.md). An autonomous is one file in autos/: a list of
  * named steps, read in INIT (for the menu and the start note, again when a choice changes; nothing runs)
  * and after ▶ (start on the Driver Hub). Inches, degrees (counterclockwise: 0 forward, 90 left), power 0 to 1. The robot only drives after the
  * Drive Tuner (Tunables.Drive.calibrated = true); the simulator runs it anyway.
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook/README.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class AutonomousRecipes {
@@ -122,17 +122,17 @@ public class AutonomousRecipes {
              .menuYesNo("Score", true)                  // the drivers choose in INIT with the D-pad
              .menuChoice("Park", "Near", "Far")
              .onlyIf("Score")                           // these steps run only if "Score" is yes
-                 .forward("To the goal", Tunables.Auto.toGoalInches, 0.5)
+                 .forward("To the goal", 30, 0.5)
                  .action(Actions.scoreHigh(robot), 5)
              .end()                                     // never forget end()
              // end recipe
              // recipe: auto-park
              .parkWithSeconds(4)                        // the steps below always get the last 4 s
              .onlyIf("Park", "Near")
-                 .right("Park near", Tunables.Auto.parkInches, 0.7)
+                 .right("Park near", 20, 0.7)
              .end()
              .onlyIf("Park", "Far")
-                 .right("Park far", Tunables.Auto.parkInches * 2, 0.7)
+                 .right("Park far", 40, 0.7)
              .end();
             // end recipe
         }
@@ -185,7 +185,7 @@ public class AutonomousRecipes {
     // recipe: auto-shared-opening
     /** The same first steps for several autos: a method that adds them to the list. */
     static Steps scorePreload(Steps s, Robot robot) {
-        return s.forward("To the goal", Tunables.Auto.toGoalInches, 0.5)
+        return s.forward("To the goal", 30, 0.5)
                 .action(Actions.scoreHigh(robot), 5);
     }
     // in each autonomous:  scorePreload(s.start("...", 0), robot).right("Park", 20, 0.7);

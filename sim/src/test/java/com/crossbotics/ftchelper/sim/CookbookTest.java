@@ -36,7 +36,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 /**
- * The cookbook (docs/cookbook.md, examples/.../cookbook): every recipe robot makes a simulator robot
+ * The cookbook (docs/cookbook/README.md, examples/.../cookbook): every recipe robot makes a simulator robot
  * file with no problems, and every recipe OpMode INITs and runs for a moment without an error. So a
  * recipe that compiles but stops at INIT (two jobs on one button, a missing Tunables number) fails here.
  */

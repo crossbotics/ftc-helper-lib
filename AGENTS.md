@@ -19,12 +19,12 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 - `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), one program per
   tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and robots in five files (the five kit bots
   `gobildabot/`, `gobildastraferbot/`, `revbot/`, `andymarkbot/`, `studicabot/`, and `lessonbot/`, `flywheelbot/`, `turretbot/`,
-  `v2bot/` (turret + lift with wrist and claw + an interlock rule), `odometrybot/`, `pedrobot/`, `quickstart/`; docs/templates.md lists them; main-track lesson 1 explains them; `SimFromRobotTest` runs them), and the cookbook's recipes (`cookbook/`, one file per topic,
-  shown in `docs/cookbook.md`; `CookbookTest` in `sim/` INITs and runs every cookbook OpMode).
+  `v2bot/` (turret + lift with wrist and claw + an interlock rule), `odometrybot/`, `pedrobot/`, `quickstart/`; docs/templates.md lists them; docs/five-files/ explains them; `SimFromRobotTest` runs them), and the cookbook's recipes (`cookbook/`, one file per topic,
+  shown in `docs/cookbook/` (one page per topic, the questions list in its README.md); `CookbookTest` in `sim/` INITs and runs every cookbook OpMode).
 - `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new
   module: extend `Module` (or `MotorPositions`/`ServoPositions`), read numbers through `TunableSection`,
-  route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` (its usual buttons: INIT names the ones Controls.java left free) and the same lines in `examples/.../cookbook/UsualButtons.java` and a "buttons to add" in docs/modules/robot.md and
-  `simLines`, a row in docs/modules/robot.md, and its fields in docs/guides/tunables.md and `TunableFields.java`. It must work when `optional()` and missing (built on
+  route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` (its usual buttons: INIT names the ones Controls.java left free) and the same lines in `examples/.../cookbook/UsualButtons.java` and a "Buttons to add" on its reference page and
+  `simLines`, a page in docs/reference/parts/ (with its "In Tunables.java" table) and its fields in `TunableFields.java`. It must work when `optional()` and missing (built on
   `MissingPart`'s stand-in devices, never updated): its "done" questions true, its "busy" ones false
   (`OptionalPartsTest` calls every public method of every module kind that way). `./gradlew :sim:newRobot` (SimNewRobot) guesses modules
   from device names: teach it the new one.
@@ -37,41 +37,51 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   site's path builder: the LIBRARY is their source, the site copies them); it runs plans through `BuiltAuto`
   (names resolved by `BuiltCode`, runs watched by `BuiltRun`). `node tools/check_builder.mjs` checks it. Its scripted
   tests (`FinderSafetyTest`) run whole OpModes: add one when an OpMode's behavior matters (safety,
-  help, buttons). Not part of robot builds. Guide: docs/guides/simulator.md. Parts page:
+  help, buttons). Not part of robot builds. Guide: docs/simulator/README.md. Parts page:
   docs/guides/parts-catalog.md is made from sim/parts/parts.json by tools/parts_page.py (never edit it by hand).
+- `skills/` instructions for TEAMS' AI agents (they reach them through one line in their project's AGENTS.md:
+  docs/guides/ask-an-ai-agent.md). `tools/check_docs.py` fails when a skill names a path that does not exist.
+- `skills/ftc-helper/` the ftc-helper skill: answers teams' "how do I" questions and changes their TeamCode.
+  Its "Where to look" table is the agent's map of the docs: a new docs/ folder must get a row
+  (`tools/check_docs.py` checks it); a moved page, a new main page (like the cookbook) or a new library rule
+  that teams' code must follow (non-blocking, signs, safety) goes in it too. crossbotics.com/llms*.txt (the
+  docs for AI chats) is made from the docs at every site build: nothing to update by hand.
 - `skills/robot-file/` the robot-file skill (for teams' agents): builds a team's simulator robot file. When
   the robot file format or `:sim:fromConfig` changes, update SKILL.md, interview.md and photos.md too.
   - To check a change to an OpMode yourself, write a scenario file and run
     `./gradlew :sim:scenario -Pfile=...` (report: each check ok/FAIL with the value seen; each file starts
     fresh: SimFresh). The page's test recorder (`SimRecorder`, `SimTests`, page code `tests.js`) writes
     scenario files from what a person does; it must only write commands `SimScenario` reads (`SimRecorderTest`).
-  - Lessons: the simulator itself is taught from the start ("Try it in the simulator" in every lesson);
-    simulator TESTS (scenario files, the recorder) only in start lesson 10 (advanced). Early lessons point to it.
+  - Walkthrough pages: the simulator itself is taught from the start ("Try it in the simulator" where it helps);
+    simulator TESTS (scenario files, the recorder) only in docs/tests/. Early pages point to it.
   - `sim/parts/parts.json`: motors and servos with seller-page numbers and the date checked; add a
     part the same way (never from memory). `sim/fields/<season>.json`: one per season, made from the
     official field CAD by a script, not typed by hand. `sim/fields/<season>.rules.json` next to it: the game's rules
     (points, match times, FLOWER heights, tip time, clean-shot rules), typed from the manual with section
     numbers (SimRules; scoring in SimScore, the clean-shot judge in SimCellJudge, a port of the turret
     simulator's judge() checked by SimCellJudgeTest).
-- `docs/` `setup/` (one page per setup step, in order, each ending with "Done when"), `five-files/` (one walkthrough
+- `docs/` `setup/` (one page per setup step, in order, each ending with "Done when"), `pick-your-start/` (the three starts: a starter bot, a common setup, a blank slate; each ends with the five files in TeamCode), `reference/` (look-up pages: one per part in `reference/parts/`, each with "In Robot.java", "In Tunables.java", "Commands" and "Buttons to add"; and Robot.java, Tunables.java, Controls.java, steps; `modules/robot.md` is the robot package's class index), `add-to-robot/` (one walkthrough page per part, after the five files, each with the same five steps; its code is cookbook recipes with `<!-- recipe: name -->` markers), `controls/` (four walkthrough pages after the five files: how buttons work, press types, what the drivers see and feel, moving the library's buttons), `tuning/` (the tuning order, then one page per finder in the Tune and check menu's order, the tuning menu, and fix it by what you see; `tools/check_docs.py` checks the order), `building-autos/` (seven walkthrough pages after the five files: the steps, putting them together, multiple autos, the auto builder, odometry and Pedro, advanced autos (what the builder cannot write), match day; route numbers stay plain numbers in each auto's steps, not `Tunables.Auto`), `five-files/` (one walkthrough
   page per robot file; each page's code is a compiled program in `examples/.../firstrobot/` or a cookbook recipe,
-  shown with a `<!-- recipe: name -->` marker and kept the same by `tools/check_docs.py`), `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
+  shown with a `<!-- recipe: name -->` marker and kept the same by `tools/check_docs.py`), `modules/` (reference: every public class and method), `simulator/` (four walkthrough pages: start it and drive, your robot file, make it match your robot, watch an autonomous; every robot file line is in `reference/robot-file.md`, the test language in `reference/scenario-files.md`, the inside in `guides/how-the-simulator-works.md`, maintainer notes in `contributing.md`), `tests/` (record and run simulator tests; checks before practice and matches), `tutorials/` (the "under the hood" tutorials),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
 - `testing/` the community test list: one file per test in `testing/tests/`, words in `vocabulary.json`,
   `catalogue.json` made by `python3 tools/check_tests.py --fix` (crossbotics.com reads it). A new
   user-facing feature gets a test there. Issue forms in `.github/ISSUE_TEMPLATE/` (their option words
   must match vocabulary.json), the triage helper's guide in `.github/triage.md`. How: `testing/README.md`.
 - `tools/check_docs.py` checks links, heading links, class coverage, tutorial programs, and that every
-  java block in `docs/cookbook.md` matches its `// recipe: name` region in `examples/.../cookbook/`
+  java block in the `docs/cookbook/` pages matches its `// recipe: name` region in `examples/.../cookbook/`
   (after changing one: `python3 tools/check_docs.py --fix-cookbook`). A guide may show a recipe too, with the
-  same `<!-- recipe: name -->` marker (docs/guides/autos.md does): it is checked and fixed the same way.
+  same `<!-- recipe: name -->` marker (the five-files and add-to-robot pages do): it is checked and fixed the same way.
 - `tools/check_tunables.py` finds every Tunables field the robot package reads and checks it against
-  `docs/guides/tunables.md` (the reference: one table per part) and the example robots' Tunables files.
+  the part pages in `docs/reference/parts/` (each has a `<!-- tunables: Key -->` table) and the example robots' Tunables files.
   A module that reads a new field (or reads one through a name that is not a string literal: add it to
   the script's DYNAMIC list) needs a row there, and its name in `robot/TunableFields.java` (INIT stops on
   any field a part does not list there; the script checks the lists match the code).
 
 ## Rules: documentation is part of every change
+
+Every doc page follows `docs/writing-style.md` (US English, short active sentences, why before how, no filler,
+no em dashes, no time estimates). Read it before writing or editing a page.
 
 Every change follows the six steps in `docs/contributing.md`. A change is NOT done until all are done:
 
@@ -93,8 +103,8 @@ Every change follows the six steps in `docs/contributing.md`. A change is NOT do
 
 Also keep current when relevant: `docs/troubleshooting.md` (new common problems),
 `docs/from-last-season.md`, `docs/guides/new-season.md` (rules and SDK facts per season),
-`docs/guides/testing.md` (checklists), `docs/starter-kit.md` and its files, and THIS file
-(when the layout or rules change).
+`docs/tests/03-checks-before-practice-and-matches.md` (checklists), `docs/starter-kit.md` and its files, `skills/ftc-helper/SKILL.md`
+(a new docs section, a moved page, a new rule for teams' code), and THIS file (when the layout or rules change).
 
 Code snippets inside Markdown are not compiled (except the cookbook's, checked against
 `examples/.../cookbook/`): when you change a program, update the matching snippets in its page. When
@@ -127,7 +137,7 @@ an API changes, update the cookbook recipes that use it too; a new user-facing f
 ## Before finishing
 
 ```bash
-./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest :sim:testDebugUnitTest
+./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest :sim:testDebugUnitTest :pedro:testDebugUnitTest
 python3 tools/check_docs.py
 python3 tools/parts_page.py --check
 python3 tools/check_blocking.py

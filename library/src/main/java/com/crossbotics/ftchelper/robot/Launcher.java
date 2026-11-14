@@ -81,7 +81,7 @@ import java.util.List;
  * trim. Double-tap D-pad up: use last time's trim (only when there is one). D-pad right picks the next
  * shot table (with two or more). Each only when that button is free.
  *
- * Docs: docs/modules/robot.md (section "Launcher"), docs/modules/launcher.md
+ * Docs: docs/reference/robot-java.md (section "Launcher"), docs/modules/launcher.md
  */
 public final class Launcher extends Module<Launcher> implements Toggleable {
     private final String motorId;
@@ -160,6 +160,10 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private double shotAngleDeg = Double.NaN;
     // The feed stop's device (feedStop(...)), or null; the parts that push a piece in (pushedBy(...)).
     private String feedStopDevice = null;
+    private String feedStopPartId = null;   // the feed stop servo's catalog id (feedStop(servo, part)), or null
+    private double feedStopMoveSecUsed = 0.1;   // Tunables feedStopMoveSec, as read at INIT
+    // Makes a feed for the Feed Stop Finder's test shot: {hold, release, moveSec, backupSec}. Null = no feed stop.
+    private java.util.function.Function<double[], ShotGate> testGateMaker = null;
     private final java.util.List<Intake> pushers = new java.util.ArrayList<>();
     private ShotGate gate = null;
     // The shot mode: set in code (shotMode(...)), or null = the launcher chooses (see chooseMode()).
@@ -261,6 +265,55 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         if (servo == null || servo.trim().isEmpty()) throw new IllegalArgumentException("Robot.java: " + name() + ".feedStop(name): the servo's configuration name");
         feedStopDevice = servo;
         return this;
+    }
+
+    /**
+     * A feed stop, with its servo's catalog id: the same as {@link #feedStop(String)}, and the Feed Stop
+     * Finder can then work out how long the stop takes to open ({@code feedStopMoveSec}) from the seller's
+     * speed.
+     *
+     * <pre>{@code
+     * .feedStop("feed_stop", "gobilda-2000-speed")
+     * }</pre>
+     *
+     * @param servo     the feed stop servo's configuration name
+     * @param servoPart the servo's catalog id ({@link Parts#servoPart}); a typo stops with the known ids
+     */
+    public Launcher feedStop(String servo, String servoPart) {
+        feedStop(servo);
+        feedStopPartId = Parts.servoPart(servoPart).id;
+        return this;
+    }
+
+    /** The feed stop servo's catalog part ({@link #feedStop(String, String)}), or null when Robot.java gives none. */
+    public Parts.ServoPart feedStopPart() {
+        return Parts.findServo(feedStopPartId);
+    }
+
+    /** Tunables {@code feedStopMoveSec} as read at INIT (0.1 when it is not written). */
+    public double feedStopMoveSec() {
+        return feedStopMoveSecUsed;
+    }
+
+    /**
+     * For the Feed Stop Finder (Tune and check): a test feed that uses these numbers instead of the ones in
+     * Tunables.java. It opens the feed stop, runs the indexer and the pushing parts like a real shot, and
+     * measures the time until the wheel sees the shot. The finder spins the wheel itself
+     * ({@link FeedTest#spin}). Not for TeleOp or autonomous code: use {@link #fire()} there.
+     *
+     * @param hold      the feed stop's hold position, 0 to 1
+     * @param release   its release position, 0 to 1
+     * @param moveSec   how long it takes to open, seconds (the indexer and the pushers wait this long)
+     * @param backupSec the longest a feed may take, seconds (a long one, so a slow piece is still timed)
+     * @return the test feed; it holds the stop at {@code hold} now. A launcher that is missing
+     *         ({@code optional()}) or has no {@code .feedStop(...)} gives one that does nothing (never ready).
+     */
+    public FeedTest feedTest(double hold, double release, double moveSec, double backupSec) {
+        if (missing || testGateMaker == null) return new FeedTest(null, null, pushers, 0, 0, clock);
+        ShotGate g = testGateMaker.apply(new double[] {hold, release, moveSec, backupSec});
+        g.clock = clock;
+        g.start();
+        return new FeedTest(g, flywheel, pushers, speedRpm(), moveSec, clock);
     }
 
     /**
@@ -467,7 +520,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     /**
      * Says which shot table some game-piece kinds use, for {@link #tableFrom}: e.g. with
      * {@code .tableFrom(pieces.nextKind()).tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")} both NECTAR
-     * colours use {@code speedByDistanceNectar}. A kind with the same name as a table needs no line
+     * colors use {@code speedByDistanceNectar}. A kind with the same name as a table needs no line
      * ("POLLEN" uses "pollen"). "NONE" and "UNKNOWN" (from {@code Pieces}) never change the table.
      *
      * @param table the table's name ("nectar")
@@ -566,6 +619,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         // A feed stop or pushing parts: one feed opens the stop, runs the pushers and the indexer, and
         // ends when the wheel sees the shot (ShotGate).
         gate = null;
+        testGateMaker = null;
         if (feedWheelOutWith != null && feedWheel == null) {
             throw new IllegalStateException("Robot.java: " + name() + ".feedWheelOutWith(" + feedWheelOutWith.name()
                     + ") needs a feed wheel: add .feedWheel(Indexer.crServo(\"...\")) to the launcher, or take feedWheelOutWith out");
@@ -611,6 +665,17 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 gate.wheelBacksOutWhile(() -> out.isPushingOut() && !part.isShooting());
             }
             gate.clock = clock;
+            feedStopMoveSecUsed = moveSec;
+            if (stopServo != null) {
+                // The same feed for the Feed Stop Finder's test shot, with the finder's numbers (feedTest).
+                final com.qualcomm.robotcore.hardware.Servo testServo = stopServo;
+                final Feeder testIndexer = indexer != null && !indexer.missing ? feed : null;
+                final boolean testPusher = indexer != null && indexer.isServo();
+                final Indexer testWheel = feedWheel != null && !feedWheel.missing ? feedWheel : null;
+                final Flywheel testFlywheel = flywheel;
+                testGateMaker = v -> new ShotGate(testServo, v[0], v[1], v[3], testIndexer, testPusher, pushers,
+                        assistSec, v[2], testFlywheel, () -> false, testWheel, () -> true);
+            }
             feed = gate;
         }
         part = new com.crossbotics.ftchelper.launcher.Launcher(flywheel, feed)
@@ -706,7 +771,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         }
         if (distanceFromOdometry && !robot.aim().hasGoalPoint()) {
             throw new IllegalStateException(name() + ".speedFromOdometry() needs the goal on the field: "
-                    + "Tunables.Aim { public static double goalX = ..., goalY = ...; } (inches, see docs/modules/robot.md#aim)");
+                    + "Tunables.Aim { public static double goalX = ..., goalY = ...; } (inches, see docs/reference/parts/aim.md)");
         }
         if (!tables.isEmpty()) {
             String first = tables.containsKey("main") ? "main" : tables.keySet().iterator().next();
@@ -756,9 +821,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     String toolFor(String field) {
-        if (field.equals("speedRpm") || field.startsWith("speedByDistance")) return "the Shot Tuner, docs/guides/finders.md#shot-tuner-the-shot-table";
+        if (field.equals("speedRpm") || field.startsWith("speedByDistance")) return "the Shot Tuner, docs/tuning/13-shot-tuner.md";
         if (field.startsWith("k") || field.equals("nominalVolts") || field.equals("shotIntervalSec")) {
-            return "the Flywheel Finder, docs/guides/finders.md#flywheel-finder-gains-and-recovery";
+            return "the Flywheel Finder, docs/tuning/06-flywheel-finder.md";
         }
         return null;
     }
@@ -1037,7 +1102,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         part.spinUp();
     }
 
-    // The eject is over (done, cancelled or given up): no piece on its way, and the wheel as it was.
+    // The eject is over (done, canceled or given up): no piece on its way, and the wheel as it was.
     private void endEject() {
         ejecting = false;
         part.stopShooting();

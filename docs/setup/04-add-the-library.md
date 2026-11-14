@@ -1,7 +1,7 @@
 # Set up 4: add the library
 
-**Set up, page 4 of 9.** Do it **once per robot project**, usually a mentor or the
-code lead. After it is committed and pushed, everyone who clones the project gets the library.
+Do it **once per robot project**, usually a mentor or the
+code lead. After you commit and push it, everyone who clones the project gets the library.
 
 **Skip this page** if there is already an `ftc-helper-lib` folder next to `TeamCode`, with files in it.
 
@@ -29,7 +29,7 @@ git submodule add https://github.com/crossbotics/ftc-helper-lib.git ftc-helper-l
 
 A new folder, `ftc-helper-lib`, is now next to `TeamCode`.
 
-Want a fixed version instead of the newest? See [Use a specific version](../02-keep-up-to-date.md#use-a-specific-version)
+For a fixed version instead of the newest, read [Use a specific version](../02-keep-up-to-date.md#use-a-specific-version)
 after this page.
 
 ## Step 2: tell Gradle about the library
@@ -95,7 +95,7 @@ Files**). Wait until it finishes with no red errors.
    ```
 
 3. Build: **Build > Make Project** (or the hammer: [the buttons](06-build-and-install.md#the-buttons)).
-   It builds? The library is in. **Why it proves it:** the `import com.crossbotics...` line only works
+   When it builds, the library is in. **Why it proves it:** the `import com.crossbotics...` line only works
    when the library is there.
 4. Delete `HelperCheck.java`.
 
@@ -111,21 +111,23 @@ git commit -m "Add ftc-helper-lib"
 git push
 ```
 
-GitHub Desktop: tick those four, type the message, **Commit to main**, then **Push origin**.
+In GitHub Desktop: tick those four, type the message, click **Commit to main**, then click **Push origin**.
 
 ## The simulator buttons (you do nothing)
 
 At each Gradle sync, the library adds three entries to the run list ([the buttons](06-build-and-install.md#the-buttons)):
 
-- **Simulator:** a pretend robot on your laptop, in your browser ([the simulator](../guides/simulator.md)).
+- **Simulator:** a pretend robot on your laptop, in your browser ([the simulator](../simulator/README.md)).
 - **Simulator tests:** runs your project's simulator tests.
 - **Update library:** gets the newest library version ([Keep it up to date](../02-keep-up-to-date.md#update-the-update-library-button)).
 
-Not in the list? **File > Close Project**, then open the project again.
-Don't want them? Write `simulatorButtons=false` in your project's `gradle.properties`.
+If they are not in the list, click **File > Close Project**, then open the project again.
+To turn them off, write `simulatorButtons=false` in your project's `gradle.properties`.
 
 ## Done when
 
-The test build passed, `HelperCheck.java` is deleted, and the change is pushed.
+The test build passed, you deleted `HelperCheck.java`, and you pushed the change.
 
 **Next:** [Update the hubs](05-update-the-hubs.md).
+
+**Look it up:** [Keep the library up to date](../02-keep-up-to-date.md) and [The simulator](../simulator/README.md).

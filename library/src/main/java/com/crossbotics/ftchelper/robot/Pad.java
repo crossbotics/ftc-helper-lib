@@ -30,10 +30,10 @@ import java.util.function.DoubleConsumer;
  * <p>Each button takes ONE job, or several gestures (tap, hold, double-tap, tap then hold, N taps,
  * held for N seconds). Two jobs on one button in Controls.java stop the program at INIT with the
  * button's name; a job you put on a button the modules suggested replaces their suggestion.
- * The full menu: docs/guides/buttons.md.
+ * The full menu: docs/controls/README.md.
  * The help on the Driver Station (in INIT) shows the whole map.
  *
- * Docs: docs/modules/robot.md (section "Controls")
+ * Docs: docs/reference/robot-java.md (section "Controls")
  */
 public final class Pad {
     /** Face buttons. */

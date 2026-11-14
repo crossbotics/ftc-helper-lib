@@ -87,7 +87,7 @@ public final class SimNewRobot {
 
     // A light: its rules go in Controls.java (which color, when).
     private static Part lightPart(Part p) {
-        p.note = "TODO its rules in Controls.java, e.g. robot." + p.field + ".show(LightColor.GREEN).when(...) (docs/modules/robot.md#lights)";
+        p.note = "TODO its rules in Controls.java, e.g. robot." + p.field + ".show(LightColor.GREEN).when(...) (docs/reference/parts/lights.md)";
         return p;
     }
 
@@ -124,7 +124,7 @@ public final class SimNewRobot {
         }
         System.out.println("Next: read the TODO lines in Robot.java, then try it in the simulator: in Android Studio, pick "
                 + "Simulator in the list next to the green Run button and click Run (or ./gradlew :sim:run). "
-                + "Tutorial: docs/tutorials/start/01-robot-in-five-files.md");
+                + "Tutorial: docs/five-files/README.md");
     }
 
     /**
@@ -305,7 +305,7 @@ public final class SimNewRobot {
                     break;
                 case "color":
                 case "distance": {
-                    // A piece sensor alone; with your kinds, it can go into a Pieces line (docs/modules/robot.md).
+                    // A piece sensor alone; with your kinds, it can go into a Pieces line (docs/reference/robot-java.md).
                     Part p = new Part("PieceSensor", field, "PieceSensor." + kind + "(" + q(d.name) + ").kinds(\"PIECE\")" + ren, section)
                             .num("nearMm", "DEFAULT");
                     p.note = "TODO your kinds of piece (e.g. \"POLLEN\", \"NECTAR\"), then the Piece Tuner";
@@ -433,7 +433,7 @@ public final class SimNewRobot {
         sb.append(" * ./gradlew :sim:newRobot from the configuration: check every TODO.\n");
         sb.append(" *\n");
         sb.append(" * <p>The numbers are in Tunables.java, the buttons in Controls.java, steps that use several parts\n");
-        sb.append(" * in Actions.java, the autonomous programs in autos/. Guide: ftc-helper-lib docs/modules/robot.md\n");
+        sb.append(" * in Actions.java, the autonomous programs in autos/. Guide: ftc-helper-lib docs/reference/robot-java.md\n");
         sb.append(" */\n");
         sb.append("public class Robot extends RobotDefinition {\n");
         for (Part p : parts) sb.append("    public ").append(p.type).append(' ').append(p.field).append(";\n");
@@ -458,7 +458,7 @@ public final class SimNewRobot {
         }
         sb.append(");\n");
         if (odometry != null) {
-            sb.append("        // TODO the Odometry Tuner (lesson 7) measures where the pods / sensor sit, then set\n");
+            sb.append("        // TODO the Odometry Tuner (Tune and check) measures where the pods / sensor sit, then set\n");
             sb.append("        //      Tunables.Odometry.checked = true\n");
             sb.append("        odometry(").append(odometry).append(");\n");
         }
@@ -484,7 +484,7 @@ public final class SimNewRobot {
         sb.append(" * CamelCase). DEFAULT = the library's starting value (from the parts catalog where\n");
         sb.append(" * Robot.java names the motor or servo; INIT shows each one). MEASURE = a number you find on the\n");
         sb.append(" * robot: INIT stops on it and names the tool (Motor Finder, Servo Finder, Hood Finder). Write\n");
-        sb.append(" * each number in place of its word once you have it (docs/guides/tunables.md).\n");
+        sb.append(" * each number in place of its word once you have it (docs/reference/tunables.md).\n");
         sb.append(" *\n");
         sb.append(" * <p>Tune on the robot with the tuning menu (GUIDE on gamepad 1, PRACTICE profile): INIT then lists\n");
         sb.append(" * every value that differs from this file, ready to copy back. This file stays the record.\n");
@@ -492,7 +492,7 @@ public final class SimNewRobot {
         sb.append("public class Tunables {\n");
         sb.append("    /** calibrated: set true after the Drive Tuner (autonomous refuses to run before). */\n");
         sb.append("    public static class Drive {\n");
-        sb.append("        public static double maxPower = 1.0, practiceMaxPower = 0.6, slowSpeed = 0.3;\n");
+        sb.append("        public static double maxPower = 1.0, slowSpeed = 0.3;\n");
         sb.append("        public static double strafeCorrection = DEFAULT, turnKp = DEFAULT;\n");
         sb.append("        public static double turnKd = DEFAULT, moveMinPower = DEFAULT;\n");
         sb.append("        public static boolean calibrated = false;\n");
@@ -517,10 +517,7 @@ public final class SimNewRobot {
             }
             sb.append(";\n    }\n");
         }
-        sb.append("\n    /** Distances (inches) and speeds (0 to 1) for the autonomous programs. */\n");
-        sb.append("    public static class Auto {\n");
-        sb.append("        public static double leaveInches = 24, leavePower = 0.5;\n");
-        sb.append("    }\n}\n");
+        sb.append("}\n");   // no Auto section: each autonomous keeps its own numbers in its steps
         return sb.toString();
     }
 
@@ -688,7 +685,6 @@ public final class SimNewRobot {
         return "package " + pkg + ".autos;\n\n"
                 + "import com.qualcomm.robotcore.eventloop.opmode.Autonomous;\n"
                 + "import " + pkg + ".Robot;\n"
-                + "import " + pkg + ".Tunables;\n"
                 + "import com.crossbotics.ftchelper.robot.Auto;\n"
                 + "import com.crossbotics.ftchelper.robot.Steps;\n\n"
                 + "/**\n"
@@ -701,7 +697,7 @@ public final class SimNewRobot {
                 + "    @Override\n"
                 + "    protected void steps(Steps s, Robot robot) {\n"
                 + "        s.start(\"TODO where to place the robot\", 0)\n"
-                + "         .move(\"Leave\", Tunables.Auto.leaveInches, 0, Tunables.Auto.leavePower);\n"
+                + "         .forward(\"Leave\", 24, 0.5);   // inches, then the most power (0 to 1)\n"
                 + "    }\n"
                 + "}\n";
     }

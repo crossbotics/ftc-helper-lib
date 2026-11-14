@@ -39,7 +39,7 @@ import java.util.Set;
  * with no extra Gradle lines. It is a few small classes; nothing in it runs on the robot unless a test
  * makes it.
  *
- * Docs: docs/modules/testkit.md, docs/guides/testing.md
+ * Docs: docs/modules/testkit.md, docs/tests/03-checks-before-practice-and-matches.md
  */
 public class PretendDevices implements Devices {
     private final Map<String, PretendMotor> motors = new HashMap<>();

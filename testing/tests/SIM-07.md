@@ -8,7 +8,7 @@ minutes: 20
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
 since: v0.18.3
-docs: [setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing, guides/simulator.md#start-it]
+docs: [setup/04-add-the-library.md#the-simulator-buttons-you-do-nothing, simulator/01-start-and-drive.md]
 ---
 
 ## Why
@@ -21,7 +21,7 @@ We tested them on a Mac. We need Windows, Linux and Chromebook results most.
 
 - Your robot project in Android Studio, with the library in `ftc-helper-lib` and your code in five files.
 - The buttons in the list next to the green Run button. The library adds them at the Gradle sync; the first time on a laptop, close the project (**File > Close Project**) and open it again. Write down if they were not there after that.
-- At least one test in `simulator/scenarios` (record one: start lesson 10), for step 6.
+- At least one test in `simulator/scenarios` (record one: [Record a test](../../docs/tests/01-record-a-test.md)), for step 6.
 
 ## Steps
 

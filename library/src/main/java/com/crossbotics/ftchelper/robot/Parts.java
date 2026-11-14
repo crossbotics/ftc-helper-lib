@@ -14,12 +14,12 @@ import java.util.Set;
  * <p>The numbers are copied from the parts catalog, which has each seller's page and the date it was
  * checked; a test checks that they still match it.
  *
- * Docs: docs/modules/robot.md (section "Shapes")
+ * Docs: docs/reference/robot-java.md (section "Shapes")
  */
 public final class Parts {
     private Parts() { }
 
-    /** One wheel or roller: its size in millimetres. */
+    /** One wheel or roller: its size in millimeters. */
     public static final class Wheel {
         /** The parts catalog id, e.g. "gobilda-hogback-96". */
         public final String id;
@@ -95,6 +95,20 @@ public final class Parts {
         public double fullMoveSec(boolean fullRange) {
             double deg = fullRange ? rangeDeg : sdkRangeDeg();
             return deg / 60.0 * secPer60Deg;
+        }
+
+        /**
+         * About how long a move between two positions takes, from the seller's speed with no load: for
+         * example how long a feed stop takes to open (goBILDA 2000 speed, 0.150 to 0.550 on the normal range:
+         * 108 degrees at 0.11 s per 60 = 0.20 s). A real servo with a load is a little slower: add some time.
+         *
+         * @param from      the position it starts at, 0 to 1
+         * @param to        the position it goes to, 0 to 1
+         * @param fullRange true with {@code .fullRange()} (0 to 1 is the servo's whole turn)
+         * @return seconds, or NaN when the catalog lacks the servo's turn or speed
+         */
+        public double moveSec(double from, double to, boolean fullRange) {
+            return Math.abs(to - from) * fullMoveSec(fullRange);
         }
 
         /**
@@ -268,7 +282,7 @@ public final class Parts {
         if (s == null) {
             throw new IllegalArgumentException("Robot.java: no servo \"" + id + "\" in the parts catalog. Known: " + SERVOS.keySet()
                     + ". A servo that is not in the catalog: Parts.customServo(\"" + id + "\", rangeDeg, secPer60Deg) "
-                    + "(docs/modules/robot.md#parts-not-in-the-catalog)");
+                    + "(docs/reference/robot-java.md#parts-not-in-the-catalog)");
         }
         return s;
     }

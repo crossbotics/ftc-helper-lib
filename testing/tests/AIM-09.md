@@ -8,7 +8,7 @@ minutes: 15
 needs: [limelight|webcam]
 kit_bots: []
 since: v0.38.0
-docs: [modules/vision.md#cameratilt, tutorials/start/09-shooter-and-camera.md#5-a-camera-that-knows-the-goal]
+docs: [modules/vision.md#cameratilt, add-to-robot/07-camera.md]
 ---
 
 ## Why

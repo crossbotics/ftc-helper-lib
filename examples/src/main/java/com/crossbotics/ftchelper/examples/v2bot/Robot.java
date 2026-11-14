@@ -22,7 +22,7 @@ import com.crossbotics.ftchelper.robot.Wrist;
 
 /**
  * The V2 robot, file 1 of 5: a turret shooter AND a lift with a wrist and a claw, with an interlock
- * rule so the turret and the claw never hit each other. Modelled on team 8938's 2026-27 designs;
+ * rule so the turret and the claw never hit each other. Modeled on team 8938's 2026-27 designs;
  * every number not measured on a built robot says "example".
  * more: https://crossbotics.com/ftc-helper/docs/guides/interlocks/#the-v2-robot
  */

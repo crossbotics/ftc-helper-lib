@@ -1,12 +1,10 @@
 # Tunables.java: the numbers
 
-**The five files, page 2 of 5.**
-
 `Tunables.java` holds your robot's **numbers**: how fast it drives, how far the lift goes, how fast the
-launcher spins. `Robot.java` says which parts the robot has; `Tunables.java` says their numbers.
+launcher spins. `Robot.java` says which parts the robot has. `Tunables.java` says their numbers.
 
-**Why a separate file:** you change numbers all season. Here you can change them without touching the
-code that works.
+**Why a separate file:** you change numbers all season. In their own file, you can change them without
+touching the code that works.
 
 ## The smallest Tunables.java
 
@@ -21,7 +19,7 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASU
 public class Tunables {
     public static class Drive { // (2)!
         public static double maxPower = 0.5;                        // top wheel power: slow for the first drives (1.0) (3)!
-        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6) (4)!
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (same as maxPower) (4)!
         public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
         public static double strafeCorrection = DEFAULT;            // sideways moves: the Drive Tuner finds it (1.15)
         public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
@@ -61,19 +59,20 @@ CamelCase: each word starts with a capital letter, with no `_` and no spaces.
 | `Launcher.flywheel("shooter", ...)` | `Shooter` |
 
 **One number per line.** Write it as `public static double name = value;`, or
-`public static boolean name = true;` for an on/off setting. `public static` is needed: the library cannot
-read a number without it. Names count, with their capitals: `maxPower` works, `MaxPower` does not.
+`public static boolean name = true;` for an on/off setting. Always write `public static`, because the
+library cannot read a number without it. The name must match exactly, with its capitals: `maxPower` works,
+`MaxPower` does not.
 
 **What to write for each number:**
 
 | The number | Write | At INIT |
 | --- | --- | --- |
-| You know it | the number | it is used |
-| A tuning number you do not know yet (a speed, `kP`) | `DEFAULT` | the library's starting value is used |
+| You know it | the number | the library uses it |
+| A tuning number you do not know yet (a speed, `kP`) | `DEFAULT` | the library uses its starting value |
 | A safety limit or a servo position only your robot can give (a lift's `min`, a claw's `open`) | `MEASURE` | the TeleOp and autos **stop** and name the tool that finds it |
 
 **Why `MEASURE` stops:** a guessed limit or servo position can drive a part into the frame and break it.
-A guessed tuning number only makes a part slow or soft. More: [DEFAULT and MEASURE](../guides/tunables.md#default-and-measure).
+A guessed tuning number only makes a part slow or soft. More: [DEFAULT and MEASURE](../reference/tunables.md#default-and-measure).
 
 **Your own numbers.** A section that no part reads is yours, for example `Score` for a wait in one of
 your actions. Your code reads it as `Tunables.Score.dropWaitSec`. An autonomous's distances stay in its
@@ -84,30 +83,31 @@ own file ([why](05-autos.md#the-numbers-are-in-the-step)).
 | Number | Needed? | What it sets | If you leave it out | Found with |
 | --- | --- | --- | --- | --- |
 | `maxPower` | optional | the most power the wheels get | Defaults to 1.0 | test: lower it for new drivers |
-| `practiceMaxPower` | optional | the most power in the PRACTICE profile | Defaults to 0.6 | test |
+| `practiceMaxPower` | optional | the most power in the PRACTICE profile | Defaults to `maxPower` (practice at match speed) | test: lower only for a new driver's first day |
 | `slowSpeed` | optional | the most power while the slow trigger is pulled | Defaults to 0.3 | test |
 | `strafeCorrection` | recommended (mecanum) | makes autonomous sideways moves the right length | Defaults to 1.15 | the Drive Tuner |
 | `turnKp` | optional | how hard an autonomous turn pushes, per degree off | Defaults to 0.012 | test: turns stop short (more) or wobble (less) |
 | `turnKd` | optional | how much an autonomous turn brakes near the end | Defaults to 0.003 | test: turns overshoot (more) |
-| `moveMinPower` | optional | the least power that still moves the robot | Defaults to 0.30 | test: it stops just short (more) |
+| `moveMinPower` | optional | the least power that still moves the robot | Defaults to 0.30 | test: it stops a little short (more) |
 | `calibrated` | **yes**, for autonomous | autonomous drives only when it is `true` | Defaults to `false`: autonomous will not drive | the Drive Tuner, then set it |
 
-Every drive number, with its units: [Tunables: Drive](../guides/tunables.md#drive).
+Every drive number, with its units: [Tunables: Drive](../reference/parts/drive.md#in-tunablesjava).
 
 ## Tune a number, then copy it back
 
 You find most numbers on the robot, with a finder or by testing. Two ways give you a number:
 
 - **A finder** (Tune and check, on the Driver Hub) measures it and shows the line to copy, for example
-  `Tunables.Drive: strafeCorrection = 1.210`. The finders: [Tune and check](../guides/finders.md).
-- **The tuning menu** changes a number while the robot runs: PRACTICE profile, after ▶ hold **GUIDE** for
-  1 second, D-pad to choose and change, **A** to save ([tuning menu](../guides/tuning.md)).
+  `Tunables.Drive: strafeCorrection = 1.210`. The finders: [Tune and check](../tuning/README.md).
+- **The tuning menu** changes a number while the robot runs. In the PRACTICE profile, after ▶, hold
+  **GUIDE** for 1 second. Use the D-pad to choose and change a number, and press **A** to save
+  ([tuning menu](../tuning/16-live-tuning.md)).
 
 **Copy every number back into `Tunables.java`, then build and install.** The next INIT lists the numbers
 saved on the hub under "Tuned on this robot (copy into Tunables.java)".
 
-**Why:** a number saved only on the Control Hub is lost with a new hub, and it is not in the team's code.
-The file is the team's record.
+**Why:** when you save a number only on the Control Hub, a new hub loses it, and the team's code does not
+have it. The file is the team's record.
 
 ## Check it
 
@@ -118,8 +118,9 @@ numbers it used. A `MEASURE` stops INIT and names the tool that finds the number
 
 ## A part's numbers
 
-When you add a part to `Robot.java`, add its section here. Below: the two common parts' sections. Each
-shows the part's lines, most set to `DEFAULT` or `MEASURE` (a few have example numbers), so you can see what there is to change.
+When you add a part to `Robot.java`, add its section here. The sections below are for the two common
+parts. Each one shows the part's lines, so you can see what there is to change. Most lines are set to
+`DEFAULT` or `MEASURE`, and a few have example numbers.
 
 ### Intake
 
@@ -133,7 +134,7 @@ public static class Intake {                                    // "intake" in t
 
 | Number | Needed? | What it sets | If you leave it out | Found with |
 | --- | --- | --- | --- | --- |
-| `inPower` | optional | power while it takes pieces in, 0 to 1 | Defaults to 1.0 | test: pieces are thrown or jam (less) |
+| `inPower` | optional | power while it takes pieces in, 0 to 1 | Defaults to 1.0 | test: it throws pieces, or they jam (less) |
 | `outPower` | optional | power while it pushes pieces out, 0 to 1 | Defaults to 0.7 | test: pieces do not come out (more) |
 
 ### Launcher
@@ -162,7 +163,7 @@ public static class Launcher {                                  // "launcher" in
 | `speedRpm` | recommended | the shot speed, in RPM | Defaults to 60% of the motor's top speed | the Shot Tuner, or test |
 | `kP`, `kI`, `kD`, `kF` | recommended | the hub's speed control | Defaults to numbers worked out from the motor | the Flywheel Finder |
 | `readyBandRpm` | optional | "at speed" means this close to the target | Defaults to 60 | test: it waits too long to fire (more) |
-| `idleRpm` | optional | the speed between shots; 0 = stop | Defaults to 0 | test: the first shot spins up too slowly |
+| `idleRpm` | optional | the speed between shots. 0 = stop | Defaults to 0 | test: the first shot spins up too slowly |
 | `stepRpm` | optional | one D-pad press changes the speed by this | Defaults to 100 | the drivers' choice |
 | `shotIntervalSec` | optional | the least time between two shots | Defaults to 0.25 | the Flywheel Finder |
 | `speedByDistance` | optional | the shot table: `{inches, RPM}` rows, for a robot with a camera | Defaults to none: `speedRpm` always | the Shot Tuner |
@@ -179,22 +180,23 @@ public static class Indexer {                                   // "indexer" in 
 }
 ```
 
-`rest` and `push` are **needed**: they are servo positions only your robot can give (the Servo Finder).
-Every launcher and feeder number: [Launcher](../guides/tunables.md#launcher),
-[Indexer](../guides/tunables.md#indexer).
+`rest` and `push` are **needed**: they are servo positions only your robot can give. The Servo Finder
+finds them.
+Every launcher and feeder number: [Launcher](../reference/parts/launcher.md#in-tunablesjava),
+[Indexer](../reference/parts/indexer.md#in-tunablesjava).
 
 ### The other parts
 
 | Part | Its numbers |
 | --- | --- |
-| Lift, Arm | [Lift and Arm](../guides/tunables.md#lift-and-arm): `min` and `max` are **needed** |
-| Claw, Wrist, Positioner | [Claw, Wrist and Positioner](../guides/tunables.md#claw-wrist-and-positioner): the positions are **needed** |
-| Turret | [Turret](../guides/tunables.md#turret) |
-| Camera | [Camera](../guides/tunables.md#camera) |
-| Lights | [Lights](../guides/tunables.md#lights) |
+| Lift, Arm | [Lift and Arm](../reference/parts/lift.md#in-tunablesjava): `min` and `max` are **needed** |
+| Claw, Wrist, Positioner | [Claw, Wrist and Positioner](../reference/parts/claw.md#in-tunablesjava): the positions are **needed** |
+| Turret | [Turret](../reference/parts/turret.md#in-tunablesjava) |
+| Camera | [Camera](../reference/parts/camera.md#in-tunablesjava) |
+| Lights | [Lights](../reference/parts/lights.md#in-tunablesjava) |
 
 ---
 
 **Next:** [Controls.java](03-controls-java.md).
-**Look it up:** [every number of every part](../guides/tunables.md). **Go deeper:**
-[the finders](../guides/finders.md) and [the tuning menu](../guides/tuning.md).
+**Look it up:** [every number of every part](../reference/tunables.md). **Go deeper:**
+[the finders](../tuning/README.md) and [the tuning menu](../tuning/16-live-tuning.md).

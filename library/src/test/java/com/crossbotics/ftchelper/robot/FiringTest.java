@@ -128,7 +128,7 @@ public class FiringTest {
         }
     }
 
-    // Review (Codex): a cancelled firing action must not let the indexer push after the feed stop's delay.
+    // Review (Codex): a canceled firing action must not let the indexer push after the feed stop's delay.
     @Test public void aCancelledFireNeverPushesLate() throws Exception {
         PretendDevices d = new PretendDevices();
         IndexerBot r = new IndexerBot();
@@ -290,7 +290,7 @@ public class FiringTest {
         assertEquals("3000 rpm, -1% BLUE alliance trim", 2970, r.launcher.targetRpm(), 1e-6);
     }
 
-    // Review (Codex): a cancelled eject goes back to what the wheel did, and an explicit stop stays stopped.
+    // Review (Codex): a canceled eject goes back to what the wheel did, and an explicit stop stays stopped.
     @Test public void aCancelledEjectGoesBackAndStopStaysStopped() {
         PretendDevices d = new PretendDevices();
         Bot r = new Bot();

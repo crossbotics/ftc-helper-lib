@@ -1,15 +1,14 @@
 # Controls.java: the buttons, and the TeleOp
 
-**The five files, page 3 of 5.**
-
 `Controls.java` is your TeleOp: the program the drivers pick on the Driver Hub. It says what each button
-does. The library's own buttons (driving, pause, the button map) are always pre-assigned. Each part's
-buttons are lines in this file, so you can read and change every one.
+does. The library always sets up its own buttons (driving, pause, the button map). Each part's buttons
+are lines in this file, so you can read and change every one.
 
 ## The smallest Controls.java
 
-This is a whole `Controls.java`. The robot has no parts yet, so it has no buttons of its own: it drives on
-the library's buttons, which are written out so you can see each one, with a line for every free button. Click a **(+)** to read what a line does.
+This is a whole `Controls.java`. The robot has no parts yet, so it has no buttons of its own. It drives on
+the library's buttons. The file writes them out so you can see each one, and it has a line for every free
+button. Click a **(+)** to read what a line does.
 
 <!-- recipe: first-controls -->
 ```java title="Controls.java"
@@ -64,13 +63,15 @@ public class Controls extends ControlMap<Robot> { // (2)!
 1. The TeleOp's name in the Driver Hub's list. Change it to your robot's name.
 2. `ControlMap<Robot>`: a TeleOp for the robot in your `Robot.java`. The library runs the loop, drives,
    and keeps every part updated.
-3. `true`: one driver does everything on gamepad 1. `false`: two drivers, gamepad 1 drives and
-   gamepad 2 runs the parts.
-4. **Always there:** the library's own buttons, one line each. These lines are the defaults: without this
-   method, the buttons are the same. Change a line to move a button; `null` = no button.
+3. `true`: one gamepad. The driver drives and runs the parts, and `g2` lines are on gamepad 1 too.
+   Most teams start here. `false`: add gamepad 2 when you want to split the work, or for jobs that are
+   hard to do while you drive (like arm control). Then the `g2` lines move to gamepad 2
+   ([One gamepad, and a second one](../controls/01-how-buttons-work.md#one-gamepad-and-a-second-one-when-you-want-it)).
+4. **Always there:** the library's own buttons, one line each. These lines are the defaults, so without
+   this method the buttons are the same. Change a line to move a button. `null` = no button.
 5. BACK pauses the robot at once: every motor stops. Keep it on a button: it is the drivers' safety stop.
-6. **Every other button is a line here.** A part has no buttons until you add its lines: each part's
-   usual lines are in the reference ([Intake: buttons to add](../modules/robot.md#intake-buttons-to-add),
+6. **Every other button is a line here.** A part has no buttons until you add its lines. The reference
+   has each part's usual lines ([Intake: buttons to add](../reference/parts/intake.md#buttons-to-add),
    and the same for every part).
 7. **Every free button has a line,** so you see what you can use. Replace `free()` with a job. When you add
    a part's lines, delete the `free()` lines of the buttons they use: one line per button.
@@ -90,53 +91,65 @@ With `Robot.java`, `Tunables.java` and this file, the robot drives.
 3. On the Driver Hub, pick **First Robot TeleOp** and press **INIT**. The screen shows the button map.
 4. Press **▶**. Push the left stick forward: all four wheels turn forward.
 5. Take it off the block and drive. `Tunables.Drive.maxPower = 0.5` keeps it slow.
+6. Check each one:
+   - Stick up = forward, stick down = back, right stick right = turn clockwise.
+   - Mecanum: left stick right = slide right, in a straight line.
+   - Slow: pull LT (two gamepads; the further you pull, the slower), or click the left stick (one gamepad).
+   - Mecanum: double-tap Y, or the right stick click with one gamepad (two buzzes: field-centric on). Turn the robot 90 degrees, and push the stick
+     up. The robot still goes away from you.
+   - Tap BACK: every part stops and the Driver Hub says PAUSED. Tap BACK again: it drives.
+
+**Robot-centric and field-centric.** Robot-centric (the start): stick up = the way the robot faces.
+Field-centric: stick up = away from the driver, whichever way the robot faces. "Away" is the way the robot
+faced at INIT, or what the autonomous left. When it is wrong: turn field-centric on, point the robot away
+from you, and hold BACK 1 s (one buzz).
 
 **In the simulator:** pick **Simulator** in the run list and click **Run**. Then pick the TeleOp on the
 simulator's Driver Hub.
 
 **Done when:** the robot drives forward, back, sideways (mecanum) and turns, the way the sticks say.
 
-A wheel turns the wrong way? Fix it in `Robot.java`: [a wheel turns the wrong way](01-robot-java.md#a-wheel-turns-the-wrong-way).
+When a wheel turns the wrong way, fix it in `Robot.java`: [a wheel turns the wrong way](01-robot-java.md#a-wheel-turns-the-wrong-way).
 
 ## Two kinds of buttons
 
-**Always pre-assigned: the library's own**, on gamepad 1. You write nothing for them, and they are there
-in every TeleOp. **Why:** BACK must always pause the robot, even in a file with a mistake.
+**The library's own buttons are always there**, on gamepad 1. You write nothing for them, and every
+TeleOp has them. **Why:** BACK must always pause the robot, even in a file with a mistake.
 
-| Job | Two drivers | One driver (`oneDriver = true`) |
+| Job | One gamepad (`oneDriver = true`) | Two gamepads |
 | --- | --- | --- |
 | Drive and slide | left stick | left stick |
 | Turn | right stick, left and right | right stick, left and right |
-| Slow | LT (the further, the slower) | left stick click: slow on/off |
-| Field-centric on/off (mecanum) | Y (a double tap) | right stick click (a double tap) |
+| Slow | left stick click: slow on/off | LT (the further, the slower) |
+| Field-centric on/off (mecanum) | right stick click (a double tap) | Y (a double tap) |
 | Pause / go on | BACK (a tap) | BACK (a tap) |
 | Button map on the screen | GUIDE (a tap) | GUIDE (a tap) |
 | Tuning menu | GUIDE (held 1 s) | GUIDE (held 1 s) |
 | Choose the alliance (in INIT) | X = BLUE, B = RED | X = BLUE, B = RED |
 
-To move one: [Moving the library's buttons](../guides/buttons.md#moving-the-librarys-buttons).
+To move one: [Moving the library's buttons](../controls/04-move-library-buttons.md).
 
 **Every other button is a line in `buttons(...)`.** A part has no buttons until you add its lines, so
 every button the robot has is a line you can read in this file. Each part's usual lines, ready to copy:
 
 | Part | Usual buttons | The lines |
 | --- | --- | --- |
-| Intake | RT: in (hold). LT: out (hold) | [Intake: buttons to add](../modules/robot.md#intake-buttons-to-add) |
-| Launcher | LB: spin up / down. RB: fire one (tap), keep firing (hold). D-pad up and down: speed | [Launcher: buttons to add](../modules/robot.md#launcher-buttons-to-add) |
-| Lift | A, X, Y: heights. D-pad up and down: next height. Left stick: by hand | [Lift: buttons to add](../modules/robot.md#lift-buttons-to-add) |
-| Arm | right stick: by hand | [Arm: buttons to add](../modules/robot.md#arm-buttons-to-add) |
-| Claw | B: open / close | [Claw: buttons to add](../modules/robot.md#claw-buttons-to-add) |
-| Wrist | D-pad left and right: positions | [Wrist: buttons to add](../modules/robot.md#wrist-buttons-to-add) |
-| Turret | right stick, left and right: by hand. BACK: follow the goal on / off | [Turret: buttons to add](../modules/robot.md#turret-buttons-to-add) |
+| Intake | RT: in (hold). LT: out (hold) | [Intake: buttons to add](../reference/parts/intake.md#buttons-to-add) |
+| Launcher | LB: spin up / down. RB: fire one (tap), keep firing (hold). D-pad up and down: speed | [Launcher: buttons to add](../reference/parts/launcher.md#buttons-to-add) |
+| Lift | A, X, Y: heights. D-pad up and down: next height. Left stick: by hand | [Lift: buttons to add](../reference/parts/lift.md#buttons-to-add) |
+| Arm | right stick: by hand | [Arm: buttons to add](../reference/parts/arm.md#buttons-to-add) |
+| Claw | B: open / close | [Claw: buttons to add](../reference/parts/claw.md#buttons-to-add) |
+| Wrist | D-pad left and right: positions | [Wrist: buttons to add](../reference/parts/wrist.md#buttons-to-add) |
+| Turret | right stick, left and right: by hand. right stick click: follow the goal on / off | [Turret: buttons to add](../reference/parts/turret.md#buttons-to-add) |
 
-**INIT tells you what is missing.** A part whose usual buttons are not in `Controls.java` gets a line at INIT,
-for example `Intake: usual buttons not in Controls.java: G2 RT (in (hold)), G2 LT (out (hold))`. A button you
-used for something else counts as your choice.
+**INIT tells you what is missing.** When a part's usual buttons are not in `Controls.java`, INIT shows a line
+for it, for example `Intake: usual buttons not in Controls.java: G2 RT (in (hold)), G2 LT (out (hold))`. INIT
+counts a button you used for something else as your choice.
 
 ## A whole robot's buttons
 
 The example [`allbuttons/Controls.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/allbuttons/Controls.java)
-is a robot with a mecanum drive, an intake and a launcher, and two drivers: every library button in
+is a robot with a mecanum drive, an intake, a launcher and two drivers. It has every library button in
 `libraryButtons(...)`, the intake's and the launcher's usual lines, and a `free()` line for every free
 button on both gamepads. A test checks that its lines are the parts' usual ones.
 
@@ -159,7 +172,7 @@ g2.y.press(robot.claw::open).says("open the claw");
 g2.x.press(() -> robot.lift.goTo("low")).says("lift to low");
 ```
 
-**Always add `.says(...)`.** The words go on the button map, so the drivers know the button.
+**Always add `.says(...)`.** The words go on the button map, so the drivers know what the button does.
 
 ### 1. Which button
 
@@ -177,18 +190,18 @@ g2.x.press(() -> robot.lift.goTo("low")).says("lift to low");
 
 | Press type | Write | The job runs |
 | --- | --- | --- |
-| Press | `.press(job)` | once, the moment it is pressed |
-| Let go | `.release(job)` | once, the moment it is let go |
-| Hold | `.hold(job)` | every loop while it is held |
-| Hold, then stop | `.hold(job, stopJob)` | every loop while held, then `stopJob` once when let go |
+| Press | `.press(job)` | once, the moment the driver presses it |
+| Let go | `.release(job)` | once, the moment the driver lets it go |
+| Hold | `.hold(job)` | every loop while the driver holds it |
+| Hold, then stop | `.hold(job, stopJob)` | every loop while the driver holds it, then `stopJob` once when the driver lets go |
 | On / off | `.toggle(part)` | each press switches the part on or off |
 | On / off, two jobs | `.toggle(onJob, offJob)` | presses take turns |
 | Tap | `.tap(job)` | once per quick press |
 | Double tap | `.doubleTap(job)` | once, on the second quick tap |
 | Several taps | `.taps(3, job)` | once, on the last of 2 to 5 quick taps |
 | Tap, then hold | `.tapThenHold(job)` | a tap, then press again and hold: every loop while held |
-| Held for a time | `.heldFor(1.0, job)` | once, after it is held 1 s: a safe "are you sure?" |
-| Two buttons | `g2.lb.with(g2.y, job)` | once, when Y is pressed while LB is held |
+| Held for a time | `.heldFor(1.0, job)` | once, after the driver holds it 1 s: a safe "are you sure?" |
+| Two buttons | `g2.lb.with(g2.y, job)` | once, when the driver presses Y while holding LB |
 | A stick | `g2.leftStickY.use(robot.lift::manual)` | every loop, with the stick's value |
 
 **Gestures can share a button.** `tap`, `doubleTap`, `taps`, `tapThenHold`, `heldFor` and `hold` chain on
@@ -199,8 +212,8 @@ g2.rb.tap(robot.launcher::fire).says("fire one")
      .hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("keep firing");
 ```
 
-`press`, `toggle` and `release` take a button for themselves. When each gesture's job runs, and the
-two times you can change: [the button menu](../guides/buttons.md#2-how-it-starts).
+`press`, `toggle` and `release` each need a button of their own. [Press types](../controls/02-press-types.md)
+says when each gesture's job runs, and how to change the double-tap time and the hold time.
 
 ### 3. What it does
 
@@ -244,8 +257,20 @@ g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
 INIT stops with a message when a button has two jobs, or when your job is on one of the library's
 buttons. The message names the button.
 
+**If the drive goes wrong:**
+
+| Problem | Fix |
+| --- | --- |
+| INIT stops with a list of names | A motor name in `Robot.java` does not match the configuration (capitals too) |
+| It spins or drifts when it should go straight | A motor direction is wrong: [a wheel turns the wrong way](01-robot-java.md#a-wheel-turns-the-wrong-way) |
+| Stick up drives backward | Every direction is flipped: reverse the other side |
+| It slides on a slant when it should slide sideways | Two motor names are on the wrong wheels (for example `front_left` and `back_left` swapped) |
+| Field-centric goes the wrong way or circles | The IMU's logo and USB directions ([check it](01-robot-java.md#how-your-control-hub-is-mounted)), or "away" is wrong: hold BACK 1 s |
+| Everything stopped and does not move | It is paused: tap BACK |
+| Slow even without LT | `maxPower` is low, or `practiceMaxPower` is low in the PRACTICE profile |
+
 ---
 
 **Next:** [Actions.java](04-actions-java.md).
-**Look it up:** [every press type and option](../guides/buttons.md). **Go deeper:**
-[the cookbook's button recipes](../cookbook.md#buttons-and-gestures).
+**Look it up:** [every press type and option](../controls/README.md). **Go deeper:**
+[the cookbook's button recipes](../cookbook/03-buttons.md).

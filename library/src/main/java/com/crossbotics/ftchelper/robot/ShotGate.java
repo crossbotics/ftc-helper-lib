@@ -49,6 +49,7 @@ final class ShotGate implements Feeder {
     private double rpmAtFeed = Double.NaN; // the wheel's speed when the feed began (a drop from it = the shot)
     private int shotsAtFeed = 0;
     private String lastEnd = "";           // "shot seen" or "backup time": how the last feed ended
+    private double lastFeedSec = Double.NaN; // the last feed's time to the shot, counted like the backup time (NaN = no shot seen)
     private double pushAfter = 0;          // seconds after the feed began that the indexer pushes
     private double pushAt = 0;             // when the indexer pushed, seconds
     private double wheelOffAt = -1;        // only while firing: when the feed wheel stops, seconds (-1 = off)
@@ -148,6 +149,7 @@ final class ShotGate implements Feeder {
             if ((shot || since >= limit) && indexerGoing) {
                 feeding = false;
                 lastEnd = shot ? "shot seen" : "backup time";
+                lastFeedSec = shot ? since : Double.NaN;
                 // A feed stop closing: a roller or belt indexer (a CR servo, a motor) stops now, so it does
                 // not push the next piece against the closed stop. A servo pusher finishes its return.
                 if (stop != null && indexer != null && indexer.isBusy() && !pusherIndexer) indexer.stop();
@@ -232,7 +234,7 @@ final class ShotGate implements Feeder {
     }
 
     /**
-     * An action was cancelled: the feed ends now (an indexer that has not pushed yet never pushes), the
+     * An action was canceled: the feed ends now (an indexer that has not pushed yet never pushes), the
      * stop closes, the pushers go back.
      */
     void cancel() {
@@ -242,6 +244,25 @@ final class ShotGate implements Feeder {
         if (wheel != null && !wheel.wheelAlwaysOn()) sendWheel(false);
         for (Intake p : pushers) p.pushForShot(false);
         if (stop != null && started) send(hold);
+    }
+
+    /** How the last feed ended: "shot seen", "backup time", or "" before the first one. */
+    String lastEnd() {
+        return lastEnd;
+    }
+
+    /**
+     * The last feed's time to the shot, seconds, counted the same way as the backup time
+     * ({@code feedStopOpenSec}): from the feed's start, or with a feed wheel from the push. NaN when the
+     * wheel saw no shot (the backup time ended it) or before the first feed.
+     */
+    double lastFeedSec() {
+        return lastFeedSec;
+    }
+
+    /** True while a piece is being fed. */
+    boolean isFeeding() {
+        return feeding;
     }
 
     /** True while the feed stop is open (or opening). */

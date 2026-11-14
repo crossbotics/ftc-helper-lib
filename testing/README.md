@@ -48,7 +48,7 @@ A fail is as useful as a pass. No student names in reports.
    | `needs` | what the robot must have, from `needs` in vocabulary.json: `[flywheel, limelight\|webcam]` (each item is needed; `\|` = either one). `[any]` for any robot |
    | `kit_bots` | the starter bots that have everything in `needs`: `[gobilda, rev]`, or `[]` |
    | `since` | the first release it works with, `v0.16.0`, or `unreleased` |
-   | `docs` | the docs pages it tests, from `docs/`: `[guides/finders.md#hood-finder]` |
+   | `docs` | the docs pages it tests, from `docs/`: `[tuning/04-hood-finder.md]` |
 
 3. Write the sections, each a `## ` heading, in this order:
    - `## Why`: why we need this tested, in 2-3 sentences.
@@ -70,12 +70,12 @@ A new kind of part (say, a "wrist") needs three changes together, or the check f
 
 1. `vocabulary.json`: the word, its label, and the form field and option it matches.
 2. `.github/ISSUE_TEMPLATE/test-report.yml`: the option in that field (usually the `robot_has` checkboxes).
-3. The website's picker reads vocabulary.json from the catalogue: nothing to change there.
+3. The website's picker reads vocabulary.json from the catalog: nothing to change there.
 
 ## At a release
 
 `python3 tools/release.py prepare v0.17.0` runs `python3 tools/check_tests.py --set-since v0.17.0`. That
-changes every `since: unreleased` to the new version and writes the catalogue. The website takes the catalogue from the newest release tag, like the docs.
+changes every `since: unreleased` to the new version and writes the catalog. The website takes the catalog from the newest release tag, like the docs.
 
 ## Triage and labels
 

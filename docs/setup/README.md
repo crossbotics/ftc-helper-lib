@@ -4,8 +4,8 @@
 the robot project, adds the library, updates the hubs and makes the robot configuration. After it, you
 **start using the library**: pick the code you start from, then work through the five robot files.
 
-Do these pages in order, once. Each page is one job and ends with **Done when**. Already done a page?
-Check its "Done when" and go on to the next.
+Do these pages in order, once. Each page is one job and ends with **Done when**. If you already did a page,
+check its "Done when" and go on to the next.
 
 | # | Page | Who |
 | --- | --- | --- |
@@ -21,6 +21,8 @@ Check its "Done when" and go on to the next.
 
 ![The setup pages in order: 1 Before you start, 2 Android Studio, 3 GitHub and the project, 4 Add the library, then 5 Update the hubs, 6 Build and install, 7 Configuration, which need the robot's hubs, then 8 Every practice. Only using the simulator: skip from 4 to 8. Page 9, the Terminal, is for when a page gives you a command.](../images/setup-path.svg)
 
-**Only using the simulator on this laptop?** Skip pages 5, 6 and 7: they need the hubs.
+**If you use only the simulator on this laptop:** skip pages 5, 6 and 7. They need the hubs.
 
-**After Set up:** start using the library. Pick the code you start from: [Quick start: pick your road](../quick-start.md#pick-your-road).
+**After Set up:** start using the library. Pick the code you start from: [Pick your start](../pick-your-start/README.md).
+
+**Next:** [Before you start](01-before-you-start.md).
