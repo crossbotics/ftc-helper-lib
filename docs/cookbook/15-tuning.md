@@ -72,7 +72,7 @@ into `Tunables.java` and rename P1 (`low`).
 With the five files, you write no code for this. In the TeleOp (PRACTICE profile), after ▶, **hold GUIDE
 for 1 second**, and the tuning menu opens. D-pad up/down chooses a number, and right/left changes it.
 **A** saves it on the hub, and **B** lists the changed values. **Then copy each good value into
-`Tunables.java`.** A value saved only on the hub is lost with a new Control Hub, and your teammates cannot see it.
+`Tunables.java`.** With a new Control Hub, you lose a value that you saved only on the hub. Also, your teammates cannot see it.
 
 **Why:** you see the effect at once, and you do not have to build and install again.
 **More:** [Tuning](../tuning/16-live-tuning.md#open-it-and-change-a-number), [Add a lift: tune the lift live](../add-to-robot/01-lift.md#4-check-it-then-tune-it).

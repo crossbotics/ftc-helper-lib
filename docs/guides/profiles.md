@@ -5,8 +5,8 @@
 **For:** teams getting ready for practice and events. **You need:** a TeleOp or autonomous that
 runs (any robot in five files: [The five files](../five-files/README.md)).
 
-The same robot code should be **helpful in the shop** (debug numbers, live tuning)
-and **safe at an event** (no tuning menu, no surprise values, nothing extra on the screen).
+The same robot code should be **helpful in the shop**: debug numbers, live tuning.
+It should also be **safe at an event**: no tuning menu, no surprise values, nothing extra on the screen.
 A profile switches between the two, and you do not change the code.
 
 ## The two profiles

@@ -26,7 +26,7 @@ there, or point to the page that explains it.
    "positive = left (counterclockwise)".
 5. **Always write down safety reasons:** why a motor is stopped, why a limit exists, why we never wait.
 6. **Java ideas** that a beginner would not know get a short, everyday-language note the first time
-   they appear in a file (for example "`() -> ...` is a small piece of code we hand over to run later"):
+   they appear in a file (for example "`() -> ...` is a small piece of code we hand over to run later"). These ideas are:
    lambda `() -> ...`, method reference `lift::stepUp`, ternary `a ? b : c`, `final`, `static`,
    `interface`, `@Override`, `try/finally`, `synchronized`, `volatile`, generics `<T>`, enum.
    In examples and tutorial programs (rule 9) that note goes in the docs next to the code (a code
@@ -47,13 +47,13 @@ there, or point to the page that explains it.
       only: at most about 3 sentences, and no numbers the text or a table already gives;
     - the **text under the box** says what the step does and what to check.
 
-    Never write the same sentence twice (in the comment and the note, or the note and the text). A note
-    every recipe would repeat (what `.part(...)` does) is explained once, where it first appears.
+    Never write the same sentence twice (in the comment and the note, or the note and the text). Explain a note
+    that every recipe would repeat (what `.part(...)` does) once, where it first appears.
 
 ## Code annotations in the docs
 
 A docs code box can explain a line without a long comment in the code. Add a marker `(1)!` at the end of
-the line's `//` comment (or `// (1)!` alone after the code), and put a numbered list right under the box,
+the line's `//` comment (or `// (1)!` alone after the code). Then put a numbered list right under the box,
 one item per marker, in order:
 
 ````text
@@ -67,7 +67,7 @@ lift = add(Lift.slide("lift").part("gobilda-5203-435"));   // the lift (1)!
 On crossbotics.com each marker becomes a small (+) button that opens its item. The site hides the list
 itself, and the Copy button copies the code without the markers. On GitHub the marker and the list show as text.
 The markers are only in the docs: `tools/check_docs.py` takes them out before it compares a box with its
-Java file, and `--fix-cookbook` keeps them on the lines that did not change.
+Java file. `--fix-cookbook` keeps them on the lines that did not change.
 
 ## Format
 

@@ -207,8 +207,8 @@ For a robot with no turret, with aim mode off:
 - When the goal is lost during the turn (a turn blurs the picture), it waits, up to `aimOnFireSec`, then fires.
 - It uses whole-robot aim's numbers (`turnKp` and the others).
 - It does nothing with aim mode on (it aims already), with a turret that follows the goal, or while the
-  launcher sprays (the last seconds, or tap-then-hold: SPRAY does not wait, so a turn would throw pieces to
-  the side).
+  launcher sprays (the last seconds, or tap-then-hold). SPRAY does not wait, so a turn would throw pieces to
+  the side.
 - An auto's `fire(n)` and fire actions do not turn. Use `aimAtGoal`.
 - While it turns, `errorDeg()`, `isAimed()` and the aim buzz follow it. The launcher's "not ready" list
   says `turning to the goal`.

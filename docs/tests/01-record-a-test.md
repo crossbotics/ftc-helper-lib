@@ -53,7 +53,7 @@ wrong section.
    ![PASSED, with the report line by line: each step and each check says ok](../images/tests-passed.png)
 
 The recorder writes down every gamepad button and stick (from the keyboard, a real controller or the
-on-screen gamepad), how long you waited, INIT, ▶, STOP, and the robot or a piece moved by hand.
+on-screen gamepad). It also writes down how long you waited, INIT, ▶, STOP, and the robot or a piece moved by hand.
 
 - A quick tap becomes a `press`.
 - A button held down becomes `hold` and `release`.

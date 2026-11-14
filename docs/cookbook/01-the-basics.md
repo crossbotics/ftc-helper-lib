@@ -38,8 +38,7 @@ the driver presses the button. So you never write `if`, `while` or `sleep` for b
 ## Where does each line go? The files, whole
 
 Each recipe gives a few lines. Put them INSIDE one of these files, at the spot the comment shows. Keep
-every other line of the file. Your files also start with a `package` line and some `import` lines. They
-are not shown here, and they stay at the very top, above `public class`. An import tells Java where a word
+every other line of the file. Your files also start with a `package` line and some `import` lines. The recipes leave them out. They stay at the very top, above `public class`. An import tells Java where a word
 like `Lift` comes from. When Android Studio shows a word in red, click it and press **Alt+Enter** (Mac:
 **Option+Enter**) to add its import.
 
@@ -114,8 +113,7 @@ The numbers file: see [Tunables.java](15-tuning.md#where-do-the-numbers-go).
 
 **`Tunables.java`**: one section per part, inside `public class Tunables { ... }`. When a recipe adds a
 new part, it shows the part's whole section (`public static class Lift { ... }`). Put it inside
-`Tunables`, next to the other sections. If your file **already has** a section with that name, do not add
-a second one, because two sections with one name do not compile. Copy only the lines inside it into
+`Tunables`, next to the other sections. If your file **already has** a section with that name, do not add a second one. Two sections with one name do not compile. Copy only the lines inside it into
 yours, and change the lines you already have. A recipe that adds to a section you already have says so
 ("In your `Tunables.Launcher` section") and shows only the lines.
 

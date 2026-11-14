@@ -26,7 +26,7 @@ EasyTeleOp that fills in the hooks.
    from `Tunables.java`. The INIT checks (a missing Lift `max`, a misspelled field...) stop here.
 5. `bindButtons(...)`, then `buttonHelp()`.
 
-Then the **INIT loop** runs until ▶ (start on the Driver Hub): gamepad 1 X/B choose the alliance, the warnings (PRACTICE
+Then the **INIT loop** runs until ▶ (start on the Driver Hub). It has: gamepad 1 X/B choose the alliance, the warnings (PRACTICE
 profile, tuned values), your `addInitTelemetry`, `t.update()`. **The INIT loop updates no part and gives
 no motor power.**
 
@@ -161,14 +161,14 @@ private final LoopTimer loop = new LoopTimer();
 - **▶:** when the profile changed in INIT, EasyAuto makes the drive and the mechanisms again. Then the
   30 s timer starts, and `AutoRoutine.runAll()` runs each step. Steps block on purpose.
 - **Each loop while a step drives or waits:** `AutoDrive` reads what the move needs (the four
-  wheel encoders for a move, the IMU for a turn), sets the wheel powers, then calls the routine's
+  wheel encoders for a move, the IMU for a turn). It sets the wheel powers, then calls the routine's
   `tick()`, then `idle()`.
   A wait (`waitFor`, `waitUntil`) calls `tick()` and `idle()`.
 - **`driveTo`** (with odometry) reads the pose that the last `tick()` worked out. So the library reads the odometry
   once per loop, not twice.
 - **`tick()`:** `robot.update()` (the same as TeleOp's, odometry first), `timer.update()`, the step's line, the
   time left, every part's telemetry, `t.update()`.
-- **End:** when the steps are done, EasyAuto stops everything and the report goes to `MatchMemory`.
+- **End:** when the steps finish, EasyAuto stops everything and the report goes to `MatchMemory`.
   After any end (done, STOP or an error), it stops everything again. Only when the drivers pressed ▶,
   the alliance and the end heading go to `MatchMemory` for TeleOp. With odometry, the whole
   end pose goes, and TeleOp's INIT starts the odometry there.
@@ -209,7 +209,7 @@ next, until the app restarts. The library keeps these static fields:
 ## See also
 
 - [Your own code at INIT, ▶, every loop and STOP](your-own-code.md): where your code goes in each
-  step, and how to write the whole OpMode yourself with the library's robot.
+  step. It also shows how to write the whole OpMode yourself with the library's robot.
 - [Non-blocking code](non-blocking.md): what blocks and what never does.
 - [Use only what you need](use-only-what-you-need.md): the building blocks in your own loop.
 - [Architecture](architecture.md): the big picture.

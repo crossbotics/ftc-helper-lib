@@ -27,7 +27,7 @@ Work in this order. Each step makes the next one count.
 | [3. The parts](#3-shape-the-parts-with-edit-robot) | where each part sits, and how big it is | **Edit robot**, then `Robot.java` |
 | [4. Pieces in and out](#4-where-pieces-go-in-and-out) | the intake roller, the launcher's shot angle, the claw | **Edit robot**, then `Robot.java` |
 | [5. CAD (optional)](#5-cad-models-optional) | your CAD parts in place of the boxes | the robot file |
-| [6. Real speeds (optional)](#6-real-speeds-optional) | how your motors really move | the robot file, from the Characterizer |
+| [6. Real speeds (optional)](#6-real-speeds-optional) | how your motors move | the robot file, from the Characterizer |
 
 **Or let an AI coding agent do steps 2 to 5 with you.** The **robot-file skill** is a set of written
 steps for an agent such as Claude Code or Codex. Give it what you have:

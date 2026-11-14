@@ -72,7 +72,7 @@ not the odometry backup) and the goal is still. Then it goes on.
 
 ### The start spot
 
-The spot in `start(where, xIn, yIn, headingDeg)` is seen from your wall and written for BLUE:
+You write the spot in `start(where, xIn, yIn, headingDeg)` for BLUE, as seen from your wall:
 
 - x = inches right of the center line; y = inches from the center toward the far wall (negative = your
   half).
@@ -80,8 +80,8 @@ The spot in `start(where, xIn, yIn, headingDeg)` is seen from your wall and writ
   the same numbers seen from the red wall.
 - When both alliances' drivers stand at one wall (not BIOBUZZ, not DECODE), override `alliancesOnOneWall()`
   to return true.
-- With odometry, the first step ("Start") sets the pose to the spot (mirrored for RED the same way), and
-  at the end the whole pose goes to TeleOp. Without a spot, the pose starts at (0, 0).
+- With odometry, the first step ("Start") sets the pose to the spot (mirrored for RED the same way).
+  At the end, the whole pose goes to TeleOp. Without a spot, the pose starts at (0, 0).
 
 ### When the steps run
 
@@ -106,7 +106,7 @@ Parking points come at the very end of autonomous, so the steps that park must n
 `parkWithSeconds(4)` in the list splits the steps in two:
 
 - **The steps before it** (main steps) run while more than 4 s of the 30 s are left. When the 4 s mark
-  comes, the step that is running stops at once (a move stops, a wait stops waiting), and the library skips the
+  comes, the step that is running stops at once (a move stops, a wait stops waiting). The library skips the
   main steps not started yet.
 - **The steps after it** (park steps) always run, until autonomous ends.
 
@@ -152,8 +152,8 @@ public static Action scoreHigh(Robot r) {
   one of them stops it ("taken by ..."). The driver stops it too by moving the part by hand (a
   button, or a stick away from the middle): the driver always wins.
 - **Press again to cancel** (a button bound with `press(action)`).
-- **A stopped action** (canceled, taken over, timed out) stops what it started, safely: a lift or arm
-  holds its height, a turret its angle, the launcher drops shots still waiting, an intake stops. An action that
+- **A stopped action** (canceled, taken over, timed out) stops what it started, safely. A lift or arm
+  holds its height, a turret holds its angle, the launcher drops shots still waiting, and an intake stops. An action that
   finishes keeps its last commands. A failed action in an autonomous says why in the report.
 - **A part that is not on the robot yet** (`optional()`): the action skips its commands, and the waits
   right after a step that only used such parts. The action goes on with the other parts.

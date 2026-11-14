@@ -94,7 +94,7 @@ r.step("Lift starts up", lift.startStep("HIGH"))      // does not wait
 
 One OpMode with choices is often better than many OpModes. You have fewer files, and the drive team picks
 at the field. For when to use which, naming, and a match-day checklist, read
-[Having multiple autos](../building-autos/03-multiple-autos.md). It is written for the five-files `Auto`, but the ideas are the same.
+[Having multiple autos](../building-autos/03-multiple-autos.md). That page uses the five-files `Auto`, but the ideas are the same.
 
 ## Red and blue
 
@@ -123,16 +123,16 @@ r.move(...).move(...)          // main steps: cut short when 4 s are left
 ## Where to place the robot
 
 `startPosition()` is the note the drive team reads in INIT. `startSpotIn()` (in a five-files autonomous:
-`s.start(note, x, y, heading)`) also gives the spot. You write it for BLUE, as seen from your drivers' wall:
-x inches right of the field's center line, y from the center toward the far wall (negative = your half).
-RED uses it like the routes do. It is mirrored, or, on a field turned half a turn like BIOBUZZ (`mirrorForRed()`
-false), it is the same numbers from the red wall. The simulator puts the robot there in INIT. On a field where
+`s.start(note, x, y, heading)`) also gives the spot. You write it for BLUE, as seen from your drivers' wall.
+The x number is inches right of the field's center line. The y number is the distance from the center toward
+the far wall (negative = your half). RED uses it like the routes do. The routine mirrors it. On a field turned
+half a turn like BIOBUZZ (`mirrorForRed()` false), RED uses the same numbers from the red wall instead. The simulator puts the robot there in INIT. On a field where
 both alliances' drivers stand at one wall, also add
 `@Override protected boolean alliancesOnOneWall() { return true; }`. Without it, the simulator puts BLUE at the far wall.
 
 ## Read the report
 
-When the steps are done, autonomous ends at once, even with time left. Then the Driver Station moves
+When the steps finish, autonomous ends at once, even with time left. Then the Driver Station moves
 to the TeleOp (`preselectTeleOp`), and the drive team can INIT it. The report gives each step's result.
 It shows at the end of autonomous, in the robot log, and again on TeleOp's INIT screen:
 

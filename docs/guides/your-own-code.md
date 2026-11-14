@@ -158,13 +158,13 @@ Try it in the simulator: **Lesson Bot: own OpMode**.
 the interlock rules, the INIT checks of `Tunables.java`, bulk reads, and the simulator.
 
 **The same as the library's OpModes:** in a TeleOp, the alliance and (with odometry) the pose come
-from the autonomous that just ran. An OpMode marked `@Autonomous` starts every part from its start
+from the autonomous that ran before it. An OpMode marked `@Autonomous` starts every part from its start
 position. INIT shows the PRACTICE and "tuned values differ" warnings.
 
-**What you do yourself now:** the buttons (the library's taps, double-taps and holds are in
-[Use only what you need](use-only-what-you-need.md#controllerbindings)), the alliance choice, the
+**What you do yourself now:** the buttons, the alliance choice, the
 pause button, field-centric driving, the tuning menu, the button list on the Driver Hub, and the
-match timer's buzzes. In an autonomous, you also do the steps one after another, the alliance choice, the
+match timer's buzzes. The library's taps, double-taps and holds are in
+[Use only what you need](use-only-what-you-need.md#controllerbindings). In an autonomous, you also do the steps one after another, the alliance choice, the
 RED/BLUE mirroring, the start spot, and handing the alliance and the end pose to the TeleOp. The
 library's `Auto` does all of these for you.
 

@@ -11,7 +11,7 @@ example, what it depends on, and how to get around it.
 
 **Mixing with the five files:** two pieces of code that send power to one motor fight each other.
 The library has no per-part switch yet to take one part out of
-`robot.update()`. `robot.update()` updates every part added in `Robot.java` (`add(...)`) every loop, and the part sends its own
+`robot.update()`. `robot.update()` updates every part added in `Robot.java` (`add(...)`) every loop. Each part sends its own
 power to its motor. A Lift or Arm sends it again at least every 25 loops, so your power does not last.
 So when you want to drive a motor yourself, **do not** add it as a part in
 `Robot.java`. Use its building block (`PositionMotor` or `SafeMotor`, below) in your own OpMode
@@ -233,7 +233,7 @@ You can also start big and step down:
   [pedro module](../modules/pedro.md). It plugs [Pedro Pathing](https://pedropathing.com/) into your
   `odometry(...)` and `drive(...)` lines, and adds a `follow(...)` step. For
   [Road Runner](https://rr.brott.dev/), use it directly with the library's odometry
-  ([`PoseTracker`](../modules/odometry.md)). A Road Runner module is planned.
+  ([`PoseTracker`](../modules/odometry.md)). We plan a Road Runner module.
 - **You already have a working command framework** (your own, FTCLib, NextFTC): use the small blocks
   above (`SafeMotor`, `PidController`, `BulkReads`) inside it, not `EasyTeleOp`.
 - **You need a value the library does not show:** read the SDK device yourself. Every block hands

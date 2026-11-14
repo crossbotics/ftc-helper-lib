@@ -76,12 +76,12 @@ there by hand before INIT, or every angle is off`.
   **Digital Device**. It reads LOW near the magnet, and the library knows this.
 
 Homing happens at **▶** (start on the Driver Hub), never in INIT. The library never moves anything before ▶, for safety.
-The game rules also want the robot standing still once INIT is done (G304.H). At ▶, when the switch is not closed already, the turret turns slowly
+The game rules also want the robot to stand still once INIT ends (G304.H). At ▶, when the switch is not closed already, the turret turns slowly
 (`homingPower`) toward it, and the Driver Station says `homing: looking for the switch`. A turret that
-starts ON the switch is homed at once, with no turning and no "looking" line. It turns from `startAngle` toward
+starts ON the switch homes at once, with no turning and no "looking" line. It turns from `startAngle` toward
 `homeAngle`, or the way `homeDirection` says (+1 = counterclockwise, -1 = clockwise).
 When the switch closes, the turret is at `homeAngle`. Following the goal and "aimed" wait until then.
-A broken switch must not wind up the wires. So when the turret does not find the switch within `homingTimeout` seconds, it stops, and the Driver Station says
+A broken switch must not wind up the wires. So when the turret does not find the switch within `homingTimeout` seconds, it stops. The Driver Station then says
 `homing failed: switch not found`. After homing, the library sets the angle right again **every time
 the turret passes the switch**. This fixes encoder drift (a slipping belt)
 during the match. When the configuration has no such switch, the INIT screen says `NO home switch`, and the turret uses the
@@ -108,7 +108,7 @@ between). **When someone turned the turret by hand between programs:** restart t
 `public static boolean keepAngle = false;` in `Tunables.Turret`.
 
 **Nothing carried over** (the robot app restarted, more than 5 minutes passed, or a program's turret never
-finished homing): with no switch, the turret starts from `startAngle`, and TeleOp's INIT says so:
+finished homing): with no switch, the turret starts from `startAngle`. TeleOp's INIT says so:
 `no angle from a program before: turn it to startAngle 0 deg by hand and INIT again`. Do it. If you do not,
 the angle on the Driver Station is off by however far someone turned the turret. In a test, it said 4 degrees
 while the turret pointed at -12. A home switch avoids this, because it finds the real angle at ▶.
@@ -159,7 +159,7 @@ its stops. The hood belongs to the launcher, so it works the same with or withou
 When a lift, an arm or a climber is in the turret's path, write an **interlock rule** in `Robot.java`, with the
 zones in `Tunables.java`. While the lift is up, the turret stays out of the back, and the other way
 round. See [Two parts that must not collide](interlocks.md). The rule pairs the turret with the
-part that really reaches it. The [v2bot example](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java)
+part that reaches it. The [v2bot example](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java)
 uses `keepApart("TurretClaw", turret.zone(), wrist.zone())`, because its claw is in the turret's way only
 while the wrist is low, at any lift height.
 
@@ -298,7 +298,7 @@ g1.rb.toggle(robot.aimMode()).says("aim at the goal");
 - **Homing turns the wrong way and stops with "switch not found"**: set `homeDirection` (+1 or -1).
 - **`homeAngle` outside `min`..`max`**: the switch must be inside the range that the turret may turn.
 - **The angle drifts during a match**: a belt slips. A home switch fixes it at every pass.
-- **A slip-ring turret with `min`/`max`**: `continuous()` ignores them. Remove them, so nobody is confused.
+- **A slip-ring turret with `min`/`max`**: `continuous()` ignores them. Remove them, so they confuse nobody.
 - **The turret is aimed, but the shots go wide by the same angle**: a camera beside the launcher needs
   `cameraOffset`.
 - **TeleOp starts with the wrong angle after someone turned the turret by hand**: restart the robot app,

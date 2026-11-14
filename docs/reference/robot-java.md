@@ -93,8 +93,7 @@ public class Robot extends RobotDefinition {
 ```
 
 - **Name each part** with `.part(...)`. For a launcher, an arm or a motor turret, write the motor's id in
-  its brackets. For the drive, use `.motor(...)`. It is optional, but recommended: then the starting values
-  come from that part's real numbers, and the simulator moves it like the real one
+  its brackets. For the drive, use `.motor(...)`. It is optional, but recommended. With the part named, the starting values come from that part's real numbers, and the simulator moves it like the real one
   ([First run](tunables.md#first-run-what-you-get-before-tuning)). For a part not in the catalog, see
   [Parts not in the catalog](#parts-not-in-the-catalog).
 - **`define()` only describes the robot.** It runs in INIT, and also without a robot (to write the
@@ -145,7 +144,7 @@ public class Robot extends RobotDefinition {
 | `sectionWarnings()` | after `setup`: INIT's warnings about Tunables sections no part reads that look meant for one |
 | `tunablesClass()` | the Tunables class found (null if none) |
 | `static changedTunables()` | values tuned on the robot that differ from Tunables.java, as lines to copy back |
-| `static freshRobotApp()` | tests and the simulator only: forget what one program leaves for the next (the last autonomous's alliance, pose and report, turret angles, launcher trims, tuned numbers in memory), as if the robot were just turned on. Never use it in robot code |
+| `static freshRobotApp()` | tests and the simulator only: forget what one program leaves for the next (the last autonomous's alliance, pose and report, turret angles, launcher trims, tuned numbers in memory), as if you turned the robot on that moment. Never use it in robot code |
 | `static sectionName(device)` | the Tunables section a device reads: "intake_deploy" -> `IntakeDeploy` |
 
 | `EncoderMotor` | What it is |
@@ -274,7 +273,7 @@ lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));          
 
 ## Parts not on the robot yet
 
-Robots are built in steps: the drive first, then the intake, the deploy servo when it arrives. Write the
+Teams build a robot in steps: the drive first, then the intake, the deploy servo when it arrives. Write the
 whole robot in Robot.java now, and mark the parts that are not built yet with `optional()`:
 
 ```java
@@ -301,7 +300,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 Without `"windmill"` in the configuration, the launcher still spins, and `fire()` feeds nothing. The
 pieces must reach the wheel another way, for example pushed in by the intake. The launcher still counts
 each `fire()` as a shot, and a piece count (`Pieces`) does not go down. So with `stopsWhen(pieces::isFull)`
-on an intake that also feeds the wheel, the intake could stop when full: leave `stopsWhen` out on such a
+on an intake that also feeds the wheel, the intake could stop when full. Leave `stopsWhen` out on such a
 robot. The other way round does not work: a feeder cannot be on while its launcher is off.
 
 What "off" means, everywhere:
@@ -450,7 +449,7 @@ fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 
 A part without `looks(...)` gets a guessed shape marked `TODO measure`. It starts from the chassis
 (`chassisMm`), the height (`heightMm`), the other parts (a claw on the end of the lift, arm or wrist) and
-the catalog, and keeps the robot inside the size rules
+the catalog. The guess keeps the robot inside the size rules
 ([simulator guide](../simulator/02-your-robot-file.md#2-the-simulator-makes-it-from-robotjava)).
 
 ## Motors

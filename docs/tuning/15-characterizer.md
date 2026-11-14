@@ -1,6 +1,6 @@
 # Characterizer: how the robot really moves
 
-Measure how each motor really behaves, for feedforward and for the simulator.
+Measure how each motor behaves, for feedforward and for the simulator.
 
 **In Tune and check:** no. It has its own file: it needs your lifts.
 **You need:** its own file, a charged battery, 5 ft of clear floor.
@@ -18,7 +18,7 @@ Measure how each motor really behaves, for feedforward and for the simulator.
 
 ## Steps
 
-Run the **Characterizer** last, when the robot drives and its lifts work. It measures how each motor really
+Run the **Characterizer** last, when the robot drives and its lifts work. It measures how each motor
 behaves: the power to start moving, the power per speed, how fast it speeds up, and for a lift the power
 that holds it against gravity. You use these numbers in two places: for feedforward in your code (see
 [Feedforward](../modules/control.md#feedforward)), and as real numbers for the

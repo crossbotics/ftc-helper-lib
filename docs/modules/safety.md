@@ -138,7 +138,7 @@ In TeleOp, the driver pushes the lift down once at the start. In autonomous, dri
 
 ### No lower switch
 
-Position 0 is wherever the motor was when the robot was turned on.
+Position 0 is wherever the motor was when you turned the robot on.
 So **turn the robot on with the mechanism all the way down**.
 
 ### Rules for use

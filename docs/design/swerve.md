@@ -104,7 +104,7 @@ New plain classes in `drive/`, the same shape as mecanum:
 ### 5. The simulator robot
 
 - Robot file: `drive.type = swerve`, `drive.pods = fl_drive fl_steer fl_angle -5.5 5.5, ...` (inches).
-  It also has a hidden `drive.podMountDeg = 37, -112, ...` (how each encoder is really mounted). Then the
+  It also has a hidden `drive.podMountDeg = 37, -112, ...` (the true mount angle of each encoder). Then the
   alignment finder has something real to find.
 - Steering model: a CR servo turns the pod at up to its no-load speed (Axon MAX MK2: 83 rpm at 6 V,
   goBILDA page), with a little lag. A pretend `AnalogInput` gives (angle + mount) / 360 × 3.3 V. The
@@ -148,7 +148,7 @@ A scenario test (`FinderSafetyTest`) also runs it in the simulator with the hidd
 Not checked: the Axon feedback wire's voltage range (the goBILDA pages do not say, and the finder measures
 it), and community FTC pod designs (they are not sold products).
 
-Game rules (BIOBUZZ manual TU01): R502 allows "4th Wire Position Feedback", and caps a servo at 8 W at
+Game rules (BIOBUZZ manual TU01): R502 allows "4th Wire Position Feedback". It caps a servo at 8 W at
 6 V (the Axon MAX MK2 is listed at 7.5 W). R504 C allows continuous-rotation mode "as specified by the
 manufacturer". R503: at most 8 motors and 8 servos. **A 4-pod swerve uses 4 of the 8 motors, 4 of the
 8 servos and 4 analog ports** (all four on one hub). The Axon servos need 6 V, and the hubs give 5 V. So the robot needs a servo power module
@@ -181,7 +181,7 @@ On a real robot, after the team builds the pods, it needs one or two practice ni
    work without odometry, the same as mecanum.
 
 **Recommendation: option 1 now, option 2 when a team has a working prototype pod.** No seller
-has an FTC swerve pod, so every team must design, cut and build four pods first. Until then, nobody can test the library work
+has an FTC swerve pod. So every team must design, cut and build four pods first. Until then, nobody can test the library work
 on hardware. Swerve also takes half the motor and servo budget, which is tight
 for a robot with a turret, lifter and intake. Option 2 gets a team driving and running Pedro paths.
 Option 3's extra week mostly serves teams without odometry, and a swerve team will have odometry.

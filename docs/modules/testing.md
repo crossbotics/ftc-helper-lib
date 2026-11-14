@@ -21,8 +21,8 @@ test each one. Make this tiny file in TeamCode:
 public class HardwareCheck extends HardwareCheckOpMode { }
 ```
 
-It finds these devices: motors, continuous-rotation (CR) servos that spin like a motor, servos, the IMU, touch
-sensors, digital channels (magnetic switches, beam breaks), color and distance sensors, analog inputs, webcams,
+It finds these devices: motors, continuous-rotation (CR) servos that spin like a motor, servos, the IMU and touch
+sensors. It also finds digital channels (magnetic switches, beam breaks), color and distance sensors, analog inputs, webcams,
 Limelights and HuskyLens cameras. For a HuskyLens, it shows each box the camera sees, with the taught number.
 It also shows the battery voltage, and it warns below 12.0 V.
 Slow reads (a HuskyLens, a distance sensor) run on a helper thread, so the buttons never wait. Because of

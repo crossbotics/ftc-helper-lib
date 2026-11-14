@@ -19,12 +19,12 @@ follows the same six steps, so nothing breaks and the docs and tutorials stay tr
    `docs/troubleshooting.md` if it fixes a common problem.
 5. **Tutorials, guides and diagrams:** if the change affects how the library is USED, update every tutorial that uses it
    (both the page in `docs/tutorials/` and its program in `examples/.../tutorials/`). A new feature
-   that students will use needs a place in a tutorial: add a section to the closest one, or a new
+   that students will use needs a place in a tutorial. Add a section to the closest one, or a new
    tutorial with its own program (and a row in `docs/tutorials/README.md`). Update the guide that
    covers it (`docs/guides/`), and any diagram that shows it (Mermaid blocks in the pages, SVGs in
    `docs/images/`). A new module gets a row in the README table and a page in `docs/modules/`.
    A new docs section (a folder in `docs/`), a moved page or a new rule for teams' code also goes in the
-   ftc-helper skill (`skills/ftc-helper/SKILL.md`): teams' AI agents use it as their map of the docs.
+   ftc-helper skill (`skills/ftc-helper/SKILL.md`). Teams' AI agents use it as their map of the docs.
 6. **CHANGELOG.md:** add a line under "Unreleased": Added / Changed / Fixed. Start each entry with one plain sentence
    (what it does for a team), then the details. The release's "What's new" comes from those sentences.
 
@@ -45,7 +45,7 @@ A change is not done until all six are done.
   `t.flag`, `t.tunable`, ...) and fails if [the Tunables reference](reference/tunables.md) misses one, names
   one the code no longer reads, or has a wrong default, "In tuning menu" or REQUIRED cell. It also checks that the
   example robots' `Tunables.java` files (and the one `:sim:newRobot` writes) use only fields their parts
-  read, and that `TunableFields.java` (the lists INIT uses to stop on a misspelled field) lists exactly
+  read. It checks that `TunableFields.java` (the lists INIT uses to stop on a misspelled field) lists exactly
   the fields each part reads. A new number in a module: add its row to the reference and its name to
   `TunableFields.java`.
 - `tools/check_docs.py` also checks the skills for teams' AI agents (`skills/`): every path they name must
@@ -95,13 +95,13 @@ node tools/check_builder.mjs          # the simulator's auto builder page code
 python3 tools/check_tests.py          # the community test list and testing/catalogue.json
 ```
 
-This runs every test (the library's, the examples', the simulator's and the Pedro module's), builds the
-examples and every tutorial program, and checks the docs, the parts page, the auto builder page and the
+These lines run every test (the library's, the examples', the simulator's and the Pedro module's). They build the
+examples and every tutorial program, and check the docs, the parts page, the auto builder page and the
 community test list. All must pass before you push. GitHub runs the same checks on every push
 (`.github/workflows/build.yml`), except the `:pedro` tests.
 
 If Gradle cannot find the Android SDK, make a file `local.properties` in this folder with the line
-`sdk.dir=/path/to/Android/sdk` (Android Studio shows the path in **Settings > Languages & Frameworks > Android SDK**).
+`sdk.dir=/path/to/Android/sdk`. Android Studio shows the path in **Settings > Languages & Frameworks > Android SDK**.
 
 ## Working from inside a robot project
 
@@ -258,7 +258,7 @@ their version does not have. A release moves `docs-live` to the new tag (step 4 
 ## Releasing a version
 
 The programming lead does this after merging changes. `vX.Y.Z` is the new version, for example `v0.19.0`.
-`tools/release.py` does the steps and stops at the first problem, so a step cannot be forgotten.
+`tools/release.py` does the steps and stops at the first problem, so nobody forgets a step.
 
 1. Get the changelog and the test list ready. The script renames "Unreleased" in `CHANGELOG.md` to the new version and
    today's date, and sets `since:` on the tests that said `since: unreleased`.
@@ -285,8 +285,8 @@ python3 tools/release.py prepare vX.Y.Z
      Then a link to [Keep it up to date](https://crossbotics.com/ftc-helper/docs/02-keep-up-to-date/).
    - **Full change list:** that version's CHANGELOG part, pasted as it is.
 
-4. Publish. It runs the checks that need no Gradle (the Gradle tests are step 2), tags, pushes `main` and the tag together, makes the GitHub release, moves
-   `docs-live` to the release, and checks that `docs-live` holds the same files as the tag. `--dry-run` gets the
+4. Publish. The script runs the checks that need no Gradle (the Gradle tests are step 2). Then it tags, pushes `main` and the tag together, and makes the GitHub release.
+   It moves `docs-live` to the release, and checks that `docs-live` holds the same files as the tag. `--dry-run` gets the
    latest from GitHub and runs only the checks. It pushes nothing.
 
 **Where:** a terminal, in the `ftc-helper-lib` folder.
@@ -300,7 +300,7 @@ python3 tools/release.py publish vX.Y.Z notes.md
    If publish stops part way, fix the problem and run the same command: it goes on with the steps not done yet.
 
 **Why:** a tag alone sends no message. Teams that click **Watch > Custom > Releases** on GitHub get an
-email for each release, and that is how they learn to update ([Keep it up to date](02-keep-up-to-date.md#find-out-about-a-new-version)).
+email for each release. That is how they learn to update ([Keep it up to date](02-keep-up-to-date.md#find-out-about-a-new-version)).
 
 Version numbers: change the middle number (0.**19**.0) for new features, the last number
 (0.19.**1**) for bug fixes, and the first number when something old stops working the same way.

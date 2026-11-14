@@ -6,8 +6,8 @@ Package: `com.crossbotics.ftchelper.vision`
 
 Learn it hands-on: [18 Vision aiming](../tutorials/18-vision-aim.md).
 
-Find **AprilTags** (square black-and-white field markers, each with an id number) with a USB webcam,
-a Limelight 3A or a HuskyLens camera, and aim at them. Your code talks to ONE interface (a set of methods every
+Find **AprilTags** (square black-and-white field markers, each with an id number) and aim at them. Use a
+USB webcam, a Limelight 3A or a HuskyLens camera. Your code talks to ONE interface (a set of methods every
 camera has), so you switch cameras by changing one line. With the [robot in five files](../reference/parts/camera.md),
 its `Camera` part sets this up: start with [Add a camera](../add-to-robot/07-camera.md).
 Use this page to aim in your own code (tutorial 18).
@@ -47,7 +47,7 @@ same names ([TagGroup](#taggroup)), so `camera.target("RED SCORING")` works with
 swaps them. A CELL's tags read **right side up** only while that CELL is up. The down CELL's tags read
 upside down. `TagGroup.goalTarget(camera, "RED SCORING")` gives the red HIVE's group that reads right
 side up now ("RED SCORING" or "RED AUDIENCE"). It gives null when only an upside-down CELL is in view,
-for example from under the HIVE: the robot must never aim at the underside of a down CELL. The five-files
+for example from under the HIVE. The robot must never aim at the underside of a down CELL. The five-files
 [`Camera`](../reference/parts/camera.md) module's `goal()` uses it. `camera.target(name)` still gives the named
 group, upside down or not.
 
@@ -96,8 +96,8 @@ camera the SDK already knows (Logitech C270/C920 at common resolutions).
 ## CameraTilt
 
 A camera tilted up (to see a high goal) measures in its own tilted view. So a goal off to the side
-reads too few degrees: 27.5 degrees left reads about 22 with the camera 35 degrees up (goal 48 inches away along the floor,
-35 inches above the lens). Its distance is
+reads too few degrees. For example, with the camera 35 degrees up, 27.5 degrees left reads about 22 (goal 48
+inches away along the floor, 35 inches above the lens). Its distance is
 the slanted line from the lens up to the goal. The aim and the odometry need the bearing and the
 distance **along the floor**. `CameraTilt` turns the camera's numbers flat again to give them.
 
@@ -198,15 +198,15 @@ small. But 0 is still straight ahead, so aiming still ends in the right place.
 
 **What it cannot do as well as the other cameras:**
 
-- **Distance is rough.** It comes only from the size of a box (a thing twice as far looks half as big),
-  and a slanted tag has a smaller box. Make your shot table with this camera, and check it. For long or
+- **Distance is rough.** It comes only from the size of a box (a thing twice as far looks half as big).
+  A slanted tag has a smaller box. Make your shot table with this camera, and check it. For long or
   exact shots, use a Limelight or a webcam.
-- **A single tag has no "right side up".** A tag group has one, from the order of its tags in the picture, as
+- **A single tag has no "right side up".** A tag group has one: the order of its tags in the picture gives it, as
   with the Limelight ([`TagGroup`](#taggroup)). So a goal needs 2 taught tags of the group in view.
 - **At most 6 boxes in one reading.** That is the SDK driver's limit. With more in view, it leaves some out.
 - **Colors change with the light.** The seller says so too. If you can, teach them at the venue.
 - **A cable that comes off takes about a second to show.** The SDK cannot tell an unplugged HuskyLens from one
-  that sees nothing: on a REV hub an empty port reads as zeros, and its `knock()` still says true. So while
+  that sees nothing. On a REV hub, an empty port reads as zeros, and its `knock()` still says true. So while
   the camera sees nothing, this class asks "are you there?" about once a second and checks the answer itself.
 
 Reading the camera is a slow I2C request, so `update()` hands it to a helper thread and never waits.
@@ -235,8 +235,8 @@ the setting for the place you are in, by itself:
    button. The driver aims at a tag and presses, and the test runs again (up to 5 s, or
    `lightingAfterStartMs`; see `relight()` on the [Camera page](../reference/parts/camera.md)).
 
-Some settings get no score: a setting the camera refuses (a webcam without manual exposure), or a
-Limelight pipeline that sends no pictures (not set up). The test skips such a setting from then on, and
+Some settings get no score. One is a setting the camera refuses (a webcam without manual exposure).
+Another is a Limelight pipeline that sends no pictures (not set up). The test skips such a setting from then on, and
 the Driver Station shows it (`no pictures from pipeline 2 (missing?)`). When a camera is not in the robot
 configuration, or not working after 3 s, INIT shows a warning. The OpMode still runs.
 
@@ -310,7 +310,7 @@ as one target, with the same name as the webcam's SDK cluster. In BIOBUZZ, a gro
 each CELL (`TagGroup.biobuzz()`).
 
 **Right side up or not:** the tag numbers in a row rise to the right when the tags are right side up
-(as printed). So the order of the tags in the picture says how the row is turned: the group's
+(as printed). So the order of the tags in the picture says how the row is turned. That is the group's
 `rollDeg` (0 = right side up, 180 = upside down). This needs only the tags' places. The Limelight
 also sends each tag's turn in its pose. But the Limelight's docs and the FTC SDK do not agree on which
 number in that list is the roll. So a single tag's `rollDeg` is the SDK's reading.
@@ -322,8 +322,8 @@ tag size in the pipeline).
 
 **The webcam aims somewhere else.** Its cluster target is the SDK's own aiming point, not the tag row.
 The SDK puts it 7.2 in toward the tags' printed top and 5.6 in behind them. In BIOBUZZ the printed
-bottom faces the field center. So the point is about 9 in farther from a robot in front of the CELL,
-1 in higher than the row, and not at the CELL opening. The two cameras give about the same bearing but a
+bottom faces the field center. So for a robot in front of the CELL, the point is about 9 in farther away
+and 1 in higher than the row. It is not at the CELL opening. The two cameras give about the same bearing but a
 different distance. Make the shot table with the camera the robot uses.
 
 ```java
@@ -430,13 +430,11 @@ The filter does two checks, one after the other:
 1. **The middle of the last 5 pictures** (the median): sort them and take the one in the middle. One or
    two bad pictures end up at the ends of the list, so the filter never uses them. It costs about 2
    pictures of delay (0.07 s at 30 pictures a second).
-2. **The jump check:** the filter uses a distance more than 12 in from the one in use only after 3
-   pictures in a row, each within 4 in of the one before. A camera never gives the exact same number
+2. **The jump check:** when a new distance is more than 12 in from the one in use, the filter waits. It uses the new distance only after 3 pictures in a row, each within 4 in of the one before. A camera never gives the exact same number
    twice, so the check needs that tolerance. A real move gets through in about 0.1 s. A glitch of a
    few pictures does not.
 
-**After a gap it starts over.** After 0.5 s with no new picture (the goal out of view), a big change is
-normal: the HIVE tipped, or the robot drove away for pieces. So the first distance after the gap skips
+**After a gap it starts over.** After 0.5 s with no new picture (the goal out of view), a big change is normal. For example, the HIVE tipped, or the robot drove away for pieces. So the first distance after the gap skips
 the jump check. It still waits for 3 pictures, so one glitch as the goal comes into view stays out.
 
 Only NEW pictures count (each picture's own time, `timeNanos`). So a loop faster than the camera does not

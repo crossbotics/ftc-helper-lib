@@ -102,7 +102,7 @@ For a PID controller you made yourself, call `PidTunables.of("Arm", kP, kI, kD, 
 
 The menu uses gamepad 1's D-pad, A, X, Y and bumpers. Without a pause, pressing Y in the menu ("reset all")
 would ALSO do whatever Y does for the driver. So give the menu key its own small button
-list, and pause the driver's gamepad-1 buttons (and sticks) while the menu is open:
+list. Pause the driver's gamepad-1 buttons (and sticks) while the menu is open:
 
 ```java
 TuningMenu tuning = new TuningMenu(gamepad1);
@@ -131,7 +131,7 @@ The starter kit's `MainTeleOp` already has this code.
 > **Not at events (2026-27 rule R704.D):** the game manual bans "additional logging/streaming
 > services, such as those hosted by third party plugins and tools such as FTC Dashboard, FTControl
 > Panels, and others". Only the Driver Station app may stream telemetry. Use these tools at home and
-> in practice only, and **take them out of the robot project before an event**: remove or comment out
+> in practice only. **Take them out of the robot project before an event**: remove or comment out
 > their Gradle lines, then build and install again. The library's own tuning menu works through the
 > Driver Station, so the rule allows it.
 

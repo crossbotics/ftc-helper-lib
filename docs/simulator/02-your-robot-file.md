@@ -66,7 +66,7 @@ shape.lift = slide, at=-7,0,4, size=2x2x12, axis=up, motor=lift   # from Robot.j
 ```
 
 - **`# from Robot.java`:** the simulator wrote this line, and it writes it again at every start.
-- **`TODO measure`** after it: a guess. Your code does not say where this part sits, so the simulator put it in a
+- **`TODO measure`** after it: a guess. Your code does not say where this part sits. So the simulator put it in a
   typical place: the intake across the front, a lift at the back, a turret on top in the middle, a claw on
   the end of the lift or arm. The guesses fit the size rules (the 18 in start cube, 29 in tall).
 
@@ -147,7 +147,7 @@ starts.
 
 ## Done when
 
-- `simulator/robot.properties` exists in your robot project, and it is committed.
+- `simulator/robot.properties` exists in your robot project, and you committed it.
 - INIT of your TeleOp works in the simulator.
 - You know which lines say `TODO measure`.
 

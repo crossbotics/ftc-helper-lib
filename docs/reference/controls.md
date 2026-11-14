@@ -69,7 +69,7 @@ has its usual lines under **Buttons to add**. Copy them as they are, or change a
 - **To use another button:** change `g2.rt` to, for example, `g2.lb`.
 - **With one driver:** set `oneDriver = true` in `Controls.java`. Then the `g2` lines go on gamepad 1. You do
   not change them. A line on a button gamepad 1 already uses (its sticks, the stick clicks, BACK) stops
-  INIT, and INIT names the button: give the line a free one.
+  INIT. INIT names the button: give the line a free one.
 - **On gamepad 1, with two drivers:** write `g1` and a free button, for example `g1.rb`. Gamepad 1's LT is slow
   mode, so do not use it. If you pick a button the library uses, INIT stops and names it.
 - Each line has: which button, how it starts (`.hold`, `.toggle`, `.press`...), what it does, and
@@ -90,7 +90,7 @@ has its usual lines under **Buttons to add**. Copy them as they are, or change a
 | `hold(...)` with other gestures | every loop while held, from 0.3 s on (`Tunables.Buttons.holdSec`), so a quick tap stays a tap |
 | `tapThenHold(whileHeld)`, `tapThenHold(whileHeld, onRelease)` | a quick tap, then press again and hold: every loop while held |
 | `with(other, job)` | a pair: hold this button (the shift key, no job of its own) and press `other` (same gamepad) to run `job` once. Pressed alone, `other` keeps its own job |
-| `rumble()`, `rumble(n)` | feedback: buzzes when the job (or the gesture just before) runs; a toggle buzzes 2 = on, 1 = off |
+| `rumble()`, `rumble(n)` | feedback: buzzes when the job (or the gesture right before it) runs; a toggle buzzes 2 = on, 1 = off |
 | `slow()` | one driver (or two after `lib.slow(null)`): on a trigger, drives slower the further it is pulled (down to `slowSpeed`); on a button, slow while held |
 | `free()` | no job: the button stays free |
 | `says(words)` | the words on the help page |
@@ -101,9 +101,9 @@ has its usual lines under **Buttons to add**. Copy them as they are, or change a
 | on a stick: `free()`, `says(words)`, `needs(part...)` | as on a button |
 | in `buttons(...)`: `show(label, value)` | your own value on the Driver Station, read again every loop, e.g. `show("Lift ticks", robot.lift::position);` or `show("Ready", () -> robot.launcher.isReady());`. The Driver Station hides it while the tuning menu or the button map is open. `value` must not wait. An error in it shows as `error: ...` and does not stop the OpMode |
 
-- **While the robot is paused** (BACK), no button or stick job runs, with one exception: a hold's stop job
-  (the second job of `hold(job, stopJob)`) still runs when the button is let go, or when the pause starts
-  during a gesture's hold. So the part stays stopped.
+- **While the robot is paused** (BACK), no button or stick job runs, with one exception. A hold's stop job
+  (the second job of `hold(job, stopJob)`) still runs when the driver lets go of the button, or when the pause
+  starts during a gesture's hold. So the part stays stopped.
 - **A gesture's job runs at once,** unless the button has a longer gesture that starts the same way. Then
   it waits until it knows which one the driver means (the driver lets go, or `Tunables.Buttons.tapGapSec`,
   0.35 s, passes).
@@ -169,8 +169,8 @@ whole map and the free buttons.
 ## One driver
 
 - The left stick click switches slow on/off, and the right stick click switches field-centric.
-- To put slow on a trigger instead, give it `.slow()`: `g1.lt.slow();` slows the robot the further LT is
-  pulled (down to `slowSpeed` at a full squeeze, like the two-driver LT). On a button, `.slow()` is slow
+- To put slow on a trigger instead, give it `.slow()`. `g1.lt.slow();` slows the robot the further you pull
+  LT (down to `slowSpeed` at a full squeeze, like the two-driver LT). On a button, `.slow()` is slow
   while held.
 - Write the switch exactly as `public static boolean oneDriver = true;`. INIT stops with a message if it
   is not static.
@@ -193,7 +193,7 @@ It is optional, and off by default. Turn it on with `lib.switchAlliance(g1.start
   again gets it).
 - The pose follows too, because autonomous ran as the wrong alliance. On a mirrored field (the reset
   spot's `mirrorForRed` true), the library mirrors it in place (x and heading flip). On a turned field
-  (`mirrorForRed = false`, BIOBUZZ), the pose counts as not set, so the aim's odometry backup is off until
+  (`mirrorForRed = false`, BIOBUZZ), the pose counts as not set. So the aim's odometry backup is off until
   you use "set pose here" (the note says so).
 - INIT's `Switch alliance` line says whether it is on.
 

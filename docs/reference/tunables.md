@@ -9,7 +9,7 @@ or servo, the library takes the default from the [parts catalog](../guides/parts
 ([First run](#first-run-what-you-get-before-tuning)). Copy only the lines you want to change.
 
 The part pages list every number the library reads from `Tunables.java`. A script
-(`tools/check_tunables.py`) reads the library's code and checks the pages against it, so the list is
+(`tools/check_tunables.py`) reads the library's code and checks the pages against it. So the list is
 complete: if a part reads a new number, the check fails until the number is on its page.
 
 ## Each part's numbers
@@ -49,8 +49,8 @@ This table moved to [Fix it by what you see](../tuning/17-fix-by-symptom.md) in 
    values it used.
 3. If INIT stops and asks for a number (a lift's `min` and `max`, a turret's stops), add the part's
    section to `Tunables.java` with that number. The message names the tool that finds it.
-4. Optional: write a line for each setting in the part's table, set to `DEFAULT`, with a short comment,
-   and `MEASURE` for the numbers only your robot can give. Then the file shows every setting the part
+4. Optional: write a line for each setting in the part's table, set to `DEFAULT`, with a short comment.
+   Write `MEASURE` for the numbers only your robot can give. Then the file shows every setting the part
    has, and you can change one when you need to. Leaving a line out does the same as `DEFAULT`. The
    [Cookbook](../cookbook/README.md) shows each part's section this way.
 
@@ -199,10 +199,10 @@ setting is in the file from day one, and the file shows what is still to do. Pic
 
 **Why positions are `MEASURE`:** the library's guesses (a Positioner's `stowed` 0.0 and `deployed` 0.5)
 are not your servo's. With `DEFAULT` the servo goes to a guess at the first command after ▶ (start on the
-Driver Hub), and a guess can push the part into the frame. With `MEASURE` your TeleOp and autos stop at
+Driver Hub). A guess can push the part into the frame. With `MEASURE` your TeleOp and autos stop at
 INIT until the [Servo Finder](../tuning/03-servo-finder.md) gives the numbers. A
-part that is `optional()` and not plugged in does not stop, so the simulator still runs before the servo
-is mounted. A wrong tuning number only makes a part slow or soft, so `DEFAULT` (a starting value from the
+part that is `optional()` and not plugged in does not stop, so the simulator still runs before you mount
+the servo. A wrong tuning number only makes a part slow or soft, so `DEFAULT` (a starting value from the
 part) is fine there.
 
 Add this line at the top of `Tunables.java`, under the `package` line and above `public class Tunables`:
@@ -244,15 +244,15 @@ Servo Finder still run: they do not read `Tunables.java`. For a lift's `min` and
 
 1. On the Driver Station, choose **Motor Finder**, press INIT, then ▶ (start).
 2. Put the lift at the bottom. Choose `lift` (D-pad, then A): its count starts at 0 there.
-3. Move it with gamepad 1's right stick. Press **X** just above the bottom block (`min`) and **B** just
+3. Move it with gamepad 1's right stick. Press **X** a little above the bottom block (`min`) and **B** a little
    below the top block (`max`).
 4. It shows the numbers: `Tunables.Lift: min = 0, max = 2580`.
 5. Write each number in place of `MEASURE`, build, and INIT your TeleOp again.
 
 - A part that is `optional()` and not on the robot does not stop on `MEASURE`.
 - **In the simulator,** INIT does not stop. `./gradlew :sim:fromRobot` writes a stand-in for each
-  `MEASURE` in the simulator's robot file (`tunable.IntakeDeploy.deployed = 0.5`), and the simulator uses
-  it in place of `MEASURE` ([MEASURE in the simulator](../simulator/02-your-robot-file.md#5-measure-numbers-and-missing-parts)).
+  `MEASURE` in the simulator's robot file (`tunable.IntakeDeploy.deployed = 0.5`). The simulator uses
+  that stand-in in place of `MEASURE` ([MEASURE in the simulator](../simulator/02-your-robot-file.md#5-measure-numbers-and-missing-parts)).
   The real robot never reads that file, so it still stops.
 - `:sim:newRobot` writes every part's settings this way.
 - For a part not in the catalog, [describe it in Robot.java](robot-java.md#parts-not-in-the-catalog).
@@ -261,19 +261,19 @@ Servo Finder still run: they do not read `Tunables.java`. For a lift's `min` and
 
 A new robot runs before any number is tuned. Every number has a safe starting value. When Robot.java
 names the motor or servo (`Launcher.flywheel("launcher", "gobilda-5203-6000")`,
-`.part("gobilda-5203-435")`), the library works out the starting value from that part's numbers in the
+`.part("gobilda-5203-435")`), the library works out the starting value from that part's numbers. They come from the
 [parts catalog](../guides/parts-catalog.md) (the seller's numbers, with the date they were checked). INIT
 shows one note per part with the values it used, where they came from and the tool that tunes them. A
 number you write always wins. Writing [`DEFAULT`](#default-and-measure) does the same as leaving the line
 out. **With no part named, or a part whose numbers are not known** (`Motors.unknown`, a custom part with
-`Double.NaN`), the library uses the general default (the plain one in each part's table), and INIT says so.
+`Double.NaN`), the library uses the general default (the plain one in each part's table). INIT says so.
 
 > **Always name the part.** Write the part number on each part's line in `Robot.java`:
-> `.part("gobilda-5203-1150")` on an intake, lift, claw or wrist, or the motor's id in the brackets on a
-> launcher, an arm or a turret (`Launcher.flywheel("launcher", "gobilda-5203-6000")`). The number is on
+> `.part("gobilda-5203-1150")` on an intake, lift, claw or wrist. On a launcher, an arm or a
+> turret, write the motor's id in the brackets (`Launcher.flywheel("launcher", "gobilda-5203-6000")`). The number is on
 > the motor's or servo's label; the [parts catalog](../guides/parts-catalog.md) lists them. **Why:**
 > `DEFAULT` then starts from that part's real numbers (a lift's gains, a servo's move time, a flywheel's
-> speed control), the simulator moves the part like the real one, and the code says what is on the robot.
+> speed control). The simulator moves the part like the real one, and the code says what is on the robot.
 > For a part not in the catalog, use [`Motors.custom(...)` or `Parts.customServo(...)`](robot-java.md#parts-not-in-the-catalog).
 > A robot works without it, but INIT notes "no part in Robot.java, so general defaults".
 

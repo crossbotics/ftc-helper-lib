@@ -115,7 +115,7 @@ With rate 2.0, going from 0 to full power takes 0.5 seconds.
 | `reset(value)` | jumps straight to a value (for example 0 when you stop) |
 | `getValue()` | the last output |
 
-Tip: let it slow down faster than it speeds up (`fall` > `rise`), so the robot still stops quickly.
+Tip: let it slow down faster than it speeds up (`fall` > `rise`), so the robot still stops fast.
 
 ## Feedforward
 

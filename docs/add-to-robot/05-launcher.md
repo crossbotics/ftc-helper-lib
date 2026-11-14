@@ -147,8 +147,8 @@ With one gamepad (`oneDriver = true`), these `g2` lines work on gamepad 1
 - **It spins up at ▶** when it has a feeder or a feed stop. A launcher that only the intake feeds
   (`pushedBy` only) waits for LB. Change it with `spinAtStart = true` or `false` in `Tunables.Launcher`.
 - **Other buttons:** `robot.launcher.fireOn(g2.y);` puts the fire job on Y. Do not give the fire button a
-  double tap or a long press of your own: then a quick press waits to see the gesture, and does not fire at
-  once.
+  double tap or a long press of your own. With one, a quick press waits to see the gesture, and does not
+  fire at once.
 
 Every setting: [Firing: shot modes](../reference/parts/launcher.md#firing-shot-modes-feed-stop-piece-path).
 
@@ -189,7 +189,7 @@ s.start("Against our wall, facing the field", 0)
  .right("Park", 12, 0.5);
 ```
 
-**No camera?** Then the launcher has no distance, and shoots at `speedRpm`. An auto that shoots from two
+**With no camera:** the launcher has no distance, and shoots at `speedRpm`. An auto that shoots from two
 spots gives each spot its own speed: `.action(robot.launcher.fireAllAction(2250))` fires every piece at
 2250 RPM, then goes back to `speedRpm`.
 
@@ -259,7 +259,7 @@ to 0. The Driver Station shows `Speed trim : +3%  READY`.
 
 - The trim starts at 0 at every INIT. At INIT, the Driver Station offers the last trim: double-tap D-pad up
   after ▶ to use it.
-- **The same trim match after match?** The table is off. Multiply each speed in the table by the trim
+- **The same trim match after match:** the table is off. Multiply each speed in the table by the trim
   (+3%: x 1.03), put the new line in `Tunables.java`, and go back to no trim.
 - **A low battery** makes the wheel slow to get back to speed after a shot. Under 11.5 V the Driver Station
   warns. Swap the battery. Battery compensation is off, and not yet tested on a robot
@@ -312,8 +312,8 @@ Every setting, a linkage and a motor hood: [Hood](../reference/parts/hood.md).
 
 ### Know which piece fires next
 
-A color sensor where the pieces come in, and one at the "ready to fire" place, let the robot count what it
-holds and know the next piece. Then the next piece picks the shot table, and the drivers do not switch
+Two color sensors let the robot count what it holds and know the next piece: one where the pieces come in,
+and one at the "ready to fire" place. Then the next piece picks the shot table, and the drivers do not switch
 tables by hand.
 
 **Where:** `Robot.java`, in `define()`, **before** the launcher line (the launcher uses `pieces`). The

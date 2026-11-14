@@ -15,7 +15,7 @@ Your robot's code is five files in the `teamcode` folder. Each file has one job:
 Yes. "Five files" counts the five jobs, not the exact number of files. The fifth one, `autos/`, is a
 folder. It has one file for each autonomous, so a robot with three autos has seven files.
 
-You can also see a few small files next to these, for example a finder (a small program that measures
+You can also see a few small files next to these. For example: a finder (a small program that measures
 one number for you), or `Routes.java` for routes that several autos share
 ([Advanced autos](../building-autos/08-advanced-autos.md)). They do not hold any of the robot's
 parts, numbers or buttons. Those always stay in the four files and the `autos/` folder.

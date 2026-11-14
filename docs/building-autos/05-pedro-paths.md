@@ -13,7 +13,7 @@ Smooth curved paths in autonomous, driven by the Pedro Pathing library.
 A **path follower** drives the robot along a line or a curve, and corrects it all the way. **Pedro Pathing**
 is a separate library. The library's `pedro` add-on connects it to your robot.
 
-- **Do you need it?** `driveTo` drives a straight line to a point and ends on it. That is enough for many
+- **When you need it:** `driveTo` drives a straight line to a point and ends on it. That is enough for many
   autos. Pedro is for curves, for paths with no stop between parts, and for facing a point while the robot
   drives.
 - **Paths use the same field numbers as `driveTo`** ([Drive to points](04-drive-to-points.md#field-numbers)): inches, seen from your own drivers' wall.
@@ -170,8 +170,8 @@ its control point, so check the bend too. The example path, seen from the red wa
 
 ![The example path: a line from the start to (-48, -50), a curve to the goal at (-30, -30), then a driveTo to park](../images/biobuzz-pedro-path.svg)
 
-**Or draw it:** the [Pedro Path Builder](https://crossbotics.com/ftc-helper/path-builder/) (a web page, no
-install) draws the robot along the path, marks in red where it hits a field part or a wall, and writes
+**Or draw it:** the [Pedro Path Builder](https://crossbotics.com/ftc-helper/path-builder/) is a web page,
+with no install. It draws the robot along the path, marks in red where it hits a field part or a wall, and writes
 the `PedroPath` code. The simulator's auto builder does the same, and runs the path
 ([page 7](07-auto-builder-odometry-and-pedro.md)).
 
@@ -216,8 +216,8 @@ In place of a name and a command, `PathAt` can take an action from your `Actions
 `PathAt.inchesLeft(12, Actions.scoreHigh(robot))`. `driveTo` takes `PathAt` too. More:
 [PathAt](../reference/parts/path-follower.md#pathat).
 
-**Try every path in the simulator first.** It runs Pedro like the real robot, so it is the safe place to
-find a path that hits a wall. The field map draws the plan (orange, dashed) and where the robot really went
+**Try every path in the simulator first.** It runs Pedro like the real robot. So it is the safe place to
+find a path that hits a wall. The field map draws the plan (orange, dashed) and where the robot went
 (green). Where the green line leaves the orange one, the robot hit something, or it went too fast to turn
 or brake. Then move a control point, or slow that part with `maxSpeed(0.5)`. Keep half the robot's width
 clear on each side of the line. The auto builder draws and runs paths too

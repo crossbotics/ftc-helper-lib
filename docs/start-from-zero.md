@@ -40,7 +40,7 @@ What each part is:
   is the name in the TeleOp list. `@Disabled` hides the OpMode from the list.
 - **`{` and `}`** (curly brackets) hold a group of lines together. Every `{` has its own `}` further
   down. The class has one pair. Each part inside it has its own pair.
-- **`;`** (semicolon) ends a statement (one command), like a full stop ends a sentence.
+- **`;`** (semicolon) ends a statement (one command), like a period ends a sentence.
 - **`//`** starts a **comment**: words for people, from `//` to the end of the line. Java ignores them.
 - **`"text in quotes"`** is text, used as it is (a name on the Driver Station, a motor name).
   Words **without** quotes are **names** in the code (`telemetry`, `init`). Do not add or remove
@@ -122,8 +122,8 @@ Later pages say "make a file" or "make a folder". Do it in the **Project** panel
 1. **A new Java file** (a class, for example `HardwareCheck.java`): right-click the `teamcode` folder and click
    **New > Java Class**. Type the name **without** `.java` (`HardwareCheck`), pick **Class**, and
    press Enter. Android Studio writes the `package` line for you. Then replace everything in the new
-   file with the whole file the page shows (select all with **Edit > Select All**, then paste), and
-   check that the first line is still `package org.firstinspires.ftc.teamcode;`.
+   file with the whole file the page shows (select all with **Edit > Select All**, then paste).
+   Check that the first line is still `package org.firstinspires.ftc.teamcode;`.
    **Why:** the file name must be the class name, and the `package` line must match the folder.
 2. **A Java folder** (a folder of code, for example `autos`): right-click the `teamcode` folder, click
    **New > Package**, and type `autos` (after the `teamcode.` that is already there). A file in it

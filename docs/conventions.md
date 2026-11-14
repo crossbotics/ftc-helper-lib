@@ -25,7 +25,7 @@ Before v0.40.0, a move's direction counted clockwise (90 = right). To update an 
 
 **Why TeleOp's turn command is clockwise-positive, but every autonomous angle is counterclockwise-positive:**
 
-- The right stick's X is positive when pushed right, and pushing right should turn the robot right.
+- The right stick's X is positive when you push it right. Pushing right should turn the robot right.
   So `drive(forward, strafe, gamepad1.right_stick_x)` works with no sign change.
 - The FTC SDK's IMU makes the heading grow when the robot turns left. That is the math rule
   (counterclockwise = positive), and we do not fight the SDK.

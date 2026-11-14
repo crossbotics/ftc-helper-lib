@@ -43,7 +43,7 @@ turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(cam
 
 - `.gearRatio(5)`: how many turns the motor makes for one turn of the turret. Count the teeth: turret gear
   / motor gear. A 20-tooth gear on a 100-tooth ring is 5.
-- `.follows(camera)`: the turret follows the goal from ▶. **No camera yet?** Leave out the camera line and
+- `.follows(camera)`: the turret follows the goal from ▶. **With no camera yet:** leave out the camera line and
   `.follows(camera)`. Add them on [Add a camera](07-camera.md).
 - When a name is red, click it and press Alt+Enter (Option+Enter on a Mac) to add the import.
 
@@ -98,7 +98,7 @@ aimed. Add this to the launcher's line in `Robot.java`:
 .requireReady("turret aimed", () -> turret.isAimed())
 ```
 
-For a turret that follows the goal, "aimed" means **at the goal now**: the robot sees the goal (camera or
+For a turret that follows the goal, "aimed" means **at the goal now**. The robot sees the goal (camera or
 odometry), and the turret is in range and on it. When the robot loses the goal, the turret is not aimed. So
 the launcher never fires blind.
 
@@ -211,7 +211,7 @@ INIT stops on `MEASURE`.
 **Tune it** with [Live tuning](../tuning/16-live-tuning.md), while the robot runs. Change one number, then
 let the turret follow the goal:
 
-1. **kP:** raise it until the turret aims quickly. If it shakes, go back a step.
+1. **kP:** raise it until the turret aims fast. If it shakes, go back a step.
 2. **kD:** if it goes past the goal and comes back, raise it a little at a time.
 3. **kI:** only if it stops a degree short, a very small number.
 

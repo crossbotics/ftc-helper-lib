@@ -13,8 +13,8 @@ before an event because someone changed the library. **You choose when to update
 
 An old library version keeps its old bugs. A new version brings:
 
-- **Fixes.** We fix a bug another team found (a lift that could overshoot, an autonomous step that did not
-  stop on time) once, in the library. You get the fix only when you update.
+- **Fixes.** Another team finds a bug (a lift that could overshoot, an autonomous step that did not stop
+  on time). We fix it once, in the library. You get the fix only when you update.
 - **Safety.** Limits, timeouts and stall checks get better. A safety fix protects your robot, your
   hands and the field.
 - **Game and SDK updates.** FIRST changes the game manual (Team Updates) and the FTC SDK during the
@@ -37,7 +37,7 @@ event may meet a change it has not tested. So: **update often, but not right bef
 - **The version list:** the [tags page](https://github.com/crossbotics/ftc-helper-lib/tags) shows every
   version (`v0.16.0`, ...), newest first.
 - **Check once a week** in the season (for example after the first practice of the week). In the season, new versions can come out several times a week.
-- **The docs site shows the newest release.** We put docs fixes on the site between releases, so the
+- **The docs site shows the newest release.** We put docs fixes on the site between releases. So the
   site can be a little ahead of the `ftc-helper-lib/docs` folder in your project. A box that says "Coming in
   the next release" describes something that is not in any version yet. If you use an older version, read
   the `docs` folder in your own project: it matches your version.
@@ -142,8 +142,8 @@ waiting for, never before an event.
 ## Update: GitHub Desktop
 
 GitHub Desktop has no button to change a submodule's version, so you type a few lines in a terminal it
-opens for you. Those lines need git on the command line, which GitHub Desktop does not give you on
-Windows: `git --version` must print a version first
+opens for you. Those lines need git on the command line. On Windows, GitHub Desktop does not give you
+command-line git: `git --version` must print a version first
 ([git is not recognized](troubleshooting.md#autonomous-choice-and-git-problems)).
 
 1. Commit and push your own work first (**Commit to main**, **Push origin**).
@@ -255,7 +255,7 @@ git add ftc-helper-lib
 git commit -m "Back to ftc-helper-lib v0.16.0"
 ```
 
-**Already pushed:** undo the update commit with a revert (a new commit that does the opposite), then
+**Already pushed:** undo the update commit with a revert (a new commit that does the opposite). Then
 put the library folder where the project now says.
 
 **Where:** Android Studio's **Terminal** tab, in the **project folder** (a new Terminal tab starts there). ([Which folder](setup/09-the-terminal.md#which-folder))

@@ -13,8 +13,8 @@ talks about. **The reading order:** [Set up](setup/README.md), [Read Java and ma
 
 ## The key idea: you never write the loop
 
-In Scratch, a game is a `forever` loop: every time round, it checks the keys and moves the sprite.
-A robot program is the same inside: a **loop** that runs many times a second. Each time round (each
+In Scratch, a game is a `forever` loop: every time around, it checks the keys and moves the sprite.
+A robot program is the same inside: a **loop** that runs many times a second. Each time around (each
 "loop"), it reads the gamepads, tells every motor what to do, and updates the Driver Station.
 
 **With this library, you do not write that loop.** The library runs it for you. Your job is
@@ -103,7 +103,7 @@ The FTC Blocks editor has blocks for the robot itself. Each one has a place in J
 | `if` the drivers chose something before the match | `onlyIf(...)` with a menu choice ([cookbook](cookbook/09-autonomous.md#how-do-i-let-the-drivers-choose-before-the-match)) | an autonomous |
 
 **The stick-up sign.** In FTC Blocks (and in the plain FTC SDK) a stick pushed **up** gives a
-**negative** number, so Blocks programs put a "negative" block (or `-1 *`) in front of
+**negative** number. So Blocks programs put a "negative" block (or `-1 *`) in front of
 `gamepad1.left_stick_y`. **Here the sign is already fixed:** every stick value the library hands you
 (`use(...)`, the driving) is **+ when pushed up or right**. Do not add the minus, or the part moves the
 wrong way. (You need the minus only when you read `gamepad1.left_stick_y` yourself, outside the library:
@@ -197,7 +197,7 @@ after one press of X, check `expect screen has "Count : 1"`. Check a `true`/`fal
 
 ## Java punctuation: a short guide
 
-- **`;`** ends a statement (one command), like a full stop. Every line inside `buttons(...)` ends with
+- **`;`** ends a statement (one command), like a period. Every line inside `buttons(...)` ends with
   one.
 - **A chain goes on over several lines.** A line that starts with `.` continues the line above it:
 

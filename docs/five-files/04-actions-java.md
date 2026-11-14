@@ -115,7 +115,7 @@ g2.x.press(robot.launcher.fireAllAction()).says("fire all");   // a ready-made a
 
 ## Use it in an autonomous
 
-In an autonomous, the same action is a step. The next page explains autonomous files. This page shows only
+In an autonomous, the same action is a step. The next page explains autonomous files. Below is only
 the action's line.
 
 <!-- recipe: action-fire-in-auto -->

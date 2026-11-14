@@ -272,8 +272,8 @@ feedStopRelease = ...`. It needs `robot()` (the robot in five files, with a laun
 With both positions saved, it also finds the two times: `Tunables.Launcher: feedStopMoveSec = ...,
 feedStopOpenSec = ...`.
 
-- `feedStopMoveSec`: from the servo's catalog speed and the angle between hold and release, plus 25% (the
-  seller's speed is with no load), rounded up to 0.05 s. Only with the part in Robot.java:
+- `feedStopMoveSec`: from the servo's catalog speed and the angle between hold and release, plus 25%,
+  rounded up to 0.05 s. The 25% is there because the seller's speed is with no load. Only with the part in Robot.java:
   `.feedStop("feed_stop", "gobilda-2000-speed")`.
 - `feedStopOpenSec`: LB spins the wheel up to `speedRpm`, RB fires a test shot. The longest test shot plus
   0.2 s, rounded up to 0.05 s.
@@ -286,7 +286,7 @@ finder, not for TeleOp or autonomous code.
 
 | Method | What it does |
 | --- | --- |
-| `spin(on)` | spins the wheel up to `speedRpm`, or stops it (a shot on its way is cancelled, the stop holds) |
+| `spin(on)` | spins the wheel up to `speedRpm`, or stops it (a shot on its way is canceled, the stop holds) |
 | `isSpinning()`, `isReady()` | the wheel is on; it is on and at speed |
 | `rpmNow()`, `targetRpm()` | the wheel's speed now; the speed it spins to (RPM) |
 | `fire()` | one test shot (only when ready and not busy) |
@@ -377,9 +377,8 @@ In every test, the sticks drive slowly (30%). D-pad up/down chooses a test. **A*
 | 3 Spin 3+ turns | turn in place at least 3 times | the offsets (Pinpoint), `trackWidthIn` + `perpForwardIn` (three wheels), `parallelLeftIn` + `perpForwardIn` (two). Not for an OTOS |
 | 4 Loop and back | from a tape mark, drive anywhere and back onto it | `checked = true` when it ends within 1 in and 2 degrees |
 
-The Spin test divides each pod's roll by the turn. It measures the turn with the Pinpoint's own heading (not
-wrapped: it keeps counting past 360 degrees), or with the Control Hub's IMU for dead wheels. It prints only
-the numbers to change (for dead wheels: `.trackWidthIn(..).perpForwardIn(..)` or
+The Spin test divides each pod's roll by the turn. It measures the turn with the Pinpoint's own heading, or
+with the Control Hub's IMU for dead wheels. The Pinpoint's heading is not wrapped: it keeps counting past 360 degrees. The test prints only the numbers to change (for dead wheels: `.trackWidthIn(..).perpForwardIn(..)` or
 `.parallelLeftIn(..).perpForwardIn(..)`). So `.reversed(...)` and the pod type stay as you wrote them. The
 output:
 
@@ -418,7 +417,7 @@ Without it, the tuner measures with the wheel counts.
 | --- | --- | --- |
 | 1 Creep | raises the power slowly until the robot rolls (forward, then right on a mecanum) | `moveMinPower`: that power x 1.3, at least 0.10 |
 | 2 Stops | moves of 6, 12 and 24 in, out and back, with `slowDownIn` 0, 3, 6, 9 and 12, until every move slides 0.5 in or less past its end | `slowDownIn`: the smallest that is good (or the best one) |
-| 3 Turns | turns 90, 135 and 45 degrees left and back | one change per round: `turnMinPower` (0.05, 0.08, 0.11), then `turnKp`, when it stops off target; `turnToleranceDeg` + 0.5 when it rocks just outside it; `turnKd` or less `turnKp` when it swings past; `turnKp` when it is slow |
+| 3 Turns | turns 90, 135 and 45 degrees left and back | one change per round: `turnMinPower` (0.05, 0.08, 0.11), then `turnKp`, when it stops off target; `turnToleranceDeg` + 0.5 when it rocks a little outside it; `turnKd` or less `turnKp` when it swings past; `turnKp` when it is slow |
 | 4 Drift | 48 in forward and back (and right and left) | how much the heading changes on a straight move. A report, nothing to copy |
 | 5 Move and turn (mecanum) | 24 in sideways while it turns 90 degrees (`moveWithTurn`), four times | `moveTurnScale` or `moveMaxTurnPower` |
 
@@ -610,8 +609,8 @@ copy it into `Tunables.java`, put the menu back to the code values (**Y**).
 ## CharacterizerOpMode
 
 Use it to measure how the real robot moves. This is called **characterizing** the robot. The numbers have two
-uses: **feedforward** in your code (the power a motor needs for a speed, see [Feedforward](control.md#feedforward))
-and **real numbers in the simulator** (its robot file). It needs `robotConfig()`, and `mechanisms()` for
+uses. In your code, they give **feedforward** (the power a motor needs for a speed, see
+[Feedforward](control.md#feedforward)). In the simulator, they are the **real numbers** in its robot file. It needs `robotConfig()`, and `mechanisms()` for
 lifts, arms and flywheels:
 
 ```java
@@ -687,9 +686,9 @@ It scales the powers to 12.8 V with the logged battery voltage.
 
 ## FinderOpMode
 
-To write your own finder, extend `FinderOpMode`. It is the shared frame of every finder: INIT (`setup()`,
-`showInit()`), the loop (`bind()` once, then `step()` and `show()` every loop, plus the results), and
-`stopAll()` at the end, always. When the finder stops, it saves the results to the file, and the screen says
+To write your own finder, extend `FinderOpMode`. It is the shared frame of every finder. INIT: `setup()`,
+`showInit()`. The loop: `bind()` once, then `step()` and `show()` every loop, plus the results. The end:
+`stopAll()`, always. When the finder stops, it saves the results to the file, and the screen says
 whether that worked. `runOpMode()` is `final`.
 
 | Field / method | What it is |
@@ -736,8 +735,8 @@ A D-pad list: `new Chooser(names)` (sorted A to Z), `next()`, `previous()`, `cur
 
 The step size that the servo finders (Servo, Feed Stop, Hood) nudge by. D-pad up/down moves the servo by the
 step, and D-pad left/right makes the step smaller / bigger. The sizes (`NudgeStep.SIZES`) are 0.1, 0.05, 0.01,
-0.005 and 0.001. It starts at 0.05. A big step gets close fast, and the smallest step finds an exact spot
-(0.001 is about a quarter of a degree on a 270 degree servo).
+0.005 and 0.001. It starts at 0.05. A big step gets close fast. The smallest step finds an exact spot:
+0.001 is about a quarter of a degree on a 270 degree servo.
 
 | Method | Does |
 | --- | --- |

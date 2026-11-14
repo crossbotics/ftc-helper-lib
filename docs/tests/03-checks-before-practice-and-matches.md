@@ -77,7 +77,7 @@ taps. Know where its hard stop is, and keep hands clear.
 | Servo parts | each named position; toggle; slow move | no buzzing at the ends (a buzz means the range is too wide) |
 | Flywheel | spin to 3 speeds; compare the RPM on the screen with a tachometer or a slow-motion video | the numbers agree within about 3%; READY within about 1 s |
 | Launcher | shoot 1, then 3 | each piece only when READY; `whyNotReady` names what is missing |
-| Turret | home; aim at 0, 90, -90, 180 and back; turn it by hand to each limit | the short way round; never past a limit; cables slack |
+| Turret | home; aim at 0, 90, -90, 180 and back; turn it by hand to each limit | the short way around; never past a limit; cables slack |
 | Camera | point it at a tag; read the bearing (positive = left), and the distance against a tape measure | the bearing sign is right; the distance is within about 5% |
 
 **Lift or arm steps:**

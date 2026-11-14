@@ -1,8 +1,8 @@
 # Building autos
 
 An **auto** (autonomous) is the program the robot runs by itself in the first 30 seconds of a match.
-You write it as a **list of steps**. These pages show every step you can use, how to put steps together,
-how to keep multiple autos, and how to build one on a picture of the field.
+You write it as a **list of steps**. These pages show every step you can use and how to put steps together.
+They also show how to keep multiple autos, and how to build one on a picture of the field.
 
 | # | Page | You learn |
 | --- | --- | --- |

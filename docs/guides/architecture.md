@@ -5,7 +5,7 @@
 **For:** students who have written a TeleOp and want the big picture. **You need:** nothing to
 install. [The five files](../five-files/README.md) helps.
 
-This page shows the whole library, and where your team's code goes. TeamCode is the folder in your
+The library has layers, and your team's code goes in the top one. TeamCode is the folder in your
 robot project where your team's own code lives.
 
 ## The layers
@@ -31,7 +31,7 @@ flowchart TB
 ```
 
 Your team writes the [five files](../five-files/README.md). They use the library's `robot` package (a
-package is a folder of classes that belong together): `Robot.java` extends `RobotDefinition`, and each
+package is a folder of classes that belong together). `Robot.java` extends `RobotDefinition`. Each
 `add(...)` line makes a module, such as `Intake` or `Lift`. A module is built on the plain parts underneath.
 It adds the things every team needs: its numbers in `Tunables.java`, its usual buttons, safety checks, and
 the simulator's picture of it.
@@ -57,14 +57,14 @@ flowchart LR
 ```
 
 - **Commands are quick.** A button sets a target ("lift to HIGH"). It never waits.
-- **`update()` does the work**, once per loop: PID (the math that moves a motor to a target and
-  holds it there), limits, jam checks, timing.
+- **`update()` does the work**, once per loop: PID, limits, jam checks, timing. PID is the math that moves
+  a motor to a target and holds it there.
 - **No `sleep()` in TeleOp.** While the code sleeps, the robot cannot react. Full guide:
   [Non-blocking code](non-blocking.md). Only autonomous moves and steps block, and they do it on purpose.
 
-The library runs this loop for you: in TeleOp, and during every step of an auto. You never write it. For the exact order, what each part reads
-and writes on the hub, when the library writes files and what stays between OpMode runs, read
-[what runs every loop](every-loop.md).
+The library runs this loop for you: in TeleOp, and during every step of an auto. You never write it.
+[What runs every loop](every-loop.md) gives the exact order and what each part reads and writes on the hub.
+It also says when the library writes files and what stays between OpMode runs.
 
 ## The interfaces (where new things plug in)
 

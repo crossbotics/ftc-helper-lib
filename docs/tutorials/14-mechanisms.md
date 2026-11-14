@@ -2,8 +2,7 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**In the five files:** one line in `Robot.java` adds a lift, an intake or a wrist, and the library builds
-it from these helpers ([Add to your robot](../add-to-robot/README.md)).
+**In the five files:** one line in `Robot.java` adds a lift, an intake or a wrist. The library builds it from these helpers ([Add to your robot](../add-to-robot/README.md)).
 **Build it by hand** to see what the five-files parts are made of, or for a part with no module.
 
 **You will build:** one program that runs a lift, a wrist, an intake and a spinner with four helpers: a

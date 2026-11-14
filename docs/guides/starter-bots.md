@@ -31,15 +31,15 @@ came from.
 your TeamCode, read [Start from a starter bot](../pick-your-start/01-starter-bot.md). The library has no
 catapult part (AndyMark), and it cannot put a gear between a flywheel motor and its wheel (Studica). Those
 two files use the closest part and say so. Each file names each part's motor or servo (`.part(...)`, or the
-motor's id in a launcher's brackets), so the starting values are those parts' real numbers. Some parts are
+motor's id in a launcher's brackets). So the starting values are those parts' real numbers. Some parts are
 not in the parts catalog: Studica's Maverick motors and Multi-Mode Smart Servo, and AndyMark's High Speed
 programmable servo. The files describe them with `Motors.custom(...)` and `Parts.customServo(...)` and the
 seller's numbers.
 
 **The autonomous programs** (`autos/`) are the same for all five. Each starts at the simulator robot file's
 start spot: back against your wall, 56 in left of the center. `mirrorForRed()` returns false. BIOBUZZ's
-field is turned half a turn between the alliances (not mirrored), so the same route works for both, when
-each alliance drives it from its own wall.
+field is turned half a turn between the alliances (not mirrored). So the same route works for both
+alliances, when each one drives it from its own wall.
 
 **Shooting in the simulator:** only the two goBILDA bots shoot. The REV, AndyMark and Studica files have no
 `shoot.` line, because their sellers do not publish the launch direction and angle. So their launchers spin,
@@ -67,8 +67,8 @@ To run its scenario (`-Pfile=` picks the scenario file):
 ```
 
 **How sure the numbers are:** goBILDA and AndyMark publish STEP CAD files. We measured them on a laptop
-(the bounding box of each part) and wrote down only the numbers, so their sizes and part positions are
-measured. REV's CAD is on Onshape, which needs a sign-in. Studica's STEP download sits behind a browser
+(the bounding box of each part: the smallest box around it) and wrote down only the numbers. So their
+sizes and part positions are measured. REV's CAD is on Onshape, which needs a sign-in. Studica's STEP download sits behind a browser
 check. So we worked out their sizes from the part lengths in the build guides and the photos, and marked
 them "est." in the file. No seller's CAD is in this repository: nobody checked the licenses, and the robot
 files hold only our own numbers.
@@ -83,7 +83,7 @@ files hold only our own numbers.
 
 Make the robot configuration on the Driver Station with these names ([how](../setup/07-robot-configuration.md)).
 They are the names in each seller's own code, so the template runs on the starter bot as it is. Use the
-port that each wire is really in. Leave the `imu` line as it is (the Control Hub's own IMU). When a motor
+port that each wire is in on your robot. Leave the `imu` line as it is (the Control Hub's own IMU). When a motor
 type is not in the Driver Station's list, pick the closest one: the library takes the motor's numbers from
 `Robot.java`.
 
@@ -221,10 +221,10 @@ backward at 147 degrees from forward, because the hood rises 33 degrees toward t
 simulator's shot arc says "shoots backward, 33° up" for it.
 
 Its autonomous, **goBILDA Bot Launch and Back Up**, starts with the robot's back against your wall, left
-of center (x -56, y -63, facing the field). The simulator puts it there at INIT. It fires the preload up
-and back over the robot, then drives `Away from the wall` (forward 4.7 in, at power 0.4). The robot is
-15.1 in long, so at y -63 its center is 7.5 in from the wall's inside face (y -70.6). goBILDA's code
-launches for 10 s. Here the launch ends as soon as the last piece is fed.
+of center (x -56, y -62.95, facing the field). The simulator puts it there at INIT. It fires the preload up
+and back over the robot, then drives `Away from the wall` (forward 4.7 in, at power 0.4). Its frame is 15.1 in long (17.8 in with the intake wheels), so at y -62.95 its center is
+7.6 in from the wall's inside face (y -70.585). goBILDA's code
+launches for 10 s. Here the launch ends as soon as the feeder sends the last piece.
 
 ### goBILDA bot code
 
@@ -253,11 +253,11 @@ five files. Part by part:
 - D-pad up/down: flywheel speed +/- 50 RPM.
 
 One difference from goBILDA's code: there, RB also spins the wheel up. Here LB spins it up too, so the
-driver can spin up early and fire the moment the shot is lined up. RB alone also works: it spins up
+driver can spin up early and fire the moment the shot lines up. RB alone also works: it spins up
 first, then fires.
 
 Not modeled or not published:
-- The exit angle and speed of a shot are not published. We estimated them from the hood, and `share=0.5`
+- goBILDA does not publish the exit angle and speed of a shot. We estimated them from the hood, and `share=0.5`
   is the default.
 - The 100T/20T gear pair on the intake: the guide does not make clear which gear is on the motor. The
   simulator does not use it anyway, because a roller only needs to turn.
@@ -271,13 +271,13 @@ the [Strafer Chassis Kit page](https://www.gobilda.com/strafer-chassis-kit-104mm
 [example code (ZIP)](https://www.gobilda.com/content/downloads/3200-2627-0004_example-code.zip) and
 [STEP CAD (ZIP)](https://www.gobilda.com/content/step_files/3200-2627-0004.zip), measured with `tools/cad/robot_cad.py`.
 
-This is the same robot as the goBILDA StarterBot above, on a different chassis: the 2026-2027 FTC Starter
-Kit, a Strafer Chassis Kit and two Flat Pattern Mounts.
+This is the same robot as the goBILDA StarterBot above, on a different chassis. It uses the 2026-2027 FTC
+Starter Kit, a Strafer Chassis Kit and two Flat Pattern Mounts.
 
 Modeled: a mecanum drive (`left_front_drive`, `right_front_drive`, `left_back_drive`, `right_back_drive`:
 312 RPM Yellow Jackets through 1:1 miter gears, 104 mm GripForce mecanum wheels). The intake, corner
 wheels, launcher and windmill are the same as on the 6WD bot, measured again in this robot's CAD. Here the
-hood is tilted 37 degrees, so the shot leaves up and backward at 143 degrees from forward.
+hood sits at a 37-degree tilt, so the shot leaves up and backward at 143 degrees from forward.
 
 goBILDA's mecanum code is a TeleOp only. Its autonomous here, **goBILDA Strafer Bot Launch and Leave**, is
 ours. It starts with the back against your wall, like the 6WD bot's, and fires the preload. Then it drives
@@ -295,7 +295,7 @@ this robot in five files. It is the [goBILDA bot's code](#gobilda-bot-code) with
 **The TeleOp buttons** are the 6WD bot's, plus the sideways slide.
 
 Not modeled or not published:
-- The exit angle and speed of a shot are not published. We estimated them from the hood, and `share=0.5`
+- goBILDA does not publish the exit angle and speed of a shot. We estimated them from the hood, and `share=0.5`
   is the default.
 - In the CAD, the drive wheels sit 24 mm behind the frame's center. The simulator turns the robot about the
   frame's center.
@@ -327,11 +327,12 @@ It collects POLLEN.
 Not modeled or not published:
 - The shot: the simulator has no part for a catapult that a motor winds and rubber bands throw. AndyMark
   does not publish its release angle, which the hood sets.
-- The NeveRest Hex gearmotors (am-5442 / am-5550) are not in the parts catalog. The files use the NeveRest
+- The NeveRest Hex gearmotors (the drive's am-5442, am-5550-0100-019 in the CAD, and the catapult's am-5443)
+  are not in the parts catalog. The files use the NeveRest
   Orbital 20 and 50 (the same motor and ratio). AndyMark's page gives only "~344 RPM" and "~130 RPM".
 - The drivetrain has its own guide (ROBITS Starter Chassis), which we did not read. The 1:1 gears and the
-  wheel base come from the CAD. The track width is estimated, because each side is in its own CAD frame.
-- The intake rollers' exact place inside the intake subassembly is estimated.
+  wheel base come from the CAD. We estimated the track width, because each side is in its own CAD frame.
+- We estimated the intake rollers' exact place inside the intake subassembly.
 
 ### AndyMark bot code
 
@@ -344,7 +345,7 @@ as it is. These facts are not in the code's comments:
   code uses `"am-neverest-orbital-20"`. The right motor runs reversed, as AndyMark's code sets it.
 - **Intake:** `rollerI` runs reversed (REVERSE in AndyMark's code), and the flower roller `rollerF` runs
   with it. Their servo is the kit's 4-wire Programmable Servo, High Speed (am-4955a), in continuous mode.
-  It is not in the parts catalog, so `Parts.customServo("am-4955a", 300, 0.05)` describes it with
+  It is not in the parts catalog. So `Parts.customServo("am-4955a", 300, 0.05)` describes it with
   AndyMark's numbers: 300 degrees, 0.05 s per 60 degrees at 6 V (the only speed listed;
   [am-4955](https://andymark.com/am-4955), read 2026-10-23). AndyMark's code runs the rollers at full
   power both ways.
@@ -399,7 +400,7 @@ Not modeled or not published:
 - The flywheel turns at half the motor's speed (13T to 26T bevel gears). The simulator takes the rim speed
   straight from the motor, so a `shoot.` line would need `share=` halved.
 - Sizes: all estimated (nobody measured CAD). The Multi-Mode Smart Servo is not in the parts catalog, and
-  the kit page does not give its speed, so this file moves it at `servo.speed`. Studica's
+  the kit page does not give its speed. So this file moves it at `servo.speed`. Studica's
   [servo page](https://docs.wsr.studica.com/en/latest/docs/Motors/servo-motors.html), read 2026-10-23,
   gives 300 degrees, 0.25 s per 60 degrees at 4.8 V. `studicabot/Robot.java` uses these.
 
@@ -411,11 +412,11 @@ configuration names are the ones in Studica's own Blocks code, so it runs on tha
 facts are not in the code's comments:
 
 - **The Maverick motors and the Multi-Mode Smart Servo** are not in the parts catalog. So
-  `Motors.custom(...)` and `Parts.customServo(...)` describe them with Studica's own numbers: speed at
-  12 V and encoder counts per output turn from the
-  [Maverick page](https://www.studica.com/maverick-planetary-dc-gear-motor-wencoder-5091-ratio-gearbox),
-  and the servo from the [servo page](https://docs.wsr.studica.com/en/latest/docs/Motors/servo-motors.html),
-  both read 2026-10-23. The starting values and the simulator then use the real parts.
+  `Motors.custom(...)` and `Parts.customServo(...)` describe them with Studica's own numbers. The speed at
+  12 V and encoder counts per output turn come from the
+  [Maverick page](https://www.studica.com/maverick-planetary-dc-gear-motor-wencoder-5091-ratio-gearbox).
+  The servo's numbers come from the [servo page](https://docs.wsr.studica.com/en/latest/docs/Motors/servo-motors.html).
+  We read both on 2026-10-23. The starting values and the simulator then use the real parts.
 - **Drive:** two driven 100 mm wheels at the front (Maverick 50.9:1, bevel gears 1:1) and two free omni
   wheels at the back. The library reverses the left side by default, as Studica's code does.
 - **Intake:** Studica's code runs it at power 1 (in) on the right bumper and -1 (out) on the left bumper.
@@ -463,7 +464,7 @@ robot file and the notes on this page all use them.
    For several parts together, write an action in `Actions.java`
    ([Actions.java](../five-files/04-actions-java.md)).
 5. **When you changed the intake, or where the pieces ride:** count again how many pieces fit (POLLEN,
-   NECTAR, a mix), and change `.holds(...)` on the intake's line
+   NECTAR, a mix). Then change `.holds(...)` on the intake's line
    ([Tuning](../tuning/README.md)).
 
 ### A part taken off
@@ -516,9 +517,9 @@ The table shows what they changed, and what each change needed:
 | a flywheel on a sliding mount and a ramp that sends shots out of the back | none | only shapes and the shot angle (`.shotAngle(147)`) for the simulator |
 | new buttons (B: intake on/off) | none | `Controls.java` |
 
-They worked on the robot in the tuning order: the Hardware Check, the Servo Finder, the Flywheel
-Finder, then (on a block, at 0.4 power) the motor directions and the first drive, each mechanism, then
-the Drive Tuner and the autonomous.
+They worked on the robot in the tuning order. First came the Hardware Check, the Servo Finder and the
+Flywheel Finder. Then, on a block at 0.4 power, came the motor directions and the first drive, and each
+mechanism. Last came the Drive Tuner and the autonomous.
 
 ## What the simulator could not express (input for its next stages)
 
@@ -527,7 +528,7 @@ the Drive Tuner and the autonomous.
    flywheel shape does not change the shot.
 2. **A catapult.** AndyMark's rubber-band catapult: a motor winds it, and it lets go at the top of each turn.
    A stand-in is possible: the motor as a `flywheel` with `feeder=` itself, and a fixed `speed=` (in/s) on
-   the `shoot.` line, once someone films a real shot. The AndyMark file does not do this yet.
+   the `shoot.` line. It needs someone to film a real shot first. The AndyMark file does not do this yet.
 3. **An arm that reaches sideways and swings up/down** (REV's poker). `axis=up` only swings an arm flat.
    To swing it up and down while it reaches sideways, the simulator needs a second hinge.
 4. **Shot direction and angle:** no seller publishes them, and a shot needs them.

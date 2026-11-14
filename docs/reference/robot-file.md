@@ -17,7 +17,7 @@ Run every command from the `ftc-helper-lib` folder. A `-P` word after the comman
 
 `-PteamCode=` points at your robot project's TeamCode. Without it, a command finds `../TeamCode` when the
 library sits in a robot project. `-PteamCode=none` runs the library's own examples. With `-Plan`, anyone
-on that WiFi can open the page and run OpModes: use it on a team or home network, not on open school WiFi.
+on that WiFi can open the page and run OpModes. Use it on a team or home network, not on open school WiFi.
 
 | Command | Does | Options |
 | --- | --- | --- |
@@ -84,7 +84,7 @@ touch.lift_bottom = lift, below=20
 | `drive.wheelDiameterIn` | 3.78 | wheel size |
 | `drive.trackWidthIn`, `drive.wheelBaseIn` | 15, 13 | left-right and front-back wheel spacing |
 | `drive.mirrored` | `left` | which side's motors are mounted mirrored (turn the other way for the same power) |
-| `drive.strafeEfficiency` | 0.85 | how much of a strafe really happens (mecanum) |
+| `drive.strafeEfficiency` | 0.85 | how much of the asked strafe the robot makes (mecanum) |
 | `drive.kS`, `drive.accelSec`, `drive.turnDegPerCount` | 0, 0.15, worked out | from the Characterizer ([Real speeds](../simulator/03-make-it-match-your-robot.md#6-real-speeds-optional)) |
 | `imu = NAME` | none | the IMU's name |
 | `missing = a, b` | none | devices described in this file but NOT in the configuration: a part not on the robot yet ([Your robot file](../simulator/02-your-robot-file.md#5-measure-numbers-and-missing-parts)) |
@@ -124,7 +124,7 @@ forward and up sizes.
 ## Robot shapes
 
 The simulator can draw the robot as simple shapes: the chassis box, plus parts from a short menu, each
-moved by its motor or servo. The 3D view draws them, and the simulator checks the size rules with them:
+moved by its motor or servo. The 3D view draws them. The simulator checks the size rules with them:
 the 18 in start cube, and 18 x 24 in and 29 in tall (R105), now and **at full reach** (every moving part
 tried over its whole range). The Control Hub panel shows the sizes in green or red.
 
@@ -184,7 +184,7 @@ now), `expect size most ok` (every pose at full reach), `expect size floor ok` (
 now). `fail` instead of `ok` checks the opposite. Also `print size`, and `print cad` (see CAD models below).
 
 How the simulator checks "at full reach": it tries every combination of the moving parts' important
-values. A slide or claw is biggest at an end of its range. A hinge (arm, turret) is tried at both ends, at
+values. A slide or claw is biggest at an end of its range. The simulator tries a hinge (arm, turret) at both ends, at
 each multiple of 90 degrees, and every few degrees between. That is every 5 degrees or less with a few
 moving parts, and coarser with many, to stay under 50,000 poses. The panel shows the worst pose. It is a
 careful check, not a proof: leave a little margin, and measure the real robot at its hard stops.

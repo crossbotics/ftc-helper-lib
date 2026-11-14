@@ -82,7 +82,7 @@ example, not your copy.
 `./gradlew :sim:run -Probot=sim/robots/starter-bot-rev.properties -PteamCode=../TeamCode`
 
 You can also copy that file to `simulator/robot.properties` in your robot project. Then you do not need
-`-Probot`. Use the kit's file. A file from `:sim:fromRobot` guesses an 18 x 18 in robot, and then the
+`-Probot`. Use the kit's file. A file from `:sim:fromRobot` guesses an 18 x 18 in robot. Then the
 REV, AndyMark and Studica bots start "overlapping the field wall" on BLUE.
 
 **What the simulator cannot show yet** (so you know the problem is not in your copy):

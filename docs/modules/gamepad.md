@@ -208,9 +208,9 @@ bearing to the goal while the driver turns by hand. See [Aim](../reference/parts
 ## ButtonNames
 
 A student with a PlayStation controller has no button called "A". And "START" on a screen could mean
-the Driver Hub's ▶ or the small START button on the gamepad. So the library's screens (the finders,
-Tune and check, the Hardware Check, the TeleOp button map, the tuning menu) write each button as a
-short mark. Just before the library sends the screen, `ButtonNames` turns each mark into the name printed
+the Driver Hub's ▶ or the small START button on the gamepad. So the library's screens write each button as a short mark. These
+screens are the finders, Tune and check, the Hardware Check, the TeleOp button map and the tuning menu.
+Right before the library sends the screen, `ButtonNames` turns each mark into the name printed
 on the controller in use. Once a controller is linked, the FTC SDK says which kind it is (`gamepad.type`).
 
 | Mark | Logitech / Xbox (and before a controller is linked) | PlayStation (PS4, PS5, Etpark) |

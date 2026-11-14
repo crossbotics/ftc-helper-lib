@@ -50,7 +50,7 @@ Then come back here.
 ## 4. Check the IMU line
 
 Open `Robot.java`. Find the line with `.imu(`. It says where the Control Hub's **logo** faces, then
-where its **USB ports** face. Look at the hub on your robot. If it is mounted another way, change the line
+where its **USB ports** face. Look at the hub on your robot. If your team mounted it another way, change the line
 ([How your Control Hub is mounted](../five-files/01-robot-java.md#how-your-control-hub-is-mounted)).
 **Why:** the IMU (the sensor in the hub that knows which way the robot faces) must know how the hub sits.
 Turns in autonomous use it.

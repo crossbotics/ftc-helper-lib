@@ -70,7 +70,7 @@ TurretLift : both in their zones (...): move one out (each may only move out)
 ```
 
 **How a waiting part waits.** It stops two **margins** before its zone. The margin is a safety distance in
-the part's units: by default 3 degrees for a turret, about 1/50 of a lift's range, and 0.02 for a servo.
+the part's units. By default it is 3 degrees for a turret, about 1/50 of a lift's range, and 0.02 for a servo.
 The part keeps its target, so it goes on by itself the moment the other part leaves. A part within one
 margin of its zone counts as "in its zone".
 
@@ -101,10 +101,10 @@ this even when the computer is so busy that loops get slow.
 A part that moves so fast that it **cannot stop before its zone** counts as already in it. The other part
 waits, so the two never both start into their zones.
 
-`<part>StopSec` (optional, default 0.15 s) is how long the part takes to stop from full speed once its
-power is cut. A heavy slide or a big turret may take longer. To test it, push the stick fully toward the
+`<part>StopSec` (optional, default 0.15 s) is how long the part takes to stop from full speed once the library
+cuts its power. A heavy slide or a big turret may take longer. To test it, push the stick fully toward the
 zone. If the part ever ends past its waiting point, raise that number. The margin is then extra safety
-on top (for an encoder that slips, or a part that bends), and the part does not need it to coast. A servo
+on top (for an encoder that slips, or a part that bends). The part does not need it to coast. A servo
 needs no stop distance: the library never sends it past its fence. Until its `travelSec` is over, the
 servo counts as anywhere between where it was and where it was sent.
 
@@ -113,20 +113,18 @@ servo counts as anywhere between where it was and where it was sent.
 rule then holds the other part out. Without this, the lift would wait below the zone for ever.
 
 **A turret crossing its zone.** Take a turret at 80 degrees that you send to 250 degrees (the same
-direction as -110). Turning counterclockwise, it would pass through the back (109 to 239). When its range
-lets it reach -110 the other way round (a range like -190 to 190, or a slip ring), it turns clockwise
-instead and never waits. When it cannot (a range of -90 to 90 cannot reach either angle), it stops at 103
+direction as -110). Turning counterclockwise, it would pass through the back (109 to 239). When its range lets it reach -110 the other way round (a range like -190 to 190, or a slip ring), it turns clockwise instead and never waits. When it cannot (a range of -90 to 90 cannot reach either angle), it stops at 103
 (two margins of 3 before 109). It waits there while the lift is up.
 
-**Both in their zones.** This should never happen, but it can: at ▶ (start on the Driver Hub), after
-another robot pushed yours, or after someone moved a part by hand. Then no part keeps a zone. Neither part
+**Both in their zones.** This should never happen, but it can. It can happen at ▶ (start on the Driver Hub),
+after another robot pushed yours, or after someone moved a part by hand. Then no part keeps a zone. Neither part
 may go deeper, and each may only move out. As soon as one is out, the other keeps its zone.
 
 **A part whose position is not known.** A turret that has not found its home switch yet could point
 anywhere. A servo cannot say where it is. Until the library knows their positions, they count as "maybe in
 the zone", so the other part waits. A servo counts as anywhere between where it was and where it was sent,
 until its `travelSec` says it has arrived. So when a wrist must be folded before the lift goes down, the
-wrist is folded for sure before the lift moves. The Driver Station says why the other part waits:
+lift does not move until the wrist is surely folded. The Driver Station says why the other part waits:
 
 ```text
 TurretLift : Lift held at 110 counts: Turret angle unknown (not homed yet)
@@ -137,7 +135,7 @@ The library sends a servo turret to its `startAngle` (or the middle of its range
 until the first loop after ▶.
 
 **And the other way round:** a part whose position is not known does not move at all while the other part
-is in its zone: no homing, no stick, no first servo move. From "anywhere", it could sweep through the zone.
+is in its zone. That means no homing, no stick, no first servo move. From "anywhere", it could sweep through the zone.
 A turret waits to home while the lift is up, and it homes as soon as the lift is down. Its homing time
 limit waits too. A first move that cannot go into the zone from anywhere does not wait. An example is a
 wrist sent to "folded", below a zone at the top of its range.
@@ -309,7 +307,7 @@ would wait.
 
 **The lift** (`Tunables.Lift`) uses encoder counts from the bottom stop. 0 is where the lift is at INIT, so
 start with the slide down. The top stage moves 120 mm per motor turn, and the 435 RPM motor counts 384.5
-per turn: 3.2 counts per mm (the lifter design log).
+per turn. That gives 3.2 counts per mm (the lifter design log).
 
 - `pickup` 0: slide down. With the wrist at 20 degrees, the claw reaches a ball on the tiles.
 - `stowed` 44 (13.7 mm): the folded claw clears the tiles.
@@ -345,13 +343,13 @@ off until someone tests it on the real robot.
 
 On 2026-10-22, team 8938 checked its pincer model against turret v8.1GB. No lifter part ever comes inside
 the turret's reach (201.1 mm from its axis). But with the wrist between 3 and 44.5 degrees, the claw body
-comes within 2 mm of that reach, at +/-4 degrees of straight back, at EVERY lift height. With the wrist
+comes within 2 mm of that reach. This happens at +/-4 degrees of straight back, at EVERY lift height. With the wrist
 above 47 degrees (carry 90, flower 122.8), every lifter part is at least 206.7 mm away, so it is clear.
 
 - **The turret's zone.** The turret's parts farther than 190 mm from the axis sit from -32.3 to +28.8
   degrees of where it points (the v8.1GB reach measurements). The claw is at 176 to 184 degrees. So they
   meet when the turret points from 176 - 28.8 = 147 to 184 + 32.3 = 217 degrees (0 forward,
-  counterclockwise +, back = 180): `turretFrom = 147`, `turretTo = 217`.
+  counterclockwise +, back = 180). In Tunables: `turretFrom = 147`, `turretTo = 217`.
 - **The wrist's zone.** 0 to 47 degrees (the measured 3 to 44.5, with a margin). In servo positions:
   `wristTo` = folded + 47 / 270 = 0.10 + 0.174 = 0.274. `wristFrom = 0`: the wrist cannot go below
   folded (its stop), so the zone starts at the bottom. When you change `folded`, change `wristTo` too.

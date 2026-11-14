@@ -2,6 +2,20 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.41.1 - 2026-11-14
+
+### Changed
+
+- Docs: a style pass on every page (shorter sentences, active voice, words explained on first use, no
+  question labels), checked so that no code, heading, link or number changed and each sentence keeps its
+  meaning.
+
+### Fixed
+
+- Docs: How the simulator works no longer lists the ranking points as not modeled (the Match panel shows
+  them), and links the robot file's piece lines. Starter bots: the goBILDA start spot (y -62.95, 7.6 in
+  from the wall) and the AndyMark catapult motor's part number.
+
 ## v0.41.0 - 2026-11-14
 
 ### Added
