@@ -19,8 +19,8 @@ feeder = add(Indexer.servo("feeder").part("gobilda-2000-speed"));       // on it
 | `Indexer.motor(name)` | **yes**, one of the three | a motor that feeds for `feedSec` per piece | - |
 | `.part(id)` | recommended | which servo or motor it is, from the [parts catalog](../../guides/parts-catalog.md). The library takes a servo indexer's `pushSec` and `returnSec` from it | `pushSec` 0.25 |
 | `.reversed()` | optional | it turns the other way | - |
-| `.alsoServoReversed(name)` | optional, servo only | a second arm on the other side. The two pinch together behind the piece and push it in ([two servos on one part](claw.md)) | one servo |
-| `.alsoServo(name)` | optional, servo only | a second servo mounted facing the same way (it turns the same way) | one servo |
+| `.alsoServoReversed(name)` | optional, servo or CR servo | a servo indexer: a second arm on the other side. The two pinch together behind the piece and push it in ([two servos on one part](claw.md)). A CR servo indexer: a second wheel on the other side of the piece. It gets the same power and spins the other way, so the two wheels squeeze the piece in | one servo |
+| `.alsoServo(name)` | optional, servo or CR servo | a second servo that turns the same way as the first. For two CR servo wheels, use it when one servo is mounted upside down | one servo |
 | `.fullRange()` | optional, servo only | the servo's whole turn ([full range](claw.md)). Measure `rest` and `push` again after you turn it on | the normal range |
 | `.optional()` | optional | the part may not be on the robot yet ([Parts not on the robot yet](../robot-java.md#parts-not-on-the-robot-yet)) | INIT stops when its device is missing |
 | `.looks(shapes...)` | optional | how it looks in the simulator ([Shapes](../robot-java.md#shapes-and-parts)) | a plain box |
@@ -28,6 +28,21 @@ feeder = add(Indexer.servo("feeder").part("gobilda-2000-speed"));       // on it
 
 A servo indexer goes to `rest` at ▶. A [feed wheel](launcher.md#feed-wheel) is an indexer too:
 `.feedWheel(Indexer.crServo("feeder_wheel"))` on the launcher.
+
+Two CR servo wheels, one on each side of the piece, squeeze it into the launcher:
+
+```java title="Robot.java"
+// "feeder_left", "feeder_right" = the servos' names in the robot configuration. Numbers: Tunables.FeederLeft.
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.crServo("feeder_left").alsoServoReversed("feeder_right").part("gobilda-2000-speed")));
+```
+
+Both servos get the same `power` for `feedSec`. Test the direction first: set `feedSec` long, fire
+with no piece, and watch both wheels pull in. If both pull out, add `.reversed()`. If one pulls out, use
+`.alsoServo(...)` in place of `.alsoServoReversed(...)`.
+
+Add `.feedWheelOutWith(intake)` to the launcher to run both wheels backward while the intake pushes out. Then
+the pieces in the feeder come out too ([Launcher](launcher.md)).
 
 ## In Tunables.java
 
@@ -56,9 +71,9 @@ public static class Indexer {                                   // "indexer" in 
 | `push` | a servo indexer: where it pushes a piece into the wheel | 0 to 1 | 0.5 | yes, at once | Servo Finder | it does not push pieces far enough |
 | `pushStep` | a servo indexer: one step of `adjustPush(...)` (a D-pad trim of `push` in TeleOp) | servo position | 0.01 | yes, at once | test | a step is too big or too small |
 | `pushSec` | a servo indexer: time to push | seconds | 0.25 (with `.part(...)`: the servo's catalog time from `rest` to `push`, at least 0.25) | yes, at once | test | it comes back before the piece is gone (more) |
-| `alsoTrim` | a servo indexer with a second servo (`alsoServoReversed`): a raw position the library adds for it, so the two arms meet | raw position, -0.2 to 0.2 | 0 | yes, at the next move | test: watch both arms | one arm pushes further than the other |
+| `alsoTrim` | a servo indexer with a second servo (`alsoServoReversed`): a raw position the library adds for it, so the two arms meet. Not for two CR servo wheels (INIT stops) | raw position, -0.2 to 0.2 | 0 | yes, at the next move | test: watch both arms | one arm pushes further than the other |
 | `returnSec` | a servo indexer: time to come back | seconds | 0.25 (with `.part(...)`: the same as `pushSec`) | yes, at once | test | the next piece jams on it (more) |
-| `power` | a motor or CR servo indexer: power while it feeds (- = the other way) | -1 to 1 | 1.0 | yes, at once | test | it feeds pieces too hard or too softly |
+| `power` | a motor or CR servo indexer: power while it feeds (- = the other way; to change the direction, use `.reversed()`: the simulator feeds only on + power) | -1 to 1 | 1.0 | yes, at once | test | it feeds pieces too hard or too softly |
 | `feedSec` | a motor or CR servo indexer: time for one piece | seconds | 0.4 | yes, at once | test | it feeds two (less) or none (more) |
 | `alwaysOn` | a feed wheel (`Launcher.feedWheel(...)`): true = it runs all the time the launcher is spun up (not while it idles); false = only while firing | true / false | false | no (at INIT) | test | the pieces wait too long for the wheel (true) or it uses battery for nothing (false) |
 | `stageSec` | a feed wheel, only while firing: it runs this long before the arm pushes (the piece gets to the arm; with a feed stop, the arm also waits for it to open) | seconds | 0.2 | yes, at once | test | the arm pushes before the piece is there (more) |

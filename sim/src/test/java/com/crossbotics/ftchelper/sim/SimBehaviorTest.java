@@ -195,6 +195,38 @@ public class SimBehaviorTest {
         java.nio.file.Files.delete(f);
     }
 
+    // A feeder run backward (Launcher.feedWheelOutWith: the intake pushes out) feeds nothing: no shot.
+    // Forward again, it feeds. A motor feeder and a CR servo feeder.
+    @Test public void aFeederRunBackwardFiresNothing() throws Exception {
+        String base = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("robots/starter.properties")), "UTF-8");
+        java.nio.file.Path f = java.nio.file.Files.createTempFile("backout", ".properties");
+        java.nio.file.Files.write(f, base.getBytes("UTF-8"));
+        SimRobot robot = SimRobot.load(f);
+        robot.motors.get("flywheel").device.setPower(1);
+        for (int i = 0; i < 200; i++) robot.step(0.01);            // 2 s: the wheel spins up
+        robot.motors.get("feeder").device.setPower(-1);            // backward
+        for (int i = 0; i < 150; i++) robot.step(0.01);
+        assertEquals("backward: no shot", 0, robot.shots());
+        robot.motors.get("feeder").device.setPower(1);             // forward: it feeds
+        for (int i = 0; i < 30; i++) robot.step(0.01);
+        assertEquals("forward: one shot", 1, robot.shots());
+        java.nio.file.Files.delete(f);
+
+        java.nio.file.Path g = java.nio.file.Files.createTempFile("backout-cr", ".properties");
+        java.nio.file.Files.write(g, (base.replace("feeder=feeder", "feeder=feeder_cr") + "\ncrservo.feeder_cr =\n").getBytes("UTF-8"));
+        SimRobot cr = SimRobot.load(g);
+        com.qualcomm.robotcore.hardware.CRServo wheel = cr.hardwareMap().get(com.qualcomm.robotcore.hardware.CRServo.class, "feeder_cr");
+        cr.motors.get("flywheel").device.setPower(1);
+        for (int i = 0; i < 200; i++) cr.step(0.01);
+        wheel.setPower(-1);
+        for (int i = 0; i < 150; i++) cr.step(0.01);
+        assertEquals("CR servo backward: no shot", 0, cr.shots());
+        wheel.setPower(1);
+        for (int i = 0; i < 30; i++) cr.step(0.01);
+        assertEquals("CR servo forward: one shot", 1, cr.shots());
+        java.nio.file.Files.delete(g);
+    }
+
     @Test public void aWheelThatRunsOnlyAfterThePushDoesNotStageIt() throws Exception {
         String base = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("robots/starter.properties")), "UTF-8");
         java.nio.file.Path f = java.nio.file.Files.createTempFile("stage", ".properties");

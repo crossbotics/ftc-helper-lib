@@ -30,6 +30,10 @@ import java.util.function.LongSupplier;
  * {@code Indexer.servo("feeder_left").alsoServoReversed("feeder_right")}. They share one Tunables section (the first
  * name's): the second arm mirrors the first; {@code alsoTrim} lines it up.
  *
+ * <p>Two wheels that spin together (one on each side of the piece, squeezing it in):
+ * {@code Indexer.crServo("feeder_left").alsoServoReversed("feeder_right")}. Both CR servos get the same power;
+ * the second spins the other way. They share one Tunables section (the first name's).
+ *
  * <p>Tunables: {@code Indexer.servo}: {@code rest}, {@code push}, {@code pushSec}, {@code returnSec} (and
  * {@code alsoTrim} with a second servo).
  * {@code Indexer.crServo} and {@code Indexer.motor}: {@code power} and {@code feedSec} (how long it
@@ -47,7 +51,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     private final Kind kind;
     private boolean reversed = false;
-    // alsoServo: a second push servo that moves with the first, and whether it turns the same way (else mirrored).
+    // alsoServo: a second servo that moves with the first (a push servo or a CR servo wheel), and whether it turns the same way (else mirrored).
     private String alsoServo = null;
     private boolean alsoSameWay = false;
     private Tunable alsoTrim;
@@ -59,6 +63,8 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     private boolean alwaysOn = false;
     private Tunable stageSec, stopSec;
     private CRServo wheelCr;
+    // A CR servo indexer's second servo (alsoServo...): it gets the same power as the first.
+    private CRServo wheelCr2;
     private DcMotorEx wheelMotor;
     Feeder feeder;
     private ServoFeeder servoFeeder;
@@ -132,6 +138,10 @@ public final class Indexer extends Module<Indexer> implements Feeder {
             throw new IllegalStateException("Tunables." + name() + ".alsoTrim needs a second servo: add .alsoServoReversed(name) "
                     + "to " + name() + " in Robot.java (a servo indexer), or delete the alsoTrim line");
         }
+        if (kind != Kind.SERVO && t.has("alsoTrim")) {
+            throw new IllegalStateException("Tunables." + name() + ".alsoTrim is for two push servos (Indexer.servo): "
+                    + "two CR servo wheels both get the same power. Delete the alsoTrim line");
+        }
         switch (kind) {
             case SERVO:
                 rest = t.tunable("rest", 0.0, 0.01).range(0, 1);
@@ -184,8 +194,14 @@ public final class Indexer extends Module<Indexer> implements Feeder {
                 if (!feedWheel) feedSec = t.tunable("feedSec", 0.4, 0.02).range(0.02, 3);
                 CRServo cr = devices.get(CRServo.class, device);
                 cr.setDirection(reversed ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
-                feeder = new TimedCrServo(cr);
                 wheelCr = cr;
+                wheelCr2 = null;
+                if (alsoServo != null) {
+                    // The second wheel: the same power; alsoServoReversed spins it the other way.
+                    wheelCr2 = devices.get(CRServo.class, alsoServo);
+                    wheelCr2.setDirection(alsoReversed() ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
+                }
+                feeder = new TimedCrServo();
                 buildWheel(t);
                 break;
             default:
@@ -233,8 +249,14 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     /** A feed wheel: sets its power (0 = stop). The launcher calls it on a change only. */
     void runWheel(double p) {
-        if (wheelCr != null) wheelCr.setPower(p);
+        if (wheelCr != null) setCrPower(p);
         else if (wheelMotor != null) wheelMotor.setPower(p);
+    }
+
+    // A CR servo indexer: the same power to its servo and its second servo (alsoServo...), if it has one.
+    private void setCrPower(double p) {
+        wheelCr.setPower(p);
+        if (wheelCr2 != null) wheelCr2.setPower(p);
     }
 
     /** True for a CR servo or a motor (they can be a feed wheel), false for a push servo. */
@@ -471,30 +493,37 @@ public final class Indexer extends Module<Indexer> implements Feeder {
      * A second push servo that moves with this one, mirrored: two arms, one on each side, that pinch
      * together behind the piece and push it in. Both go to the same {@code rest} and {@code push}; the
      * second turns the other way (it is mounted facing the first). If the two do not quite meet, set
-     * {@code alsoTrim} (raw position added for the second one). For {@code Indexer.servo} only.
+     * {@code alsoTrim} (raw position added for the second one).
+     *
+     * <p>On a CR servo indexer: a second wheel that spins with the first, the other way. Two wheels, one on
+     * each side of the piece, that squeeze it and move it in (both servos' shafts up, so they must turn opposite
+     * ways). Both get the same {@code power}; there is no {@code alsoTrim}.
      *
      * <pre>{@code
      * .feeder(Indexer.servo("feeder_left").alsoServoReversed("feeder_right").part("gobilda-2000-torque"))
+     * .feeder(Indexer.crServo("feeder_left").alsoServoReversed("feeder_right").part("gobilda-2000-speed"))
      * }</pre>
      *
      * @param name the second servo's configuration name
      * @return this indexer
-     * @throws IllegalStateException on a CR servo or motor indexer
+     * @throws IllegalStateException on a motor indexer
      */
     public Indexer alsoServoReversed(String name) {
-        if (kind != Kind.SERVO) throw new IllegalStateException("Robot.java: " + name() + ": a second servo (alsoServo...) is for Indexer.servo(...)");
+        if (kind == Kind.MOTOR) throw new IllegalStateException("Robot.java: " + name() + ": a second servo (alsoServo...) is for Indexer.servo(...) or Indexer.crServo(...)");
         secondServo(name, false);
         return this;
     }
 
     /**
-     * Like {@link #alsoServoReversed}, for a second servo mounted facing the same way (it turns the same way).
+     * Like {@link #alsoServoReversed}, for a second servo that turns the same way as the first. For two CR servo
+     * wheels: one mounted upside down (shaft down) already spins the other way, so it takes the same power.
      *
      * @param name the second servo's configuration name
      * @return this indexer
+     * @throws IllegalStateException on a motor indexer
      */
     public Indexer alsoServo(String name) {
-        if (kind != Kind.SERVO) throw new IllegalStateException("Robot.java: " + name() + ": a second servo (alsoServo...) is for Indexer.servo(...)");
+        if (kind == Kind.MOTOR) throw new IllegalStateException("Robot.java: " + name() + ": a second servo (alsoServo...) is for Indexer.servo(...) or Indexer.crServo(...)");
         secondServo(name, true);
         return this;
     }
@@ -562,7 +591,10 @@ public final class Indexer extends Module<Indexer> implements Feeder {
                 out.add(servoLine(alsoServo, alsoReversed() ? 1 - r2 : r2));
             }
         }
-        else if (kind == Kind.CR_SERVO) out.add("crservo." + device + " =" + (partId != null ? "   # " + partId : ""));
+        else if (kind == Kind.CR_SERVO) {
+            out.add("crservo." + device + " =" + (partId != null ? "   # " + partId : ""));
+            if (alsoServo != null) out.add("crservo." + alsoServo + " =" + (partId != null ? "   # " + partId : ""));
+        }
         else if (partId != null) out.add("motor." + device + " = free, " + motorWords(partId, "gobilda-5203-1150") + simTodo(partId));
         else out.add("motor." + device + " = free, part=gobilda-5203-1150   # TODO the real motor");
         lookLines(out, t);
@@ -602,14 +634,9 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         };
     }
 
-    // A CR servo that runs for feedSec per piece, then stops.
+    // A CR servo (and its second servo, if any) that runs for feedSec per piece, then stops.
     private final class TimedCrServo implements Feeder {
-        private final CRServo servo;
         private double endAt = -1;    // seconds; -1 = not feeding
-
-        TimedCrServo(CRServo servo) {
-            this.servo = servo;
-        }
 
         private double now() {
             return clock.getAsLong() / 1e9;
@@ -618,7 +645,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         @Override public void feedOne() {
             if (isBusy()) return;
             endAt = now() + feedSec.get();
-            servo.setPower(power.get());
+            setCrPower(power.get());
         }
 
         @Override public boolean isBusy() {
@@ -631,7 +658,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
         @Override public void stop() {
             endAt = -1;
-            servo.setPower(0);
+            setCrPower(0);
         }
 
         @Override public String name() {

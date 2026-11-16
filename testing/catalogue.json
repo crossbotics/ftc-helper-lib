@@ -6003,6 +6003,92 @@
    }
   },
   {
+   "id": "SHOT-13",
+   "title": "Two CR servo feed wheels spin together, opposite ways",
+   "area": "shooter",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 15,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "intake"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.42.0",
+   "docs": [
+    {
+     "path": "docs/reference/parts/indexer.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/reference/parts/indexer.md",
+     "anchor": "in-tunablesjava"
+    },
+    {
+     "path": "docs/cookbook/04-mechanisms.md",
+     "anchor": "how-do-i-feed-with-two-wheels-one-on-each-side"
+    }
+   ],
+   "file": "testing/tests/SHOT-13.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Two wheels, one on each side of the piece, squeeze it into the launcher. If one wheel stops or turns the wrong way, the piece twists or jams."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Eye protection. Nobody in front of the launcher. Keep fingers out of the wheels."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A flywheel launcher with `.feeder(Indexer.crServo(\"feeder_left\").alsoServoReversed(\"feeder_right\"))`, or its simulator robot file. Pieces to fire. No kit bot has two feed wheels, so use your own robot. For the simulator, make its robot file from your Robot.java ([your robot file](repo:docs/simulator/02-your-robot-file.md)).",
+       "A motor feeder (`Indexer.motor(...)`) works the same way for step 5: test it too if you have one.",
+       "`Tunables.FeederLeft`: `power` and `feedSec` (start with the defaults).",
+       "For step 5: `.feedWheelOutWith(intake)` on the launcher, and an intake that can push out."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT. Neither wheel must move.",
+       "Press ▶ (start on the Driver Hub). Fire with no piece. Both wheels must start at the same moment and pull in (toward the flywheel), then stop together after `feedSec`.",
+       "Fire one piece. It must go in straight, with no twist.",
+       "Fire all the pieces, one at a time. Each one must go in, and the next must wait.",
+       "Only with `.feedWheelOutWith(intake)`: make the intake push out. Both wheels must turn backward (away from the flywheel). Make the intake stop or pull in. Both wheels must stop."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "The robot and where (simulator or real robot).",
+       "The servos, `power` and `feedSec`, and whether you needed `.reversed()` or `.alsoServo(...)`."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Both wheels pull out: add `.reversed()`. One pulls out: one servo is upside down, so use `.alsoServo(...)` in place of `.alsoServoReversed(...)`."
+     }
+    ]
+   }
+  },
+  {
    "id": "SIM-05",
    "title": "A simulator test stands in for a number not measured yet (set tunable)",
    "area": "simulator",

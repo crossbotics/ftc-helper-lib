@@ -30,7 +30,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `.feedStop(servo, part)` | optional | the same, with the servo's catalog id (`"gobilda-2000-speed"`). The Feed Stop Finder then works out `feedStopMoveSec` | no part: the finder cannot work out the open time |
 | `.pushedBy(intake...)` | optional | the parts that push a piece into the wheel, in order ([piece path](#piece-path)). Add the intake **before** the launcher | nothing pushes |
 | `.feedWheel(Indexer)` | optional | a [feed wheel](#feed-wheel): a CR servo or motor that moves each piece up to the `feeder` (a push arm). It needs `.feeder(...)` too | no feed wheel |
-| `.feedWheelOutWith(intake)` | optional | the feed wheel runs backward while that intake pushes out (`out()`), so the pieces in the feeder come out too. A shot that is being fed wins. It needs `.feedWheel(...)` | - |
+| `.feedWheelOutWith(intake)` | optional | the feed wheel runs backward while that intake pushes out (`out()`), so the pieces in the feeder come out too. A shot that is being fed wins. It needs `.feedWheel(...)`, or a feeder that spins (`Indexer.crServo` or `Indexer.motor`): with no feed wheel, the feeder itself runs backward | - |
 | `.startTable(name)` | optional | the shot table at the start | the plain `speedByDistance` (named `main`, shown as `MAIN`), if there is one. Else the first by name: `nectar` before `pollen` |
 | `.tableFrom(() -> name)` | optional | code (a game-piece sensor) picks the table. Each time its answer changes to a table's name, the launcher uses that table. null, "NONE" and "UNKNOWN" change nothing | the drivers pick the table |
 | `.tableFor(table, kinds...)` | optional | which table some game-piece kinds use, for example `.tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")`. A kind named like a table ("POLLEN") needs no line | - |
@@ -265,6 +265,9 @@ Add `.feedWheel(Indexer.crServo("feeder_wheel"))`, with a push arm as the `feede
 up to the arm. The arm pushes each one into the flywheel, then comes back. The wheel's numbers go in its
 own section (`Tunables.FeederWheel`, [Indexer](indexer.md)). With `.feedWheelOutWith(intake)` it also runs
 backward while the intake pushes out. Then a piece stuck between the wheel and the arm comes back out.
+With no feed wheel, `.feedWheelOutWith(intake)` works on a feeder that spins (a CR servo or a motor) too: then the
+feeder itself runs backward. A shot fired while the intake pushes out runs the feeder forward at once. The
+piece may have backed off a little, so it may need a longer `feedSec`.
 
 It runs in one of two ways, set with `alwaysOn`:
 

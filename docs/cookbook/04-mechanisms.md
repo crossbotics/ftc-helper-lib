@@ -288,6 +288,7 @@ turn opposite ways, so use `alsoServoReversed`. When both face the same way, use
 **When the fingers do not quite meet:** the horns may sit a spline tooth apart. Set `alsoTrim` (a small raw
 position, like 0.02) for the second servo. The same line works on a Wrist, a Positioner and a servo feeder:
 `Indexer.servo("feeder_left").alsoServoReversed("feeder_right")` (two arms that pinch a piece into a launcher).
+On a CR servo feeder, it adds a second wheel that spins the other way: `Indexer.crServo("feeder_left").alsoServoReversed("feeder_right")`.
 **More:** [Two servos on one part](../reference/parts/claw.md), [Tunables names](../reference/parts/claw.md#in-tunablesjava).
 
 ## How do I add a wrist?
@@ -484,6 +485,27 @@ public static class Indexer {                                   // "indexer" in 
 
 **Why:** the launcher feeds a piece only when the wheel is at speed, so every shot flies the same way.
 **More:** [Add a launcher](../add-to-robot/05-launcher.md#robotjava-one-line), [Launcher](../reference/parts/launcher.md).
+
+## How do I feed with two wheels, one on each side?
+
+**Where:** `Robot.java`, inside `define()`. Add the intake before the launcher.
+
+<!-- recipe: launcher-two-feed-wheels -->
+```java title="Robot.java"
+// Two CR servo wheels squeeze each piece into the flywheel. They face each other, so the
+// second spins the other way: alsoServoReversed. Numbers: Tunables.FeederLeft (power, feedSec).
+// feedWheelOutWith: the intake pushing out turns both wheels backward too.
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.crServo("feeder_left").alsoServoReversed("feeder_right").part("gobilda-2000-speed"))
+        .feedWheelOutWith(intake));
+```
+
+**Why:** two wheels that squeeze the piece push it in straight. One power (`Tunables.FeederLeft`) runs both,
+so they can never fight. When the intake pushes pieces out, the wheels turn backward, so a piece in the feeder
+comes out too. A shot always wins.
+**Test the direction first:** set `feedSec` to 2, fire with no piece, and watch both wheels pull in. Both pull
+out: add `.reversed()` to the feeder. One pulls out: use `.alsoServo(...)` in place of `.alsoServoReversed(...)`.
+**More:** [Indexer](../reference/parts/indexer.md), [Launcher](../reference/parts/launcher.md).
 
 ## How do I add a turret that follows the goal?
 

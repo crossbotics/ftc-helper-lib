@@ -221,6 +221,25 @@ public class CookbookTest {
         }
     }
 
+    // The two-wheel feeder recipe: the intake pushing out turns both feed wheels backward, and fires nothing.
+    @Test public void theTwoFeedWheelsBackOutWithTheIntake() throws Exception {
+        try (SimRun s = new SimRun(robotFile(MechanismRecipes.TwoWheelFeederRobot.class).toString())) {
+            s.sim.ds.register("Cookbook Two Feed Wheels", "TeleOp", MechanismRecipes.TwoWheelFeederControls.class);
+            s.init("Cookbook Two Feed Wheels");
+            double[] left = s.robot().crServos.get("feeder_left"), right = s.robot().crServos.get("feeder_right");
+            s.start();
+            s.g1().a = true;                                       // hold A: the intake pushes out
+            assertTrue("the first wheel turns backward\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> left[0] < -0.5, 2));
+            assertTrue("the second one too", SimRun.waitFor(() -> right[0] < -0.5, 1));
+            SimRun.waitFor(() -> false, 1);                        // 1 s backward
+            assertEquals("backward fires nothing", 0, s.robot().shots());
+            s.g1().a = false;
+            assertTrue("both stop", SimRun.waitFor(() -> left[0] == 0 && right[0] == 0, 1));
+            assertEquals("", s.error());
+        }
+    }
+
     // One autonomous with a menu: the "Start" line moves the note and the robot in INIT, and the "Plan"
     // line chooses the steps (Far + cycle: 12 steps, the 3rd crosses to the near side).
     @Test public void theInitMenuChoosesTheStartAndThePlan() throws Exception {

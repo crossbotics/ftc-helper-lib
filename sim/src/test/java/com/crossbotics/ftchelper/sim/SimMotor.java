@@ -76,6 +76,11 @@ final class SimMotor {
     /** A feeder runs above this power. */
     static final double FEED_ON = 0.3;
 
+    /** True when the OpMode asks it to turn forward (positive power or velocity): only then can it feed a flywheel. */
+    boolean askedForward() {
+        return (Double.isNaN(targetVelocity) ? power : targetVelocity) > 0;
+    }
+
     final DcMotorEx device;
     // A dead-wheel odometry pod plugged into this port: its count replaces the motor's own (null = none).
     volatile java.util.function.IntSupplier encoderOverride = null;
@@ -184,7 +189,8 @@ final class SimMotor {
                 double was = Double.isNaN(targetVelocity) ? power : targetVelocity;
                 power = Math.max(-1, Math.min(1, ((Number) a[0]).doubleValue()));
                 targetVelocity = Double.NaN;
-                if (Math.abs(was) <= FEED_ON && Math.abs(power) > FEED_ON) starts++;
+                // Only forward (positive power): a feeder run backward (an intake pushing out) feeds nothing.
+                if (was <= FEED_ON && power > FEED_ON) starts++;
                 commanded(was, power);
                 return null;
             }
