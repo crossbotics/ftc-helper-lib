@@ -78,12 +78,12 @@ public class TwoServoPartsTest {
         assertEquals(0.2, d.servo("feeder_right").position, 1e-9);
     }
 
-    @Test public void alsoServoIsForAPushServoOnly() {
+    @Test public void alsoServoIsNotForAMotorIndexer() {
         try {
-            Indexer.crServo("roller").alsoServoReversed("roller_2");
-            fail("a CR servo indexer");
+            Indexer.motor("roller").alsoServoReversed("roller_2");
+            fail("a motor indexer");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("is for Indexer.servo"));
+            assertTrue(e.getMessage(), e.getMessage().contains("is for Indexer.servo(...) or Indexer.crServo"));
         }
     }
 

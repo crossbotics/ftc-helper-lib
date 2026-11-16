@@ -288,6 +288,7 @@ turn opposite ways, so use `alsoServoReversed`. When both face the same way, use
 **When the fingers do not quite meet:** the horns may sit a spline tooth apart. Set `alsoTrim` (a small raw
 position, like 0.02) for the second servo. The same line works on a Wrist, a Positioner and a servo feeder:
 `Indexer.servo("feeder_left").alsoServoReversed("feeder_right")` (two arms that pinch a piece into a launcher).
+On a CR servo feeder, it adds a second wheel that spins the other way: `Indexer.crServo("feeder_left").alsoServoReversed("feeder_right")`.
 **More:** [Two servos on one part](../reference/parts/claw.md), [Tunables names](../reference/parts/claw.md#in-tunablesjava).
 
 ## How do I add a wrist?

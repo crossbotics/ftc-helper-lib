@@ -2,6 +2,17 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- Two CR servo wheels on one feeder: `Indexer.crServo("feeder_left").alsoServoReversed("feeder_right")`. Both
+  servos get the same power; the second spins the other way (`alsoServo`: the same way). It works for a
+  launcher's feeder and its feed wheel. `alsoTrim` stays for push servos only.
+- `Launcher.feedWheelOutWith(intake)` now also works with no feed wheel, when the feeder spins (a CR servo or a
+  motor): the feeder itself runs backward while the intake pushes out. A push servo feeder still needs a
+  `feedWheel(...)`.
+
 ## v0.41.1 - 2026-11-14
 
 ### Changed

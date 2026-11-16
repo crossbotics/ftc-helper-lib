@@ -380,11 +380,16 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      * The feed wheel runs backward while this part pushes pieces out ({@code intake.out()}), and stops
      * again when it stops pushing out. WHY: pushing pieces out of the intake leaves the ones already in
      * the feeder stuck there; with this they come back out too. A shot being fed always wins. Needs a
-     * {@link #feedWheel(Indexer)}.
+     * {@link #feedWheel(Indexer)}, or a feeder that spins ({@code Indexer.crServo(...)} or
+     * {@code Indexer.motor(...)}, with no feed wheel): then the feeder itself turns backward.
      *
      * <pre>{@code
      * add(Launcher.flywheel("launcher", "gobilda-5203-6000")
      *         .feeder(Indexer.servo("feeder_arm")).feedWheel(Indexer.crServo("feeder_wheel"))
+     *         .feedWheelOutWith(intake));
+     * // Or two feed wheels that are the feeder:
+     * add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+     *         .feeder(Indexer.crServo("feeder_left").alsoServoReversed("feeder_right"))
      *         .feedWheelOutWith(intake));
      * }</pre>
      *
@@ -620,9 +625,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         // ends when the wheel sees the shot (ShotGate).
         gate = null;
         testGateMaker = null;
-        if (feedWheelOutWith != null && feedWheel == null) {
+        // Without a feed wheel, a feeder that spins (a CR servo or a motor) turns backward itself.
+        if (feedWheelOutWith != null && feedWheel == null && (indexer == null || !indexer.spins())) {
             throw new IllegalStateException("Robot.java: " + name() + ".feedWheelOutWith(" + feedWheelOutWith.name()
-                    + ") needs a feed wheel: add .feedWheel(Indexer.crServo(\"...\")) to the launcher, or take feedWheelOutWith out");
+                    + ") needs a part that spins: a feeder(Indexer.crServo(\"...\")) or a .feedWheel(Indexer.crServo(\"...\")), "
+                    + "or take feedWheelOutWith out");
         }
         if (feedWheelOutWith != null && feedWheelOutWith.robot != robot) {
             throw new IllegalStateException("Robot.java: " + name() + ".feedWheelOutWith(" + feedWheelOutWith.name()
@@ -677,6 +684,12 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                         assistSec, v[2], testFlywheel, () -> false, testWheel, () -> true);
             }
             feed = gate;
+        }
+        // No feed wheel, and the feeder spins: the feeder itself turns backward while the intake pushes out.
+        // (An optional feeder that is missing: nothing to turn.)
+        if (feedWheelOutWith != null && feedWheel == null && !indexer.missing) {
+            final Intake out = feedWheelOutWith;
+            feed = new BackOutFeeder(feed, indexer, () -> out.isPushingOut() && !part.isShooting());
         }
         part = new com.crossbotics.ftchelper.launcher.Launcher(flywheel, feed)
                 .idleRpm(t.number("idleRpm", 0))

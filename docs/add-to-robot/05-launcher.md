@@ -42,6 +42,9 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   ([Indexer](../reference/parts/indexer.md)).
 - **Two arms** that pinch the piece from both sides: `Indexer.servo("feeder_left").alsoServoReversed("feeder_right")`.
   Both arms use the same `rest` and `push`.
+- **Two wheels** that squeeze the piece from both sides: `Indexer.crServo("feeder_left").alsoServoReversed("feeder_right")`.
+  Both CR servos get the same `power`, and the second spins the other way. Add `.feedWheelOutWith(intake)` to
+  run them backward while the intake pushes out.
 - **A wheel and an arm:** a CR servo wheel brings each piece up, and the arm pushes it in. Write the arm as
   the feeder, and add `.feedWheel(Indexer.crServo("feeder_wheel"))` ([Feed wheel](../reference/parts/launcher.md#feed-wheel)).
 - **A motor that is not in the catalog:** write `Motors.custom("my-motor", 28, 5800)` in place of the id
