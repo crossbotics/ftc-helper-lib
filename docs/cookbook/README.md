@@ -70,6 +70,7 @@ project, and these recipes go into those files. If you never coded before, read
 - [How do I send a part to a position from a button?](04-mechanisms.md#how-do-i-send-a-part-to-a-position-from-a-button)
 - [My robot doesn't have this part yet. How do I keep its code?](04-mechanisms.md#my-robot-doesnt-have-this-part-yet-how-do-i-keep-its-code)
 - [How do I add a launcher (flywheel and feeder)?](04-mechanisms.md#how-do-i-add-a-launcher-flywheel-and-feeder)
+- [How do I feed with two wheels, one on each side?](04-mechanisms.md#how-do-i-feed-with-two-wheels-one-on-each-side)
 - [How do I add a turret that follows the goal?](04-mechanisms.md#how-do-i-add-a-turret-that-follows-the-goal)
 - [How do I fire only when aimed, at the right speed?](04-mechanisms.md#how-do-i-fire-only-when-aimed-at-the-right-speed)
 

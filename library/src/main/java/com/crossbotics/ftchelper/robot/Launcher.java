@@ -687,7 +687,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         }
         // No feed wheel, and the feeder spins: the feeder itself turns backward while the intake pushes out.
         // (An optional feeder that is missing: nothing to turn.)
-        if (feedWheelOutWith != null && feedWheel == null && !indexer.missing) {
+        // A feed wheel marked optional() and missing: a feeder that spins turns backward in its place.
+        if (feedWheelOutWith != null && (feedWheel == null || feedWheel.missing)
+                && indexer != null && indexer.spins() && !indexer.missing) {
             final Intake out = feedWheelOutWith;
             feed = new BackOutFeeder(feed, indexer, () -> out.isPushingOut() && !part.isShooting());
         }

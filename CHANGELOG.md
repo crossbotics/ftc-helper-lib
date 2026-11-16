@@ -6,12 +6,21 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
-- Two CR servo wheels on one feeder: `Indexer.crServo("feeder_left").alsoServoReversed("feeder_right")`. Both
-  servos get the same power; the second spins the other way (`alsoServo`: the same way). It works for a
-  launcher's feeder and its feed wheel. `alsoTrim` stays for push servos only.
-- `Launcher.feedWheelOutWith(intake)` now also works with no feed wheel, when the feeder spins (a CR servo or a
-  motor): the feeder itself runs backward while the intake pushes out. A push servo feeder still needs a
-  `feedWheel(...)`.
+- A feeder can now have two CR servo wheels, one on each side of the piece. Write
+  `Indexer.crServo("feeder_left").alsoServoReversed("feeder_right")`. Both servos get the same power, and the
+  second spins the other way (with `alsoServo`, the same way). It works for a launcher's feeder and its feed
+  wheel. `alsoTrim` stays for push servos only. Cookbook: "How do I feed with two wheels, one on each side?".
+
+### Changed
+
+- A feeder that spins can now turn backward with the intake, with no separate feed wheel. Write
+  `.feedWheelOutWith(intake)` on a launcher whose feeder is a CR servo or a motor. The feeder runs backward
+  while the intake pushes out, and a shot always wins. Before, `feedWheelOutWith` needed a `feedWheel(...)`. A
+  push servo feeder still needs one; its INIT message now says so.
+
+### Fixed
+
+- Simulator: a feeder that runs backward (negative power) no longer fires pieces. Only forward power feeds.
 
 ## v0.41.1 - 2026-11-14
 

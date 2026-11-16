@@ -43,6 +43,7 @@ arm = add(Positioner.servo("arm_left").alsoServo("arm_right"));        // both t
 - Two horns (the arms on the servo shafts) can sit a spline tooth apart. `alsoTrim` (raw position, -0.2 to
   0.2, default 0) fixes that: the library adds it for the second servo, so the two still meet.
 - It works on a Claw, a Wrist, a Positioner and a servo [Indexer](indexer.md).
+- On a CR servo [Indexer](indexer.md) (two feed wheels), both servos get the same power. There is no `alsoTrim`.
 - No standard says which way a bigger number turns a servo. It depends on the servo, so test it:
   [Signs and units](../../conventions.md#servos-and-motors-which-way-is-bigger).
 

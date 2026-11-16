@@ -5,10 +5,10 @@ area: shooter
 priority: medium
 where: both
 minutes: 15
-needs: [flywheel]
-kit_bots: [gobilda-strafer]
+needs: [flywheel, intake]
+kit_bots: []
 since: v0.42.0
-docs: [reference/parts/indexer.md, reference/parts/indexer.md#in-tunablesjava]
+docs: [reference/parts/indexer.md, reference/parts/indexer.md#in-tunablesjava, cookbook/04-mechanisms.md#how-do-i-feed-with-two-wheels-one-on-each-side]
 ---
 
 ## Why
@@ -19,7 +19,9 @@ wrong way, the piece twists or jams.
 ## Setup
 
 - A flywheel launcher with `.feeder(Indexer.crServo("feeder_left").alsoServoReversed("feeder_right"))`, or its
-  simulator robot file. Pieces to fire.
+  simulator robot file. Pieces to fire. No kit bot has two feed wheels, so use your own robot. For the
+  simulator, make its robot file from your Robot.java ([your robot file](../../docs/simulator/02-your-robot-file.md)).
+- A motor feeder (`Indexer.motor(...)`) works the same way for step 5: test it too if you have one.
 - `Tunables.FeederLeft`: `power` and `feedSec` (start with the defaults).
 - For step 5: `.feedWheelOutWith(intake)` on the launcher, and an intake that can push out.
 

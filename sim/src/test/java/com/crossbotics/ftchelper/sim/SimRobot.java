@@ -673,8 +673,9 @@ final class SimRobot {
                             synchronized (this) {
                                 double was = state[0];
                                 state[0] = Math.max(-1, Math.min(1, ((Number) a[0]).doubleValue()));
-                                // as a flywheel's feeder: one more feed (see SimMotor.starts)
-                                if (Math.abs(was) <= SimMotor.FEED_ON && Math.abs(state[0]) > SimMotor.FEED_ON) state[2]++;
+                                // as a flywheel's feeder: one more feed (see SimMotor.starts). Forward only:
+                                // backward (an intake pushing out) feeds nothing.
+                                if (was <= SimMotor.FEED_ON && state[0] > SimMotor.FEED_ON) state[2]++;
                             }
                             return null;
                         case "getPower": synchronized (this) { return state[0]; }
@@ -871,8 +872,9 @@ final class SimRobot {
             SimMotor feeder = motors.get(m.feeder);
             double[] cr = crServos.get(m.feeder);
             SimServo pusher = servos.get(m.feeder);
-            boolean on = feeder != null ? Math.abs(feeder.appliedPower) > 0.3
-                    : cr != null ? Math.abs(cr[0]) > 0.3
+            // A motor or CR servo feeds only while it turns forward (positive power): backward, it backs out.
+            boolean on = feeder != null ? Math.abs(feeder.appliedPower) > 0.3 && feeder.askedForward()
+                    : cr != null ? cr[0] > 0.3
                     : pusher != null && Math.abs(pusher.actual - pusher.start) > pushMove(m, pusher);
             // A feed stop: pieces get through only while it is (nearly) at its open position.
             SimServo gate = m.stop == null ? null : servos.get(m.stop);
@@ -880,7 +882,7 @@ final class SimRobot {
             if (m.stage != null) {
                 SimMotor sm = motors.get(m.stage);
                 double[] sc = crServos.get(m.stage);
-                boolean wheelOn = sm != null ? Math.abs(sm.appliedPower) > 0.3 : sc != null && Math.abs(sc[0]) > 0.3;
+                boolean wheelOn = sm != null ? Math.abs(sm.appliedPower) > 0.3 && sm.askedForward() : sc != null && sc[0] > 0.3;
                 if (wheelOn) stagedSec.merge(m.name, dt, Double::sum);
             }
             if (pusher != null) {

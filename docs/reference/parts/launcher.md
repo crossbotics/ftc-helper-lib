@@ -266,7 +266,8 @@ up to the arm. The arm pushes each one into the flywheel, then comes back. The w
 own section (`Tunables.FeederWheel`, [Indexer](indexer.md)). With `.feedWheelOutWith(intake)` it also runs
 backward while the intake pushes out. Then a piece stuck between the wheel and the arm comes back out.
 With no feed wheel, `.feedWheelOutWith(intake)` works on a feeder that spins (a CR servo or a motor) too: then the
-feeder itself runs backward.
+feeder itself runs backward. A shot fired while the intake pushes out runs the feeder forward at once. The
+piece may have backed off a little, so it may need a longer `feedSec`.
 
 It runs in one of two ways, set with `alwaysOn`:
 

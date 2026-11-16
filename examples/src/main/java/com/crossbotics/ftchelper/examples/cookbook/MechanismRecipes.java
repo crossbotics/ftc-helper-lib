@@ -281,6 +281,38 @@ public class MechanismRecipes {
         }
     }
 
+    /** A flywheel fed by two CR servo wheels, one on each side of the piece. */
+    public static class TwoWheelFeederRobot extends RobotDefinition {
+        public Intake intake;
+        public Launcher launcher;
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            intake = add(Intake.motor("intake").part("gobilda-5203-312"));
+            // recipe: launcher-two-feed-wheels
+            // Two CR servo wheels squeeze each piece into the flywheel. They face each other, so the
+            // second spins the other way: alsoServoReversed. Numbers: Tunables.FeederLeft (power, feedSec).
+            // feedWheelOutWith: the intake pushing out turns both wheels backward too.
+            launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                    .feeder(Indexer.crServo("feeder_left").alsoServoReversed("feeder_right").part("gobilda-2000-speed"))
+                    .feedWheelOutWith(intake));
+            // end recipe
+        }
+    }
+
+    /** Its TeleOp: hold A to push pieces out (both feed wheels turn backward too). */
+    @TeleOp(name = "Cookbook Two Feed Wheels", group = "Cookbook")
+    @Disabled
+    public static class TwoWheelFeederControls extends ControlMap<TwoWheelFeederRobot> {
+        public static boolean oneDriver = false;
+
+        @Override
+        protected void buttons(TwoWheelFeederRobot robot, Pad g1, Pad g2) {
+            g1.a.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
+        }
+    }
+
     /** A flywheel with a feeder. */
     public static class ShooterRobot extends RobotDefinition {
         public Launcher launcher;

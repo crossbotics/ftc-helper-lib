@@ -10,13 +10,14 @@ import java.util.function.BooleanSupplier;
  * feeder would stay stuck there; backward, they come out with the others. A feed always wins: the
  * feeder turns backward only when it is not feeding.
  *
- * <p>It sends a power only when it changes (each write takes time on the hub).
+ * <p>It sends a power only when it changes (each write takes time on the hub), and a new power from the
+ * tuning menu at once.
  */
 final class BackOutFeeder implements Feeder {
     private final Feeder inner;          // the feeder as the launcher sees it (it feeds and stops itself)
     private final Indexer wheel;         // the same feeder's CR servo(s) or motor (runWheel)
     private final BooleanSupplier when;  // true: the intake pushes out and the launcher is not shooting
-    private boolean backing = false;     // true while we run it backward
+    private double sent = Double.NaN;    // the backward power we sent last (NaN = we are not backing out)
 
     BackOutFeeder(Feeder inner, Indexer wheel, BooleanSupplier when) {
         this.inner = inner;
@@ -26,11 +27,8 @@ final class BackOutFeeder implements Feeder {
 
     @Override
     public void feedOne() {
-        // A shot wins: the feed sets its own forward power.
-        if (backing) {
-            backing = false;
-            wheel.runWheel(0);
-        }
+        // A shot wins: the feed sets its own forward power, so we only forget ours.
+        sent = Double.NaN;
         inner.feedOne();
     }
 
@@ -52,15 +50,26 @@ final class BackOutFeeder implements Feeder {
     @Override
     public void update() {
         inner.update();
-        boolean back = !inner.isBusy() && when.getAsBoolean();
-        if (back == backing) return;
-        backing = back;
-        wheel.runWheel(back ? -wheel.wheelPower() : 0);
+        if (inner.isBusy()) {
+            // A feed started some other way (the feeder's own feedOne()): it set its own power. Leave it.
+            sent = Double.NaN;
+            return;
+        }
+        if (when.getAsBoolean()) {
+            double p = -wheel.wheelPower();
+            if (p != sent) {          // first time, or a new power from the tuning menu
+                sent = p;
+                wheel.runWheel(p);
+            }
+        } else if (!Double.isNaN(sent)) {
+            sent = Double.NaN;        // the intake stopped pushing out: stop
+            wheel.runWheel(0);
+        }
     }
 
     @Override
     public void stop() {
-        backing = false;
+        sent = Double.NaN;
         inner.stop();
     }
 
@@ -71,12 +80,12 @@ final class BackOutFeeder implements Feeder {
 
     @Override
     public void addTelemetry(RobotTelemetry t) {
-        if (backing) t.debug(name(), "backward (intake out)");
-        else inner.addTelemetry(t);
+        inner.addTelemetry(t);   // its own lines (a jam warning, the feed stop) stay
+        if (isBacking()) t.debug(name() + " backward", "the intake pushes out");
     }
 
     /** True while the feeder runs backward (tests). */
     boolean isBacking() {
-        return backing;
+        return !Double.isNaN(sent);
     }
 }

@@ -6012,11 +6012,12 @@
    "needs": [
     [
      "flywheel"
+    ],
+    [
+     "intake"
     ]
    ],
-   "kit_bots": [
-    "gobilda-strafer"
-   ],
+   "kit_bots": [],
    "since": "v0.42.0",
    "docs": [
     {
@@ -6026,6 +6027,10 @@
     {
      "path": "docs/reference/parts/indexer.md",
      "anchor": "in-tunablesjava"
+    },
+    {
+     "path": "docs/cookbook/04-mechanisms.md",
+     "anchor": "how-do-i-feed-with-two-wheels-one-on-each-side"
     }
    ],
    "file": "testing/tests/SHOT-13.md",
@@ -6045,7 +6050,8 @@
     "setup": [
      {
       "ul": [
-       "A flywheel launcher with `.feeder(Indexer.crServo(\"feeder_left\").alsoServoReversed(\"feeder_right\"))`, or its simulator robot file. Pieces to fire.",
+       "A flywheel launcher with `.feeder(Indexer.crServo(\"feeder_left\").alsoServoReversed(\"feeder_right\"))`, or its simulator robot file. Pieces to fire. No kit bot has two feed wheels, so use your own robot. For the simulator, make its robot file from your Robot.java ([your robot file](repo:docs/simulator/02-your-robot-file.md)).",
+       "A motor feeder (`Indexer.motor(...)`) works the same way for step 5: test it too if you have one.",
        "`Tunables.FeederLeft`: `power` and `feedSec` (start with the defaults).",
        "For step 5: `.feedWheelOutWith(intake)` on the launcher, and an intake that can push out."
       ]
