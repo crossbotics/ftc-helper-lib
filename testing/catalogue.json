@@ -6105,7 +6105,7 @@
     "gobilda-strafer",
     "rev"
    ],
-   "since": "unreleased",
+   "since": "v0.43.0",
    "docs": [
     {
      "path": "docs/reference/parts/indexer.md",

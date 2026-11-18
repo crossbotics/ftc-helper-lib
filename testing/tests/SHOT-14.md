@@ -7,7 +7,7 @@ where: both
 minutes: 15
 needs: [flywheel]
 kit_bots: [gobilda, gobilda-strafer, rev]
-since: unreleased
+since: v0.43.0
 docs: [reference/parts/indexer.md, reference/parts/launcher.md#in-tunablesjava, tuning/06-flywheel-finder.md, reference/parts/indexer.md#in-tunablesjava, tuning/17-fix-by-symptom.md]
 ---
 
