@@ -47,7 +47,11 @@ When the last column names a finder, run that finder again: a guess is worse tha
 | One D-pad press changes the speed too much or too little | [`stepRpm`](../reference/parts/launcher.md#in-tunablesjava) | less / more |
 | **Feeding** | - | - |
 | It feeds two pieces at once | [`feedSec`](../reference/parts/indexer.md#in-tunablesjava) | less |
+| It feeds two at once, but less `feedSec` feeds none from farther back | [`stopOnShot`](../reference/parts/indexer.md#in-tunablesjava) | true |
 | It feeds no piece | [`feedSec`](../reference/parts/indexer.md#in-tunablesjava) | more |
+| The Flywheel Finder's "Shots seen" is less than the pieces fed | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
+| With `stopOnShot`, the wheels still run the full `feedSec` after a shot | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
+| With `stopOnShot`, the wheels stop before the piece gets to the flywheel | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | more |
 | A pusher comes back before the piece is gone | [`pushSec`](../reference/parts/indexer.md#in-tunablesjava) | more |
 | **Aiming** | - | - |
 | Aim is slow, or swings past the goal | [`Aim.turnKp`](../reference/parts/aim.md#in-tunablesjava) | more / less |

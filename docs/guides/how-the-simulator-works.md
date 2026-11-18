@@ -246,7 +246,8 @@ The robot rolls over the FLOWER's thin floor plate (0.35 in), and pieces rest on
 The colors are the screen colors of the field file, not a real sensor's. Measure the real ones with the
 Piece Tuner (it also runs here). A motor or CR servo feeder sends one piece each time it turns on.
 If it keeps running, it sends one more every 0.3 s from 0.45 s on. So keep an indexer's `feedSec` under
-0.45 s. Otherwise one feed fires two pieces here, and the count is off by one.
+0.45 s. Otherwise one feed fires two pieces here, and the count is off by one. With `stopOnShot = true`,
+the feed stops at the shot, so a longer `feedSec` is fine.
 A second webcam's colors are not simulated: it says "not found" and sees nothing.
 
 **Rollers turn the pieces they touch.** A roller or spinner (any `roller` or `flywheel` shape) drags a

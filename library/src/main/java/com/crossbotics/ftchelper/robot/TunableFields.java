@@ -48,12 +48,12 @@ final class TunableFields {
                 "lightingPictures", "lightingSettleMs", "liveView", "pipeline", "pitchDeg", "sizeIn");
         part("Hood", "angleA", "angleB", "byHandPerSec", "calibration", "kP", "maxPower", "posA", "posB",
                 "startAngle", "stepAngle", "tolerance", "travelSec", "trimMax");
-        part("Indexer", "alsoTrim", "alwaysOn", "feedSec", "power", "push", "pushSec", "pushStep", "rest", "returnSec", "stageSec", "stopSec");
+        part("Indexer", "alsoTrim", "alwaysOn", "feedSec", "power", "push", "pushSec", "pushStep", "rest", "returnSec", "stageSec", "stopOnShot", "stopSec");
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
         part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "distanceJumpAgreeIn", "distanceJumpIn", "distanceMedianOf", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold",
                 "feedStopMoveSec", "feedStopOpenSec", "feedStopRelease", "idleRpm", "kD", "kF", "kI", "kP", "maxFiringQueue", "nominalVolts", "quickBandRpm",
-                "quickMaxWaitSec", "readyBandRpm", "redTrimPercent", "shotIntervalSec", "speedByDistance", "speedRpm",
+                "quickMaxWaitSec", "readyBandRpm", "redTrimPercent", "shotDropRpm", "shotIntervalSec", "speedByDistance", "speedRpm",
                 "spinAtStart", "sprayEnabled", "sprayLastSec", "sprayOnTapHold", "stepRpm", "trimMaxPercent", "trimStepPercent");
         part("LiftArm", "kD", "kF", "kI", "kP", "max", "maxPower", "min", "slowZone", "slowZonePower", "tolerance");
         part("Lights", "allianceAtInit");

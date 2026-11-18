@@ -189,6 +189,14 @@ public class Tunables {
     }
     // end recipe
 
+    // recipe: tunables-feed-wheels
+    public static class FeederLeft {                                // "feeder_left" in the configuration: it runs both wheels
+        public static double power = DEFAULT;                       // wheel power (1)
+        public static double feedSec = DEFAULT;                     // the most time the wheels run per shot (0.4)
+        public static boolean stopOnShot = true;                    // stop when the flywheel sees the shot: true or false
+    }
+    // end recipe
+
     // recipe: tunables-buttons
     /** Optional: slower gestures, e.g. for new drivers. Leave the section out for the defaults (in brackets). */
     public static class Buttons {                                   // a fixed name: always Buttons

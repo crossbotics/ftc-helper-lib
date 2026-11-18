@@ -242,7 +242,9 @@ When the encoder counts BACKWARD at forward power, the finder warns you to check
 It also blocks step 2, because speed control with a backward encoder would run away.
 
 In step 2, feed a piece with the robot's feeder or a push stick, never with fingers near the wheel. The
-finder then shows the **recovery time** (from the shot until the wheel is ready again).
+finder then shows the **recovery time** (from the shot until the wheel is ready again), "Shots seen" (the
+drops of more than 150 RPM) and "Shot drop": every drop out of "Ready", counted or not, with the last
+drop, the smallest drop and how many (for `shotDropRpm`). The screen shows the drop; the results file does not.
 It works out the gains as F = 32767 / top speed (counts/s), P = F / 10, I = P / 10, D = 0. This is a common
 starting point for REV hubs. `countsPerRev()` is 28 (the motor's own encoder, wheel on the motor shaft).
 Override it for a geared wheel. The output:

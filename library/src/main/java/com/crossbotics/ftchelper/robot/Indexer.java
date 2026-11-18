@@ -37,7 +37,8 @@ import java.util.function.LongSupplier;
  * <p>Tunables: {@code Indexer.servo}: {@code rest}, {@code push}, {@code pushSec}, {@code returnSec} (and
  * {@code alsoTrim} with a second servo).
  * {@code Indexer.crServo} and {@code Indexer.motor}: {@code power} and {@code feedSec} (how long it
- * runs per piece). Added on its own (no launcher), its usual button (a line in Controls.java) is operator RB: feed one.
+ * runs per piece), and {@code stopOnShot} (true: a launcher's feed stops when the flywheel sees the shot,
+ * and {@code feedSec} is the time limit). Added on its own (no launcher), its usual button (a line in Controls.java) is operator RB: feed one.
  *
  * <p>A feed wheel ({@code Launcher.feedWheel(Indexer.crServo("feeder_wheel"))}): a CR servo or motor that
  * moves the pieces up to the pusher (the launcher's {@code feeder}). Its Tunables: {@code power},
@@ -61,6 +62,8 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     // A launcher's feed wheel (Launcher.feedWheel): it stages the pieces; the launcher runs it (runWheel).
     boolean feedWheel = false;
     private boolean alwaysOn = false;
+    // A CR servo or motor feeder (not a feed wheel): end the feed when the flywheel sees the shot (Tunables stopOnShot).
+    private boolean stopOnShot = false;
     private Tunable stageSec, stopSec;
     private CRServo wheelCr;
     // A CR servo indexer's second servo (alsoServo...): it gets the same power as the first.
@@ -142,6 +145,11 @@ public final class Indexer extends Module<Indexer> implements Feeder {
             throw new IllegalStateException("Tunables." + name() + ".alsoTrim is for two push servos (Indexer.servo): "
                     + "two CR servo wheels both get the same power. Delete the alsoTrim line");
         }
+        if ((kind == Kind.SERVO || feedWheel) && t.has("stopOnShot") && t.flag("stopOnShot", false)) {
+            throw new IllegalStateException("Tunables." + name() + ".stopOnShot is for a CR servo or motor feeder that feeds "
+                    + "the flywheel (Indexer.crServo or Indexer.motor)" + (feedWheel ? ", not a feed wheel" : ", not a push servo")
+                    + ". Delete the stopOnShot line");
+        }
         switch (kind) {
             case SERVO:
                 rest = t.tunable("rest", 0.0, 0.01).range(0, 1);
@@ -192,6 +200,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
                 power = t.tunable("power", 1.0, 0.05).range(-1, 1);
                 // A feed wheel runs as long as the launcher says, not feedSec: no feedSec in its menu.
                 if (!feedWheel) feedSec = t.tunable("feedSec", 0.4, 0.02).range(0.02, 3);
+                if (!feedWheel) stopOnShot = t.flag("stopOnShot", false);
                 CRServo cr = devices.get(CRServo.class, device);
                 cr.setDirection(reversed ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
                 wheelCr = cr;
@@ -208,6 +217,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
                 power = t.tunable("power", 1.0, 0.05).range(-1, 1);
                 // A feed wheel runs as long as the launcher says, not feedSec: no feedSec in its menu.
                 if (!feedWheel) feedSec = t.tunable("feedSec", 0.4, 0.02).range(0.02, 3);
+                if (!feedWheel) stopOnShot = t.flag("stopOnShot", false);
                 DcMotorEx m = MotorSetup.of(devices.get(DcMotorEx.class, device)).reversed(reversed)
                         .brake().runWithoutEncoder().done();
                 motorFeeder = new MotorFeeder(name(), m);
@@ -262,6 +272,18 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     /** True for a CR servo or a motor (they can be a feed wheel), false for a push servo. */
     boolean spins() {
         return kind != Kind.SERVO;
+    }
+
+    /** A CR servo or motor feeder: true = the launcher ends each feed when the flywheel sees the shot (Tunables stopOnShot). */
+    boolean stopsOnShot() {
+        return stopOnShot && spins() && !feedWheel;
+    }
+
+    // The launcher saw the shot: stop now. The piece went, so the feed counts as fired (not "stopped part way").
+    void endFeedOnShot() {
+        if (!feeding || feeder == null) return;
+        feeder.stop();
+        checkFeedEnded(false);
     }
 
     // Live tuning: copies the tuning menu's values in (cheap, so every loop).

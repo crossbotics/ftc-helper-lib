@@ -27,6 +27,7 @@ import java.util.List;
  *     public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}};   // inches, rpm
  *     public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;   // Flywheel Finder
  *     public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional: the speed trim
+ *     public static double shotDropRpm = 150;                // optional: a drop of more than this = a shot
  * }
  * }</pre>
  *
@@ -578,6 +579,18 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 .tolerance(t.number("readyBandRpm", 60));
         numberNotes.clear();
         catalogNote = "";
+        // A drop of more than this after "ready" counts as a shot (shot count, stopOnShot, feed stop, Feed Test).
+        if (t.has("shotDropRpm")) {
+            double drop = t.number("shotDropRpm", 150);
+            if (!(drop > 0)) throw new IllegalStateException("Tunables." + name() + ".shotDropRpm = " + Shape.n(drop)
+                    + ": it must be more than 0. Write a bigger number, or delete the line (default 150)");
+            flywheel.shotDrop(drop);
+        }
+        // At or under the ready band, the normal wobble of a wheel "at speed" can count as a shot.
+        if (flywheel.getShotDrop() <= flywheel.getTolerance()) {
+            numberNotes.add("Tunables." + name() + ": shotDropRpm (" + Shape.n(flywheel.getShotDrop()) + ") is not more than readyBandRpm ("
+                    + Shape.n(flywheel.getTolerance()) + "): the wheel's normal wobble can count as a shot. Make shotDropRpm bigger");
+        }
         // The hub's speed control. A written number always wins. Without kF, the starting gains come
         // from the parts catalog (Flywheel.startingPidf: F = 32767 / the motor's top speed in counts per
         // second, P = F / 10, I = P / 10, D = 0, REV's formula and the Flywheel Finder's), NOT the hub's
@@ -621,6 +634,12 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         // A feeder marked optional() and not in the configuration: no feeding (pieces go in some other way,
         // e.g. pushed by the intake); the launcher still spins and its "fire" waits for nothing.
         Feeder feed = indexer != null && !indexer.missing ? indexer.forLauncher() : new NoFeeder();
+        // stopOnShot (a CR servo or motor feeder): the feed ends when the flywheel sees the shot; feedSec is the
+        // time limit. Not in SPRAY: there the wheels keep turning from piece to piece.
+        if (indexer != null && !indexer.missing && indexer.stopsOnShot()) {
+            feed = new ShotStopFeeder(feed, indexer, flywheel,
+                    () -> part != null && part.getShotMode() == ShotMode.SPRAY);
+        }
         // A feed stop or pushing parts: one feed opens the stop, runs the pushers and the indexer, and
         // ends when the wheel sees the shot (ShotGate).
         gate = null;

@@ -64,6 +64,13 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     private int lastShots = 0;
     private double shotAt = Double.NaN;
     private double recoverySec = Double.NaN;
+    // Every drop out of "Ready", counted as a shot or not (a drop under the 150 RPM shot drop is not):
+    // the deepest point of the drop now, the last drop's and the smallest of all (RPM), and how many.
+    // For shotDropRpm. NaN = none. A new target (D-pad) is not a drop.
+    private double dropNow = Double.NaN, lastDrop = Double.NaN, smallestDrop = Double.NaN;
+    private int drops = 0;
+    private boolean wasReady = false;
+    private double dropTarget = Double.NaN;
     // The battery: the last reading, and the voltage when the top speed (so the gains) was measured.
     // NaN = none.
     private double volts = Double.NaN;
@@ -158,10 +165,36 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             if (tuneVolts >= 9 && tuneVolts <= 14) flywheel.batteryCompensation(batteryReader(), tuneVolts);
             if (targetRpm == 0) targetRpm = Math.round(topRpm() * 0.6 / 25) * 25.0;
             lastShots = 0;
+            dropNow = lastDrop = smallestDrop = Double.NaN;
+            drops = 0;
+            wasReady = false;
         } else {
             flywheel.stop();
             plainPower();
         }
+    }
+
+    // A drop: the wheel was "Ready", fell out of the ready band, and came back. Its depth is how far it
+    // fell under the target. A target change starts over (the wheel is not "Ready" for the new speed).
+    private void watchDrops() {
+        boolean ready = flywheel.isReady();
+        if (dropTarget != targetRpm) {
+            dropTarget = targetRpm;
+            dropNow = Double.NaN;
+            wasReady = ready;
+            return;
+        }
+        if (wasReady && !ready) dropNow = 0;
+        if (!Double.isNaN(dropNow)) {
+            dropNow = Math.max(dropNow, Math.abs(targetRpm) - Math.abs(flywheel.getRpm()));
+            if (ready) {
+                drops++;
+                lastDrop = dropNow;
+                smallestDrop = Double.isNaN(smallestDrop) ? dropNow : Math.min(smallestDrop, dropNow);
+                dropNow = Double.NaN;
+            }
+        }
+        wasReady = ready;
     }
 
     // X: reverse the wheel. Only while it is not spinning on purpose (step 1 or 2 running).
@@ -212,6 +245,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
                 shotAt = Double.NaN;
                 writeResults();
             }
+            watchDrops();
             return;
         }
         // Step 1: full power while A is held, at most MAX_TOP_SPEED_SEC. The A press that chose the
@@ -318,6 +352,10 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         t.line("Ready", flywheel.isReady() ? "YES" : "no");
         t.line("Shots seen", flywheel.getShotCount());
         if (!Double.isNaN(recoverySec)) t.line("Recovery", FinderResults.num(recoverySec, 2) + " s");
+        if (!Double.isNaN(lastDrop)) {
+            t.line("Shot drop", FinderResults.num(lastDrop, 0) + " RPM (smallest " + FinderResults.num(smallestDrop, 0)
+                    + ", " + drops + (drops == 1 ? " drop" : " drops") + ")");
+        }
         t.text("Too slow at every speed: F up ({RB}). Too fast: F down ({LB}).");
     }
 
