@@ -41,6 +41,32 @@ Both servos get the same `power` for `feedSec`. Test the direction first: set `f
 with no piece, and watch both wheels pull in. If both pull out, add `.reversed()`. If one pulls out, use
 `.alsoServo(...)` in place of `.alsoServoReversed(...)`.
 
+**Stop on the shot.** A fixed `feedSec` must be long enough for the piece that starts farthest back. Then a
+piece that starts near the flywheel gets too much time, and the wheels can push the next piece in behind it.
+Set `stopOnShot = true`: each feed stops when the flywheel sees the shot (its speed drops), and `feedSec` is
+only the time limit. It is for a CR servo or motor feeder only: on a push servo or a feed wheel, INIT stops.
+It is `boolean`, not `double`:
+
+<!-- recipe: tunables-feed-wheels -->
+```java title="Tunables.java"
+public static class FeederLeft {                                // "feeder_left" in the configuration: it runs both wheels
+    public static double power = DEFAULT;                       // wheel power (1)
+    public static double feedSec = DEFAULT;                     // the most time the wheels run per shot (0.4)
+    public static boolean stopOnShot = true;                    // stop when the flywheel sees the shot: true or false
+}
+```
+
+- **SPRAY:** the wheels do not stop on a shot. They keep turning from one piece to the next, and each feed
+  runs the full `feedSec`. So in SPRAY the robot feeds one piece each `feedSec`: keep `feedSec` short (near
+  `shotIntervalSec`), not long "to be safe".
+- **First check that the flywheel sees your shots.** In the [Flywheel Finder](../../tuning/06-flywheel-finder.md),
+  feed 10 pieces, one at a time, and read "Shots seen" and "Shot drop". If "Shots seen" shows fewer than 10,
+  set `shotDropRpm` in the [launcher's Tunables](launcher.md#in-tunablesjava) to about half the smallest
+  shot drop.
+- **Then check for false shots.** Fire with no piece: the wheels must run the full `feedSec`. If they stop
+  early, the robot saw a shot that was not there: make `shotDropRpm` bigger.
+- If no number passes both checks, leave `stopOnShot` off and tune `feedSec`.
+
 Add `.feedWheelOutWith(intake)` to the launcher to run both wheels backward while the intake pushes out. Then
 the pieces in the feeder come out too ([Launcher](launcher.md)).
 
@@ -74,7 +100,8 @@ public static class Indexer {                                   // "indexer" in 
 | `alsoTrim` | a servo indexer with a second servo (`alsoServoReversed`): a raw position the library adds for it, so the two arms meet. Not for two CR servo wheels (INIT stops) | raw position, -0.2 to 0.2 | 0 | yes, at the next move | test: watch both arms | one arm pushes further than the other |
 | `returnSec` | a servo indexer: time to come back | seconds | 0.25 (with `.part(...)`: the same as `pushSec`) | yes, at once | test | the next piece jams on it (more) |
 | `power` | a motor or CR servo indexer: power while it feeds (- = the other way; to change the direction, use `.reversed()`: the simulator feeds only on + power) | -1 to 1 | 1.0 | yes, at once | test | it feeds pieces too hard or too softly |
-| `feedSec` | a motor or CR servo indexer: time for one piece | seconds | 0.4 | yes, at once | test | it feeds two (less) or none (more) |
+| `feedSec` | a motor or CR servo indexer: time for one piece. With `stopOnShot`: the time limit | seconds | 0.4 | yes, at once | test | it feeds two (less) or none (more) |
+| `stopOnShot` | a motor or CR servo indexer: true = each feed stops when the flywheel sees the shot (its speed drops), and `feedSec` is only the time limit. Not in SPRAY: there the wheels keep turning. Not for a feed wheel | true / false | false | no (at INIT) | test: Flywheel Finder, "Shots seen" | it feeds two pieces at once, and the pieces start in different places (true) |
 | `alwaysOn` | a feed wheel (`Launcher.feedWheel(...)`): true = it runs all the time the launcher is spun up (not while it idles); false = only while firing | true / false | false | no (at INIT) | test | the pieces wait too long for the wheel (true) or it uses battery for nothing (false) |
 | `stageSec` | a feed wheel, only while firing: it runs this long before the arm pushes (the piece gets to the arm; with a feed stop, the arm also waits for it to open) | seconds | 0.2 | yes, at once | test | the arm pushes before the piece is there (more) |
 | `stopSec` | a feed wheel, only while firing: it stops this long after the arm starts to push. Below 0 = before the push; 0 = as the push starts | seconds, -2 to 2 | 0.3 | yes, at once | test | it pushes the next piece in behind (less) or the piece stops on the arm (more) |

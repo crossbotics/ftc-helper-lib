@@ -2,6 +2,23 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.43.0 - 2026-11-18
+
+### Added
+
+- `stopOnShot` (Tunables, a CR servo or motor feeder): true = each feed stops as soon as the flywheel sees the
+  shot (its speed drops), and `feedSec` becomes only the time limit. Why: a piece does not always start in the
+  same place, and a fixed `feedSec` long enough for the farthest one can push the next piece in behind a near
+  one. In SPRAY the wheels do not stop on a shot: they keep turning from one piece to the next. Default false:
+  nothing changes until you turn it on. On a push servo or a feed wheel, INIT stops. Cookbook: the
+  `Tunables.FeederLeft` block for two feed wheels.
+- `shotDropRpm` (Tunables, the launcher): a drop of more than this many RPM after "at speed" counts as a shot.
+  Default 150, the same as before. The Shot Tuner's shot count, `stopOnShot`, the feed stop and the Feed Stop
+  Finder's test shot all use it. Make it less when the robot misses shots, and more when it counts shots with
+  no piece. 0 or less stops INIT. INIT shows a note when it is not more than `readyBandRpm`.
+- The Flywheel Finder shows "Shot drop": every drop out of "Ready" (also the ones under 150), with the last
+  drop, the smallest drop and how many.
+
 ## v0.42.0 - 2026-11-15
 
 ### Added

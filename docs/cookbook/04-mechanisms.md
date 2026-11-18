@@ -505,6 +505,19 @@ so they can never fight. When the intake pushes pieces out, the wheels turn back
 comes out too. A shot always wins.
 **Test the direction first:** set `feedSec` to 2, fire with no piece, and watch both wheels pull in. Both pull
 out: add `.reversed()` to the feeder. One pulls out: use `.alsoServo(...)` in place of `.alsoServoReversed(...)`.
+**Stop on the shot:** `stopOnShot = true` in `Tunables.FeederLeft` stops both wheels when the flywheel sees the
+shot, so they do not push the next piece in behind. `feedSec` is then only the time limit. It is `boolean`,
+not `double`:
+
+<!-- recipe: tunables-feed-wheels -->
+```java title="Tunables.java"
+public static class FeederLeft {                                // "feeder_left" in the configuration: it runs both wheels
+    public static double power = DEFAULT;                       // wheel power (1)
+    public static double feedSec = DEFAULT;                     // the most time the wheels run per shot (0.4)
+    public static boolean stopOnShot = true;                    // stop when the flywheel sees the shot: true or false
+}
+```
+
 **More:** [Indexer](../reference/parts/indexer.md), [Launcher](../reference/parts/launcher.md).
 
 ## How do I add a turret that follows the goal?

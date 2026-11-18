@@ -205,7 +205,8 @@ INIT stops on `MEASURE`. The finders still run, because they do not read `Tunabl
 2. **Flywheel Finder** ([how](../tuning/06-flywheel-finder.md)): it finds the speed gains and the
    recovery time after a shot. Until then, the wheel runs on starting gains from the motor, and INIT says
    so: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, ...`. Put the gains line in `Tunables.Launcher`. Make `shotIntervalSec` a little
-   longer than the recovery time.
+   longer than the recovery time. Feed 10 pieces and read "Shots seen": it must show 10. Fewer: see
+   `shotDropRpm` in [Launcher](../reference/parts/launcher.md#in-tunablesjava).
 3. **Feed Stop Finder** ([how](../tuning/07-feed-stop-finder.md)), only with a feed stop: the hold and
    release positions, and the firing times.
 4. **Hood Finder** ([how](../tuning/04-hood-finder.md)), only with a hood: the hood's two stops.

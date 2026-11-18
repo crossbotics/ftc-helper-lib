@@ -46,7 +46,16 @@ Find the gains that hold a flywheel at its speed, and how fast it recovers after
    they would be next to a wheel at full speed. Put safety glasses on. The screen shows the recovery time
    (on the robot only, because the simulator has no piece to feed). Use it for the launcher's
    `shotInterval(...)`: make that a little longer than the recovery time.
-5. Five files: copy the `Tunables.Launcher: kP = ..., kI = ..., kD = 0, kF = ..., nominalVolts = ...` line
+5. Check that the robot sees each shot (for `stopOnShot`). Set the target to your shot speed with the
+   D-pad. Feed 10 pieces, one at a time. Wait for "Ready: YES" before each. Read two lines:
+   - "Shots seen": the drops of more than 150 RPM (the default `shotDropRpm`).
+   - "Shot drop": every drop, also the ones under 150. It shows the last drop, the smallest drop and how
+     many drops it saw.
+
+   "Shots seen" shows 10: the default is good. It shows fewer: set `shotDropRpm` in `Tunables.Launcher` to
+   about half the smallest shot drop. Keep it more than `readyBandRpm`. Then fire with no piece in TeleOp:
+   the feed must run its full `feedSec`. The finder always counts with 150, not with your `shotDropRpm`.
+6. Five files: copy the `Tunables.Launcher: kP = ..., kI = ..., kD = 0, kF = ..., nominalVolts = ...` line
    into `Tunables.Launcher` (the section is the motor's name). A slow recovery adds `shotIntervalSec`.
    `nominalVolts` is the battery voltage at which the finder found the gains. The launcher's battery
    compensation uses it, so a low battery spins the wheel back up as fast. The compensation is off unless
@@ -72,6 +81,7 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 | --- | --- |
 | `Tunables.Launcher: kP = ..., kI = ..., kD = 0, kF = ..., nominalVolts = ...` | `Tunables.Launcher` (the section is the motor's name) |
 | the recovery time | `shotIntervalSec` in `Tunables.Launcher`: a little longer than the recovery time |
+| "Shots seen" fewer than the pieces | `shotDropRpm` in `Tunables.Launcher`: about half the smallest "Shot drop" (from the screen) |
 
 ## Done when
 
