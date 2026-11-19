@@ -31,6 +31,7 @@ The menu lists only the tools that fit your robot. It finds Robot.java by itself
 | Motor Finder | the robot has a lift or an arm (or there is no Robot.java) |
 | Flywheel Finder | the robot has a launcher (or there is no Robot.java) |
 | Feed Stop Finder | the launcher has a `.feedStop(...)` |
+| Feed Time Finder | the launcher's feeder is a CR servo or a motor, with no feed stop, pushing parts or feed wheel |
 | Drive Tuner | there is a Robot.java |
 | Odometry Tuner | Robot.java has an `odometry(...)` line |
 | Move Tuner | there is a Robot.java |

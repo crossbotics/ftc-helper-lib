@@ -318,6 +318,33 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     }
 
     /**
+     * True when the launcher's feeder runs for a time per piece ({@code feedSec}): a CR servo or motor
+     * {@link #feeder(Indexer)}, with no feed stop, no pushing parts and no feed wheel. The Feed Time Finder
+     * (Tune and check) is for this launcher. Known from Robot.java alone (before INIT).
+     *
+     * @return true for a timed feeder
+     */
+    public boolean hasTimedFeeder() {
+        return indexer != null && indexer.spins() && feedStopDevice == null && pushers.isEmpty() && feedWheel == null;
+    }
+
+    /**
+     * For the Feed Time Finder (Tune and check): a test shot that runs the feeder at its {@code power} until
+     * the wheel sees the shot, and times it. The finder spins the wheel itself ({@link FeedTimeTest#spin}).
+     * Not for TeleOp or autonomous code: use {@link #fire()} there.
+     *
+     * @param limitSec the longest a test feed may run, seconds (a long one, so a slow piece is still timed)
+     * @return the test shot. A launcher that is missing ({@code optional()}), has no timed feeder
+     *         ({@link #hasTimedFeeder()}) or is not set up yet gives one that does nothing (never ready).
+     */
+    public FeedTimeTest feedTimeTest(double limitSec) {
+        if (missing || flywheel == null || !hasTimedFeeder() || indexer.missing) {
+            return new FeedTimeTest(null, null, 0, limitSec, clock);
+        }
+        return new FeedTimeTest(flywheel, indexer, speedRpm(), limitSec, clock);
+    }
+
+    /**
      * The parts that push a piece into the wheel, in order (e.g. the intake that rolls it up a ramp).
      * For each piece they run in, even when the driver has them off, for at most {@code assistSec}
      * (Tunables, 0.25) or until the shot is seen; then each goes back to what it was doing. Pushing out

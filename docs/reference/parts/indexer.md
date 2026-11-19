@@ -67,6 +67,10 @@ public static class FeederLeft {                                // "feeder_left"
   early, the robot saw a shot that was not there: make `shotDropRpm` bigger.
 - If no number passes both checks, leave `stopOnShot` off and tune `feedSec`.
 
+**Find `feedSec`.** The [Feed Time Finder](../../tuning/07-feed-time-finder.md) in Tune and check fires test
+shots, times each piece to the shot, and gives `feedSec` from the longest. Fire 5 or more, from every place a
+piece can sit.
+
 Add `.feedWheelOutWith(intake)` to the launcher to run both wheels backward while the intake pushes out. Then
 the pieces in the feeder come out too ([Launcher](launcher.md)).
 
@@ -100,7 +104,7 @@ public static class Indexer {                                   // "indexer" in 
 | `alsoTrim` | a servo indexer with a second servo (`alsoServoReversed`): a raw position the library adds for it, so the two arms meet. Not for two CR servo wheels (INIT stops) | raw position, -0.2 to 0.2 | 0 | yes, at the next move | test: watch both arms | one arm pushes further than the other |
 | `returnSec` | a servo indexer: time to come back | seconds | 0.25 (with `.part(...)`: the same as `pushSec`) | yes, at once | test | the next piece jams on it (more) |
 | `power` | a motor or CR servo indexer: power while it feeds (- = the other way; to change the direction, use `.reversed()`: the simulator feeds only on + power) | -1 to 1 | 1.0 | yes, at once | test | it feeds pieces too hard or too softly |
-| `feedSec` | a motor or CR servo indexer: time for one piece. With `stopOnShot`: the time limit | seconds | 0.4 | yes, at once | test | it feeds two (less) or none (more) |
+| `feedSec` | a motor or CR servo indexer: time for one piece. With `stopOnShot`: the time limit | seconds | 0.4 | yes, at once | Feed Time Finder (in a launcher) | it feeds two (less) or none (more) |
 | `stopOnShot` | a motor or CR servo indexer: true = each feed stops when the flywheel sees the shot (its speed drops), and `feedSec` is only the time limit. Not in SPRAY: there the wheels keep turning. Not for a feed wheel | true / false | false | no (at INIT) | test: Flywheel Finder, "Shots seen" | it feeds two pieces at once, and the pieces start in different places (true) |
 | `alwaysOn` | a feed wheel (`Launcher.feedWheel(...)`): true = it runs all the time the launcher is spun up (not while it idles); false = only while firing | true / false | false | no (at INIT) | test | the pieces wait too long for the wheel (true) or it uses battery for nothing (false) |
 | `stageSec` | a feed wheel, only while firing: it runs this long before the arm pushes (the piece gets to the arm; with a feed stop, the arm also waits for it to open) | seconds | 0.2 | yes, at once | test | the arm pushes before the piece is there (more) |

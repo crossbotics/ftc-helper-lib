@@ -49,6 +49,7 @@ When the last column names a finder, run that finder again: a guess is worse tha
 | It feeds two pieces at once | [`feedSec`](../reference/parts/indexer.md#in-tunablesjava) | less |
 | It feeds two at once, but less `feedSec` feeds none from farther back | [`stopOnShot`](../reference/parts/indexer.md#in-tunablesjava) | true |
 | It feeds no piece | [`feedSec`](../reference/parts/indexer.md#in-tunablesjava) | more |
+| It feeds the near pieces but not the ones far back | [`feedSec`](07-feed-time-finder.md) | the Feed Time Finder's number |
 | The Flywheel Finder's "Shots seen" is less than the pieces fed | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
 | With `stopOnShot`, the wheels still run the full `feedSec` after a shot | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
 | With `stopOnShot`, the wheels stop before the piece gets to the flywheel | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | more |

@@ -274,6 +274,11 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         return kind != Kind.SERVO;
     }
 
+    /** A CR servo or motor feeder: Tunables {@code feedSec} now, seconds (NaN for a push servo or a feed wheel). */
+    double feedSecNow() {
+        return feedSec == null ? Double.NaN : feedSec.get();
+    }
+
     /** A CR servo or motor feeder: true = the launcher ends each feed when the flywheel sees the shot (Tunables stopOnShot). */
     boolean stopsOnShot() {
         return stopOnShot && spins() && !feedWheel;
