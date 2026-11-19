@@ -6201,7 +6201,7 @@
     "gobilda-strafer",
     "rev"
    ],
-   "since": "unreleased",
+   "since": "v0.44.0",
    "docs": [
     {
      "path": "docs/tuning/07-feed-time-finder.md",

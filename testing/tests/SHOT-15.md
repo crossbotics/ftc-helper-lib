@@ -7,7 +7,7 @@ where: both
 minutes: 15
 needs: [flywheel]
 kit_bots: [gobilda, gobilda-strafer, rev]
-since: unreleased
+since: v0.44.0
 docs: [tuning/07-feed-time-finder.md, reference/parts/indexer.md#in-tunablesjava, modules/finders.md]
 ---
 

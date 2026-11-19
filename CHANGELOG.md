@@ -2,7 +2,7 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.44.0 - 2026-11-19
 
 ### Added
 
@@ -13,6 +13,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   the times differ a lot. Why: `feedSec` must be long enough for the piece that starts farthest back, and one
   shot does not show that. Page: docs/tuning/07-feed-time-finder.md.
 - `Launcher.hasTimedFeeder()` and `Launcher.feedTimeTest(limitSec)` (with `FeedTimeTest`), the finder's test shot.
+
+### Fixed
+
+- The Feed Stop Finder: a test shot stopped part way (wheel off, help, STOP) no longer shows a "No shot seen"
+  note.
 
 ## v0.43.0 - 2026-11-18
 
