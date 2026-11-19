@@ -154,6 +154,7 @@ public abstract class FeedStopFinderOpMode extends FinderOpMode {
         if (test != null) {
             test.spin(false);
             test = null;
+            wasBusy = false;   // a test shot stopped part way is not a result
             position = hold;   // the test feed left the stop at hold
             atRelease = false;
             return;
@@ -303,6 +304,7 @@ public abstract class FeedStopFinderOpMode extends FinderOpMode {
         if (test != null) {
             test.spin(false);
             test = null;
+            wasBusy = false;
             if (bothSaved()) position = hold;
         }
     }

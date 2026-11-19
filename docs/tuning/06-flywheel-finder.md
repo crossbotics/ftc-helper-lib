@@ -89,6 +89,8 @@ you copied the `Tunables.Launcher` gains line, and the speed holds the target.
 
 ---
 
-**Next:** [Feed Stop Finder](07-feed-stop-finder.md).
+**Next:** [Feed Stop Finder](07-feed-stop-finder.md) (a launcher with a feed stop), or
+[Feed Time Finder](07-feed-time-finder.md) (a CR servo or motor feeder with no feed stop, pushing parts or
+feed wheel).
 
 **Look it up:** [Launcher: In Tunables.java](../reference/parts/launcher.md#in-tunablesjava).

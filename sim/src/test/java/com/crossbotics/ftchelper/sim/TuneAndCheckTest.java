@@ -90,6 +90,32 @@ public class TuneAndCheckTest {
         }
     }
 
+    // The Feed Time Finder on the goBILDA kit bot (a CR servo "windmill" feeder, no feed stop): a test shot
+    // goes, it is timed, and the feedSec line is shown. A robot with a feed stop does not get it.
+    @Test public void theFeedTimeFinderTimesATestShot() throws Exception {
+        TuneAndCheckOpMode.useRobots(Collections.<Class<? extends RobotDefinition>>singletonList(
+                com.crossbotics.ftchelper.examples.gobildabot.Robot.class));
+        try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
+            s.init(TuneAndCheckOpMode.NAME);
+            for (int i = 0; i < 15 && !s.screenHas("> Feed Time Finder"); i++) s.press(v -> s.g1().dpad_down = v);
+            assertTrue(String.join("\n", s.screen()), s.screenHas("> Feed Time Finder"));
+            assertFalse("no feed stop on this robot", s.screenHas("Feed Stop Finder"));
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Feed time finder"), 1));
+            s.start();
+            assertEquals("nothing moves at START", 0, s.robot().crServos.get("windmill")[0], 1e-9);
+            s.press(v -> s.g1().left_bumper = v);         // wheel on
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("test shot") && s.screenHas("ready"), 6));
+            int before = s.robot().shots();
+            s.press(v -> s.g1().right_bumper = v);        // a test shot
+            assertTrue("a piece goes\n" + String.join("\n", s.screen()), SimRun.waitFor(() -> s.robot().shots() > before, 4));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Test shots"), 2));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("(1 of 5)"));
+            assertEquals("the feeder stops at the shot", 0, s.robot().crServos.get("windmill")[0], 1e-9);
+            assertEquals("", s.error());
+        }
+    }
+
     // The Motor Direction Check: one drive motor runs while its button is held, set up as Robot.java says.
     @Test public void theMotorDirectionCheckSpinsOneMotorWhileHeld() throws Exception {
         TuneAndCheckOpMode.useRobots(Collections.<Class<? extends RobotDefinition>>singletonList(

@@ -198,6 +198,8 @@ Use them in `Controls.java`, `Actions.java` and autos: `robot.launcher.fire()`.
 | `feedStopName()` | its feed stop's name |
 | `feedStopPart()`, `feedStopMoveSec()` | its feed stop's catalog servo (null if Robot.java gives none); `feedStopMoveSec` as read at INIT |
 | `feedTest(hold, release, moveSec, backupSec)` | for the Feed Stop Finder only: a [test shot](../../modules/finders.md#feedtest) with those numbers |
+| `hasTimedFeeder()` | true for a CR servo or motor feeder with no feed stop, pushing parts or feed wheel: the Feed Time Finder is for it |
+| `feedTimeTest(limitSec)` | for the Feed Time Finder only: a [test shot](../../modules/finders.md#feedtimetest) that times the feeder until the shot |
 | `pushers()` | the parts that push the pieces in |
 | `isEjecting()` | whether it ejects now |
 | `part()` | the plain [launcher](../../modules/launcher.md#launcher) inside |

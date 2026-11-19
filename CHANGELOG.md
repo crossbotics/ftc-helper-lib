@@ -2,6 +2,23 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.44.0 - 2026-11-19
+
+### Added
+
+- The Feed Time Finder (Tune and check): for a launcher whose feeder is a CR servo or a motor, with no feed
+  stop. LB spins the wheel up, RB fires a test shot, and it times each piece from the start of the feed to the
+  shot. Fire 5 or more, from every place a piece can sit: it shows the shortest, average and longest time, and
+  the line to copy, `Tunables.Feeder: feedSec = ...` (the longest + 0.1 s). Without `stopOnShot`, it warns when
+  the times differ a lot. Why: `feedSec` must be long enough for the piece that starts farthest back, and one
+  shot does not show that. Page: docs/tuning/07-feed-time-finder.md.
+- `Launcher.hasTimedFeeder()` and `Launcher.feedTimeTest(limitSec)` (with `FeedTimeTest`), the finder's test shot.
+
+### Fixed
+
+- The Feed Stop Finder: a test shot stopped part way (wheel off, help, STOP) no longer shows a "No shot seen"
+  note.
+
 ## v0.43.0 - 2026-11-18
 
 ### Added

@@ -209,6 +209,8 @@ INIT stops on `MEASURE`. The finders still run, because they do not read `Tunabl
    `shotDropRpm` in [Launcher](../reference/parts/launcher.md#in-tunablesjava).
 3. **Feed Stop Finder** ([how](../tuning/07-feed-stop-finder.md)), only with a feed stop: the hold and
    release positions, and the firing times.
+   With a CR servo or motor feeder and no feed stop, pushing parts or feed wheel: the **Feed Time Finder**
+   ([how](../tuning/07-feed-time-finder.md)) instead. Its test shots give `feedSec`.
 4. **Hood Finder** ([how](../tuning/04-hood-finder.md)), only with a hood: the hood's two stops.
 5. **Shot Tuner** ([how](../tuning/13-shot-tuner.md)), after the camera or the odometry: the shot table.
 

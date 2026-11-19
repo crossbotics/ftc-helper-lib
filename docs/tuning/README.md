@@ -23,6 +23,7 @@ flowchart TB
     subgraph G3["The launcher"]
         direction LR
         F["Flywheel Finder<br/>gains + recovery"] --> FS["Feed Stop Finder<br/>hold + release"]
+        F --> FT["Feed Time Finder<br/>feedSec"]
     end
     subgraph G4["Driving"]
         direction LR
@@ -47,7 +48,7 @@ flowchart TB
 | 4 | [Hood Finder](04-hood-finder.md) | a hood's two stops | the Shot Tuner writes hood positions, so the hood needs its stops first |
 | 5 | [Motor Finder](05-motor-finder.md) | limits and positions | a wrong limit breaks parts, so do it before you drive a mechanism with code |
 | 6 | [Flywheel Finder](06-flywheel-finder.md) | gains (the numbers that hold its speed) and recovery | the shot table is only true when the wheel holds its speed |
-| 7 | [Feed Stop Finder](07-feed-stop-finder.md) | hold and release | the launcher must feed one piece at a time before you tune shots |
+| 7 | [Feed Stop Finder](07-feed-stop-finder.md), or [Feed Time Finder](07-feed-time-finder.md) for a CR servo or motor feeder with no feed stop, pushing parts or feed wheel (a robot gets one or the other) | hold and release; or `feedSec` (how long the feeder runs per shot) | the launcher must feed one piece at a time before you tune shots |
 | 8 | [Drive Tuner](08-drive-tuner.md) | wheel size and strafe | autonomous moves need the right distances. Autonomous stays off until it passes |
 | 9 | [Odometry Tuner](09-odometry-tuner.md) | pod directions and offsets (a pod is a small free wheel that measures how far the robot rolls) | `driveTo` and the shot distance need a true pose (where the robot is on the field, and which way it faces). Path steps stay off until it passes |
 | 10 | [Move Tuner](10-move-tuner.md) | where moves stop, how turns end | it needs the right distances (Drive Tuner) and, with odometry, a true pose to measure with |

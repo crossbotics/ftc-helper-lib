@@ -290,6 +290,11 @@ public class TuneAndCheckOpMode extends LinearOpMode {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
+        if (hasTimedFeeder(modules)) {
+            out.add(new Tool("Feed Time Finder", "how long the feeder runs per shot", () -> new FeedTimeFinderOpMode() {
+                @Override protected RobotDefinition robot() { return fresh.get(); }
+            }));
+        }
         if (robot != null) {
             out.add(new Tool("Drive Tuner", "the wheel size, for the autonomous", () -> new DriveTunerOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
@@ -323,6 +328,11 @@ public class TuneAndCheckOpMode extends LinearOpMode {
 
     private static boolean hasFeedStop(List<Module<?>> modules) {
         for (Module<?> m : modules) if (m instanceof Launcher && ((Launcher) m).feedStopName() != null) return true;
+        return false;
+    }
+
+    private static boolean hasTimedFeeder(List<Module<?>> modules) {
+        for (Module<?> m : modules) if (m instanceof Launcher && ((Launcher) m).hasTimedFeeder()) return true;
         return false;
     }
 

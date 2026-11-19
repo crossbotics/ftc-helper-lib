@@ -306,6 +306,44 @@ test.update();
 if (test.isReady() && !test.isBusy() && gamepad1.right_bumper) test.fire();
 ```
 
+## FeedTimeFinderOpMode
+
+`FeedTimeFinderOpMode` finds how long a launcher's feeder must run per shot: `Tunables.Feeder: feedSec = ...`.
+It is for a feeder that runs for a time (`Indexer.crServo(...)` or `Indexer.motor(...)`) with no feed stop,
+pushing parts or feed wheel (`Launcher.hasTimedFeeder()`). It needs `robot()` (the robot in five files).
+Tune and check adds it by itself. Steps: [Feed Time Finder](../tuning/07-feed-time-finder.md).
+
+LB spins the wheel up to `speedRpm`. RB fires a test shot: the feeder runs at its `power` until the wheel sees
+the shot (at most 3 s). X clears the times. It shows the shortest, average and longest time, and
+`feedSec` = the longest plus 0.1 s, rounded up to 0.05 s. Without `stopOnShot`, it warns when the times
+differ by more than 0.15 s.
+
+```java
+@TeleOp(name = "Feed Time Finder", group = "Finders")
+public class FeedTimeFinder extends FeedTimeFinderOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+### FeedTimeTest
+
+`FeedTimeTest` is the test shot (`robot.launcher.feedTimeTest(limitSec)`). It runs the launcher's own
+feeder. It is for the finder, not for TeleOp or autonomous code.
+
+| Method | What it does |
+| --- | --- |
+| `works()` | true for a launcher with a timed feeder that is on the robot |
+| `spin(on)` | spins the wheel up to `speedRpm`, or stops it (a test feed going on stops too) |
+| `isSpinning()`, `isReady()` | the wheel is on; it is on and at speed |
+| `rpmNow()`, `targetRpm()` | the wheel's speed now; the speed it spins to (RPM) |
+| `fire()` | one test shot (only when ready and not busy) |
+| `update()` | runs the wheel, and ends a test feed at the shot or the time limit: call it every loop |
+| `isBusy()` | a test feed runs |
+| `lastSec()` | the last test shot's time from the start of the feed to the shot, seconds (NaN: no shot seen) |
+| `lastEnd()` | `shot seen` or `time limit` |
+| `limitSec()` | the time limit of one test feed, seconds |
+| `feederSection()`, `feedSecNow()`, `stopsOnShot()` | the feeder's Tunables section, its `feedSec` now, its `stopOnShot` |
+
 ## DriveTunerOpMode
 
 Use it to find the wheel size and strafe correction for autonomous. It needs your robot. For the robot in
