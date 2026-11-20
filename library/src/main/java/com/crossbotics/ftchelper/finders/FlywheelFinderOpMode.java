@@ -26,10 +26,12 @@ import java.util.List;
  *
  * <pre>
  * Choose:  D-pad up/down = motor, A = use it
- * Step 1:  hold A = full power (at most 5 s). Release when the speed stops rising.
+ * Step 1:  hold A = full power (at most 5 s). Release when the speed stops rising. Still rising at
+ *          5 s (a heavy wheel)? It says so: the top speed may be higher, so F is a little high.
  * Step 2:  B = hold a speed on/off. D-pad up/down = +/- 100 RPM, right/left = +/- 25 RPM.
  *          RB / LB = F gain +2% / -2%. Feed a piece with the feeder or a stick (never fingers): it shows the recovery time.
  *          X = the wheel spins the wrong way: reverse it (for both steps; adds .reversed())
+ *          (From Tune and check, a motor starts the way Robot.java turns it: reversed() there = reversed here.)
  *          BACK = choose another motor
  * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
  * </pre>
@@ -55,6 +57,12 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     private final double[] recent = new double[8];
     private int recentCount = 0;
     private double fullPowerSince = Double.NaN;
+    // Still speeding up when step 1's time ran out (a heavy wheel): the top speed may be higher.
+    // The top when it last rose by STILL_RISING_STEP, and when. NaN = not this run.
+    private double riseTop = 0, riseAt = Double.NaN;
+    private boolean stillRising = false;
+    /** In step 1's last second, the speed rose by more than this share: still speeding up. */
+    static final double STILL_RISING_STEP = 0.01;
     // False right after choosing with A: A must be let go once before it means "full power".
     private boolean aReleased = false;
     // X: the wheel spins the wrong way, so the motor runs reversed (the code line gets .reversed()).
@@ -84,6 +92,23 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
      */
     protected double countsPerRev() {
         return 28;
+    }
+
+    /**
+     * The direction Robot.java gives each flywheel motor it knows (true = {@code reversed()} on the
+     * launcher). The finder starts a motor in that direction, so the wheel spins the way it does in
+     * TeleOp, and the numbers fit Robot.java as it is. A motor not in the map starts forward. Default:
+     * none (your own finder; set it in a subclass). Tune and check fills it from Robot.java.
+     *
+     * @return motor name (as in the robot configuration) to reversed; never null
+     */
+    protected java.util.Map<String, Boolean> motorDirections() {
+        return java.util.Collections.emptyMap();
+    }
+
+    // The direction Robot.java gives the chosen motor: TRUE reversed, FALSE forward, null not known.
+    private Boolean robotDirection() {
+        return motorName == null ? null : motorDirections().get(motorName);
     }
 
     @Override protected String finderName() { return "Flywheel finder"; }
@@ -120,12 +145,15 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         motor = hardwareMap.get(DcMotorEx.class, motorName);
         // A flywheel coasts: braking a fast wheel is hard on the gears.
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        // The way Robot.java turns it (a wheel spinning backward throws the piece back or jams on it).
+        // Before plainPower(): it sets the motor's direction from this.
+        reversed = Boolean.TRUE.equals(robotDirection());
         plainPower();
         flywheel = null;
         holding = false;
         aReleased = false;
-        reversed = false;
         topTicks = 0;
+        stillRising = false;
         gains = null;
         recoverySec = Double.NaN;
         tuneVolts = Double.NaN;
@@ -255,8 +283,16 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             if (Double.isNaN(fullPowerSince)) {
                 fullPowerSince = now();
                 recentCount = 0;
+                riseTop = 0;
+                riseAt = Double.NaN;
+                stillRising = false;
             }
             boolean tooLong = now() - fullPowerSince > MAX_TOP_SPEED_SEC;
+            // The time ran out while the speed still rose (in the last second): the top may be higher.
+            if (tooLong && !stillRising && !Double.isNaN(riseAt) && now() - riseAt < 1.0) {
+                stillRising = true;
+                writeResults();
+            }
             motor.setPower(tooLong ? 0 : 1);
             if (!tooLong) measureTop();
         } else {
@@ -273,6 +309,11 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         double sum = 0;
         for (double v : recent) sum += v;
         double avg = sum / recent.length;
+        // A rise of more than STILL_RISING_STEP since the last one: note when (for "still speeding up").
+        if (Math.abs(avg) > Math.abs(riseTop) * (1 + STILL_RISING_STEP)) {
+            riseTop = avg;
+            riseAt = now();
+        }
         if (Math.abs(avg) > Math.abs(topTicks)) {
             topTicks = avg;
             tuneVolts = volts;   // the gains below are right for the battery as it is now
@@ -292,7 +333,8 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
                 + FinderResults.num(gains[3], 2) + ")"
                 + ".maxRpm(" + FinderResults.num(Math.floor(topRpm() * 0.9 / 100) * 100, 0) + ")";
         results.set(key + ":0", line);
-        results.set(key + ":1", "    // top speed " + FinderResults.num(topRpm(), 0) + " RPM; maxRpm = 90% of it");
+        results.set(key + ":1", "    // top speed " + FinderResults.num(topRpm(), 0) + " RPM; maxRpm = 90% of it"
+                + (stillRising ? " (still speeding up at " + FinderResults.num(MAX_TOP_SPEED_SEC, 0) + " s: may be higher)" : ""));
         if (!Double.isNaN(recoverySec)) {
             results.set(key + ":2", "    // recovery after a shot at " + FinderResults.num(targetRpm, 0) + " RPM: "
                     + FinderResults.num(recoverySec, 2) + " s");
@@ -315,7 +357,12 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             fields.add("shotIntervalSec = " + FinderResults.num(Math.ceil(recoverySec * 20) / 20 + 0.05, 2));
         }
         results.set(key + ":t0", FinderResults.tunablesLine(motorName, fields));
-        if (reversed) results.set(key + ":t1", "Robot.java: add .reversed() to the \"" + motorName + "\" launcher");
+        // Robot.java must turn it the way it turned here. Not known (your own finder): only a reversed one needs a line.
+        Boolean inRobot = robotDirection();
+        if (inRobot == null ? reversed : inRobot != reversed) {
+            results.set(key + ":t1", reversed ? "Robot.java: add .reversed() to the \"" + motorName + "\" launcher"
+                    : "Robot.java: take .reversed() off the \"" + motorName + "\" launcher");
+        }
     }
 
     @Override
@@ -333,7 +380,9 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             if (volts < Flywheel.LOW_BATTERY_VOLTS) t.warn("Battery low: charge it before measuring (the gains are for this voltage).");
         }
         if (gains == null) {
-            t.line("Direction", reversed ? "reversed ({X})" : "normal ({X} = reverse)");
+            Boolean inRobot = robotDirection();
+            String asRobot = inRobot == null ? "" : inRobot == reversed ? ", as in Robot.java" : ", NOT as in Robot.java";
+            t.line("Direction", (reversed ? "reversed" : "normal") + asRobot + " ({X} = " + (reversed ? "normal" : "reverse") + ")");
             t.text("Step 1: hold {A} for full power until the speed stops rising.");
             t.text("Wheel spins the wrong way? Let go, press {X}, try again.");
             return;
@@ -341,6 +390,10 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         t.line("Top speed", FinderResults.num(topRpm(), 0) + " RPM");
         // Forward power but the count goes down: the encoder disagrees with the motor. Speed control
         // cannot work like that (it would run away), so step 2 is not allowed.
+        if (stillRising) {
+            t.warn("Still speeding up at " + FinderResults.num(MAX_TOP_SPEED_SEC, 0) + " s: the top speed may be higher (a heavy wheel)."
+                    + " Then F is a little high. Check the wheel turns freely, then fine-tune F in step 2.");
+        }
         if (topTicks < 0) t.warn("The encoder counts BACKWARD at forward power: check the encoder cable and motor port.");
         t.line("F gain", FinderResults.num(gains[3], 2) + " ({RB}/{LB})");
         if (!holding) {

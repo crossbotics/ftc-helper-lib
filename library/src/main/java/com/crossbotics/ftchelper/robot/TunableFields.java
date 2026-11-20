@@ -37,7 +37,7 @@ final class TunableFields {
         part("Drive", "calibrated", "maxPower", "moveMaxTurnPower", "moveMinPower", "moveTurnScale", "practiceMaxPower", "slowDownIn", "slowSpeed",
                 "strafeCorrection", "strafeCorrectionLeft", "turnKd", "turnKp", "turnMinPower", "turnToleranceDeg");
         part("Odometry", "angularScalar", "checked", "linearScalar", "mirrorForRed", "resetHeading", "resetX", "resetY");
-        part("Aim", "aimOnFire", "aimOnFireSec", "cameraForwardIn", "cameraLatencyMs", "cameraLeftIn", "cameraMaxAgeMs", "cameraOdometryAgree",
+        part("Aim", "aimDriveSpeed", "aimOnFire", "aimOnFireSec", "cameraForwardIn", "cameraLatencyMs", "cameraLeftIn", "cameraMaxAgeMs", "cameraOdometryAgree",
                 "cameraOffset", "flightSec", "flightSecPerIn", "goalSteadyDeg", "goalSteadyIn", "goalSteadySec", "goalX", "goalY", "lockMarginDeg", "maxGoalDistance", "maxLeadIn",
                 "maxTurnPower", "minTurnPower", "mirrorForRed", "rumbleDeg", "shootOnMove", "shooterForwardIn",
                 "shooterLeftIn", "sweepPower", "sweepStepDeg", "toleranceDeg", "turnKd", "turnKp");

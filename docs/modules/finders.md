@@ -238,6 +238,15 @@ hands away, and wear eye protection.
 | 2 | **RB** / **LB** | F gain +2% / -2%. F does most of the work: when the wheel is too slow at every speed, add F |
 | 1, 2 | **X** | reverses the wheel when it spins the wrong way (adds `.reversed()`) |
 
+Each motor starts in the direction from `motorDirections()` (motor name to `true` for reversed). Tune and
+check fills it from Robot.java: a launcher with `.reversed()` starts reversed, so the wheel spins the way it
+does in TeleOp. A motor not in the map starts forward. Your own finder can override `motorDirections()`. When
+**X** makes the direction differ from Robot.java, the results say to add or remove `.reversed()` there.
+
+When the speed still rose in the last second before step 1's 5 s limit (a heavy wheel), the finder warns
+`Still speeding up at 5 s` and adds "may be higher" to the top-speed line. F is then a little high: fine-tune
+it in step 2.
+
 When the encoder counts BACKWARD at forward power, the finder warns you to check the encoder cable and port.
 It also blocks step 2, because speed control with a backward encoder would run away.
 

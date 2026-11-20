@@ -68,6 +68,7 @@ public class WebcamTags implements TargetSource {
     private BackgroundWorker worker = null;
     private double keepMs = 500;
     private double pitchDeg = 0;
+    private boolean upsideDown = false;
     // A note for status(), written by the background worker ("manual exposure", "exposure failed"...).
     private volatile String controlsNote = "";
     // Venue lighting (autoExposure): the exposures to try (0 = the camera's own automatic exposure),
@@ -125,6 +126,25 @@ public class WebcamTags implements TargetSource {
     public WebcamTags pitchDeg(double degrees) {
         pitchDeg = degrees;
         return this;
+    }
+
+    /**
+     * The webcam is mounted upside down (turned half a turn around its lens). Its picture is then upside
+     * down: left and right swap, and every tag reads upside down. With this set, each target's bearing and
+     * roll are turned back, so left is still left and a right-side-up tag still reads right side up
+     * ({@link TargetObservation#isUpright()}). The live view stays upside down. Default false. Set it
+     * before start(). In the robot in five files: {@code Camera.webcam("Webcam 1").upsideDown()} in Robot.java.
+     *
+     * @param on true = the camera is upside down
+     */
+    public WebcamTags upsideDown(boolean on) {
+        upsideDown = on;
+        return this;
+    }
+
+    /** True if {@link #upsideDown(boolean)} is set. */
+    public boolean isUpsideDown() {
+        return upsideDown;
     }
 
     /** Camera resolution (pixels). 640x480 is a good start. Higher = farther tags, slower. Set before start(). */
@@ -312,7 +332,7 @@ public class WebcamTags implements TargetSource {
         }
         // A new picture: turn each SDK detection into our own TargetObservation.
         List<TargetObservation> out = new ArrayList<>();
-        for (AprilTagDetection d : fresh) out.add(convert(d, pitchDeg));
+        for (AprilTagDetection d : fresh) out.add(convert(d, pitchDeg, upsideDown));
         latest = out;
     }
 
@@ -326,18 +346,32 @@ public class WebcamTags implements TargetSource {
      * {@code pitchDeg} (0 = level): bearing and distance along the floor ({@link CameraTilt}). Public for tests.
      */
     public static TargetObservation convert(AprilTagDetection d, double pitchDeg) {
+        return convert(d, pitchDeg, false);
+    }
+
+    /**
+     * The same, for a camera that may be mounted upside down ({@link #upsideDown(boolean)}). Public for tests.
+     */
+    public static TargetObservation convert(AprilTagDetection d, double pitchDeg, boolean upsideDown) {
         // ftcPose is null for a tag that is not in the tag library (the SDK cannot measure it): use NaN.
         // The SDK's bearing is already positive = LEFT, and its range is measured flat in the camera's own
         // view (sideways and forward only), the same kind of distance as the Limelight's.
         double bearing = d.ftcPose != null ? d.ftcPose.bearing : Double.NaN;
         double range = d.ftcPose != null ? d.ftcPose.range : Double.NaN;
+        // An upside-down camera: the picture's right is the robot's left, and its up is the robot's down.
+        // So x and z swap sign, and so does the bearing; the range (a length) stays the same.
+        double flip = upsideDown ? -1 : 1;
+        if (d.ftcPose != null) bearing *= flip;
         if (d.ftcPose != null && pitchDeg != 0) {
             // A tilted camera: ftcPose's x = right, y = forward along the lens, z = up in the picture (inches).
-            bearing = CameraTilt.bearingDeg(d.ftcPose.x, d.ftcPose.y, d.ftcPose.z, pitchDeg);
-            range = CameraTilt.floorDistance(d.ftcPose.x, d.ftcPose.y, d.ftcPose.z, pitchDeg);
+            double x = flip * d.ftcPose.x, z = flip * d.ftcPose.z;
+            bearing = CameraTilt.bearingDeg(x, d.ftcPose.y, z, pitchDeg);
+            range = CameraTilt.floorDistance(x, d.ftcPose.y, z, pitchDeg);
         }
         // roll: how far the tag (or the cluster's row of tags) is turned in the picture; 0 = right side up.
+        // Upside down: half a turn more, kept between -180 and 180.
         double roll = d.ftcPose != null ? d.ftcPose.roll : Double.NaN;
+        if (upsideDown && !Double.isNaN(roll)) roll = roll > 0 ? roll - 180 : roll + 180;
         // "instanceof" asks "is this a single tag?"; then "(AprilTagSingleDetection) d" lets us use it as one.
         if (d instanceof AprilTagSingleDetection) {
             AprilTagSingleDetection s = (AprilTagSingleDetection) d;

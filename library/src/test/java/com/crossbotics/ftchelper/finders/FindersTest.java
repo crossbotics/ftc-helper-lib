@@ -451,4 +451,20 @@ public class FindersTest {
         assertEquals("a launcher's hood too", Boolean.TRUE, d.get("hood"));
         assertEquals("not named: left alone", null, d.get("other"));
     }
+
+    // Tune and check's Flywheel Finder starts each launcher's motor the way Robot.java turns it.
+    public static class FlywheelDirectionsBot extends com.crossbotics.ftchelper.robot.RobotDefinition {
+        @Override protected void define() {
+            drive(com.crossbotics.ftchelper.robot.Drive.tank("left", "right"));
+            add(com.crossbotics.ftchelper.robot.Launcher.flywheel("launcher", "gobilda-5203-6000").reversed());
+            add(com.crossbotics.ftchelper.robot.Launcher.flywheel("launcher2", "gobilda-5203-6000"));
+        }
+    }
+
+    @Test public void tuneAndCheckKnowsEachFlywheelsDirection() {
+        java.util.Map<String, Boolean> d = TuneAndCheckOpMode.flywheelDirections(new FlywheelDirectionsBot().modules());
+        assertEquals("reversed() in Robot.java", Boolean.TRUE, d.get("launcher"));
+        assertEquals(Boolean.FALSE, d.get("launcher2"));
+        assertEquals("a drive motor: not a flywheel", null, d.get("left"));
+    }
 }

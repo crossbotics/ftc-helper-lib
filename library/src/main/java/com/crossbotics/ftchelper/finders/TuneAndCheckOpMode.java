@@ -188,6 +188,15 @@ public class TuneAndCheckOpMode extends LinearOpMode {
 
     // Every positional servo part Robot.java names, and whether it is reversed() (also a second servo, a
     // launcher's feeder and hood, a servo hood, a servo turret). The Servo Finder turns each the same way.
+    /** Each launcher's flywheel motor and whether Robot.java reverses it (for the Flywheel Finder). */
+    static Map<String, Boolean> flywheelDirections(List<Module<?>> modules) {
+        Map<String, Boolean> out = new java.util.HashMap<>();
+        for (Module<?> m : withChildren(modules)) {
+            if (m instanceof Launcher) out.put(m.deviceName(), ((Launcher) m).isReversed());
+        }
+        return out;
+    }
+
     static Map<String, Boolean> servoDirections(List<Module<?>> modules) {
         Map<String, Boolean> out = new java.util.HashMap<>();
         for (Module<?> m : withChildren(modules)) {
@@ -283,7 +292,11 @@ public class TuneAndCheckOpMode extends LinearOpMode {
             out.add(new Tool("Motor Finder", "a lift's or arm's limits and positions", () -> new MotorFinderOpMode() { }));
         }
         if (robot == null || any(modules, Launcher.class)) {
-            out.add(new Tool("Flywheel Finder", "the flywheel's gains", () -> new FlywheelFinderOpMode() { }));
+            // Each launcher's motor starts the way Robot.java turns it (reversed() there = reversed here).
+            final Map<String, Boolean> motorDirs = flywheelDirections(modules);
+            out.add(new Tool("Flywheel Finder", "the flywheel's gains", () -> new FlywheelFinderOpMode() {
+                @Override protected Map<String, Boolean> motorDirections() { return motorDirs; }
+            }));
         }
         if (hasFeedStop(modules)) {
             out.add(new Tool("Feed Stop Finder", "the feed stop's hold and release", () -> new FeedStopFinderOpMode() {

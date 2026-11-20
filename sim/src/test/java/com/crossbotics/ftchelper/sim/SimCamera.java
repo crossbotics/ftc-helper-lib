@@ -14,14 +14,15 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  * (sim/src/test/java/org/firstinspires/ftc/vision/...) turns those into the SDK's own detections.
  *
  * Where it sits: forward/left/up (inches) from the robot's center on the floor, yaw (degrees, + = turned
- * left) and pitch (degrees, + = tilted up). What it sees: hfov degrees across, width x height pixels.
+ * left), pitch (degrees, + = tilted up) and roll (degrees, turned around the lens: 180 = upside down,
+ * its picture upside down too). What it sees: hfov degrees across, width x height pixels.
  * on=SHAPE: it rides a moving shape (a camera on a turret: on=turret); then forward/left/up/yaw are
  * measured with that part at 0 (the turret pointing straight forward), and it turns with the part.
  */
 final class SimCamera implements InvocationHandler {
     final String name;
     final String kind;          // "webcam", "limelight" or "huskylens"
-    final double forwardIn, leftIn, upIn, yawDeg, pitchDeg, hfovDeg;
+    final double forwardIn, leftIn, upIn, yawDeg, pitchDeg, rollDeg, hfovDeg;
     final int width, height;
     // on=SHAPE: the shape it rides (a turret), or null for a camera fixed to the chassis.
     final String on;
@@ -48,6 +49,7 @@ final class SimCamera implements InvocationHandler {
         upIn = num(s, "up", 10);
         yawDeg = num(s, "yaw", 0);
         pitchDeg = num(s, "pitch", 0);
+        rollDeg = num(s, "roll", 0);
         on = s.containsKey("on") && !s.get("on").trim().isEmpty() && !s.get("on").trim().equals("chassis") ? s.get("on").trim() : null;
         // Logitech C920 at 640x480: about 70 degrees across; Limelight 3A: 54.5 (its spec sheet);
         // HuskyLens: 60 is a guess (no number from the seller), and its boxes are in a 320x240 screen (FTC docs).
@@ -196,6 +198,14 @@ final class SimCamera implements InvocationHandler {
         double[] pos = {forwardIn, leftIn, upIn};
         double[] z = {Math.cos(yaw) * Math.cos(p), Math.sin(yaw) * Math.cos(p), Math.sin(p)};
         double[] x = {Math.sin(yaw), -Math.cos(yaw), 0};
+        if (rollDeg != 0) {
+            // Turned around the lens (roll): the picture's right (x) turns about the lens axis (z).
+            // roll=180 (upside down): the picture's right is the robot's left.
+            double r = Math.toRadians(rollDeg);
+            double[] x0 = cross(z, x);
+            x = new double[] {x[0] * Math.cos(r) + x0[0] * Math.sin(r), x[1] * Math.cos(r) + x0[1] * Math.sin(r),
+                    x[2] * Math.cos(r) + x0[2] * Math.sin(r)};
+        }
         if (on != null) {
             synchronized (robot) {
                 // On a turret: turned (and moved) with it, from where it was measured (the turret at 0).

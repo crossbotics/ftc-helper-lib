@@ -124,6 +124,8 @@ public final class DriverControls {
 
     // Turn assist (e.g. aim at a goal), or null: gets the driver's turn and gives the turn to use.
     private java.util.function.DoubleUnaryOperator turnAssist = null;
+    // Forward and strafe are multiplied by this every loop (e.g. slower while aiming); the turn is not.
+    private java.util.function.DoubleSupplier moveScale = () -> 1;
     // Reverse drive: while this says true, forward and strafe are flipped (the back is the front).
     private java.util.function.BooleanSupplier reversed = () -> false;
 
@@ -149,6 +151,22 @@ public final class DriverControls {
      */
     public DriverControls turnAssist(java.util.function.DoubleUnaryOperator assist) {
         turnAssist = assist;
+        return this;
+    }
+
+    /**
+     * Multiplies forward and strafe by this every loop, 0 to 1 (1 = unchanged, the default). The turn is
+     * not changed: a turn assist (aim) keeps its full power. The five-files TeleOp uses it to drive slower
+     * while {@code robot.aimMode()} is on ({@code Tunables.Aim.aimDriveSpeed}), so the aim keeps up.
+     *
+     * <pre>{@code
+     * driving.moveScale(() -> aimOn ? 0.5 : 1);
+     * }</pre>
+     *
+     * @param scale gives the share of forward and strafe to use, 0 to 1; null = always 1
+     */
+    public DriverControls moveScale(java.util.function.DoubleSupplier scale) {
+        moveScale = scale == null ? () -> 1 : scale;
         return this;
     }
 
@@ -184,6 +202,9 @@ public final class DriverControls {
         double strafe = StickShaping.shape(swapped ? gamepad.right_stick_x : gamepad.left_stick_x, deadband, exponent);
         double turn = StickShaping.shape(swapped ? gamepad.left_stick_x : gamepad.right_stick_x, deadband, exponent);
         if (turnAssist != null) turn = turnAssist.applyAsDouble(turn);
+        double move = Math.max(0, Math.min(1, moveScale.getAsDouble()));
+        forward *= move;
+        strafe *= move;
         lastSpeed = speed;
         if (!isFieldCentric() && reversed.getAsBoolean()) {
             forward = -forward;

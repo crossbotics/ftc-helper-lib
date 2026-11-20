@@ -495,6 +495,14 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     }
 
     /**
+     * True when Robot.java has {@code reversed()} on this launcher: its flywheel motor turns the other way.
+     * The Flywheel Finder in Tune and check starts the motor this way too.
+     */
+    public boolean isReversed() {
+        return reversed;
+    }
+
+    /**
      * Another check before each piece is fed, e.g. {@code .requireReady("turret aimed", () -> turret.isAimed())}.
      * While it is false the launcher waits (and gives up after 3 s, saying which check failed).
      *
