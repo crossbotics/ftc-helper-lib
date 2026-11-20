@@ -42,6 +42,8 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
 - `.autoPipelines(0, 1, 2)`: the lighting test at INIT. A **pipeline** is a set of camera settings that
   you save on the Limelight by number. Put your usual one first, because it wins a tie.
 - A webcam: `Camera.webcam("Webcam 1").autoExposure()`. It tries exposures in place of pipelines.
+- A webcam mounted upside down: add `.upsideDown()`, like `Camera.webcam("Webcam 1").upsideDown().autoExposure()`.
+  Without it, the robot aims the wrong way ([A webcam upside down](../reference/parts/camera.md#a-webcam-upside-down)).
 - A HuskyLens works too, with fewer features: no lighting test, and a rough distance
   ([Camera: A HuskyLens](../reference/parts/camera.md#a-huskylens)).
 - When a name is red, click it and press Alt+Enter (Option+Enter on a Mac) to add the import.
@@ -265,6 +267,7 @@ the distance.
 | `limelight lighting: NO TAGS SEEN` (after ▶) | No pipeline saw a tag at INIT. Have a tag in view at INIT. Check each pipeline on the Limelight's page |
 | `limelight lighting: no pictures from pipeline 2 (missing?)` | That pipeline is not set up on the Limelight. Make it, or take it out of `autoPipelines(...)` |
 | `Goal : not seen (RED SCORING is upside down (a down CELL))` | The camera sees only a down CELL. Drive to see the up CELL |
+| Aim turns away from the goal, or aims at the down CELL (webcam) | The webcam is mounted upside down. Add `.upsideDown()` to its line in Robot.java |
 | The speed never changes with distance | No goal in view. Check `pipeline` and the `goal(...)` names |
 | INIT stops: `robot.aimMode() ... separate modes` | The turret follows the goal. Remove the `aimMode()` line, or `.follows(...)` on the turret |
 | Whole-robot aim stops a few degrees off | Raise `turnKp`, or set `minTurnPower` in `Tunables.Aim` |

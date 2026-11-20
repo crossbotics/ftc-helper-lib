@@ -100,6 +100,7 @@ need hard stops), then make sure the shapes are right before blaming the robot.
     Tunables section (if it has one; if not, suggest adding it), so the simulator and the robot agree. A Logitech C920 sees about 70 degrees across
     (`hfov=70.4`), a C270 about 42.5 (`hfov=42.5`); a Limelight 3A 54.5. On a turret (or arm)? Add `on=turret` (the shape's name) and
     measure with the turret pointing straight forward: then it turns with the turret.
+    Mounted upside down? Add `roll=180`, and `.upsideDown()` on the webcam's line in Robot.java.
     A HuskyLens: `huskylens.KEY = name=..., forward=, left=, up=, yaw=, pitch=, hfov=, taught=30|31` (ask
     for the view angle they measured, and what they taught it, in order: ID1 first; piece names for colors).
 

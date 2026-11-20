@@ -28,8 +28,19 @@ Find the gains that hold a flywheel at its speed, and how fast it recovers after
 ## Steps
 
 1. After you choose the motor, let go of A, then hold **A** again: the wheel runs at full power until the
-   speed stops rising. The finder works out the gains from the top speed. When the wheel spins the wrong
-   way, let go, press **X** (reverse), and try again.
+   speed stops rising. The finder works out the gains from the top speed. From Tune and check, the motor
+   starts in the direction Robot.java gives it: with `.reversed()` on the launcher, the screen shows
+   `Direction : reversed, as in Robot.java`. When the wheel spins the wrong way, let go, press **X**
+   (reverse), and try again. Then the results tell you to add or remove `.reversed()` in Robot.java.
+
+   **Why the direction matters:** a wheel that spins backward pushes the piece back. The piece jams on the
+   wheel, and the wheel stops when the piece touches it.
+
+   **`Still speeding up at 5 s`:** full power stops after 5 s, for safety. A heavy wheel (a wheel with added
+   weight) can still speed up then, so its real top speed is higher than the one shown. Extra weight does
+   not lower the top speed much, but it makes the wheel take longer to get there. Because the finder works
+   out F from the top speed, F is then a little high. Check that the wheel turns freely by hand, with no
+   rubbing. Then fine-tune F in step 2 (step 3 below): the error must stay near 0 at your shot speed.
 
    ![Let go of A, then hold A: the Driver Hub shows Top speed : 5600 RPM](../images/hub-flywheel-finder-step-top-speed.svg)
 

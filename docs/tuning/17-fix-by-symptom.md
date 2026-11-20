@@ -40,6 +40,8 @@ When the last column names a finder, run that finder again: a guess is worse tha
 | **Launcher** | - | - |
 | Shots land short or long | [`speedRpm`](../reference/parts/launcher.md#in-tunablesjava) (or the shot table) | Shot Tuner, or more / less |
 | The flywheel is slow to reach speed, or its speed swings | [`kP`, `kF`](../reference/parts/launcher.md#in-tunablesjava) | Flywheel Finder |
+| The flywheel suddenly speeds up now and then | [`kD`](../reference/parts/launcher.md#in-tunablesjava) | 0 (the Flywheel Finder's line has `kD = 0`: copy each number to its own name) |
+| In the Flywheel Finder, the wheel stops when a piece touches it | the direction | `Direction` must say "as in Robot.java"; else press X ([why](06-flywheel-finder.md#steps)) |
 | It waits too long before it fires | [`readyBandRpm`](../reference/parts/launcher.md#in-tunablesjava) | more |
 | Shots land at different distances | [`readyBandRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
 | The second of two quick shots lands short | [`shotIntervalSec`](../reference/parts/launcher.md#in-tunablesjava) | more |

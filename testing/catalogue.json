@@ -3862,6 +3862,163 @@
    }
   },
   {
+   "id": "AIM-10",
+   "title": "An upside-down webcam aims the right way",
+   "area": "aim",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 15,
+   "needs": [
+    [
+     "webcam"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.45.0",
+   "docs": [
+    {
+     "path": "docs/reference/parts/camera.md",
+     "anchor": "a-webcam-upside-down"
+    },
+    {
+     "path": "docs/add-to-robot/07-camera.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/AIM-10.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A webcam mounted upside down sees an upside-down picture. Left and right swap, and every tag reads upside down. Without help, the robot aims the wrong way and takes the down CELL for the goal. With `.upsideDown()` on the webcam's line in Robot.java, the library turns each reading back. We want to know that left is left again, and that the goal is the up CELL."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Robot on the floor, wheels free to turn. Keep clear of the robot while aim mode turns it.",
+       "The flywheel does not need to spin: switch it off (or leave the launcher out of the test)."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A webcam mounted upside down, with `.goal(\"BLUE SCORING\", \"RED SCORING\")` and an aim button (`robot.aimMode()` in Controls.java).",
+       "In Robot.java: `Camera.webcam(\"Webcam 1\").upsideDown()`.",
+       "A HIVE (or its tags) in view, with its up CELL known."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT, facing the HIVE's middle about 48 in away. Read `Goal : ..., NN in, N.N deg` on the Driver Station. It must name the up CELL.",
+       "Turn the robot by hand so the goal is about 20 degrees to its LEFT. Read the line again.",
+       "Press ▶. Turn aim mode on. Watch which way the robot turns.",
+       "Take `.upsideDown()` out, install, and do steps 1 and 2 again (the old way, for comparison)."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 1 the goal is the up CELL. In step 2 the angle is + (left), within 3 degrees of the true one. In step 3 the robot turns toward the goal and stops on it. In step 4 the angle has the wrong sign, or the goal is the down CELL or not seen."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the camera (model), its tilt, its height",
+       "the goal names and angles in each step, and the true angles",
+       "which way the robot turned in step 3"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A HuskyLens or a Limelight cannot use `.upsideDown()` (a Limelight has its own setting on its web page). A camera on a turret: the turret turns toward the goal in step 3, not the robot."
+     }
+    ]
+   }
+  },
+  {
+   "id": "AIM-11",
+   "title": "Whole-robot aim keeps the goal centered while the robot strafes",
+   "area": "aim",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 15,
+   "needs": [
+    [
+     "webcam"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.45.0",
+   "docs": [
+    {
+     "path": "docs/reference/parts/aim.md",
+     "anchor": "whole-robot-aim"
+    },
+    {
+     "path": "docs/modules/drive.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/AIM-11.md",
+   "sections": {
+    "why": [
+     {
+      "p": "With whole-robot aim on (`robot.aimMode()`), the robot turns to face the goal while the driver drives. At full speed the robot moved faster than the aim could turn: the goal drifted off, and the robot only turned back to it when it stopped. Now forward and strafe go at `Tunables.Aim.aimDriveSpeed` (0.5) while aim is on. We want to know that the goal stays near the middle while the robot strafes, and that 0.5 is a good default."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Clear space on both sides of the robot. Keep clear while it drives.",
+       "The flywheel does not need to spin."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot with no turret, a camera with `.goal(...)`, and an aim button (`robot.aimMode()` in Controls.java).",
+       "The goal (or its tags) in view, about 48 in away."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Press ▶. Turn aim on. Wait for `AIMED`.",
+       "Strafe left with the stick fully over for 2 s, then right for 2 s. Read the `Aim : ... deg off` line while the robot moves.",
+       "Set `aimDriveSpeed = 1` (the tuning menu, or Tunables.java) and do step 2 again.",
+       "Turn aim off and strafe: full speed again."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 2 the robot strafes at about half speed, and the error stays within 5 degrees while it moves. In step 3 the error grows more while it moves. In step 4 the robot strafes at full speed."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the robot's drive (mecanum, tank) and its top speed",
+       "the largest error in steps 2 and 3",
+       "the `aimDriveSpeed` the drivers like best"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A tank robot cannot strafe: drive forward and back across the goal's line instead. A robot with a turret that follows the goal does not use whole-robot aim: skip this test."
+     }
+    ]
+   }
+  },
+  {
    "id": "AUTO-01",
    "title": "Choose the start spot in the INIT menu",
    "area": "autos",
@@ -6268,6 +6425,87 @@
     "different": [
      {
       "p": "A light piece may not slow the flywheel enough to count as a shot: the finder then says \"No shot seen\" for every test shot. Set `shotDropRpm` in the launcher's Tunables section lower (try 100), and run the steps again."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-16",
+   "title": "Flywheel Finder: a reversed launcher spins right, a heavy wheel is seen",
+   "area": "shooter",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 10,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.45.0",
+   "docs": [
+    {
+     "path": "docs/tuning/06-flywheel-finder.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/modules/finders.md",
+     "anchor": "flywheelfinderopmode"
+    }
+   ],
+   "file": "testing/tests/SHOT-16.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A launcher with `.reversed()` in Robot.java spins the other way from the motor's normal direction. The Flywheel Finder in Tune and check now starts the motor that way too. Before, it started forward: the wheel spun backward, and a piece fed in jammed on it and stopped it. We want to know that the wheel spins the same way in the finder as in TeleOp. It also warns when a heavy wheel still speeds up at the end of step 1's 5 s."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Eye protection. Nobody in front of the launcher.",
+       "Feed a piece with the robot's feeder or a push stick, never with fingers."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with `.reversed()` in Robot.java (`Launcher.flywheel(...).reversed()`).",
+       "2 pieces."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "In TeleOp, spin the wheel up. Look at which way the wheel spins (a tape mark on it helps).",
+       "Open Tune and check, then the Flywheel Finder. Choose the launcher's motor. Read the `Direction` line.",
+       "Let go of A, then hold A. Look at which way the wheel spins.",
+       "Press B (hold a speed). Feed one piece with the feeder or a stick.",
+       "Hold A for more than 5 s in step 3. Note if the screen says `Still speeding up at 5 s`, and if the `Speed` line still went up at the end.",
+       "Simulator: do steps 2 and 3 with the robot file of a robot with `.reversed()`."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 2 the line reads `Direction : reversed, as in Robot.java`. In step 3 the wheel spins the same way as in step 1. In step 4 the piece leaves the launcher, and the wheel does not stop. The results have no line to add `.reversed()` to Robot.java. In step 5 the warning shows only when the speed still went up at the end."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the motor, the wheel, and the library version",
+       "the `Direction` line in step 2",
+       "what the piece did in step 4",
+       "the top speed, and if the warning showed in step 5 (and any weight added to the wheel)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A launcher without `.reversed()`: the line reads `Direction : normal, as in Robot.java`, and the test is the same. A Flywheel Finder of your own (not from Tune and check) starts forward, as before."
      }
     ]
    }

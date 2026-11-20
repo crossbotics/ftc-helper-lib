@@ -233,14 +233,15 @@ distance.intake_distance = at=intake, acrossMm=150
 
 ```properties
 # name = the name in the robot configuration. Where it sits: inches forward/left/up from the robot's
-# center on the floor; yaw (+ = turned left) and pitch (+ = tilted up) in degrees. hfov = how wide it
-# sees, in degrees (Logitech C920 at 640x480: about 70; C270: 42.5). Defaults: 0, 0, 10, 0, 0, 70.4, 640, 480.
+# center on the floor; yaw (+ = turned left) and pitch (+ = tilted up) in degrees. roll = turned around the
+# lens, in degrees (180 = upside down). hfov = how wide it sees, in degrees (Logitech C920 at 640x480: about 70;
+# C270: 42.5). Defaults: 0, 0, 10, 0, 0, 0, 70.4, 640, 480.
 camera.front = name=Webcam 1, forward=7, left=0, up=12, yaw=0, pitch=20, hfov=70.4, width=640, height=480
 ```
 
 For a robot in five files, `:sim:fromRobot` makes this line from Robot.java. Its `pitch` is the camera's
-`pitchDeg` in Tunables when you wrote one, else 30 (a guess). Change `forward`, `up` and `hfov` to your
-robot's.
+`pitchDeg` in Tunables when you wrote one, else 30 (a guess). A webcam with `.upsideDown()` gets `roll=180`.
+Change `forward`, `up` and `hfov` to your robot's.
 
 **Limelight 3A**: the same settings with `limelight.` (hfov default 54.5, from its spec sheet).
 

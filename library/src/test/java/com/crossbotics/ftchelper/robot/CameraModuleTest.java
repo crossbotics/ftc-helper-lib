@@ -181,6 +181,28 @@ public class CameraModuleTest {
         Camera.webcam("Webcam 1").tag(1, 30);
     }
 
+    @Test public void anUpsideDownWebcamIsInTheRobotFileToo() {
+        Camera cam = Camera.webcam("Webcam 1").upsideDown();
+        assertTrue(cam.isUpsideDown());
+        assertFalse(Camera.webcam("Webcam 1").isUpsideDown());
+        java.util.List<String> out = new java.util.ArrayList<>();
+        cam.simLines(out, null);
+        assertTrue("the simulator's camera is upside down too: " + out, out.get(0).contains(", roll=180,"));
+        out.clear();
+        Camera.webcam("Webcam 1").simLines(out, null);
+        assertFalse(out.toString(), out.get(0).contains("roll="));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void upsideDownIsForAWebcamNotALimelight() {
+        Camera.limelight("limelight").upsideDown();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void upsideDownIsForAWebcamNotAHuskyLens() {
+        Camera.huskyLens("huskylens").upsideDown();
+    }
+
     @Test(expected = IllegalStateException.class)
     public void aHuskyLensHasNoLightingTest() {
         Camera.huskyLens("huskylens").autoExposure();

@@ -26,6 +26,7 @@ import java.util.function.LongSupplier;
  *     public static double goalX = 13, goalY = -13;           // the goal on the field (odometry backup)
  *     public static boolean mirrorForRed = false;             // the robot's one setting (BIOBUZZ: false)
  *     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, minTurnPower = 0, toleranceDeg = 2;
+ *     public static double aimDriveSpeed = 0.5;               // aim mode on: forward and strafe at this share
  *     public static double cameraOffset = 0, rumbleDeg = 4;
  *     public static double maxGoalDistance = 170, cameraOdometryAgree = 6;   // inches: odometry sanity checks
  *     public static boolean shootOnMove = false;              // shooting while driving: off until tuned
@@ -119,6 +120,8 @@ public final class Aim {
     private final double maxGoalDistanceIn, agreeIn;
     // Live numbers (in the tuning menu when the section exists).
     private final DoubleSupplier turnKp, turnKd, maxTurnPower, minTurnPower, toleranceDeg, cameraOffset, rumbleDeg;
+    // While whole-robot aim is on: the share of the driver's forward and strafe (the aim keeps up).
+    private final DoubleSupplier aimDriveSpeed;
     // The turn controller, made again if kP or kD is tuned.
     private AimController controller = null;
     private double controllerKp = Double.NaN, controllerKd = Double.NaN;
@@ -162,6 +165,7 @@ public final class Aim {
         maxTurnPower = live(t, "maxTurnPower", 0.5, 0.05);
         minTurnPower = live(t, "minTurnPower", 0, 0.01);
         toleranceDeg = live(t, "toleranceDeg", 2, 0.5);
+        aimDriveSpeed = live(t, "aimDriveSpeed", 0.5, 0.05);
         cameraOffset = live(t, "cameraOffset", 0, 0.5);
         rumbleDeg = live(t, "rumbleDeg", 4, 0.5);
         movingShot = new Mode("Shoot on the move", t.has("shootOnMove") && t.flag("shootOnMove", false));
@@ -398,8 +402,9 @@ public final class Aim {
 
     /**
      * Whole-robot aim, for a robot with no turret: while it is on, TeleOp turns the robot toward the
-     * goal and the driver keeps forward and sideways. The driver's turn stick still wins: move it and
-     * the robot turns as the stick says; let go and the aim takes over again. Off at START.
+     * goal and the driver keeps forward and sideways, slowed to {@code aimDriveSpeed} (0.5) so the aim keeps
+     * up. The driver's turn stick still wins: move it and the robot turns as the stick says; let go and the
+     * aim takes over again. Off at START.
      * {@code g1.rb.toggle(robot.aimMode())}.
      *
      * @throws IllegalStateException if a turret follows the goal: whole-robot aim and turret-following
@@ -541,6 +546,17 @@ public final class Aim {
         double min = minTurnPower.getAsDouble();
         if (power != 0 && Math.abs(power) < min) power = Math.copySign(min, power);
         return power;
+    }
+
+    /**
+     * The share of the driver's forward and strafe TeleOp uses this loop: {@code Tunables.Aim.aimDriveSpeed}
+     * (0.5) while whole-robot aim is on, else 1. Why: at full speed the robot moves faster than the aim can
+     * turn, so the goal drifts off and the robot only catches up when it stops. Slower, the aim keeps the
+     * goal centered while the robot moves. The turn is not slowed.
+     */
+    double driveScale() {
+        if (!mode.isOn()) return 1;
+        return Math.max(0.1, Math.min(1, aimDriveSpeed.getAsDouble()));
     }
 
     // The aim controller with this loop's numbers (a new one if kP or kD was tuned).

@@ -38,6 +38,7 @@ public static class Aim {                                       // a fixed name:
     public static double turnKd = DEFAULT;                      // brake near the goal (0.002)
     public static double maxTurnPower = DEFAULT;                // the most it turns by itself (0.5)
     public static double toleranceDeg = DEFAULT;                // "aimed" within this, degrees (2)
+    public static double aimDriveSpeed = DEFAULT;               // aim mode on: forward and strafe at this share (0.5)
     public static double rumbleDeg = DEFAULT;                   // rumbleWhenAimed(): buzz within this (4)
     public static boolean aimOnFire = false;                    // no turret: a fire press turns to the goal first
 }
@@ -58,6 +59,7 @@ public static class Aim {                                       // a fixed name:
 | `maxTurnPower` | whole-robot aim: the most turn power | 0 to 1 | 0.5 | yes, at once | test | aim is too fast or too slow |
 | `minTurnPower` | whole-robot aim: the least power that still turns the robot | 0 to 1 | 0 | yes, at once | test | aim stops a few degrees short |
 | `toleranceDeg` | whole-robot aim counts as aimed within this | degrees | 2 | yes, at once | test | shots miss although "AIMED" (less) |
+| `aimDriveSpeed` | whole-robot aim on: the share of the driver's forward and strafe (the turn is not slowed) | 0.1 to 1 | 0.5 | yes, at once | test | the goal drifts off while the robot moves (less); too slow to drive (more); 1 = full speed |
 | `aimOnFire` | quick turn on fire (no turret, aim mode off): a fire press with the goal in view turns the robot to the goal, then fires | true/false | false | no | test | the robot fires before it points at the goal (turn it on) |
 | `aimOnFireSec` | quick turn on fire: the most a press waits for the turn before it fires anyway | seconds | 0.5 | no | test | shots wait too long (less), or fire before the turn is done (more) |
 | `lockMarginDeg` | once LOCKED (or AIMED), it stays so until the error passes `toleranceDeg` + this, so it does not flicker at the edge | degrees | 1 | no | test | LOCKED flickers (more) |
@@ -120,7 +122,10 @@ The odometry is only as good as its pose: the auto's start spot, carried into Te
 
 For a robot with no turret. Turn it on with one line in `Controls.java` ([Buttons to add](#buttons-to-add)).
 
-- While it is on, the robot turns to face the goal. The driver still controls forward and sideways.
+- While it is on, the robot turns to face the goal. The driver still controls forward and sideways, at
+  half speed (`aimDriveSpeed`, 0.5). Why: at full speed the robot moves faster than the aim can turn. The goal
+  then drifts off, and the robot only turns back to it when it stops. Slower, the aim keeps the goal centered
+  while the robot moves. The aim's turn keeps its full power.
 - Moving the turn stick still turns it by hand.
 - It is off at ▶.
 - Its numbers: `turnKp`, `turnKd`, `maxTurnPower`, `minTurnPower` (the least power that turns the robot),

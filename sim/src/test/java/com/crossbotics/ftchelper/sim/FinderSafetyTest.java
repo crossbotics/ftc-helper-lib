@@ -90,6 +90,57 @@ public class FinderSafetyTest {
     }
 
     /** A Servo Finder that knows a two-servo part: "claw" with "wrist" as its mirrored second servo. */
+    // A heavy wheel still speeds up when step 1's 5 s run out: the finder says the top speed may be higher.
+    // A light one reaches its top in time: no warning.
+    @Test public void flywheelFinderSaysWhenAHeavyWheelIsStillSpeedingUp() throws Exception {
+        for (boolean heavy : new boolean[] {true, false}) {
+            try (SimRun s = new SimRun()) {
+                s.init("Flywheel Finder").start();
+                for (int i = 0; i < 4; i++) s.press(v -> s.g1().dpad_down = v);   // arm -> ... -> flywheel
+                s.press(v -> s.g1().a = v);
+                SimMotor fly = s.robot().motors.get("flywheel");
+                if (heavy) fly.lagSec = 3;               // 63% of a new speed in 3 s: still rising at 5 s
+                SimRun.pause(0.2);
+                s.g1().a = true;                         // step 1: hold A past the 5 s limit
+                SimRun.pause(5.6);
+                s.g1().a = false;
+                boolean said = SimRun.waitFor(() -> s.screenHas("Still speeding up at 5 s"), 1);
+                assertEquals(String.join("\n", s.screen()), heavy, said);
+                assertEquals(heavy, s.screenHas("(still speeding up at 5 s: may be higher)"));
+                assertEquals("", s.error());
+            }
+        }
+    }
+
+    /** A Flywheel Finder for a robot whose "flywheel" launcher has reversed() in Robot.java (as Tune and check makes it). */
+    public static class ReversedFlywheelFinder extends com.crossbotics.ftchelper.finders.FlywheelFinderOpMode {
+        @Override protected java.util.Map<String, Boolean> motorDirections() { return java.util.Collections.singletonMap("flywheel", true); }
+    }
+
+    // reversed() in Robot.java: the finder spins the wheel the same way as TeleOp. Forward, it would spin
+    // backward, and a piece fed in would jam on it and stop it.
+    @Test public void flywheelFinderSpinsAReversedWheelTheSameWayAsRobotJava() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.sim.ds.register("Reversed Flywheel Finder", "TeleOp", ReversedFlywheelFinder.class);
+            s.init("Reversed Flywheel Finder").start();
+            for (int i = 0; i < 4; i++) s.press(v -> s.g1().dpad_down = v);   // arm -> ... -> flywheel
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Direction : reversed, as in Robot.java"));
+            SimMotor fly = s.robot().motors.get("flywheel");
+            SimRun.pause(0.2);                           // A let go after choosing
+            s.g1().a = true;                             // step 1, full power
+            assertTrue("the shaft turns backward, as TeleOp turns it", SimRun.waitFor(() -> fly.shaftSpeed() < -2000, 3));
+            s.g1().a = false;
+            assertTrue(SimRun.waitFor(() -> s.screenHas(".reversed().pidf("), 1));
+            assertFalse("Robot.java already has it: no line to add it", s.screenHas("add .reversed()"));
+            // X: forward, NOT as Robot.java: it says to take reversed() off.
+            SimRun.pause(0.5);
+            s.press(v -> s.g1().x = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("take .reversed() off the \"flywheel\" launcher"), 1));
+            assertEquals("", s.error());
+        }
+    }
+
     public static class PairFinder extends com.crossbotics.ftchelper.finders.ServoFinderOpMode {
         @Override protected java.util.Map<String, java.util.Map.Entry<String, Boolean>> pairedServos() {
             return java.util.Collections.singletonMap("claw", new java.util.AbstractMap.SimpleEntry<>("wrist", true));

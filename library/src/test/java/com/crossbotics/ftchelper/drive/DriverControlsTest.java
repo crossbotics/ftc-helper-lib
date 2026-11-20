@@ -154,5 +154,16 @@ public class DriverControlsTest {
         g.right_stick_x = 0;
         d.update(g);
         assertEquals(0, w.turn, 1e-9);
+        // moveScale: forward and strafe slower (aim mode), the turn not.
+        double sideBefore = w.side;
+        d.moveScale(() -> 0.5);
+        d.turnAssist(turn -> 0.25);
+        d.update(g);
+        assertEquals("forward at half", 0.5, w.forward, 1e-9);
+        assertEquals("strafe at half", sideBefore / 2, w.side, 1e-9);
+        assertEquals("the turn keeps its power", 0.25, w.turn, 1e-9);
+        d.moveScale(null);
+        d.update(g);
+        assertEquals("null: back to 1", 1, w.forward, 1e-9);
     }
 }

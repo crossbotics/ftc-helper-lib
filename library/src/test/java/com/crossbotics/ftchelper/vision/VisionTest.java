@@ -117,6 +117,28 @@ public class VisionTest {
         assertEquals("level (no pitch): the SDK's own numbers", pose.bearing, WebcamTags.convert(d).bearingDeg, E);
     }
 
+    @Test public void anUpsideDownWebcamsDetectionIsTurnedBack() {
+        double[] c = inCameraView();
+        // The same goal, seen by the same camera mounted upside down: right and up swap sign, the tag reads
+        // upside down (roll 175), and the SDK's bearing points the other way.
+        AprilTagPoseFtc pose = new AprilTagPoseFtc(-c[0], c[1], -c[2], 0, 0, 175, Math.hypot(c[0], c[1]),
+                Math.toDegrees(Math.atan2(c[0], c[1])), 0);
+        AprilTagSingleDetection d = new AprilTagSingleDetection(7, 0, 50f, null, null, null, pose, null, null, 123L, DistanceUnit.INCH);
+        TargetObservation wrong = WebcamTags.convert(d, PITCH);
+        assertTrue("not set: the goal looks to the right", wrong.bearingDeg < 0);
+        assertFalse("not set: it reads upside down", wrong.isUpright());
+        TargetObservation o = WebcamTags.convert(d, PITCH, true);
+        assertEquals(TRUE_BEARING, o.bearingDeg, 1e-6);
+        assertEquals(FLOOR, o.distanceIn, 1e-6);
+        assertEquals("half a turn back: 175 - 180", -5, o.rollDeg, 1e-9);
+        assertTrue(o.isUpright());
+        // Level (no pitch): the SDK's bearing, turned around; a roll of -170 becomes 10.
+        AprilTagPoseFtc level = new AprilTagPoseFtc(3, 40, -7, 0, 0, -170, Math.hypot(3, 40), -4.3, 0);
+        AprilTagSingleDetection l = new AprilTagSingleDetection(7, 0, 50f, null, null, null, level, null, null, 1L, DistanceUnit.INCH);
+        assertEquals(4.3, WebcamTags.convert(l, 0, true).bearingDeg, E);
+        assertEquals(10, WebcamTags.convert(l, 0, true).rollDeg, 1e-9);
+    }
+
     @Test public void aTiltedLimelightsGroupTargetIsTurnedFlat() {
         TagGroup red = TagGroup.biobuzz().get(0);
         double[] c = inCameraView();

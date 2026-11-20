@@ -2,6 +2,39 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.45.0 - 2026-11-20
+
+### Added
+
+- `Camera.webcam(...).upsideDown()` (Robot.java) and `WebcamTags.upsideDown(on)`: a webcam mounted upside down.
+  Why: its picture is upside down, so left and right swap (whole-robot aim turns the wrong way) and every tag
+  reads upside down (BIOBUZZ: the down CELL looks like the up CELL, so it aims at the wrong one). With it, each
+  reading is turned back. The live view stays upside down. Webcam only: INIT stops on a Limelight (it has its own
+  setting) or a HuskyLens. Page: docs/reference/parts/camera.md#a-webcam-upside-down.
+- The simulator robot file: `roll` on a camera line (degrees around the lens, 180 = upside down).
+  `:sim:fromRobot` writes `roll=180` for an upside-down webcam.
+- `Launcher.isReversed()`, and `FlywheelFinderOpMode.motorDirections()`: the direction Robot.java gives each
+  flywheel motor.
+- The Flywheel Finder warns `Still speeding up at 5 s` when the speed still rose at the end of step 1 (full
+  power stops after 5 s). Why: a heavy wheel takes longer to reach its top speed, so the top speed shown is
+  too low and F a little too high. Fine-tune F in step 2. Page: docs/tuning/06-flywheel-finder.md.
+
+### Changed
+
+- Whole-robot aim (`robot.aimMode()`) drives slower while it is on: forward and strafe at
+  `Tunables.Aim.aimDriveSpeed` (0.5 by default; 1 = full speed, as before). The aim's turn keeps its full
+  power. Why: at full speed the robot moved faster than the aim could turn, so the goal drifted off and the
+  robot only turned back to it when it stopped. `DriverControls.moveScale(...)` is the general block: it scales
+  forward and strafe, not the turn. Page: docs/reference/parts/aim.md#whole-robot-aim.
+
+### Fixed
+
+- The Flywheel Finder in Tune and check starts a launcher's motor in the direction Robot.java gives it. Before,
+  it always started forward, so a launcher with `.reversed()` spun backward in the finder (unless you pressed
+  X). Why it matters: a wheel spinning backward pushes the piece back, jams on it and stops. The screen says
+  `Direction : reversed, as in Robot.java`. When X makes it differ, the results say to add or remove
+  `.reversed()` in Robot.java. Page: docs/tuning/06-flywheel-finder.md.
+
 ## v0.44.0 - 2026-11-19
 
 ### Added

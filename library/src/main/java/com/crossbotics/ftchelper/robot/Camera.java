@@ -31,6 +31,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  * ({@code Tunables.Limelight} for device "limelight"): {@code pipeline} (Limelight only, default 0), {@code pitchDeg}
  * (webcam or Limelight: its tilt up in degrees, 0 = level: then bearings and distances are along the floor, see
  * {@link com.crossbotics.ftchelper.vision.CameraTilt}).
+ * A webcam mounted upside down: {@link #upsideDown()}.
  * No usual buttons. It starts in INIT (a webcam needs a second or two). A camera missing from the
  * robot configuration never stops the OpMode: it warns on the Driver Station and sees nothing.
  *
@@ -62,6 +63,8 @@ public final class Camera extends Module<Camera> {
     // Venue lighting: the Limelight pipelines or webcam exposures to try (null = no test).
     private int[] autoPipelines = null;
     private long[] autoExposures = null;
+    // A webcam mounted upside down (upsideDown()).
+    private boolean upsideDown = false;
     TargetSource source;
     // The lighting test as running (null when it is off).
     private com.crossbotics.ftchelper.vision.LightingSweep sweep = null;
@@ -202,6 +205,28 @@ public final class Camera extends Module<Camera> {
         return this;
     }
 
+    /**
+     * The webcam is mounted upside down. Without this, an upside-down webcam turns the robot the wrong way
+     * when it aims, and it never sees the goal: every tag reads upside down (a down CELL, in BIOBUZZ). With
+     * it, left is left again and the tags read right side up. The live view on the Driver Station stays
+     * upside down. Webcam only: a Limelight has its own setting on its web page (Settings, Orientation).
+     *
+     * <pre>{@code
+     * camera = add(Camera.webcam("Webcam 1").upsideDown().goal("BLUE SCORING", "RED SCORING"));
+     * }</pre>
+     */
+    public Camera upsideDown() {
+        if (limelight) throw new IllegalStateException("Robot.java: " + device + " is a Limelight: set its orientation on its web page (Settings), not upsideDown()");
+        if (kind == Kind.HUSKYLENS) throw new IllegalStateException("Robot.java: " + device + " is a HuskyLens: upsideDown() is for a webcam. Mount it right side up");
+        upsideDown = true;
+        return this;
+    }
+
+    /** True if {@link #upsideDown()} is set in Robot.java. */
+    public boolean isUpsideDown() {
+        return upsideDown;
+    }
+
     // A camera missing from the configuration warns and sees nothing; INIT goes on.
     @Override
     boolean canDoWithout(String deviceName) {
@@ -263,7 +288,8 @@ public final class Camera extends Module<Camera> {
             source = ll;
         } else {
             WebcamTags cam = new WebcamTags(device, (WebcamName) found)
-                    .pitchDeg(optional(t, "pitchDeg", 0));   // tilted up: the floor's bearing and distance (CameraTilt)
+                    .pitchDeg(optional(t, "pitchDeg", 0))    // tilted up: the floor's bearing and distance (CameraTilt)
+                    .upsideDown(upsideDown);                  // mounted upside down: left and up turned back
             // Live view: the picture on the robot's screen and the Driver Station's Camera Stream, for
             // checking the brightness. On in the PRACTICE profile (Tunables liveView, true), never at an
             // event (COMPETITION): drawing the picture costs speed.
@@ -473,7 +499,7 @@ public final class Camera extends Module<Camera> {
             out.add("huskylens." + device + " = name=" + device + ", " + where + (t != null && t.has("hfovDeg") ? ", hfov=" + fmt("%.1f", t.number("hfovDeg", HuskyLensCamera.GUESSED_HFOV_DEG)) : "")
                     + (last > 0 ? ", taught=" + taught : "") + "   # TODO measure the mount and hfov");
         } else if (limelight) out.add("limelight." + device + " = name=" + device + ", " + where + "   # TODO measure the mount");
-        else out.add("camera." + sectionFor(device) + " = name=" + device + ", " + where + ", hfov=70.4, width=640, height=480   # TODO measure the mount");
+        else out.add("camera." + sectionFor(device) + " = name=" + device + ", " + where + (upsideDown ? ", roll=180" : "") + ", hfov=70.4, width=640, height=480   # TODO measure the mount");
     }
 
     /**

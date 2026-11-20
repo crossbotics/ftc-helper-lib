@@ -87,7 +87,8 @@ camera.start();                  // in INIT: a webcam needs 1-2 s to start
 | `lighting()` / `matchStarted()` | the lighting test (null without `autoExposure`); tells it that the driver pressed ▶ (start on the Driver Hub) |
 | `.keepTargetsMs(ms)` | how long targets stay in `targets()` without a new picture (default 500) |
 | `.pitchDeg(degrees)` | the camera's tilt up (0 = level, the default), so bearings and distances are along the floor ([CameraTilt](#cameratilt)) |
-| `WebcamTags.convert(detection)` / `convert(detection, pitchDeg)` | turns an SDK detection into a TargetObservation (level, or tilted) |
+| `.upsideDown(on)` / `isUpsideDown()` | the webcam is mounted upside down: each target's bearing and roll are turned back (left is left, a right-side-up tag reads right side up). The live view stays upside down |
+| `WebcamTags.convert(detection)` / `convert(detection, pitchDeg)` / `convert(detection, pitchDeg, upsideDown)` | turns an SDK detection into a TargetObservation (level, tilted, or upside down) |
 
 For better distances, calibrate the camera (the FTC docs explain "camera calibration"). Or use a
 camera the SDK already knows (Logitech C270/C920 at common resolutions).

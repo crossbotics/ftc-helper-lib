@@ -151,6 +151,7 @@ driving.stop();
 | `drive(forward, strafeRight, turnClockwise, speed)` | drives with your own numbers (robot-centric), for custom controls |
 | `tank(left, right, speed)` | two-stick tank style: one value per side. It works on tank and mecanum robots. |
 | `turnAssist(turn -> ...)` | a helper that may change the turn every loop. It gets the driver's shaped turn (clockwise +) and gives back the turn to use. Forward and sideways stay the driver's. Null = none. The five-files TeleOp uses it for [whole-robot aim](../reference/parts/aim.md). |
+| `moveScale(() -> ...)` | multiplies forward and strafe every loop, 0 to 1 (1 = unchanged, the default). The turn is not changed. The five-files TeleOp uses it to drive slower while [whole-robot aim](../reference/parts/aim.md#whole-robot-aim) is on (`Tunables.Aim.aimDriveSpeed`). Null = always 1. |
 | `hold()` | keeps the wheels still this loop (for example while a menu uses the gamepad) |
 | `stop()` | sets all wheels to 0 |
 | `slowSpeed(s)` | the speed at a full slow trigger, default 0.3 |

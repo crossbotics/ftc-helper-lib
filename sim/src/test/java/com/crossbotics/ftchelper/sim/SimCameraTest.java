@@ -256,6 +256,35 @@ public class SimCameraTest {
         cam.close();
     }
 
+    @Test public void anUpsideDownWebcamWithUpsideDownAimsTheRightWay() throws Exception {
+        SimRobot r;
+        File f = tmp.newFile("flipped.properties");
+        String base = new String(Files.readAllBytes(new File("robots/starter.properties").toPath()), "UTF-8");
+        Files.write(f.toPath(), (base + "\ncamera.front = name=Webcam 1, forward=8, up=10, pitch=30, roll=180\n").getBytes("UTF-8"));
+        r = SimRobot.load(f.toPath());
+        // Red, at the start: the up CELL (RED AUDIENCE) is the goal; RED SCORING is the down CELL.
+        synchronized (r) { r.setPose(60, -12.75, 90); }
+        // Without upsideDown: the picture is upside down, so the DOWN cell reads right side up: the wrong goal.
+        WebcamTags plain = WebcamTags.create(r.hardwareMap(), "Webcam 1").pitchDeg(30);
+        plain.start();
+        assertGoal(plain, "RED SCORING", "RED SCORING");
+        plain.close();
+        // With upsideDown: the up CELL is the goal again, and left is left.
+        WebcamTags cam = WebcamTags.create(r.hardwareMap(), "Webcam 1").pitchDeg(30).upsideDown(true);
+        assertTrue(cam.isUpsideDown());
+        cam.start();
+        assertGoal(cam, "RED SCORING", "RED AUDIENCE");
+        TargetObservation ahead = com.crossbotics.ftchelper.vision.TagGroup.goalTarget(cam, "RED SCORING");
+        assertEquals("straight ahead", 0, ahead.bearingDeg, 1.0);
+        assertTrue("reads right side up: " + ahead.rollDeg, ahead.isUpright());
+        synchronized (r) { r.headingDeg = 100; }        // turned 10 degrees left: the goal is to the right
+        Thread.sleep(80);
+        TargetObservation right = waitFor(cam, "RED AUDIENCE");
+        assertNotNull(right);
+        assertTrue("to the right = negative bearing: " + right.bearingDeg, right.bearingDeg < -5 && right.bearingDeg > -15);
+        cam.close();
+    }
+
     // Waits up to 2 s for the camera to see this group again (after a move, the old picture may still be in).
     private static TargetObservation waitFor(com.crossbotics.ftchelper.vision.TargetSource c, String name) throws InterruptedException {
         TargetObservation t = null;

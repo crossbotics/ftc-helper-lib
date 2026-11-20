@@ -23,6 +23,7 @@ camera = add(Camera.huskyLens("huskylens").tag(1, 34).tag(2, 35).goal("BLUE SCOR
 | `.tag(taughtNumber, tagNumber)` | HuskyLens | the number you taught it, and the tag's real number. A HuskyLens says the taught number | - |
 | `.colors()`, `.objects()` | HuskyLens, optional | it looks for taught colors, or one object, instead of tags | tags |
 | `.label(taughtNumber, name)` | HuskyLens, optional | a name for `target(name)` | - |
+| `.upsideDown()` | webcam, optional | the webcam is mounted upside down: left is left again, and the tags read right side up ([Upside down](#a-webcam-upside-down)) | an upside-down webcam aims the wrong way, and it takes the down CELL for the goal |
 | `.optional()` | optional | the part may not be on the robot yet ([Parts not on the robot yet](../robot-java.md#parts-not-on-the-robot-yet)) | a warning at INIT (below) |
 
 The camera starts in INIT. When the robot configuration has no camera of that name, INIT shows a warning and
@@ -95,6 +96,23 @@ camera = add(Camera.webcam("Webcam 1").autoExposure());          // or your own 
 - If no setting sees a tag, it keeps the setting it had.
 - With no `autoExposure` or `autoPipelines`, or with `autoLighting = false`, it does nothing. It gives
   false, and the TeleOp screen says so for 5 s.
+
+### A webcam upside down
+
+A webcam mounted upside down sees an upside-down picture. Left and right swap, so whole-robot aim turns the
+wrong way. Every tag reads upside down, so the down CELL looks like the up CELL: the camera aims at the wrong
+one. Add `.upsideDown()`:
+
+```java title="Robot.java"
+camera = add(Camera.webcam("Webcam 1").upsideDown().goal("BLUE SCORING", "RED SCORING"));
+```
+
+The library then turns each reading back: left is left, and the up CELL is the goal again. The live view on
+the Driver Station stays upside down. In the simulator robot file, `:sim:fromRobot` writes `roll=180` on the
+camera's line. A robot file you wrote yourself needs it too ([Cameras](../robot-file.md#cameras)).
+
+A Limelight has its own setting on its web page (Settings, Orientation): `upsideDown()` is for a webcam only,
+and INIT stops if you add it to a Limelight or a HuskyLens.
 
 ### Live view
 

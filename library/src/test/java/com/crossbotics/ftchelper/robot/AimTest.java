@@ -443,8 +443,10 @@ public class AimTest {
         AimBot r = bot(GoalTunables.class, true, false);
         Aim aim = r.aim();
         assertEquals("off: the driver's turn as it is", 0.3, aim.assistTurn(0.3), 1e-9);
+        assertEquals("off: full drive speed", 1, aim.driveScale(), 1e-9);
         r.aimMode().on();
         cam.seen = seen(10, 48);                              // the goal 10 degrees LEFT
+        assertEquals("on: forward and strafe at aimDriveSpeed (0.5)", 0.5, aim.driveScale(), 1e-9);
         double turn = aim.assistTurn(0);
         assertTrue("turns left = counterclockwise = negative: " + turn, turn < 0);
         assertEquals("the stick wins", 0.5, aim.assistTurn(0.5), 1e-9);

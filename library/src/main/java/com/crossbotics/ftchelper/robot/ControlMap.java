@@ -272,6 +272,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         // Whole-robot aim (robot.aimMode()): while it is on, the robot's turn comes from the aim
         // unless the driver moves the turn stick.
         driving().turnAssist(robot().aim()::assistTurn);
+        // ...and forward and strafe are slower (Tunables.Aim.aimDriveSpeed), so the aim keeps up.
+        driving().moveScale(robot().aim()::driveScale);
         // Reverse drive (robot.reverseDriveMode()): the back is the front while it is on.
         driving().reverseWhen(robot().reverseDriveMode()::isOn);
         // The "pose was never set" warning says how to set it with the button.
