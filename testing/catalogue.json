@@ -3874,7 +3874,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.45.0",
    "docs": [
     {
      "path": "docs/reference/parts/camera.md",
@@ -3953,7 +3953,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.45.0",
    "docs": [
     {
      "path": "docs/reference/parts/aim.md",
@@ -6442,7 +6442,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.45.0",
    "docs": [
     {
      "path": "docs/tuning/06-flywheel-finder.md",

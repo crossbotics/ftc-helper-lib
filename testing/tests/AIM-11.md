@@ -7,7 +7,7 @@ where: both
 minutes: 15
 needs: [webcam]
 kit_bots: []
-since: unreleased
+since: v0.45.0
 docs: [reference/parts/aim.md#whole-robot-aim, modules/drive.md]
 ---
 

@@ -7,7 +7,7 @@ where: real
 minutes: 15
 needs: [webcam]
 kit_bots: []
-since: unreleased
+since: v0.45.0
 docs: [reference/parts/camera.md#a-webcam-upside-down, add-to-robot/07-camera.md]
 ---
 

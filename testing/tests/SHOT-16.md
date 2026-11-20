@@ -7,7 +7,7 @@ where: both
 minutes: 10
 needs: [flywheel]
 kit_bots: []
-since: unreleased
+since: v0.45.0
 docs: [tuning/06-flywheel-finder.md, modules/finders.md#flywheelfinderopmode]
 ---
 
