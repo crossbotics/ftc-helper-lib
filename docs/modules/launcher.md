@@ -246,6 +246,9 @@ facing forward.
 
 ## Launcher
 
+The five-files launcher (`robot.Launcher`) adds the speed from the distance and its Tunables (`distanceSmoothSec`,
+`lockSpeedWhileFiring`, `ejectFeedSec`, `ejectRpm`): see [Launcher](../reference/parts/launcher.md#in-tunablesjava).
+
 ```java
 Launcher launcher = new Launcher(flywheel, feeder)
         .hood(hood)

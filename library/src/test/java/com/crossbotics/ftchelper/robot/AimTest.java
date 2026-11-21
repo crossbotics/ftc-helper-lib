@@ -146,6 +146,36 @@ public class AimTest {
         }
     }
 
+    public static class Smooth {
+        public static class Launcher {
+            public static double[][] speedByDistance = {{24, 2000}, {72, 3000}};   // 20.8 RPM an inch
+            public static double distanceSmoothSec = 0.3;
+        }
+    }
+
+    public static class NotSmooth {
+        public static class Launcher {
+            public static double[][] speedByDistance = {{24, 2000}, {72, 3000}};   // no distanceSmoothSec: off
+        }
+    }
+
+    public static class Lock {
+        public static class Launcher {
+            public static double[][] speedByDistance = {{24, 2000}, {72, 3000}};
+            public static boolean lockSpeedWhileFiring = true;
+        }
+    }
+
+    public static class AngleAim {
+        public static class Aim {
+            public static boolean angleAim = true;
+            public static double goalFrontIn = 3;
+        }
+        public static class Launcher {
+            public static double[][] speedByDistance = {{24, 2000}, {72, 3000}};
+        }
+    }
+
     public static class NoGoalPoint {
         public static class Launcher {
             public static double[][] speedByDistance = {{24, 2000}, {72, 3000}};
@@ -322,6 +352,121 @@ public class AimTest {
         assertEquals(Aim.Source.ODOMETRY, r.launcher.distanceSource());
         assertEquals(72, r.launcher.distanceIn(), 1e-9);
         assertEquals(3500, r.launcher.targetRpm(), 1e-9);
+    }
+
+    // Pictures at `inches` for `sec` seconds, 30 a second (the camera's rate), updating the robot each time.
+    private void pictures(AimBot r, double inches, double sec) {
+        for (int i = 0; i < Math.round(sec / 0.033); i++) {
+            clock.addSec(0.033);
+            cam.seen = seen(0, inches);
+            r.all().update();
+        }
+    }
+
+    @Test public void theSpeedEasesIntoANewDistance() {
+        AimBot r = bot(Smooth.class, true, false);
+        r.started();
+        r.launcher.spinUp();
+        pictures(r, 48, 0.5);
+        assertEquals("the first distance at once", 48, r.launcher.distanceIn(), 1e-6);
+        assertEquals(2500, r.launcher.targetRpm(), 1e-6);
+        pictures(r, 51, 0.15);                                // the camera now says 3 in more (the median takes 3 pictures)
+        double partWay = r.launcher.distanceIn();
+        assertTrue("eased, not at once: " + partWay, partWay > 48 && partWay < 50);
+        pictures(r, 51, 2);
+        assertEquals("there after a few time constants (0.3 s)", 51, r.launcher.distanceIn(), 0.05);
+    }
+
+    @Test public void aLostGoalHoldsTheSpeedAndANewSightingAfterAGapComesInAtOnce() {
+        AimBot r = bot(Smooth.class, true, false);
+        r.started();
+        r.launcher.spinUp();
+        pictures(r, 48, 0.5);
+        for (int i = 0; i < 30; i++) {                        // 1 s with no goal in view
+            clock.addSec(0.033);
+            cam.seen = null;
+            r.all().update();
+        }
+        assertEquals("no goal: the last distance held", 48, r.launcher.distanceIn(), 1e-6);
+        assertEquals(2500, r.launcher.targetRpm(), 1e-6);
+        pictures(r, 60, 0.15);                                // seen again, 12 in farther (the filter starts over)
+        assertEquals("after the gap: at once, not eased", 60, r.launcher.distanceIn(), 1e-6);
+    }
+
+    @Test public void lockSpeedWhileFiringKeepsTheShotsSpeed() {
+        AimBot r = bot(Lock.class, true, false);
+        r.started();
+        r.launcher.spinUp();
+        pictures(r, 48, 0.5);
+        assertEquals(2500, r.launcher.targetRpm(), 1e-6);
+        r.launcher.fire();                                    // the wheel is not at speed: the shot waits
+        pictures(r, 51, 0.5);                                 // the camera's distance moves a little meanwhile
+        assertEquals("the waiting shot keeps its speed", 2500, r.launcher.targetRpm(), 1e-6);
+        assertEquals("the distance shown is the one the shot uses", 48, r.launcher.distanceIn(), 1e-6);
+        pictures(r, 60, 0.5);                                 // the robot drove 12 in: more than 4 in
+        assertEquals("a big move lets go: the old speed would miss", 2750, r.launcher.targetRpm(), 1e-6);
+        r.launcher.part().stopShooting();
+        pictures(r, 60, 0.1);
+        assertEquals("no shot waiting: the speed follows again", 2750, r.launcher.targetRpm(), 1e-6);
+        assertEquals(60, r.launcher.distanceIn(), 1e-6);
+    }
+
+    @Test public void withoutDistanceSmoothSecEachDistanceIsUsedAtOnce() {
+        AimBot r = bot(NotSmooth.class, true, false);
+        r.started();
+        r.launcher.spinUp();
+        pictures(r, 48, 0.5);
+        pictures(r, 51, 0.15);
+        assertEquals(51, r.launcher.distanceIn(), 1e-6);
+    }
+
+    @Test public void theAngleAimPointsInFrontOfTheTagsFromAnAngle() {
+        AimBot r = bot(AngleAim.class, true, false);
+        r.started();
+        // The tags straight ahead, 32 in, their face pointing back 45 degrees off (the robot is off to one side).
+        cam.seen = new TargetObservation(TargetObservation.CLUSTER, "BLUE SCORING", 0, 32, clock.get(), 0, 135);
+        double want = Math.toDegrees(Math.atan2(3 * Math.sin(Math.toRadians(135)), 32 + 3 * Math.cos(Math.toRadians(135))));
+        assertEquals("3 in in front of the tags, the way they face: about 4 degrees left", want, r.aim().goal().bearingDeg, 1e-6);
+        assertEquals("the distance stays the tags' (the shot table's)", 32, r.aim().goal().distanceIn, 1e-9);
+        clock.addSec(0.6);                                    // the old pictures are too old to count
+        cam.seen = new TargetObservation(TargetObservation.CLUSTER, "BLUE SCORING", 0, 32, clock.get(), 0, -135);
+        assertEquals("from the other side: the other way", -want, r.aim().goal().bearingDeg, 1e-6);
+        clock.addSec(0.6);
+        cam.seen = new TargetObservation(TargetObservation.CLUSTER, "BLUE SCORING", 0, 32, clock.get(), 0, 180);
+        assertEquals("straight on: no change", 0, r.aim().goal().bearingDeg, 1e-6);
+        r.aim().angleAimMode().toggle();
+        clock.addSec(0.6);
+        cam.seen = new TargetObservation(TargetObservation.CLUSTER, "BLUE SCORING", 0, 32, clock.get(), 0, 135);
+        assertEquals("switched off: the tags", 0, r.aim().goal().bearingDeg, 1e-9);
+        r.aim().angleAimMode().toggle();
+        cam.seen = new TargetObservation(TargetObservation.CLUSTER, "BLUE SCORING", 0, 32, clock.get(), 0);
+        assertEquals("a camera that cannot tell the facing: the tags", 0, r.aim().goal().bearingDeg, 1e-9);
+    }
+
+    @Test public void oneOddFacingDoesNotSwingTheAngleAim() {
+        AimBot r = bot(AngleAim.class, true, false);
+        r.started();
+        double[] facings = {135, 136, 134, 100, 135};   // the 4th picture's facing is way off (tag yaw noise)
+        double last = Double.NaN;
+        for (double f : facings) {
+            clock.addSec(0.033);
+            cam.seen = new TargetObservation(TargetObservation.CLUSTER, "BLUE SCORING", 0, 32, clock.get(), 0, f);
+            last = r.aim().goal().bearingDeg;
+            if (f == 100) {
+                double want = Math.toDegrees(Math.atan2(3 * Math.sin(Math.toRadians(134)), 32 + 3 * Math.cos(Math.toRadians(134))));
+                assertEquals("the odd picture: the middle of the fresh ones, not its own", want, last, 0.2);
+            }
+        }
+        double steady = Math.toDegrees(Math.atan2(3 * Math.sin(Math.toRadians(135)), 32 + 3 * Math.cos(Math.toRadians(135))));
+        assertEquals(steady, last, 0.1);
+    }
+
+    @Test public void theAngleAimIsOffUnlessTunablesTurnItOn() {
+        AimBot r = bot(Smooth.class, true, false);
+        r.started();
+        assertFalse(r.aim().angleAimMode().isOn());
+        cam.seen = new TargetObservation(TargetObservation.CLUSTER, "BLUE SCORING", 0, 32, clock.get(), 0, 135);
+        assertEquals(0, r.aim().goal().bearingDeg, 1e-9);
     }
 
     @Test public void shotTablesSwitchByNameByButtonAndFromASensor() {

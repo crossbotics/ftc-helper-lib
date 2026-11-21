@@ -4019,6 +4019,83 @@
    }
   },
   {
+   "id": "AIM-12",
+   "title": "Aim into the opening from an angle (angle aim on and off)",
+   "area": "aim",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 15,
+   "needs": [
+    [
+     "webcam"
+    ],
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/reference/parts/aim.md",
+     "anchor": "aim-into-the-opening"
+    }
+   ],
+   "file": "testing/tests/AIM-12.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A goal's opening can be in front of its AprilTags (BIOBUZZ: the CELL's opening is about 3 in in front of the tags under it). From an angle, aiming at the tags sends the shot toward the back edge of the opening. The angle aim (`angleAim`, `goalFrontIn`) points at the opening instead. We want to know that it turns the right way, by about the right amount, and that it does nothing straight on."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Eye protection. Nobody in front of the launcher or near the goal."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Whole-robot aim (or a turret that follows the goal) with a webcam and a `goal(...)` in Robot.java.",
+       "In `Tunables.Aim`: `angleAim = true`, `goalFrontIn = 3` (BIOBUZZ). A button for `robot.aim().angleAimMode()` (for example `g1.a.toggle(...)`).",
+       "Tape marks: straight in front of the goal at about 36 in, and 45 degrees to each side at the same distance."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Straight on: aim (aim mode, or RB with quick turn on fire), angle aim on. Read the `Goal` line's degrees. Switch the angle aim off and read it again.",
+       "45 degrees to the left of straight on: the same, on and off. Fire 5 pieces with it on and 5 with it off.",
+       "45 degrees to the right: the same.",
+       "Simulator: the same three spots, with a robot file that has a webcam."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Straight on, the degrees are the same on and off. At 45 degrees, the angle aim turns the robot a few degrees toward the front of the goal (the side the opening faces), the other way on the other side. More pieces go in with it on than off, from both sides."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the robot, the camera, the distance, and the library version",
+       "the `Goal` line's degrees in each step, on and off",
+       "how many of 5 went in, on and off, on each side"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A Limelight: the angle aim does nothing yet (it cannot tell which way the tags face); skip the test. A goal whose opening is right behind its tags: leave `goalFrontIn = 0`."
+     }
+    ]
+   }
+  },
+  {
    "id": "AUTO-01",
    "title": "Choose the start spot in the INIT menu",
    "area": "autos",
@@ -6511,6 +6588,86 @@
    }
   },
   {
+   "id": "SHOT-17",
+   "title": "The speed from the camera eases in and keeps the wheel ready",
+   "area": "shooter",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 10,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "webcam"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/reference/parts/launcher.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/SHOT-17.md",
+   "sections": {
+    "why": [
+     {
+      "p": "With `speedFromDistance(camera)`, the flywheel speed comes from the shot table and the camera's distance. The distance wobbles a little from picture to picture. Before, each wobble could change the speed enough to restart \"ready\", so firing waited. With `distanceSmoothSec` set, the speed eases into each new distance. We want to know that the wheel stays ready while the robot moves a little, and that the speed still follows a real move."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Eye protection. Nobody in front of the launcher.",
+       "Feed a piece with the robot's feeder, never with fingers."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with `speedFromDistance(camera)` and a shot table (`speedByDistance`). A webcam or a Limelight.",
+       "`distanceSmoothSec = 0.3` in the Launcher part of Tunables.java (it is off by default).",
+       "The goal's AprilTags in view, about 40 in away."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "In TeleOp, spin the wheel up. Wait for `READY` on the Launcher line.",
+       "Drive slowly toward the goal and back, 6 in each way, for 10 s. Watch the `READY` on the Launcher line and the `Shot distance` line.",
+       "Stop. Drive 24 in farther from the goal at once, and stop. Count how long until the target speed on the Launcher line stops changing.",
+       "Set `distanceSmoothSec = 0` (off) and do step 2 again.",
+       "Simulator: do steps 1 to 3 with a robot file that has a camera."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 2, `READY` stays on most of the time, and `Shot distance` changes smoothly. In step 3 the target speed settles within about 1 s. Step 4 shows `READY` dropping out more often than step 2 (if your table is steep)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the robot, the camera, and the library version",
+       "the shot table rows near 40 in",
+       "what `READY` did in steps 2 and 4",
+       "the time in step 3"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A robot with `speedFromOdometry()` (no camera): the odometry's distance is used at once; the test does not apply. A robot without the speed from the distance: the test does not apply."
+     }
+    ]
+   }
+  },
+  {
    "id": "SIM-05",
    "title": "A simulator test stands in for a number not measured yet (set tunable)",
    "area": "simulator",
@@ -7346,6 +7503,149 @@
     "different": [
      {
       "p": "Use your own rules; any true/false works. If a goBILDA color looks wrong on your light, say which LightColor and what you saw."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-19",
+   "title": "lockSpeedWhileFiring keeps a waiting shot's speed",
+   "area": "shooter",
+   "priority": "low",
+   "where": "both",
+   "minutes": 10,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "webcam"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/reference/parts/launcher.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/SHOT-19.md",
+   "sections": {
+    "why": [
+     {
+      "p": "With the speed from the camera's distance, a shot that waits for the wheel could see its speed move with the camera's distance and wait longer. With `lockSpeedWhileFiring = true` its speed stays fixed until it is gone."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Eye protection. Nobody in front of the launcher."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with `speedFromDistance(camera)` and a shot table. `lockSpeedWhileFiring = true` in the Launcher part of Tunables.java."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "In TeleOp, switch the wheel off (or let it slow), aim at the goal, and press fire. While it spins up, drive 2 in toward the goal and back (more than 4 in lets the lock go, on purpose). Watch the target speed on the Launcher line.",
+       "Let the shot go. Drive again and watch the target speed.",
+       "Simulator: the same with a robot file that has a webcam."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 1 the target speed does not change until the piece is gone (2 in moves). Driving 12 in during a waiting shot changes it (the lock lets go after 4 in). In step 2 it follows the distance again."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the robot, the camera, the library version",
+       "the target speeds seen in steps 1 and 2"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "No speed from the distance: the setting does nothing; skip the test."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-20",
+   "title": "ejectFeedSec pushes out one piece, not two",
+   "area": "shooter",
+   "priority": "low",
+   "where": "real",
+   "minutes": 10,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/reference/parts/launcher.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/SHOT-20.md",
+   "sections": {
+    "why": [
+     {
+      "p": "An eject runs a spinning feeder (CR servo or motor) for its `feedSec`. That can be long enough to push the next piece out too. With `ejectFeedSec` set, the feeder runs only that long."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Eye protection. Nobody in front of the launcher."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with a CR servo or motor feeder and a button for `robot.launcher.ejectAction()`.",
+       "`ejectFeedSec = 0.6` in the Launcher part of Tunables.java to start."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Load 3 pieces. Press the eject button once. Count the pieces that come out.",
+       "Change `ejectFeedSec` by 0.1 at a time until one piece comes out each time (5 times in a row).",
+       "Check that the piece lands just outside the robot (`ejectRpm`)."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "5 presses in a row: exactly 1 piece out each time, landing within 12 in of the robot."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the feeder, `feedSec`, the `ejectFeedSec` that works, `ejectRpm`"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A push servo: `ejectFeedSec` does nothing (it pushes one piece already); skip the test. A spinning feeder behind a feed stop or a feed wheel: it applies, from when the feeder really starts."
      }
     ]
    }

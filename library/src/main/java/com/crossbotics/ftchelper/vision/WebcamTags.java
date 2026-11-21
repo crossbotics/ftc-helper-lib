@@ -377,16 +377,44 @@ public class WebcamTags implements TargetSource {
             AprilTagSingleDetection s = (AprilTagSingleDetection) d;
             String tagName = s.metadata != null ? s.metadata.name : "Tag " + s.id;
             // frameAcquisitionNanoTime: when the picture was taken, on the System.nanoTime() clock
-            return new TargetObservation(s.id, tagName, bearing, range, d.frameAcquisitionNanoTime, roll);
+            return new TargetObservation(s.id, tagName, bearing, range, d.frameAcquisitionNanoTime, roll,
+                    facingDeg(d, pitchDeg, upsideDown, bearing));
         }
         if (d instanceof AprilTagClusterDetection) {
             // A cluster has a name but no single tag number, so its id is CLUSTER (-1).
             AprilTagClusterDetection c = (AprilTagClusterDetection) d;
             String clusterName = c.metadata != null ? c.metadata.name : "Cluster";
-            return new TargetObservation(TargetObservation.CLUSTER, clusterName, bearing, range, d.frameAcquisitionNanoTime, roll);
+            return new TargetObservation(TargetObservation.CLUSTER, clusterName, bearing, range, d.frameAcquisitionNanoTime, roll,
+                    facingDeg(d, pitchDeg, upsideDown, bearing));
         }
         // Some other kind of detection a future SDK might add: still report it, so it shows up.
         return new TargetObservation(TargetObservation.CLUSTER, "Unknown", bearing, range, d.frameAcquisitionNanoTime);
+    }
+
+    /**
+     * Which way the tag's (or the cluster's) face points along the floor, in the camera's frame (like the bearing) (degrees, +
+     * = counterclockwise, turned to the camera's side), NaN if unknown. From the SDK's raw pose: its
+     * rotation's third column is the face's axis in the camera's axes (right, down, forward), the same
+     * rotation the SDK turns into ftcPose's yaw. A face that points almost straight up or down: NaN (its
+     * direction along the floor would be mostly noise). Public for tests.
+     *
+     * @param d          the detection
+     * @param pitchDeg   the camera's tilt up (degrees)
+     * @param upsideDown true for a camera mounted upside down ({@link #upsideDown(boolean)})
+     * @param bearingDeg the target's bearing (already tilt-corrected), positive = LEFT
+     */
+    public static double facingDeg(AprilTagDetection d, double pitchDeg, boolean upsideDown, double bearingDeg) {
+        if (d.rawPose == null || d.rawPose.R == null || Double.isNaN(bearingDeg)) return Double.NaN;
+        double flip = upsideDown ? -1 : 1;
+        double cvRight = d.rawPose.R.get(0, 2), cvDown = d.rawPose.R.get(1, 2), cvForward = d.rawPose.R.get(2, 2);
+        double right = flip * cvRight, up = flip * -cvDown;
+        if (CameraTilt.floorDistance(right, cvForward, up, pitchDeg) < 0.2) return Double.NaN;
+        double facing = CameraTilt.bearingDeg(right, cvForward, up, pitchDeg);
+        // The axis may point into the tag or out of it: keep the way that points back to the camera. (A tag tilted
+        // down and seen from far to the side could fool this, but a goal's own body hides it from there.)
+        double back = bearingDeg + 180;
+        if (Math.abs(com.crossbotics.ftchelper.util.Angles.wrapDegrees(facing - back)) > 90) facing += 180;
+        return com.crossbotics.ftchelper.util.Angles.wrapDegrees(facing);
     }
 
     @Override

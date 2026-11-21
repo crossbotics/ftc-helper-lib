@@ -66,6 +66,8 @@ public static class Aim {                                       // a fixed name:
 | `sweepStepDeg` | `aimAtGoal(label, sec, sweepDeg)`: the robot turns this much between two looks while it sweeps for the goal | degrees | 15 | no | test | the robot turns past the goal between looks (less) |
 | `sweepPower` | the sweep's turn power | 0-1 | 0.3 | no | test | the sweep is too slow, or the picture blurs (less) |
 | `cameraOffset` | whole-robot aim (no turret): a camera that is not on the robot's center line. A turret has its own, `Tunables.Turret.cameraOffset`. The Aim Tuner prints the line for the one your robot uses | degrees | 0 | yes, at once | test | the robot aims a little to one side |
+| `angleAim` | aim into the opening, not at the tags: on at ▶ ([Aim into the opening](#aim-into-the-opening)) | true/false | false | no | test | the goal's opening is in front of its tags, and shots from an angle miss to one side |
+| `goalFrontIn` | for the angle aim: how far the opening is in front of the tags, along the way they face | inches | 0 | yes, at once | the field's drawings (BIOBUZZ: 3) | shots from an angle still miss toward the back (more) or the front (less) |
 | `rumbleDeg` | the aim buzz starts this close to the goal | degrees | 4 | yes, at once | test | the drivers want it earlier or later |
 | `shootOnMove` | shooting while driving: on at ▶ | true/false | false | no | test | only after you tune it on the real robot |
 | `flightSec` | shooting on the move: the piece's time in the air | seconds | 0 | yes, at once | test (film a shot) | moving shots land behind (more) or ahead |
@@ -241,12 +243,38 @@ Turn it on with `shootOnMove = true`. **It is off by default: tune it on the rea
 - When it is off, nothing changes.
 - The math: [MovingShot](../../modules/vision.md#movingshot).
 
+## Aim into the opening
+
+Some goals have their opening in front of their AprilTags, not right behind them. BIOBUZZ: the 4 tags are
+under the CELL, and the CELL's opening is about 3 in in front of them (from the field's drawings).
+
+- Straight on, the opening is behind the tags, on the same line. The aim needs no change.
+- From an angle, the opening is off to one side of the tags: toward the front, the way the tags face. Aimed at
+  the tags, the shot goes toward the back edge of the opening. Up close it can miss.
+- With the angle aim on, Aim points at the spot `goalFrontIn` inches in front of the tags, not at the tags. The
+  camera says which way the tags face, so Aim works out the side and the size by itself.
+- BIOBUZZ, `goalFrontIn = 3`: at 45 degrees from straight on, about 4 degrees at 32 in and about 2 degrees at
+  55 in. From the other side, the other way.
+- The distance for the speed stays the tags' distance (the shot table was made with it).
+- It needs a camera that knows which way the tags face: a webcam (and the simulator's). With a Limelight, it
+  does nothing.
+- On at ▶ with `angleAim = true` and `goalFrontIn` set. A button can switch it on and off:
+  `g1.a.toggle(robot.aim().angleAimMode())`. Try shots from an angle with it on and off.
+- It works with whole-robot aim, quick turn on fire, `aimAtGoal` in an auto, and a turret that follows.
+- A tag's facing is the noisiest part of what the camera measures. Aim uses the middle of the last 5 pictures'
+  corrections, so one odd picture does not swing the aim.
+- TeleOp shows `Angle aim: +3.9 deg toward the opening`, or why it does nothing (`no face direction from this
+  camera`, `no goal in view`). Check that line before you trust it in a match.
+- When the camera loses the goal and the odometry backup takes over, the aim goes back to the goal point (no
+  correction): it can turn a few degrees.
+
 ## Commands
 
 | Command | What it does |
 | --- | --- |
 | `mode()` (= `robot.aimMode()`) | whole-robot aim. It stops with a message on a robot whose turret follows the goal |
 | `movingShotMode()` | shooting on the move on/off. It is on from ▶ with `shootOnMove = true` |
+| `angleAimMode()` | [aim into the opening](#aim-into-the-opening) on/off. It is on from ▶ with `angleAim = true` |
 
 | Question | What it tells you |
 | --- | --- |
@@ -275,6 +303,7 @@ Aim has no buttons until you add its lines to `Controls.java`
 g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();   // whole-robot aim
 g2.rumbleWhenAimed();                                                               // the aim buzz
 g2.a.toggle(robot.aim().movingShotMode());                                          // shooting on the move on/off
+g1.a.toggle(robot.aim().angleAimMode()).rumble();                                   // aim into the opening on/off
 ```
 
 **The aim buzz** (`rumbleWhenAimed()`, an [AimRumble](../../modules/gamepad.md)):

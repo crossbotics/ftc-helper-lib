@@ -37,8 +37,8 @@ final class TunableFields {
         part("Drive", "calibrated", "maxPower", "moveMaxTurnPower", "moveMinPower", "moveTurnScale", "practiceMaxPower", "slowDownIn", "slowSpeed",
                 "strafeCorrection", "strafeCorrectionLeft", "turnKd", "turnKp", "turnMinPower", "turnToleranceDeg");
         part("Odometry", "angularScalar", "checked", "linearScalar", "mirrorForRed", "resetHeading", "resetX", "resetY");
-        part("Aim", "aimDriveSpeed", "aimOnFire", "aimOnFireSec", "cameraForwardIn", "cameraLatencyMs", "cameraLeftIn", "cameraMaxAgeMs", "cameraOdometryAgree",
-                "cameraOffset", "flightSec", "flightSecPerIn", "goalSteadyDeg", "goalSteadyIn", "goalSteadySec", "goalX", "goalY", "lockMarginDeg", "maxGoalDistance", "maxLeadIn",
+        part("Aim", "aimDriveSpeed", "aimOnFire", "aimOnFireSec", "angleAim", "cameraForwardIn", "cameraLatencyMs", "cameraLeftIn", "cameraMaxAgeMs", "cameraOdometryAgree",
+                "cameraOffset", "flightSec", "flightSecPerIn", "goalFrontIn", "goalSteadyDeg", "goalSteadyIn", "goalSteadySec", "goalX", "goalY", "lockMarginDeg", "maxGoalDistance", "maxLeadIn",
                 "maxTurnPower", "minTurnPower", "mirrorForRed", "rumbleDeg", "shootOnMove", "shooterForwardIn",
                 "shooterLeftIn", "sweepPower", "sweepStepDeg", "toleranceDeg", "turnKd", "turnKp");
         part("Buttons", "holdSec", "tapGapSec");
@@ -51,7 +51,7 @@ final class TunableFields {
         part("Indexer", "alsoTrim", "alwaysOn", "feedSec", "power", "push", "pushSec", "pushStep", "rest", "returnSec", "stageSec", "stopOnShot", "stopSec");
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
-        part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "distanceJumpAgreeIn", "distanceJumpIn", "distanceMedianOf", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold",
+        part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "distanceJumpAgreeIn", "distanceJumpIn", "distanceMedianOf", "distanceSmoothSec", "ejectFeedSec", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold", "lockSpeedWhileFiring",
                 "feedStopMoveSec", "feedStopOpenSec", "feedStopRelease", "idleRpm", "kD", "kF", "kI", "kP", "maxFiringQueue", "nominalVolts", "quickBandRpm",
                 "quickMaxWaitSec", "readyBandRpm", "redTrimPercent", "shotDropRpm", "shotIntervalSec", "speedByDistance", "speedRpm",
                 "spinAtStart", "sprayEnabled", "sprayLastSec", "sprayOnTapHold", "stepRpm", "trimMaxPercent", "trimStepPercent");

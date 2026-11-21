@@ -12,7 +12,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.robotcore.external.matrices.GeneralMatrixF;
 import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
+import org.firstinspires.ftc.vision.apriltag.AprilTagPoseRaw;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.junit.Test;
 
@@ -115,6 +117,41 @@ public class VisionTest {
         assertEquals(TRUE_BEARING, o.bearingDeg, 1e-6);
         assertEquals(FLOOR, o.distanceIn, 1e-6);
         assertEquals("level (no pitch): the SDK's own numbers", pose.bearing, WebcamTags.convert(d).bearingDeg, E);
+    }
+
+    // A detection straight ahead (bearing 0, 40 in) whose face axis, in the camera's axes (right, down,
+    // forward, as the SDK's raw pose), is (r, d, f): the third column of its rotation.
+    private static AprilTagSingleDetection facing(double r, double d, double f) {
+        GeneralMatrixF rot = new GeneralMatrixF(3, 3);
+        rot.put(0, 2, (float) r);
+        rot.put(1, 2, (float) d);
+        rot.put(2, 2, (float) f);
+        AprilTagPoseRaw raw = new AprilTagPoseRaw(0, 0, 40, rot);
+        AprilTagPoseFtc pose = new AprilTagPoseFtc(0, 40, 0, 0, 0, 0, 40, 0, 0);
+        return new AprilTagSingleDetection(7, 0, 50f, null, null, null, pose, raw, null, 1L, DistanceUnit.INCH);
+    }
+
+    @Test public void theWebcamSaysWhichWayATagFaces() {
+        assertEquals("straight on: it faces back at the robot", 180, Math.abs(WebcamTags.convert(facing(0, 0, 1)).facingDeg), 1e-6);
+        assertEquals("the axis the other way round: the same", 180, Math.abs(WebcamTags.convert(facing(0, 0, -1)).facingDeg), 1e-6);
+        // Turned 30 degrees: the axis into the tag points 30 degrees right of forward, so its face points back
+        // and 30 degrees to the left of straight back: 150 (counterclockwise from the robot's front).
+        double s = Math.sin(Math.toRadians(30)), c = Math.cos(Math.toRadians(30));
+        assertEquals(150, WebcamTags.convert(facing(s, 0, c)).facingDeg, 1e-4);
+        assertEquals("upside down: left and right swap", -150, WebcamTags.convert(facing(s, 0, c), 0, true).facingDeg, 1e-4);
+        // Tilted down like a BIOBUZZ CELL tag (60 degrees): still the same way along the floor.
+        double down = Math.sin(Math.toRadians(60)), flat = Math.cos(Math.toRadians(60));
+        assertEquals(150, WebcamTags.convert(facing(flat * s, down, flat * c)).facingDeg, 1e-4);
+        // A camera tilted 36 degrees up (R1's): the tag straight ahead and level, turned 30 degrees. In the
+        // camera's axes the face's axis is tilted by the camera's pitch; along the floor it is still 150.
+        double p36 = Math.toRadians(36);
+        double fwd = c, dn = 0;   // level face axis (right s, down 0, forward c), seen by a camera pitched up:
+        double camDown = dn * Math.cos(p36) + fwd * Math.sin(p36), camFwd = -dn * Math.sin(p36) + fwd * Math.cos(p36);
+        AprilTagSingleDetection tilted = facing(s, camDown, camFwd);
+        assertEquals("tilted camera", 150, WebcamTags.convert(tilted, 36).facingDeg, 1e-3);
+        assertTrue("a face pointing straight down: unknown", Double.isNaN(WebcamTags.convert(facing(0, 1, 0)).facingDeg));
+        assertTrue("no raw pose: unknown", Double.isNaN(WebcamTags.convert(new AprilTagSingleDetection(7, 0, 50f, null, null, null,
+                new AprilTagPoseFtc(0, 40, 0, 0, 0, 0, 40, 0, 0), null, null, 1L, DistanceUnit.INCH)).facingDeg));
     }
 
     @Test public void anUpsideDownWebcamsDetectionIsTurnedBack() {

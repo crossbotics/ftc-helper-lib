@@ -89,6 +89,7 @@ camera.start();                  // in INIT: a webcam needs 1-2 s to start
 | `.pitchDeg(degrees)` | the camera's tilt up (0 = level, the default), so bearings and distances are along the floor ([CameraTilt](#cameratilt)) |
 | `.upsideDown(on)` / `isUpsideDown()` | the webcam is mounted upside down: each target's bearing and roll are turned back (left is left, a right-side-up tag reads right side up). The live view stays upside down |
 | `WebcamTags.convert(detection)` / `convert(detection, pitchDeg)` / `convert(detection, pitchDeg, upsideDown)` | turns an SDK detection into a TargetObservation (level, tilted, or upside down) |
+| `WebcamTags.facingDeg(detection, pitchDeg, upsideDown, bearingDeg)` | which way the tag's face points along the floor (the observation's `facingDeg`), from the SDK's raw pose; NaN with no raw pose or a face pointing almost straight up or down |
 
 For better distances, calibrate the camera (the FTC docs explain "camera calibration"). Or use a
 camera the SDK already knows (Logitech C270/C920 at common resolutions).
@@ -353,6 +354,8 @@ camera.groups(java.util.Arrays.asList(goal));
 | `distanceIn` | inches from the camera, flat in the camera's own view (its up/down left out), or NaN when unknown. It is the floor distance only for a level camera. A camera tilted up reads more. It means the same for both cameras, but make the shot table with the camera mounted as on the robot |
 | `timeNanos` | when the camera took the picture |
 | `rollDeg`, `isUpright()` | how far it is turned in the picture: 0 = right side up, 180 (or -180) = upside down, NaN when the camera cannot tell. `isUpright()`: whether it is turned less than 90 degrees either way (false for NaN). Webcam: the SDK's `ftcPose.roll` (for a cluster, the turn of its row). Limelight: a group's, from the order of its tags ([TagGroup](#taggroup)) |
+| `facingDeg` | which way its face points along the floor, in the camera's frame like `bearingDeg` (degrees, counterclockwise +, turned to the camera's side; straight on = the bearing + 180), NaN when the camera cannot tell. Webcam: from the SDK's raw pose (`WebcamTags.facingDeg`). Limelight and HuskyLens: NaN. [Aim into the opening](../reference/parts/aim.md#aim-into-the-opening) uses it |
+| `withBearing(deg)` | the same observation with another bearing (for code that moves the aim point) |
 | `ageMs(now)`, `isFresh(now, maxAgeMs)` | how old it is, and whether it is newer than `maxAgeMs`. Never aim with an old picture |
 | `hasBearing()`, `hasDistance()` | whether the camera worked out a bearing, and a distance |
 
@@ -424,7 +427,9 @@ Keeps camera glitches out of a distance. A camera sometimes gives one picture wi
 (a tag half hidden, a blur, a reflection). If the robot uses that picture as it comes, the flywheel
 speed changes for a moment, and a shot fired then goes long or short. The five-files launcher's
 `speedFromDistance(camera)` uses a filter for you. Its numbers are in `Tunables.Launcher`:
-`distanceMedianOf`, `distanceJumpIn`, `distanceJumpAgreeIn`.
+`distanceMedianOf`, `distanceJumpIn`, `distanceJumpAgreeIn`. After the filter, the launcher can also ease its
+speed into each new distance (`distanceSmoothSec`, off by default): see the
+[launcher's page](../reference/parts/launcher.md#in-tunablesjava).
 
 The filter does two checks, one after the other:
 
