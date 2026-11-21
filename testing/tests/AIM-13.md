@@ -7,7 +7,7 @@ where: real
 minutes: 20
 needs: [flywheel, webcam]
 kit_bots: []
-since: unreleased
+since: v0.47.0
 docs: [tuning/13-shot-tuner.md]
 ---
 

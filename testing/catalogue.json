@@ -717,7 +717,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.47.0",
    "docs": [
     {
      "path": "docs/tuning/13-shot-tuner.md",
@@ -6755,7 +6755,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.47.0",
    "docs": [
     {
      "path": "docs/tuning/06-flywheel-finder.md",
