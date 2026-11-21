@@ -32,6 +32,19 @@ public final class Chooser {
         if (!items.isEmpty()) index = (index + items.size() - 1) % items.size();
     }
 
+    /**
+     * Moves the choice to this name, if it is in the list (e.g. start on the robot's flywheel motor).
+     *
+     * @param name the name to choose; null or not in the list: the choice stays
+     * @return true if the name was found and chosen
+     */
+    public boolean select(String name) {
+        int i = name == null ? -1 : items.indexOf(name);
+        if (i < 0) return false;
+        index = i;
+        return true;
+    }
+
     /** The chosen name, or null if the list is empty. */
     public String current() {
         return items.isEmpty() ? null : items.get(index);

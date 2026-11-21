@@ -15,7 +15,9 @@ Find the flywheel speed (and hood angle) that hits the goal at each distance.
 
    ![The Tune and check menu with the arrow on Shot Tuner: press D-pad, then A](../images/hub-shot-tuner-go-menu.svg)
 
-3. The Shot Tuner's INIT screen shows. The flywheel stays off. Press **▶** (start) on the Driver Hub.
+3. The Shot Tuner's INIT screen shows. The flywheel stays off. Choose your alliance: **X** = BLUE, **B** = RED
+   (the `Alliance` line). Only that alliance's goal counts. Point the camera at a tag: the camera's lighting
+   test runs now, as in a match. Wait until its line says it is done, then press **▶** (start) on the Driver Hub.
 
    ![The Shot Tuner's INIT screen: The flywheel stays off until you press LB. Press start](../images/hub-shot-tuner-go-start.svg)
 
@@ -70,6 +72,27 @@ Load only that kind of piece, and tune. The screen shows no `Table` line.
      `robot.launcher.tableOn(g2.dpadRight);` in `Controls.java`. The Driver Station shows
      `Shot table: POLLEN, 48 in (camera)`, so the driver sees which one is in use.
    - At the start, the launcher uses `.startTable("pollen")`, or NECTAR when you write none.
+
+## It aims and sees like a match
+
+A table made from shots that were not aimed, or with another camera setting, does not fit the match. So with
+your robot in five files and a camera with `goal(...)` in Robot.java, the Shot Tuner uses the robot's own camera
+and aim, the same code as TeleOp and the autos:
+
+- **The camera:** the same camera and settings, and its lighting test in INIT. **Hold Y 0.5 s** to run the test
+  again (aim the camera at a tag first). A short **Y** press still changes what the D-pad changes.
+- **The goal:** only the goal of the alliance you chose in INIT, read right side up, from fresh pictures. Its
+  distance is the tags' distance, as the launcher reads it in a match.
+- **The aim:** **RB** turns the whole robot to the goal with TeleOp's aim (`Tunables.Aim`: `toleranceDeg`, the
+  saved `cameraOffset`, the angle aim when `angleAim` is on), then shoots when it is aimed and `Ready`. The
+  `Aim` line shows how far off it is. The robot keeps facing the goal after the shot. Your turn stick still wins.
+- **No shot** when the camera does not see the goal (an odometry guess does not count here), the robot is not
+  aimed for 2 s, or the flywheel is not `Ready` in 4 s. The screen says why. So the table holds only aimed shots.
+  After each shot the aim lets go: the robot does not turn by itself while you move it to the next spot.
+
+A robot whose turret follows the goal: the turret aims in a match, so the tuner shoots where the robot points
+(point it with the sticks), and the distance is to the first target the camera sees, as before. Its lighting
+test and alliance choice still run. A camera with no `goal(...)`: the first target with a distance, as before.
 
 ## Where the distance comes from
 
@@ -151,7 +174,8 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    ![At the nearest spot, press LB: the Driver Hub shows Speed : 2600 RPM, measured 2594, the distance, and Ready : YES](../images/hub-shot-tuner-step-spin.svg)
 
 3. The speed starts at what your table already gives at this distance (or `Tunables.Launcher.speedRpm`),
-   so you only fine-tune. Shoot 3-5 (**RB** one at a time, or hold **RT**).
+   so you only fine-tune. Shoot 3-5 (**RB** one at a time, or hold **RT**). A robot that aims turns to the
+   goal first ([It aims and sees like a match](#it-aims-and-sees-like-a-match)).
 
    ![Press RB: the Driver Hub shows Shots fired : 1, 1 to mark](../images/hub-shot-tuner-step-shoot.svg)
 
@@ -159,7 +183,7 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    fired them. Each shot keeps the speed, hood angle and distance it was **fired** with. So when you change the speed or the hood before
    you mark, the mark does not move. The screen shows `Hits at 2600: 3/4` and every speed tried here
    (`Tried here: 2500: 1/3, 2600: 3/4 (best)`). Change the speed with the D-pad, and shoot 3-5 again.
-   **Y** steps through what the D-pad changes: SPEED, HOOD with a hood, TABLE with two tables, and
+   A short **Y** press steps through what the D-pad changes: SPEED, HOOD with a hood, TABLE with two tables, and
    DISTANCE. DISTANCE is a distance you type in when neither the camera nor the odometry gives one. 2-3
    speeds are usually enough.
    - **When you pressed the wrong one,** a **left stick click** takes back the last HIT / MISS. That shot
@@ -196,8 +220,9 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    Between the points, the launcher **blends** the speed: halfway between two points, it uses the speed
    halfway between theirs. Outside them, it uses the nearest point.
 
-With `robot()`, the Shot Tuner uses your robot's launcher, camera and drive. A turret stays still, and the
-"fire only when aimed" checks are off: point the robot at the goal with the sticks. **With a hood**
+With `robot()`, the Shot Tuner uses your robot's launcher, camera and drive. A robot with whole-robot aim turns
+to the goal before each shot. A turret stays still, and its "fire only when aimed" checks are off: point the
+robot at the goal with the sticks. **With a hood**
 (`.hood(...)` in Robot.java, or the older helpers' `.hood(servo)`), **Y** also chooses HOOD. The D-pad then
 steps the hood by a fifth / a fiftieth of its range: 5 / 0.5 deg for a 0-25 deg hood. The hood starts at
 the table's hood for this distance, like the speed. Each speed and hood angle is its own try in the hit

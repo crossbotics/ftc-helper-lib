@@ -381,6 +381,30 @@ public final class Aim {
         return robot.alliance() == Alliance.RED && robot.mirrorForRed() ? -goalX : goalX;
     }
 
+    /**
+     * The camera that aims the whole robot: the first one with {@code goal(...)} in Robot.java, or null.
+     * The Shot Tuner uses it, so it sees the goal through the same camera (and lighting test) as TeleOp.
+     */
+    public Camera camera() {
+        return aimingCamera();
+    }
+
+    /**
+     * The next {@link #isAimed()} must get within {@code toleranceDeg} again (not the wider band an aim that was
+     * already locked keeps). TeleOp's quick turn on fire does this for each press; the Shot Tuner for each shot.
+     */
+    public void relock() {
+        lockedLast = false;
+    }
+
+    /**
+     * True when a turret follows the goal ({@code follows(camera)} or {@code followsOdometry()} in
+     * Robot.java): the turret aims, and {@link #mode()} (whole-robot aim) cannot be used.
+     */
+    public boolean turretAims() {
+        return followingTurretInRobot() != null;
+    }
+
     // The camera that aims the whole robot: the first one with a goal(...) in Robot.java, or null.
     Camera aimingCamera() {
         for (Module<?> m : robot.modules()) {
@@ -587,6 +611,18 @@ public final class Aim {
      * after shaping: unchanged while the mode is off (and no quick turn on fire is working) or the stick
      * is moved; the aim's turn otherwise (0 when there is no goal: the robot does not turn on its own).
      */
+    /**
+     * The same turn as TeleOp's, for an OpMode that drives with its own {@code DriverControls} (the Shot
+     * Tuner): {@code driving.turnAssist(robot.aim()::turnFor)}. While {@link #mode()} is on it turns the
+     * robot to the goal (with {@code cameraOffset} and the angle aim); the driver's stick still wins.
+     *
+     * @param driverTurn the driver's turn after shaping, -1 to 1 (clockwise +)
+     * @return the turn to use this loop, -1 to 1
+     */
+    public double turnFor(double driverTurn) {
+        return assistTurn(driverTurn);
+    }
+
     double assistTurn(double driverTurn) {
         if (!mode.isOn() && !isTurningToFire()) {
             driverTurning = false;

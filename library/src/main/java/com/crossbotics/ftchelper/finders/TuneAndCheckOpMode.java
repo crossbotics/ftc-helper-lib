@@ -197,6 +197,18 @@ public class TuneAndCheckOpMode extends LinearOpMode {
         return out;
     }
 
+    // Each launcher's gains written in Tunables.java ({kP, kI, kD, kF, nominalVolts or NaN}), by motor name.
+    // Only launchers with kP, kI and kF written: the Flywheel Finder holds the wheel with them.
+    static Map<String, double[]> flywheelGains(List<Module<?>> modules, Class<?> tunables) {
+        Map<String, double[]> out = new java.util.HashMap<>();
+        for (Module<?> m : withChildren(modules)) {
+            if (!(m instanceof Launcher)) continue;
+            double[] g = ((Launcher) m).writtenGains(tunables);
+            if (g != null) out.put(m.deviceName(), g);
+        }
+        return out;
+    }
+
     static Map<String, Boolean> servoDirections(List<Module<?>> modules) {
         Map<String, Boolean> out = new java.util.HashMap<>();
         for (Module<?> m : withChildren(modules)) {
@@ -293,9 +305,12 @@ public class TuneAndCheckOpMode extends LinearOpMode {
         }
         if (robot == null || any(modules, Launcher.class)) {
             // Each launcher's motor starts the way Robot.java turns it (reversed() there = reversed here).
+            // ...and the finder holds it with the gains in Tunables.java (when written): Y switches to its own.
             final Map<String, Boolean> motorDirs = flywheelDirections(modules);
+            final Map<String, double[]> gains = flywheelGains(modules, robot == null ? null : robot.tunablesClass());
             out.add(new Tool("Flywheel Finder", "the flywheel's gains", () -> new FlywheelFinderOpMode() {
                 @Override protected Map<String, Boolean> motorDirections() { return motorDirs; }
+                @Override protected Map<String, double[]> robotGains() { return gains; }
             }));
         }
         if (hasFeedStop(modules)) {

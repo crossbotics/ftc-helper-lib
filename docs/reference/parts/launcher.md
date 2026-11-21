@@ -181,6 +181,7 @@ Use them in `Controls.java`, `Actions.java` and autos: `robot.launcher.fire()`.
 | Question | What it tells you |
 | --- | --- |
 | `isReady()` | whether it is at speed and every check is OK |
+| `writtenGains(tunables)` | the gains written in Tunables.java, {kP, kI, kD, kF, nominalVolts or NaN}, or null (the Flywheel Finder in Tune and check holds with them) |
 | `isShooting()` | whether it fires now |
 | `isSpinning()` | whether it is spun up (or spins up); false when idle |
 | `targetRpm()` | the speed it goes to |

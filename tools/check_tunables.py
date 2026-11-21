@@ -64,6 +64,7 @@ NAMED_KEY = {"Drive": "Drive", "Odometry": "Odometry", "Aim": "Aim", "Buttons": 
 DYNAMIC = {
     "Aim.java: t.tunable(field": [],                       # inside live(t, "name", ...)
     "Camera.java: t.has(field": [], "Camera.java: t.number(field": [],   # inside optional(t, "name", ...)
+    "Launcher.java: t.has(names[i]": [], "Launcher.java: t.number(names[i]": [],   # writtenGains(): kP, kI, kD, kF (read just above)
     "Turret.java: t.require(f": [],                        # the loop over posA, angleA, posB, angleB (REQUIRED_EXTRA)
     "Interlock.java: t.has(f": [],                         # the zone's fields, read just below
     "Interlock.java: t.number(pre + \"Above\"": ["<part>Above"],

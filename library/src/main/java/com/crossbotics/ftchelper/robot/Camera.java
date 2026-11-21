@@ -72,6 +72,8 @@ public final class Camera extends Module<Camera> {
     private boolean relit = false;
     // relight() was pressed with the test off: when (Time.nanos), to warn for a few seconds. -1: not pressed.
     private long relightOffAt = -1;
+    // A tag seen since the lighting test gave up: its setting works after all, so the warning stops.
+    private boolean sawTagAfterGaveUp = false;
     // The Tunables lines that skip the test next time, e.g. "pipeline = 1;" (shown at INIT once found).
     private String skipHint = "";
     // For the simulator file: the turret this camera rides (its device name), or null (set by
@@ -358,7 +360,31 @@ public final class Camera extends Module<Camera> {
         }
         sweep.restart();
         relit = true;
+        sawTagAfterGaveUp = false;
         return true;
+    }
+
+    /**
+     * TeleOp's INIT work for this camera, for an OpMode that does not run the robot's INIT loop (the Shot
+     * Tuner): it reads the camera, so the lighting test runs, and shows its lines. Call it every INIT loop.
+     *
+     * @param t the Driver Hub screen
+     */
+    public void checkInInit(RobotTelemetry t) {
+        initLoop(t);
+    }
+
+    /**
+     * TeleOp's START work for this camera (an unfinished lighting test stops and keeps the best setting so
+     * far), for an OpMode that does not run the robot's START (the Shot Tuner). Call it once, at START.
+     */
+    public void started() {
+        start();
+    }
+
+    /** True if Robot.java gives this camera a {@code goal(...)}: {@link #goal()} can find the alliance's goal. */
+    public boolean knowsGoal() {
+        return hasGoal();
     }
 
     // The INIT loop: keep the camera reading (so the lighting test runs), and show the result.
@@ -462,10 +488,13 @@ public final class Camera extends Module<Camera> {
             t.warn(device + " lighting test is off: nothing to do again (it needs autoExposure() or autoPipelines(...) "
                     + "in Robot.java, and no exposureMs/pipeline line or autoLighting = false in Tunables)");
         }
-        if (relit && sweep != null) {
-            if (sweep.gaveUp()) t.warn(device + " lighting: " + sweep.status());
-            else t.line(device + " lighting", sweep.status());
+        // A driver must know at once, at the TOP of the screen (warnings go first; a camera that is not working
+        // already warns above): a lighting test that saw no tag, and the camera has seen none since.
+        if (sweep != null && sweep.gaveUp() && !sawTagAfterGaveUp) {
+            if (!source.targets().isEmpty()) sawTagAfterGaveUp = true;
+            else t.warn(device + " lighting: NO TAGS SEEN: aim at a tag and run the lighting test again");
         }
+        if (relit && sweep != null && !sweep.gaveUp()) t.line(device + " lighting", sweep.status());
         if (blueGoal != null) {
             TargetObservation g = goal();
             String why = g == null ? whyNoGoal() : "";

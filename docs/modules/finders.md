@@ -233,7 +233,8 @@ hands away, and wear eye protection.
 | Step | Button | Does |
 | --- | --- | --- |
 | 1 | hold **A** | runs full power (at most 5 s), measures the top speed and works out starting gains. The A press that chose the motor does not count: let go and press again |
-| 2 | **B** | turns speed holding on or off (the library's `Flywheel`, with those gains) |
+| 2 | **B** | turns speed holding on or off (the library's `Flywheel`, with those gains, or the gains in Tunables.java) |
+| 2 | **Y** | the gains step 2 uses: Tunables.java's, or this finder's own (after step 1) |
 | 2 | D-pad up/down, right/left | target +/- 100 / 25 RPM (starts at 60% of top speed) |
 | 2 | **RB** / **LB** | F gain +2% / -2%. F does most of the work: when the wheel is too slow at every speed, add F |
 | 1, 2 | **X** | reverses the wheel when it spins the wrong way (adds `.reversed()`) |
@@ -242,6 +243,11 @@ Each motor starts in the direction from `motorDirections()` (motor name to `true
 check fills it from Robot.java: a launcher with `.reversed()` starts reversed, so the wheel spins the way it
 does in TeleOp. A motor not in the map starts forward. Your own finder can override `motorDirections()`. When
 **X** makes the direction differ from Robot.java, the results say to add or remove `.reversed()` there.
+
+The list starts on the flywheel: the first motor in `motorDirections()` or `robotGains()`, else a name with "fly",
+"launch" or "shoot". `robotGains()` (motor name to {kP, kI, kD, kF, nominalVolts or NaN}) holds the wheel in step 2
+with the robot's own gains, so step 1 is not needed and **RB** / **LB** fine-tune the kF the robot uses; the
+Tunables line keeps their kP, kI and kD. Tune and check fills it from `Tunables.java` (a launcher with kP, kI and kF).
 
 When the speed still rose in the last second before step 1's 5 s limit (a heavy wheel), the finder warns
 `Still speeding up at 5 s` and adds "may be higher" to the top-speed line. F is then a little high: fine-tune
@@ -545,7 +551,10 @@ left/right picks the one you tune. It starts on the launcher's start table. Each
 and gets its own line.
 
 The tuner sets up the robot's other parts but does not move them. A turret stays still. The launcher's
-`requireReady(...)` checks (like "turret aimed") are off, because you aim by hand here.
+`requireReady(...)` checks (like "turret aimed") are off. A robot with whole-robot aim (a camera with `goal(...)`, no
+following turret) aims like TeleOp instead: the alliance chosen in INIT (X / B), the camera's lighting test in INIT
+(hold Y 0.5 s for it again), and RB turns to the goal with `robot.aim()` and shoots once aimed and Ready
+(`AIM_TIMEOUT_SEC` not aimed, or no goal: no shot).
 
 Without five files, fill in these methods:
 
@@ -554,7 +563,7 @@ Without five files, fill in these methods:
 | `robot()` | no | the robot in five files: gives the three below |
 | `createLauncher()` | without `robot()` | your [`Launcher`](launcher.md), as in TeleOp (with a hood, it tunes the hood too) |
 | `createCamera()` | no | the camera gives the distance; null = set the distance by hand |
-| `findTarget(camera)` | no | which target to use. Default: the first one with a distance |
+| `findTarget(camera)` | no | which target to use. Default: the robot's goal (`robot.aim().goal()`, this alliance's) with a goal camera, else the first one with a distance |
 | `robotConfig()` | no | lets you drive with the sticks between distances |
 | `createSubsystems()` | no | other mechanisms to keep updated (an intake that loads it) |
 | `startRpm()` | no | the starting speed; default (NaN) = the table's speed at the distance seen, else `Tunables.Launcher.speedRpm`, else 3000 |
@@ -777,8 +786,8 @@ count, NaN when the wheels disagree), `servoPosition(p)` (kept in 0..1).
 
 ## Chooser
 
-A D-pad list: `new Chooser(names)` (sorted A to Z), `next()`, `previous()`, `current()`,
-`isEmpty()`, `addTelemetry(t, emptyText)`.
+A D-pad list: `new Chooser(names)` (sorted A to Z), `next()`, `previous()`, `current()`, `select(name)` (choose that
+name; false when it is not in the list), `isEmpty()`, `addTelemetry(t, emptyText)`.
 
 ## NudgeStep
 

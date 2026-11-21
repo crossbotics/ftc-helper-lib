@@ -613,6 +613,69 @@ public class SimFromRobotTest {
         }
     }
 
+    // The lighting test saw no tag in INIT: TeleOp warns at the TOP of the screen until the camera sees a tag.
+    @Test public void teleOpWarnsAtTheTopWhenTheLightingTestSawNoTag() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("TurretBot TeleOp");
+            synchronized (s.sim.robot) { s.sim.robot.headingDeg = -90; }   // facing away from every tag
+            s.sim.robot.setPose(0, -60, -90);
+            SimRun.pause(1.0);
+            s.start();
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("lighting: NO TAGS SEEN"), 8));
+            assertTrue("a warning, at the top: " + String.join("\n", s.screen()), s.screen().stream().limit(4).anyMatch(l -> l.contains("NO TAGS SEEN")));
+            assertEquals("", s.error());
+        }
+    }
+
+    /** The Shot Tuner for flywheelbot (a webcam with goal(...), whole-robot aim, no turret). */
+    public static class FlywheelBotShotTuner extends com.crossbotics.ftchelper.finders.ShotTunerOpMode {
+        @Override protected com.crossbotics.ftchelper.robot.RobotDefinition robot() {
+            return new com.crossbotics.ftchelper.examples.flywheelbot.Robot();
+        }
+    }
+
+    // The Shot Tuner sees and aims like a match: the alliance chosen in INIT (only its goal counts), and
+    // RB turns the robot to that goal with TeleOp's aim, then shoots. No goal in view: no shot.
+    @Test public void theShotTunerAimsAtTheChosenAlliancesGoalBeforeEachShot() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.sim.ds.register("FlywheelBot Shot Tuner", "TeleOp", FlywheelBotShotTuner.class);
+            s.init("FlywheelBot Shot Tuner");
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Alliance : BLUE"), 2));
+            s.press(v -> s.g1().b = v);                              // RED
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Alliance : RED"), 2));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("RB} turns the robot to the goal") || s.screenHas("RB turns the robot to the goal"));
+            s.start();
+            // Facing away from every goal: RB does not shoot.
+            s.sim.robot.setPose(57, -12.75, -90);
+            s.press(v -> s.g1().left_bumper = v);                   // flywheel on
+            SimRun.pause(1.5);
+            int before = s.robot().shots();
+            s.press(v -> s.g1().right_bumper = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("No shot: the camera does not see the RED goal"), 2));
+            SimRun.pause(0.5);
+            assertEquals("no shot without the goal", before, s.robot().shots());
+            // Level with the red up CELL's tags, turned 15 degrees left: RB turns to it, then shoots.
+            s.sim.robot.setPose(57, -12.75, 105);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("(camera, "), 6));
+            s.press(v -> s.g1().right_bumper = v);
+            assertTrue("it turns to face the goal: " + s.robot().headingDeg + "\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> Math.abs(s.robot().headingDeg - 90) < 3, 6));
+            assertTrue("then the shot goes\n" + String.join("\n", s.screen()), SimRun.waitFor(() -> s.robot().shots() > before, 5));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Alliance : RED (its goal only)"));
+            // Between shots the screen says the wheel is Ready (the aim turns on only at RB).
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Ready : YES (RB turns to the goal"), 5));
+            // Hold RT: it keeps shooting, aiming before each shot.
+            int afterOne = s.robot().shots();
+            s.g1().right_trigger = 1;
+            assertTrue("hold RT: two more shots\n" + String.join("\n", s.screen()), SimRun.waitFor(() -> s.robot().shots() >= afterOne + 2, 10));
+            s.g1().right_trigger = 0;
+            assertEquals("", s.error());
+        }
+    }
+
     // ----------------------------- the goBILDA starter bot, rewritten -----------------------------
 
     @Test public void goBildaBotMatchesTheMeasuredRobotFile() throws Exception {
@@ -980,7 +1043,8 @@ public class SimFromRobotTest {
         Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
             s.init("TurretBot Shot Tuner");
-            assertTrue(String.join("\n", s.screen()), s.screenHas("Camera"));
+            // The robot's camera does its INIT work, as in TeleOp: the lighting test runs.
+            assertTrue(String.join("\n", s.screen()), s.screenHas("limelight lighting"));
             s.start();
             s.press(v -> s.g1().left_bumper = v);                     // flywheel on
             int before = s.robot().shots();
