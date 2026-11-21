@@ -309,6 +309,31 @@ public class StopOnShotTest {
         public static class Feeder { public static double power = 0.9, feedSec = 0.4; public static boolean stopOnShot = true; }
     }
 
+    public static class ShortEject {
+        public static class Drive { public static boolean calibrated = true; }
+        public static class Launcher { public static double speedRpm = 3000, ejectRpm = 600, ejectSec = 1, ejectFeedSec = 0.2; }
+        public static class Feeder { public static double power = 0.9, feedSec = 1.0; public static boolean stopOnShot = true; }
+    }
+
+    @Test public void ejectFeedSecStopsTheFeedWheelsEarly() {
+        PretendDevices d = new PretendDevices();
+        Bot r = started(d, ShortEject.class);
+        PretendMotor fly = d.motor("launcher");
+        r.launcher.eject();
+        for (int i = 0; i < 10; i++) {                        // the wheel at the eject speed: it feeds
+            clock.addSec(0.005);
+            fly.velocity = fly.velocityCommand;
+            r.all().update();
+        }
+        assertEquals("feeding the piece out", 0.9, d.crServo("feeder_left").power, 1e-9);
+        for (int i = 0; i < 40; i++) {                        // 0.2 s more
+            clock.addSec(0.005);
+            fly.velocity = fly.velocityCommand;
+            r.all().update();
+        }
+        assertEquals("after ejectFeedSec: stopped (feedSec is 1 s)", 0, d.crServo("feeder_left").power, 1e-9);
+    }
+
     @Test public void wobbleInsideTheReadyBandIsNotAShot() {
         PretendDevices d = new PretendDevices();
         Bot r = started(d, Wobble.class);

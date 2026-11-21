@@ -2,6 +2,37 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.46.0 - 2026-11-20
+
+### Added
+
+- Aim into the opening: `Tunables.Aim.angleAim` (on at ▶) and `goalFrontIn` (inches), and
+  `robot.aim().angleAimMode()` for a button. The aim points `goalFrontIn` in front of the goal's tags, the way
+  they face, not at the tags. Why: BIOBUZZ's CELL opening is about 3 in in front of the tags under it. Straight
+  on that changes nothing, but from an angle the opening is off to one side, and shots aimed at the tags went
+  toward its back edge (up close, at 45 degrees, they just went in; at 60 degrees they missed). With
+  `goalFrontIn = 3`: about 4 degrees at 32 in and 45 degrees, toward the front. The distance for the speed stays
+  the tags'. The correction is the middle of the last 5 pictures (a tag's facing is noisy), and TeleOp shows it
+  (`Angle aim: +3.9 deg toward the opening`, or why it does nothing). Webcam only (and the simulator's). Page:
+  docs/reference/parts/aim.md#aim-into-the-opening.
+- `Tunables.Launcher.distanceSmoothSec` (seconds, 0 = off, the default): with the speed from the camera's distance
+  (`speedFromDistance`), the speed eases into each new camera distance. Why: the camera's distance wobbles a little
+  from picture to picture. On a steep part of a shot table (70 RPM an inch on one robot), each wobble changed the
+  speed by more than half the ready band, so "ready" started again and firing waited. The odometry's distance is
+  used at once. With no goal in view the last speed is held, and a new sighting after 0.5 s comes in at once.
+  `launcher.distanceIn()` (and the screen's `Shot distance`) is the distance the speed uses. The cost: on the move,
+  the speed lags a little. Page: docs/reference/parts/launcher.md.
+- `Tunables.Launcher.lockSpeedWhileFiring` (false by default): with the speed from the distance, a shot that waits
+  for "ready" (a tap: CAREFUL) keeps its speed, and `distanceIn()` shows the distance it uses. A held stream
+  (QUICK) and SPRAY keep following the distance, and so does a shot whose robot moved more than 4 in (its old speed
+  would miss). Why: the camera's distance kept moving the speed of a shot that
+  was waiting for it.
+  Page: docs/reference/parts/launcher.md.
+- `Tunables.Launcher.ejectFeedSec` (0 = `feedSec`, as before): an eject with a spinning feeder (CR servo or motor)
+  runs the feeder only this long, counted from when it really starts feeding. Why: a feed time long enough for a far piece also pushed the next piece out.
+- `TargetObservation.facingDeg` (which way the target's face points along the floor, in the camera's frame like the bearing) and
+  `withBearing(deg)`; `WebcamTags.facingDeg(...)` works it out from the SDK's raw pose.
+
 ## v0.45.0 - 2026-11-20
 
 ### Added

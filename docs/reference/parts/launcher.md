@@ -101,6 +101,7 @@ public static class Launcher {                                  // "launcher" in
 | `distanceMedianOf` | with the speed from the camera's distance: the launcher uses the middle of this many pictures, so one or two bad pictures never change the speed ([DistanceFilter](../../modules/vision.md#distancefilter)); 1 = off | pictures, 1-15 | 5 | no | none | the speed follows the distance too slowly (lower), or glitches still get through (higher) |
 | `distanceJumpIn` | a distance change bigger than this needs 3 pictures that agree before the launcher uses it (except after the goal was out of view for 0.5 s); 0 = no jump check | inches | 12 | no | none | real moves are held back (higher), or glitch runs get through (lower) |
 | `distanceJumpAgreeIn` | for the jump check: how close each of the 3 pictures must be to the one before | inches | 4 | no | none | a real jump is never used: the camera's numbers jump about more (higher) |
+| `distanceSmoothSec` | with the speed from the camera's distance: the speed eases into each new camera distance over about this time (the odometry's is used at once), so small moves of the camera's distance do not restart "ready". The cost: while the robot drives toward or away from the goal, the speed lags (at 10 in/s and 0.3 s, about 3 in behind) | seconds, 0-3 | 0 (off) | no | test | firing waits while the camera's distance wobbles (0.2 to 0.3), or shots fired on the move land long or short (less) |
 | `feedStopHold` | with `.feedStop(...)`: the servo position that holds the pieces back | servo position 0-1 | 0 (a guess, INIT says so) | no | Feed Stop Finder | after the Feed Stop Finder |
 | `feedStopRelease` | with `.feedStop(...)`: the servo position that lets a piece through | servo position 0-1 | 0.5 (a guess) | no | Feed Stop Finder | the same |
 | `feedStopMoveSec` | with `.feedStop(...)`: how long it takes to open; the indexer and the pushing parts wait this long | seconds | 0.1 | no | Feed Stop Finder (with the servo's part) | a slow servo is still part-closed when the piece comes (more) |
@@ -108,13 +109,19 @@ public static class Launcher {                                  // "launcher" in
 | `assistSec` | with `.pushedBy(...)`: how long the parts push each piece in, at most (less when the wheel sees the shot) | seconds | 0.25 | no | test | pieces do not reach the wheel (more) |
 | `ejectRpm` | `ejectAction()`: the low speed that pushes one piece out | RPM | 600 | no | test | the piece does not clear the robot (more) or flies too far (less) |
 | `ejectSec` | `ejectAction()`: how long the eject lasts | seconds | 1 | no | test | the piece is still in the robot at the end (more) |
+| `ejectFeedSec` | `ejectAction()` with a spinning feeder (CR servo or motor): it runs only this long, so it pushes one piece and not the next one too; 0 = its own `feedSec` | seconds | 0 | no | test | two pieces come out (less), or none does (more) |
+| `lockSpeedWhileFiring` | with the speed from the distance: while a tapped shot (CAREFUL) waits for "ready" and feeds, its speed stays fixed. The camera's distance can still move then, but it does not move that shot's speed or restart "ready"; `Shot distance` shows the distance the shot uses. It lets go if the distance moves more than 4 in (the robot drove: the old speed would miss). A held stream (QUICK) and SPRAY keep following the distance | true/false | false | no | none | firing waits, or a shot's speed changes while it waits (true) |
 
 **The shot table** (`speedByDistance`):
 
 - Rows are `{inches, rpm}`. The launcher blends the speed between rows. With no goal in view, it keeps the
   last speed.
 - The camera's distance goes through a [glitch filter](../../modules/vision.md#distancefilter) first:
-  `distanceMedianOf`, `distanceJumpIn`, `distanceJumpAgreeIn`.
+  `distanceMedianOf`, `distanceJumpIn`, `distanceJumpAgreeIn`. With `distanceSmoothSec` (off by default), the
+  speed then eases into each new camera distance. Why: on a steep part of the table, a 1 in wobble of the camera's
+  distance changes the speed by more than half the ready band, and "ready" starts again. Eased, the speed moves in
+  small steps the wheel follows, so it stays ready. With no goal in view it holds the last speed; a new sighting
+  after 0.5 s comes in at once.
 - One table per game piece: `speedByDistancePollen`, `speedByDistanceNectar`. Any name after
   `speedByDistance` works.
 - With a [hood](hood.md), a row is `{inches, rpm, hood}`. The launcher blends the hood between rows like the

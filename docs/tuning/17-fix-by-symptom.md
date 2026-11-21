@@ -43,6 +43,7 @@ When the last column names a finder, run that finder again: a guess is worse tha
 | The flywheel suddenly speeds up now and then | [`kD`](../reference/parts/launcher.md#in-tunablesjava) | 0 (the Flywheel Finder's line has `kD = 0`: copy each number to its own name) |
 | In the Flywheel Finder, the wheel stops when a piece touches it | the direction | `Direction` must say "as in Robot.java"; else press X ([why](06-flywheel-finder.md#steps)) |
 | It waits too long before it fires | [`readyBandRpm`](../reference/parts/launcher.md#in-tunablesjava) | more |
+| With the speed from the camera, it waits to fire and the `Shot distance` line wobbles | [`distanceSmoothSec`](../reference/parts/launcher.md#in-tunablesjava) | more (and check the shot table for a steep part) |
 | Shots land at different distances | [`readyBandRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
 | The second of two quick shots lands short | [`shotIntervalSec`](../reference/parts/launcher.md#in-tunablesjava) | more |
 | The first shot takes too long to spin up | [`idleRpm`](../reference/parts/launcher.md#in-tunablesjava) | more (uses more battery) |
@@ -54,6 +55,8 @@ When the last column names a finder, run that finder again: a guess is worse tha
 | It feeds the near pieces but not the ones far back | [`feedSec`](07-feed-time-finder.md) | the Feed Time Finder's number |
 | The Flywheel Finder's "Shots seen" is less than the pieces fed | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
 | With `stopOnShot`, the wheels still run the full `feedSec` after a shot | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
+| An eject pushes out two pieces | [`ejectFeedSec`](../reference/parts/launcher.md#in-tunablesjava) | set it, then less |
+| With the speed from the camera, a shot waits while its speed keeps changing | [`lockSpeedWhileFiring`](../reference/parts/launcher.md#in-tunablesjava) | true |
 | With `stopOnShot`, the wheels stop before the piece gets to the flywheel | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | more |
 | A pusher comes back before the piece is gone | [`pushSec`](../reference/parts/indexer.md#in-tunablesjava) | more |
 | **Aiming** | - | - |

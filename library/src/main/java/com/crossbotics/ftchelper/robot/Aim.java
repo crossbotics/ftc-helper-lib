@@ -120,6 +120,17 @@ public final class Aim {
     private final double maxGoalDistanceIn, agreeIn;
     // Live numbers (in the tuning menu when the section exists).
     private final DoubleSupplier turnKp, turnKd, maxTurnPower, minTurnPower, toleranceDeg, cameraOffset, rumbleDeg;
+    // The angle aim: aim goalFrontIn inches in front of the tags (where the face points), on or off.
+    private final Mode angleAim;
+    private final DoubleSupplier goalFrontIn;
+    // The angle aim's correction (degrees) from the last few pictures, and when each was taken: the middle one is
+    // used, because a tag's facing is the noisiest part of its pose (one odd picture must not swing the aim).
+    private final double[] openingTurn = new double[5];
+    private final long[] openingTurnAt = new long[5];
+    private int openingTurns = 0, openingNext = 0;
+    private long lastOpeningPicture = Long.MIN_VALUE;
+    private double lastOpeningDeg = Double.NaN;   // the correction used last (NaN: none), for the screen
+    private long lastOpeningAt = 0;
     // While whole-robot aim is on: the share of the driver's forward and strafe (the aim keeps up).
     private final DoubleSupplier aimDriveSpeed;
     // The turn controller, made again if kP or kD is tuned.
@@ -167,6 +178,8 @@ public final class Aim {
         toleranceDeg = live(t, "toleranceDeg", 2, 0.5);
         aimDriveSpeed = live(t, "aimDriveSpeed", 0.5, 0.05);
         cameraOffset = live(t, "cameraOffset", 0, 0.5);
+        angleAim = new Mode("Aim into the opening", t.has("angleAim") && t.flag("angleAim", false));
+        goalFrontIn = live(t, "goalFrontIn", 0, 0.5);
         rumbleDeg = live(t, "rumbleDeg", 4, 0.5);
         movingShot = new Mode("Shoot on the move", t.has("shootOnMove") && t.flag("shootOnMove", false));
         flightSec = live(t, "flightSec", 0, 0.05);
@@ -236,7 +249,59 @@ public final class Aim {
         if (camera == null) return null;
         TargetObservation g = camera.goal();
         if (g == null || !g.hasBearing() || !g.isFresh(clock.getAsLong(), cameraMaxAgeMs)) return null;
-        return moving(g, camera);
+        TargetObservation opening = intoOpening(g);
+        if (opening == g) return moving(g, camera);
+        // The angle aim: the direction from the opening, the distance from the tags (the shot table's), each
+        // brought forward and led on its own while shooting on the move. The opening's last, so lead() is the aim's.
+        TargetObservation tags = moving(g, camera);
+        TargetObservation aimed = moving(opening, camera);
+        return new TargetObservation(aimed.id, aimed.name, aimed.bearingDeg, tags.distanceIn, aimed.timeNanos,
+                aimed.rollDeg, aimed.facingDeg);
+    }
+
+    // The angle aim: the point goalFrontIn inches in front of the target, the way its face points, along
+    // the floor. Straight on, that point is behind the same line: no change. From an angle it is off to
+    // the side of the front, so the aim turns that way. The distance stays the target's (the shot table
+    // was made with it). Off, no face direction, or no distance: the target as it is.
+    TargetObservation intoOpening(TargetObservation g) {
+        double front = goalFrontIn.getAsDouble();
+        if (!angleAim.isOn() || front == 0 || !g.hasDistance() || Double.isNaN(g.facingDeg)) return g;
+        double b = Math.toRadians(g.bearingDeg), f = Math.toRadians(g.facingDeg);
+        double forward = g.distanceIn * Math.cos(b) + front * Math.cos(f);
+        double left = g.distanceIn * Math.sin(b) + front * Math.sin(f);
+        double turn = Angles.wrapDegrees(Math.toDegrees(Math.atan2(left, forward)) - g.bearingDeg);
+        // Each picture once (goal() is asked many times a loop), then the middle of the fresh ones.
+        long now = clock.getAsLong();
+        if (g.timeNanos != lastOpeningPicture) {
+            lastOpeningPicture = g.timeNanos;
+            openingTurn[openingNext] = turn;
+            openingTurnAt[openingNext] = now;
+            openingNext = (openingNext + 1) % openingTurn.length;
+            openingTurns = Math.min(openingTurns + 1, openingTurn.length);
+        }
+        java.util.List<Double> fresh = new java.util.ArrayList<>();
+        for (int i = 0; i < openingTurns; i++) {
+            if ((now - openingTurnAt[i]) / 1e9 <= 0.5) fresh.add(openingTurn[i]);
+        }
+        java.util.Collections.sort(fresh);
+        double used = fresh.isEmpty() ? turn : fresh.get(fresh.size() / 2);
+        lastOpeningDeg = used;
+        lastOpeningAt = now;
+        return g.withBearing(g.bearingDeg + used);
+    }
+
+    /**
+     * The angle aim: while it is on, the aim (whole robot or turret) points {@code Tunables.Aim.goalFrontIn}
+     * inches in front of the goal's tags, the way they face, not at the tags. Why: a goal's opening can sit
+     * in front of its tags (BIOBUZZ: the CELL's opening is about 3 in in front of the tags under it). Straight
+     * on, nothing changes. From an angle, the opening is off to one side of the tags, so the aim turns toward
+     * the front by a few degrees (more up close). The distance for the speed stays the tags'. On from START
+     * when {@code Tunables.Aim.angleAim = true}. A button can switch it:
+     * {@code g1.a.toggle(robot.aim().angleAimMode())}. Needs a camera that knows which way the tags face
+     * (a webcam; the simulator's too); with a Limelight it does nothing.
+     */
+    public Mode angleAimMode() {
+        return angleAim;
     }
 
     /**
@@ -760,6 +825,18 @@ public final class Aim {
         }
         // Seen, in range, locked: always, on a robot that can aim (the drivers see it before they shoot).
         if (canAim()) t.line("Goal", stageLine());
+        // The angle aim: how much it turns the aim now, or why it does nothing (so a camera that cannot tell
+        // which way the tags face is seen, not guessed).
+        if (angleAim.isOn()) {
+            TargetObservation seen = aimingCamera() == null ? null : aimingCamera().goal();
+            boolean fresh = (clock.getAsLong() - lastOpeningAt) / 1e9 <= 0.5;
+            String words = seen == null ? "no goal in view"
+                    : Double.isNaN(seen.facingDeg) ? "no face direction from this camera: aiming at the tags"
+                    : goalFrontIn.getAsDouble() == 0 ? "goalFrontIn is 0: aiming at the tags"
+                    : fresh && !Double.isNaN(lastOpeningDeg) ? Module.fmt("%+.1f deg toward the opening", lastOpeningDeg)
+                    : "waiting for a picture";
+            t.line("Angle aim", words);
+        }
         if (mode.refusedLately()) t.warn("Aim mode not on: " + mode.whyRefused() + " (press again with the goal in view)");
         if (!mode.isOn()) return;
         if (driverTurning) {

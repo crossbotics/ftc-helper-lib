@@ -59,7 +59,10 @@ import java.util.List;
  * The camera's distance goes through a glitch filter first ({@link com.crossbotics.ftchelper.vision.DistanceFilter}:
  * the middle of the last 5 pictures, and a jump over 12 in needs 3 pictures that agree), so one bad
  * picture never changes the speed. Tunables {@code distanceMedianOf}, {@code distanceJumpIn},
- * {@code distanceJumpAgreeIn}.
+ * {@code distanceJumpAgreeIn}. With {@code distanceSmoothSec} (seconds; 0 = off, the default), the speed then eases
+ * into each new camera distance, so the small moves of the camera's distance do not restart "ready". With
+ * {@code lockSpeedWhileFiring = true}, the speed stays fixed while a shot waits or feeds (the camera's distance
+ * can still move then, but not that shot's speed).
  *
  * <p><b>Several shot tables</b>, one per game piece (they fly differently): every
  * {@code speedByDistance...} table in the section is one, named by the rest of its name.
@@ -116,6 +119,17 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     // The last distance to the goal (inches; NaN = none yet) and where it came from.
     private double lastDistance = Double.NaN;
     private Aim.Source distanceSource = Aim.Source.NONE;
+    // The distance the speed uses: lastDistance eased in over distanceSmoothSec (NaN = none yet), and when
+    // it was last eased (Aim.clock nanos). Why: the camera's distance moves a little from picture to picture,
+    // and on a steep part of the table each small move changed the speed and restarted "ready".
+    private double smoothDistance = Double.NaN;
+    private long smoothAtNanos = 0;
+    // The distance the speed was last set from (what the shot uses; NaN = none yet). With the lock it can lag
+    // the camera's distance while a shot waits.
+    private double appliedDistance = Double.NaN;
+    private double distanceSmoothSec = 0;
+    // Tunables lockSpeedWhileFiring: keep the speed from the distance fixed while a shot waits or feeds.
+    private boolean lockSpeedWhileFiring = false;
     private final Mode speedMode = new Mode("Speed from distance", false);
     private final List<String> checkNames = new java.util.ArrayList<>();
     private final List<java.util.function.BooleanSupplier> checks = new java.util.ArrayList<>();
@@ -206,6 +220,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     static final double EJECT_SLOW_SEC = 3;
     private boolean spinningBeforeEject = false;
     private double ejectRpm = 600, ejectSec = 1;
+    // Tunables ejectFeedSec: a spinning feeder (CR servo or motor) runs only this long for an eject, so it
+    // pushes one piece, not the next one too. 0 = its own feedSec.
+    private double ejectFeedSec = 0;
+    private double ejectFeedEndsAt = Double.NaN;
+    private boolean ejectFeedDone = false;
     // The distance to use before any goal was seen (Tunables fallbackDistanceIn); NaN = none.
     private double fallbackDistanceIn = Double.NaN;
     // Keeps camera glitches out of the distance (the middle of the last pictures, and the jump check).
@@ -784,8 +803,13 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         distanceFilter = new com.crossbotics.ftchelper.vision.DistanceFilter(medianOf,
                 t.has("distanceJumpIn") ? t.number("distanceJumpIn", 12) : 12,
                 t.has("distanceJumpAgreeIn") ? t.number("distanceJumpAgreeIn", 4) : 4);
+        lockSpeedWhileFiring = t.has("lockSpeedWhileFiring") && t.flag("lockSpeedWhileFiring", false);
+        // Eases the speed into a new distance over this many seconds (0 = at once): see smoothed().
+        distanceSmoothSec = t.has("distanceSmoothSec") ? Math.abs(t.number("distanceSmoothSec", 0)) : 0;
+        if (distanceSmoothSec > 3) throw new IllegalStateException("Tunables." + name() + ".distanceSmoothSec = " + distanceSmoothSec + ": use 0 (off) to 3 seconds");
         ejectRpm = t.has("ejectRpm") ? Math.abs(t.number("ejectRpm", 600)) : 600;
         ejectSec = t.has("ejectSec") ? Math.abs(t.number("ejectSec", 1)) : 1;
+        ejectFeedSec = t.has("ejectFeedSec") ? Math.abs(t.number("ejectFeedSec", 0)) : 0;
         // The hood (built before this module): the launcher sends it the table's angle and waits for it.
         // The hood moves for changes over 1/100 of its range (0.25 deg for 25 deg), so camera jitter
         // does not keep it "moving" (degrees, servo positions or ticks alike).
@@ -1145,7 +1169,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      * A ready-made action: one piece out through the launcher at a low speed ({@code ejectRpm}, 600, for
      * {@code ejectSec}, 1 s), e.g. a wrong-colour piece. It feeds once the wheel is near the eject speed
      * (half to one and a half times it: a wheel at shooting speed slows down first, up to 3 s), then the
-     * wheel goes back to what it did before. "Eject" in the auto
+     * wheel goes back to what it did before. A spinning feeder (CR servo or motor) runs its {@code feedSec}, or
+     * {@code ejectFeedSec} when that is set (shorter: one piece, not the next one too). "Eject" in the auto
      * builder's Action list; TeleOp: {@code g2.b.press(robot.launcher.ejectAction())}.
      */
     public Action ejectAction() {
@@ -1161,6 +1186,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         if (!ejecting) spinningBeforeEject = spinning;
         ejecting = true;
         ejectFed = false;
+        ejectFeedEndsAt = Double.NaN;
+        ejectFeedDone = false;
         ejectGiveUpAt = clock.getAsLong() / 1e9 + EJECT_SLOW_SEC;
         spinning = true;
         part.stopShooting();
@@ -1621,9 +1648,56 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return speedRpm == null ? Double.NaN : speedRpm.get();
     }
 
-    /** The distance to the goal last used for the speed (inches), NaN if none yet. */
+    /**
+     * The distance to the goal the speed uses now (inches), NaN if none yet. The camera's distance is eased in
+     * over {@code Tunables.Launcher.distanceSmoothSec} (0 = off, the default); the odometry's is used as it is.
+     * With {@code lockSpeedWhileFiring}, a waiting shot keeps the distance it had.
+     */
     public double distanceIn() {
-        return lastDistance;
+        if (!Double.isNaN(appliedDistance)) return appliedDistance;
+        return Double.isNaN(smoothDistance) ? lastDistance : smoothDistance;
+    }
+
+    // Sets the speed (and a table's hood angle) from this distance, and remembers it as the one in use.
+    private void applyDistance(double d) {
+        appliedDistance = d;
+        part.setDistance(d);
+    }
+
+    // lockSpeedWhileFiring: a CAREFUL shot waits for "ready" or feeds (not a QUICK hold or SPRAY stream: those
+    // keep following the distance between pieces, and SPRAY does not wait for the speed). A robot that moved
+    // more than LOCK_RELEASE_IN since the shot's distance is not held to it: the old speed would miss.
+    private boolean speedLocked(double distanceNow) {
+        if (!lockSpeedWhileFiring || modeNow != ShotMode.CAREFUL) return false;
+        if (part.getShotsLeft() == 0 && !part.isShooting()) return false;
+        return Double.isNaN(appliedDistance) || Math.abs(distanceNow - appliedDistance) <= LOCK_RELEASE_IN;
+    }
+
+    /** lockSpeedWhileFiring lets go when the distance moved more than this since the shot's (inches). */
+    static final double LOCK_RELEASE_IN = 4;
+
+    // Eases the distance the speed uses toward the newest one: each loop it closes the part of the gap that
+    // dt / distanceSmoothSec says (an exponential, like a slow needle on a gauge). The first distance, one
+    // after a gap of 0.5 s, or any with distanceSmoothSec 0 is used at once. Small steps keep the flywheel "ready": it never sees a jump.
+    private double smoothed(double newest) {
+        long now = Aim.clock.getAsLong();
+        // No distance for a while (the goal out of view, like the glitch filter's 0.5 s): start over, at once.
+        boolean gap = (now - smoothAtNanos) / 1e9 > 0.5;
+        if (Double.isNaN(smoothDistance) || distanceSmoothSec <= 0 || gap) {
+            smoothDistance = newest;
+        } else {
+            double dt = Math.max(0, (now - smoothAtNanos) / 1e9);
+            smoothDistance += (newest - smoothDistance) * (1 - Math.exp(-dt / distanceSmoothSec));
+        }
+        smoothAtNanos = now;
+        return smoothDistance;
+    }
+
+    // A distance used as it is (the odometry's, or the fallback): the next camera distance eases from here.
+    private double atOnce(double d) {
+        smoothDistance = d;
+        smoothAtNanos = Aim.clock.getAsLong();
+        return d;
     }
 
     /** Where that distance came from last loop: CAMERA, ODOMETRY or NONE (keeps the last speed). */
@@ -1636,9 +1710,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         tableName = key;
         tableProblem = "";
         part.table(tables.get(key));
-        if (!Double.isNaN(lastDistance) && speedMode.isOn()) {
+        // A shot waiting with the speed locked: the new table's speed comes once it is gone (next update).
+        double d = Double.isNaN(smoothDistance) ? lastDistance : smoothDistance;
+        if (!Double.isNaN(d) && speedMode.isOn() && !speedLocked(d)) {
             if (hood != null) part.hoodOffset(hood.trim());
-            part.setDistance(lastDistance);
+            applyDistance(d);
         }
     }
 
@@ -1695,11 +1771,23 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                     part.shoot(1);
                     ejectFed = true;
                     ejectUntil = now + ejectSec;
+                    ejectFeedEndsAt = Double.NaN;   // set when the feeder really starts (after a gate or a feed wheel)
                 } else if (now >= ejectGiveUpAt) {
                     endEject();
                 }
-            } else if (now >= ejectUntil && !part.isShooting()) {
-                endEject();   // the piece's feed has finished (a feed stop closed) and the time is up
+            } else {
+                // ejectFeedSec: stop the spinning feeder early, so the next piece stays in. The time counts from
+                // when it really starts feeding. ejectFeedDone: once per eject.
+                if (ejectFeedSec > 0 && indexer != null && indexer.spins() && !ejectFeedDone) {
+                    if (Double.isNaN(ejectFeedEndsAt) && indexer.isFeeding()) ejectFeedEndsAt = now + ejectFeedSec;
+                    if (!Double.isNaN(ejectFeedEndsAt) && now >= ejectFeedEndsAt) {
+                        indexer.endFeedOnShot();
+                        ejectFeedDone = true;
+                    }
+                }
+                if (now >= ejectUntil && !part.isShooting()) {
+                    endEject();   // the piece's feed has finished (a feed stop closed) and the time is up
+                }
             }
             part.update();
             return;
@@ -1742,7 +1830,15 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             if (!Double.isNaN(lastDistance)) {
                 // The hood trim is added to the table's angle (setDistance moves the hood).
                 if (hood != null) part.hoodOffset(hood.trim());
-                part.setDistance(lastDistance);
+                // The camera's distance is eased in (it wobbles); the odometry's is smooth already: at once.
+                // No goal now: hold the distance the speed used, and leave its time alone, so the next camera
+                // distance after 0.5 s comes in at once (the robot may have moved far meanwhile).
+                double use = distanceSource == Aim.Source.CAMERA ? smoothed(lastDistance)
+                        : distanceSource == Aim.Source.ODOMETRY || Double.isNaN(smoothDistance) ? atOnce(lastDistance)
+                        : smoothDistance;
+                // lockSpeedWhileFiring: while a shot waits or feeds, keep its speed (the distance keeps
+                // easing in the background and is used again once the shot is gone).
+                if (!speedLocked(use)) applyDistance(use);
                 if (hoodTable) hood.afterTable();
             }
         } else {
@@ -1861,8 +1957,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         // While it fires: how strict it is, and why ("Fire: QUICK (12 s left)").
         if (part.isShooting()) t.line("Fire", modeNow + (modeWhy.isEmpty() ? "" : " (" + modeWhy + ")"));
         // The distance and where it came from, e.g. "48 in (camera)"; "(last seen)" while no goal is seen.
-        String where = !speedMode.isOn() || tableName == null ? "" : Double.isNaN(lastDistance) ? "no goal yet"
-                : fmt("%.0f in (%s)", lastDistance, distanceSource == Aim.Source.NONE ? "last seen" : distanceSource.words());
+        String where = !speedMode.isOn() || tableName == null ? "" : Double.isNaN(distanceIn()) ? "no goal yet"
+                : fmt("%.0f in (%s)", distanceIn(), distanceSource == Aim.Source.NONE ? "last seen" : distanceSource.words());
         if (tables.size() > 1) {
             t.line("Shot table", tableName.toUpperCase(java.util.Locale.US) + (where.isEmpty() ? "" : ", " + where));
         } else if (!where.isEmpty()) {

@@ -234,6 +234,23 @@ public static double shooterLeftIn = 0;      // the turret's pivot: inches left 
 
 Every setting, a camera on the body, longer flights: [Shooting on the move](../reference/parts/aim.md#shooting-on-the-move).
 
+### Aim into the opening
+
+Some goals have their opening in front of their tags (BIOBUZZ: about 3 in in front of the tags under the CELL).
+From an angle, a shot aimed at the tags goes toward the back edge of the opening, and up close it can miss.
+Turn on the angle aim, and the robot aims at the opening instead:
+
+```java title="Tunables.java"
+public static class Aim {
+    public static boolean angleAim = true;     // aim into the opening, not at the tags
+    public static double goalFrontIn = 3;      // the opening is 3 in in front of the tags (BIOBUZZ)
+}
+```
+
+Straight on, nothing changes. From an angle, the aim turns a few degrees toward the front of the goal. Put it on
+a button to compare shots with it on and off: `g1.a.toggle(robot.aim().angleAimMode());`. It needs a webcam
+([Aim into the opening](../reference/parts/aim.md#aim-into-the-opening)).
+
 ### Try it in the simulator
 
 The turret robot has a camera on a turret, and a shot table for each piece. Make its simulator file from

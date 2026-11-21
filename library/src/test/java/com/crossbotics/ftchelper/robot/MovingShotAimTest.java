@@ -76,6 +76,21 @@ public class MovingShotAimTest {
         }
     }
 
+    // Moving, with the angle aim on (the opening 3 in in front of the tags).
+    public static class MovingAngle {
+        public static class Aim {
+            public static double goalX = -24, goalY = 48;
+            public static boolean shootOnMove = true;
+            public static double flightSec = 0.5;
+            public static double maxLeadIn = 30;
+            public static boolean angleAim = true;
+            public static double goalFrontIn = 3;
+        }
+        public static class Launcher {
+            public static double[][] speedByDistance = {{24, 2000}, {72, 3000}};
+        }
+    }
+
     // The same with shooting on the move left out (the default: off).
     public static class Still {
         public static class Aim {
@@ -259,6 +274,18 @@ public class MovingShotAimTest {
         cam.seen = seen(-Math.toDegrees(Math.atan2(15, 48)), Math.hypot(48, 15));   // pointing at the virtual goal
         assertTrue("aimed at the led goal", Math.abs(r.aim().errorDeg()) < 2);
         assertTrue(r.aim().isAimed());
+    }
+
+    @Test public void theAngleAimMovesTheDirectionButNotTheShotDistanceWhileMoving() {
+        Bot r = bot(MovingAngle.class);
+        place(r, -24, 0, 0);
+        r.tracker.moving(30, 0, 0);                           // strafing right: a 15 in lead
+        cam.seen = new TargetObservation(TargetObservation.CLUSTER, "BLUE SCORING", 0, 48, clock.get(), 0, 135);
+        TargetObservation on = r.aim().goal();
+        r.aim().angleAimMode().toggle();
+        TargetObservation off = r.aim().goal();
+        assertEquals("the distance: the tags' led distance either way", off.distanceIn, on.distanceIn, 1e-9);
+        assertTrue("the direction: turned toward the opening (left)", on.bearingDeg > off.bearingDeg + 1);
     }
 
     @Test public void anOldPictureIsBroughtForwardByTheTurn() {

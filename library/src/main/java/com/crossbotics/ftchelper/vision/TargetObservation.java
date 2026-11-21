@@ -56,6 +56,14 @@ public final class TargetObservation {
     public final long timeNanos;
     /** How far it is turned in the picture: 0 = right side up, +/-180 = upside down. NaN if unknown. */
     public final double rollDeg;
+    /**
+     * Which way the target's face points, along the floor, in the camera's frame (the same frame as
+     * {@link #bearingDeg}: for a camera on the robot's front, the robot's): degrees, counterclockwise +, turned to
+     * the camera's side. Straight on it is
+     * the bearing + 180. NaN if unknown (a camera that cannot tell, or a face that points straight down).
+     * {@link com.crossbotics.ftchelper.robot.Aim}'s angle aim uses it.
+     */
+    public final double facingDeg;
 
     /**
      * Makes one observation. The camera classes call this for you.
@@ -77,12 +85,35 @@ public final class TargetObservation {
      *                down (NaN if unknown)
      */
     public TargetObservation(int id, String name, double bearingDeg, double distanceIn, long timeNanos, double rollDeg) {
+        this(id, name, bearingDeg, distanceIn, timeNanos, rollDeg, Double.NaN);
+    }
+
+    /**
+     * Makes one observation with the tag's turn in the picture and which way its face points. The camera
+     * classes call this for you.
+     *
+     * @param facingDeg which way the face points along the floor, robot frame, degrees, + = counterclockwise
+     *                  (NaN if unknown); see {@link #facingDeg}
+     */
+    public TargetObservation(int id, String name, double bearingDeg, double distanceIn, long timeNanos, double rollDeg,
+                             double facingDeg) {
         this.id = id;
         this.name = name;
         this.bearingDeg = bearingDeg;
         this.distanceIn = distanceIn;
         this.timeNanos = timeNanos;
         this.rollDeg = rollDeg;
+        this.facingDeg = facingDeg;
+    }
+
+    /**
+     * The same observation with another bearing (everything else kept). For code that moves the aim point.
+     *
+     * @param newBearingDeg degrees, positive = LEFT
+     * @return a new observation
+     */
+    public TargetObservation withBearing(double newBearingDeg) {
+        return new TargetObservation(id, name, newBearingDeg, distanceIn, timeNanos, rollDeg, facingDeg);
     }
 
     /**
