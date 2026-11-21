@@ -275,6 +275,7 @@ under the CELL, and the CELL's opening is about 3 in in front of them (from the 
 | `mode()` (= `robot.aimMode()`) | whole-robot aim. It stops with a message on a robot whose turret follows the goal |
 | `movingShotMode()` | shooting on the move on/off. It is on from ▶ with `shootOnMove = true` |
 | `angleAimMode()` | [aim into the opening](#aim-into-the-opening) on/off. It is on from ▶ with `angleAim = true` |
+| `turnFor(driverTurn)` | TeleOp's turn for an OpMode with its own drive (the Shot Tuner): `driving.turnAssist(robot.aim()::turnFor)`. While `mode()` is on it turns to the goal; the stick still wins |
 
 | Question | What it tells you |
 | --- | --- |
@@ -284,6 +285,8 @@ under the CELL, and the CELL's opening is about 3 in in front of them (from the 
 | `disagreement()` | the camera/odometry distance warning, "" if they agree |
 | `hasGoalPoint()` | whether `Tunables.Aim` has `goalX` and `goalY` |
 | `canAim()` | whether the robot can find the goal at all (a camera with a goal, or the odometry backup) |
+| `camera()` | the [Camera](camera.md) that aims the robot (the first with `goal(...)`), or null |
+| `turretAims()` | whether a turret follows the goal (then `mode()` cannot be used) |
 | `stage()` | NOT_SEEN, SEEN, IN_RANGE or LOCKED now (`Stage.words()`: "not seen" ... "LOCKED") |
 | `aimsOnFire()`, `isTurningToFire()` | whether quick turn on fire is set (`aimOnFire`); whether a fire press is turning the robot now |
 | `errorDeg()` | degrees off now (NaN = unknown). While shooting on the move: off the virtual goal |

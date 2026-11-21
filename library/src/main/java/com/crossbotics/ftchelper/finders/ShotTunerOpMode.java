@@ -42,15 +42,25 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  * ({@code speedByDistancePollen}, {@code speedByDistanceNectar}), choose the one you are tuning (Y until
  * "> Table", then the D-pad): each keeps its own points and gets its own line to copy.
  *
+ * <p><b>Like a match.</b> With your robot in five files and a camera with {@code goal(...)} in Robot.java, the
+ * tuner sees the goal the way TeleOp and the autos do: the same camera, its lighting test in INIT (as in a
+ * match), the alliance you choose in INIT (only its goal counts), and the goal's distance as the launcher
+ * reads it. RB turns the whole robot to the goal with TeleOp's aim ({@code Tunables.Aim}: toleranceDeg,
+ * the saved cameraOffset, the angle aim if on) and shoots once it is aimed and Ready. Not aimed for
+ * {@link #AIM_TIMEOUT_SEC}, or the goal not in view: no shot, so the table is built only from aimed shots.
+ * (A robot whose turret follows the goal: the turret aims, the tuner shoots where it points.)
+ *
  * <pre>
+ * In INIT:  X = BLUE, B = RED (only that alliance's goal counts). The camera's lighting test runs.
  * Gamepad 1:
- *   Y              = what the D-pad changes: SPEED, HOOD (if any), DISTANCE (no camera, no odometry),
+ *   Y (tap)        = what the D-pad changes: SPEED, HOOD (if any), DISTANCE (no camera, no odometry),
  *                    TABLE (two or more tables)
  *   D-pad up/down  = big step (100 RPM / a fifth of the hood's range, 5 deg for 25 / 6 in),
  *                    right/left = small step (10 RPM / a fiftieth of the hood's range, 0.5 deg / 1 in)
  *                    (TABLE: left/right = the other table)
  *   LB             = flywheel on/off (off at START; off also stops shooting)
- *   RB             = shoot one         hold RT = keep shooting (let go to stop)
+ *   RB             = shoot one (a robot that aims turns to the goal first)   hold RT = keep shooting (let go to stop)
+ *   hold Y 0.5 s   = the camera's lighting test again (aim the camera at a tag first)
  *   A              = the oldest shot not marked yet was a HIT          B = it was a MISS
  *   left stick click  = undo the last HIT / MISS (that shot waits to be marked again)
  *   right stick click = drop the last shot not marked (a "shot" that never was: the wheel dipped)
@@ -103,6 +113,12 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     /** The marked shots start again when the distance moves more than this from where they began (inches). */
     public static final double SPOT_MOVE_IN = ShotPoints.Trials.SPOT_MOVE_IN;
 
+    /** The longest RB waits for the robot to turn to the goal (seconds): then no shot, and a note says why. */
+    public static final double AIM_TIMEOUT_SEC = 2.0;
+
+    /** Hold Y this long to run the camera's lighting test again (seconds). A shorter press: the next field. */
+    public static final double RELIGHT_HOLD_SEC = 0.5;
+
     /** Hold BACK this long to delete the saved point here (seconds). */
     public static final double DELETE_HOLD_SEC = 1.0;
 
@@ -146,19 +162,37 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     }
 
     /**
-     * Your camera, or null to set the distance by hand. It is started for you. Default: the first
-     * camera of {@link #robot()}, or null.
+     * Your camera, or null to set the distance by hand. It is started for you. Default: the camera that
+     * aims in a match (the first with {@code goal(...)} in Robot.java), else the first camera of
+     * {@link #robot()}, or null.
      */
     protected TargetSource createCamera() {
         if (robotDef == null) return null;
+        // The camera that aims in a match (the first with goal(...)), else the first camera.
+        Camera aiming = robotDef.aim().camera();
+        if (aiming != null) return aiming.source();
         for (Module<?> m : robotDef.modules()) if (m instanceof Camera) return ((Camera) m).source();
         return null;
     }
 
-    /** Which target the distance is measured to. Default: the first one the camera sees with a distance. */
+    /**
+     * Which target the distance is measured to. Default: with a robot that aims the whole robot (a camera with
+     * {@code goal(...)} in Robot.java, no turret following the goal), the goal the aim uses in a match ({@code robot.aim()}: this alliance's goal only, fresh
+     * pictures, the tags' distance); otherwise the first target the camera sees with a distance.
+     */
     protected TargetObservation findTarget(TargetSource camera) {
+        if (matchGoal()) {
+            TargetObservation g = robotDef.aim().goal();
+            return g != null && !g.fromOdometry() ? g : null;
+        }
         for (TargetObservation o : camera.targets()) if (o.hasDistance()) return o;
         return null;
+    }
+
+    // True when the distance and the aim come from the robot's own goal camera (as in TeleOp and the autos).
+    // (Whole-robot aim only: a turret robot keeps the first target with a distance, as before.)
+    private boolean matchGoal() {
+        return aims && robotCamera != null && robotCamera.knowsGoal() && camera == robotCamera.source();
     }
 
     /** Your robot settings, to drive with the sticks. Default: the drive of {@link #robot()}, or null = no driving. */
@@ -215,6 +249,23 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     private enum Field { SPEED, HOOD, DISTANCE, TABLE }
 
     private RobotDefinition robotDef;   // the robot in five files, or null
+    // The robot's goal camera (Robot.java), or null: its lighting test runs in INIT, as in TeleOp.
+    private Camera robotCamera;
+    // True when RB turns the whole robot to the goal before each shot (Robot.java aims, no following turret).
+    private boolean aims = false;
+    // The alliance chosen in INIT ({X} blue, {B} red): only its goal counts. Last loop's X and B (edges).
+    private com.crossbotics.ftchelper.match.Alliance alliance = com.crossbotics.ftchelper.match.Alliance.BLUE;
+    private boolean xWasDown = true, bWasDown = true;
+    // A shot waiting for the aim (seconds since START it was asked; NaN = none), and START's first loop done.
+    private double aimingSince = Double.NaN;
+    private boolean shotFromRt = false;   // the waiting shot came from holding RT (let go: it is dropped)
+    private double shotAskedAt = Double.NaN;   // when the waiting shot was asked for (seconds)
+    /** The longest a shot waits in all (aimed but the flywheel not Ready, seconds): then it is dropped and says why. */
+    public static final double SHOT_WAIT_SEC = 4.0;
+    private boolean startedCamera = false;
+    // Hold Y: when it was pressed (NaN = up) and whether this hold already ran the lighting test.
+    private double ySince = Double.NaN;
+    private boolean yUsed = false;
     private Launcher launcher;
     private AngleDevice hood;
     // The robot's Hood module (five files), or null: its range sets the D-pad steps.
@@ -288,8 +339,21 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         hood = launcher.getHood();
         camera = createCamera();
         if (camera != null) camera.start();
+        // The match's camera and alliance: the robot's goal camera (its lighting test runs in INIT), and the
+        // alliance last chosen (BLUE if none; X / B in INIT change it), so only that alliance's goal counts.
+        if (robotDef != null) {
+            robotCamera = robotDef.aim().camera();
+            alliance = com.crossbotics.ftchelper.match.MatchMemory.allianceOr(com.crossbotics.ftchelper.match.Alliance.BLUE);
+            robotDef.setAlliance(alliance);
+            aims = robotCamera != null && camera == robotCamera.source() && !robotDef.aim().turretAims();
+        }
         RobotConfig config = robotConfig();
         if (config != null) driving = DriverControls.create(hardwareMap, config.drive(), null);
+        // RB turns the robot to the goal the way TeleOp does (cameraOffset, the angle aim); the stick still wins.
+        if (driving != null && aims) driving.turnAssist(robotDef.aim()::turnFor);
+        if (driving == null) aims = false;   // no drive: it cannot turn, so it shoots where it points
+        // The feed itself waits for the aim (as TeleOp's "aimed" check), so a queued piece never leaves unaimed.
+        if (aims) launcher.requireReady("aimed at the goal", this::aimedNow);
         others = createSubsystems();
         if (others == null) others = new Subsystems();
         com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
@@ -305,7 +369,6 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         if (robotDef != null && robotDef.odometry() != null && robotDef.aim().hasGoalPoint()) {
             odometry = robotDef.odometry();
             odometryDistance = true;
-            robotDef.setAlliance(com.crossbotics.ftchelper.match.MatchMemory.allianceOr(com.crossbotics.ftchelper.match.Alliance.BLUE));
             double[] spot = startSpotIn();
             odometry.setPose(new com.crossbotics.ftchelper.util.FieldPose(spot[0], spot[1], spot.length > 2 ? spot[2] : 0));
         }
@@ -331,7 +394,20 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     protected void showInit(RobotTelemetry t) {
         t.text("Shot tuner: builds the shot table (distance -> speed" + (hood != null ? ", hood" : "") + ").");
         t.warn("Nobody in the line of fire. Eye protection on.");
-        if (camera != null) t.line("Camera", camera.status());
+        if (robotDef != null) {
+            // X = BLUE, B = RED (a fresh press; not with START held: START + B pairs a gamepad).
+            boolean x = gamepad1.x && !gamepad1.start, b = gamepad1.b && !gamepad1.start;
+            if (x && !xWasDown) alliance = com.crossbotics.ftchelper.match.Alliance.BLUE;
+            if (b && !bWasDown) alliance = com.crossbotics.ftchelper.match.Alliance.RED;
+            xWasDown = x;
+            bWasDown = b;
+            robotDef.setAlliance(alliance);
+            t.line("Alliance", alliance + " ({X} blue / {B} red): only its goal counts");
+        }
+        // The robot's goal camera: TeleOp's INIT work (the lighting test runs now, as in a match).
+        if (robotCamera != null && camera == robotCamera.source()) robotCamera.checkInInit(t);
+        else if (camera != null) t.line("Camera", camera.status());
+        if (aims) t.text("{RB} turns the robot to the goal, then shoots (as TeleOp aims).");
         if (odometryDistance) {
             double[] spot = startSpotIn();
             t.line("Odometry", "put the robot at x " + FinderResults.num(spot[0], 0) + ", y " + FinderResults.num(spot[1], 0)
@@ -348,16 +424,19 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     @Override
     protected void bind(ControllerBindings c) {
-        c.bindPress(Pad.G1, Btn.Y, this::nextField)
-         .bindPress(Pad.G1, Btn.DPAD_UP, () -> change(1, true))
+        // Y: a tap changes the field, a hold runs the lighting test again: both watched in step().
+        c.bindPress(Pad.G1, Btn.DPAD_UP, () -> change(1, true))
          .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> change(-1, true))
          .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> change(1, false))
          .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> change(-1, false))
          .bindPress(Pad.G1, Btn.LB, () -> {
                     spinning = !spinning;
-                    if (!spinning) launcher.stop();   // fully off (it stays off until spinUp)
+                    if (!spinning) {
+                        stopAiming();      // first: dropping a waiting shot idles the launcher...
+                        launcher.stop();   // ...then fully off (it stays off until spinUp)
+                    }
                 })
-         .bindPress(Pad.G1, Btn.RB, () -> { if (spinning) launcher.shoot(1); })
+         .bindPress(Pad.G1, Btn.RB, () -> { if (spinning) shootOne(false); })
          .bindPress(Pad.G1, Btn.A, () -> note = trials.mark(true))
          .bindPress(Pad.G1, Btn.B, () -> note = trials.mark(false))
          .bindPress(Pad.G1, Btn.L_STICK_BTN, () -> note = trials.undo())
@@ -376,6 +455,46 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
                     && !(field == Field.TABLE && names.size() < 2);
             if (usable) return;
         }
+    }
+
+    // One shot. A robot that aims: the aim turns to the goal, and the launcher feeds only when it is Ready AND
+    // aimed (the "aimed at the goal" check, see setup()). No goal in the camera now: no shot.
+    private void shootOne(boolean fromRt) {
+        if (!aims) {
+            launcher.shoot(1);
+            return;
+        }
+        if (!Double.isNaN(aimingSince) || launcher.isShooting()) return;   // one at a time
+        if (target == null) {
+            cancelShot("No shot: the camera does not see the " + alliance + " goal. Point the robot at it.");
+            return;
+        }
+        robotDef.aim().mode().on();   // TeleOp's aim: the turn assist turns to the goal
+        robotDef.aim().relock();      // as TeleOp's quick turn: each shot must get within toleranceDeg again
+        aimingSince = nowSec();
+        shotAskedAt = aimingSince;
+        shotFromRt = fromRt;
+        launcher.shoot(1);            // waits for Ready and "aimed at the goal"
+    }
+
+    // True when a shot may be fed: the camera sees this alliance's goal NOW (not the odometry's guess) and
+    // TeleOp's aim says the robot is aimed (toleranceDeg, cameraOffset, the angle aim).
+    private boolean aimedNow() {
+        return target != null && !target.fromOdometry() && robotDef.aim().mode().isOn() && robotDef.aim().isAimed();
+    }
+
+    // A waiting shot is dropped (not fed), the aim stops, and the robot is the driver's again. why: a note, or null.
+    private void cancelShot(String why) {
+        aimingSince = Double.NaN;
+        continuous = false;
+        if (launcher != null && launcher.isShooting()) launcher.idle();   // the queued piece is not fed
+        if (aims) robotDef.aim().mode().off();
+        if (why != null) note = why;
+    }
+
+    // The aim stops (LB off, help, a relight, STOP): any shot waiting is dropped.
+    private void stopAiming() {
+        cancelShot(null);
     }
 
     // True when the distance is set by hand: no camera and no odometry.
@@ -560,6 +679,11 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     @Override
     protected void step() {
+        // START: the camera's START work, as in a match (an unfinished lighting test keeps its best setting).
+        if (!startedCamera) {
+            startedCamera = true;
+            if (robotCamera != null) robotCamera.started();
+        }
         // The odometry: a fresh pose every loop (the rest of the robot stays still).
         if (odometry != null) odometry.update();
         if (camera != null) {
@@ -596,6 +720,18 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             backUsed = true;
             deletePoint();
         }
+        // Y: a tap (let go before RELIGHT_HOLD_SEC) = the next field; a hold = the lighting test again.
+        boolean y = gamepad1.y && inputsReady();
+        if (y && Double.isNaN(ySince)) {
+            ySince = nowSec();
+            yUsed = false;
+        } else if (y && !yUsed && nowSec() - ySince >= RELIGHT_HOLD_SEC) {
+            yUsed = true;
+            relight();
+        } else if (!y && !Double.isNaN(ySince)) {
+            if (!yUsed) nextField();
+            ySince = Double.NaN;
+        }
         // The sticks and RT only count once gamepad 1 was let go after START or help (inputsReady()).
         if (driving != null) {
             if (inputsReady()) driving.update(gamepad1);
@@ -623,7 +759,34 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         if (!rt) continuous = false;
         else if (freshPress) continuous = true;   // a new press tries again (shoot() clears an old jam)
         else if (!launcher.getLastProblem().isEmpty()) continuous = false;
-        if (spinning && continuous && !launcher.isShooting()) launcher.shoot(1);
+        // RT let go while its shot waits for the aim: that shot is dropped too.
+        if (!rt && shotFromRt && !Double.isNaN(aimingSince)) cancelShot(null);
+        if (spinning && continuous && !launcher.isShooting() && Double.isNaN(aimingSince)) shootOne(true);
+        // A shot waiting: the launcher feeds it when Ready and aimed. Not aimed for AIM_TIMEOUT_SEC (or the goal
+        // lost): it is dropped and the aim stops, so no table point comes from a shot that was not aimed. The
+        // time counts only while NOT aimed (spinning up after a speed change is fine).
+        if (!Double.isNaN(aimingSince)) {
+            if (!spinning) {
+                cancelShot(null);
+            } else if (!launcher.isShooting()) {
+                // Fed, or the launcher gave up (its note shows). Fed with RT held: the next shot aims again
+                // (shootOne relocks). Otherwise the aim stops, so the robot never turns on its own later (when it
+                // is moved to the next spot, say).
+                aimingSince = Double.NaN;
+                if (!launcher.getLastProblem().isEmpty() || !continuous) cancelShot(null);
+            } else if (launcher.getShotsLeft() > 0 && nowSec() - shotAskedAt > SHOT_WAIT_SEC) {   // not while it feeds
+                cancelShot("No shot: not Ready in " + FinderResults.num(SHOT_WAIT_SEC, 0) + " s (" + launcher.whyNotReady()
+                        + "). Check the speed and the battery.");
+            } else if (aimedNow()) {
+                aimingSince = nowSec();
+            } else if (nowSec() - aimingSince > AIM_TIMEOUT_SEC) {
+                double e = robotDef.aim().errorDeg();
+                cancelShot("No shot: not aimed for " + FinderResults.num(AIM_TIMEOUT_SEC, 0) + " s ("
+                        + (target == null || Double.isNaN(e) ? "the camera does not see the goal" : FinderResults.num(e, 1) + " deg off") + ").");
+            }
+        }
+        // No shot waiting and RT not held: the aim is off, so the robot never turns on its own.
+        if (aims && Double.isNaN(aimingSince) && !continuous && robotDef.aim().mode().isOn()) robotDef.aim().mode().off();
         if (spinning) {
             launcher.setRpm(rpm);
             launcher.spinUp();
@@ -651,6 +814,18 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         }
     }
 
+    // Hold Y: the robot camera's lighting test again (the camera sees no targets until it is done).
+    private void relight() {
+        if (robotCamera == null || camera != robotCamera.source()) {
+            note = "No lighting test: this tuner's camera is not the robot's.";
+            return;
+        }
+        stopAiming();
+        continuous = false;
+        note = robotCamera.relight() ? "Lighting test again: aim the camera at a tag; wait for it to finish."
+                : "No lighting test: Robot.java needs autoExposure() (and Tunables autoLighting not false).";
+    }
+
     // The hood angle for the tally: NaN without a hood.
     private double hoodNow() {
         return hood == null ? Double.NaN : hoodDeg;
@@ -675,12 +850,29 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         if (odo != null && target != null && target.hasDistance()) {
             t.line("  Odometry says", FinderResults.num(odo.distanceIn, 1) + " in");
         }
+        if (robotDef != null) t.line("  Alliance", alliance + (matchGoal() ? " (its goal only)" : ""));
+        if (robotCamera != null && robotCamera.lighting() != null && (!robotCamera.lighting().isDone() || robotCamera.lighting().gaveUp())) {
+            t.warn("Camera lighting test: " + robotCamera.lighting().status()
+                    + (robotCamera.lighting().gaveUp() ? ": aim at a tag, hold Y 0.5 s" : ""));
+        }
+        if (aims) {
+            double e = robotDef.aim().errorDeg();
+            t.line("  Aim", !Double.isNaN(aimingSince) ? "turning to the goal" + (Double.isNaN(e) ? "" : ", " + FinderResults.num(e, 1) + " deg off")
+                    : robotDef.aim().mode().isOn() ? (Double.isNaN(e) ? "on, goal not in view" : "on, " + FinderResults.num(e, 1) + " deg off")
+                    : "{RB} turns to the goal first");
+        }
         if (atLimit) t.warn("At the flywheel's maxRpm or the hood's limit");
         if (!Double.isNaN(lastSagRpm)) {
             t.warn("Last shot: the flywheel was " + FinderResults.num(lastSagRpm, 0)
                     + " RPM under the speed (sagged). Wait for Ready; charge the battery.");
         }
-        t.line("Ready", launcher.isReady() ? "YES" : "no: " + launcher.whyNotReady());
+        if (aims) {
+            // The aim check is part of the launcher's Ready, but the aim turns on only at RB: show the rest here.
+            boolean rest = launcher.getFlywheel().isReady() && (hood == null || hood.isDone());
+            t.line("Ready", rest ? "YES (RB turns to the goal, then fires)" : "no: " + launcher.whyNotReady());
+        } else {
+            t.line("Ready", launcher.isReady() ? "YES" : "no: " + launcher.whyNotReady());
+        }
         int waiting = trials.unmarkedCount();
         t.line("Shots fired", launcher.getShotsFired() + (waiting == 0 ? "" : ", " + waiting + " to mark ({A} hit / {B} miss)"));
         // The way teams tune: hits / shots at this speed (and hood), and every one tried at this spot.
@@ -727,15 +919,15 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         return new String[] {
             "Builds the shot table: distance -> speed (+ hood).",
             "Nobody in the line of fire. Eye protection on.",
-            "{LB} = flywheel on/off. {Y} = what the D-pad changes:",
-            "  SPEED / HOOD / DISTANCE (by hand) / TABLE.",
-            "D-pad up/down: 100 RPM / 1/5 of the hood /",
-            "  6 in; right/left: 10 RPM / 1/50 / 1 in.",
-            "{RB} = shoot one, hold {RT} = keep shooting.",
+            "In INIT: {X} = BLUE, {B} = RED (its goal only).",
+            "{LB} = flywheel on/off. {Y} = what D-pad sets.",
+            "D-pad up/down: 100 RPM / 1/5 of the hood / 6 in;",
+            "  right/left: 10 RPM / 1/50 / 1 in.",
+            "{RB} = shoot one (aims first), hold {RT} = keep going.",
             "{A} = HIT, {B} = MISS (the oldest shot not marked).",
             "L stick click = undo mark, R = drop last shot.",
             "{X} = save the best speed. Hold {BACK} 1 s = delete.",
-            "Sticks = drive (if set up), left trigger = slow.",
+            "Hold {Y} 0.5 s = the lighting test again.",
             "3-5 shots a speed, 2-3 speeds, {X}; back 1-2 ft.",
             "4-6 points per table, then copy into Tunables.",
         };
@@ -744,8 +936,11 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     // Help open: the flywheel, feeding and wheels stop; the camera keeps running.
     @Override
     protected void pause() {
+        ySince = Double.NaN;   // a Y held into help is not a tap after it
+        yUsed = true;
         spinning = false;
         continuous = false;
+        stopAiming();
         launcher.stop();
         if (driving != null) driving.stop();
         others.stop();
@@ -754,6 +949,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     @Override
     protected void stopAll() {
         RuntimeException first = null;
+        try { if (aims && robotDef != null) stopAiming(); } catch (RuntimeException e) { first = e; }
         try { if (launcher != null) launcher.stop(); } catch (RuntimeException e) { first = e; }
         try { if (driving != null) driving.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
         try { if (others != null) others.stop(); } catch (RuntimeException e) { if (first == null) first = e; }

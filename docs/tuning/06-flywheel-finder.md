@@ -20,10 +20,26 @@ Find the gains that hold a flywheel at its speed, and how fast it recovers after
 
    ![The Flywheel Finder's INIT screen: Hands away from the wheel. Eye protection on. Press start](../images/hub-flywheel-finder-go-start.svg)
 
-4. Press **D-pad up/down** until the arrow is on the flywheel motor's name, then press **A**. The names come
-   from the robot configuration.
+4. The arrow starts on the flywheel motor: the launcher's motor in Robot.java (from Tune and check), else a
+   name with "fly", "launch" or "shoot" in it. Check the name, then press **A**. Another motor: press
+   **D-pad up/down** first. The names come from the robot configuration.
 
    ![Choose the flywheel motor: the arrow on launcher, then press A](../images/hub-flywheel-finder-go-choose.svg)
+
+## Already have gains in Tunables.java?
+
+From Tune and check, when your launcher's part of `Tunables.java` has `kP`, `kI` and `kF`, the finder holds the
+wheel with **those** gains (and their battery compensation). The `Gains` line shows them:
+`Gains : Tunables.java (kP 10.00, kI 0.000, kF 14.68, for 13.0 V)`.
+
+- Step 1 is not needed: press **B** at once (step 2), set your shot speed, and fine-tune F with **RB** / **LB**.
+- The `Tunables.Launcher` line keeps your kP, kI and kD, with the new kF. Copy only that line.
+- After step 1, **Y** switches to the finder's own gains (from the top speed) and back. The F you fine-tuned on
+  each stays.
+
+**Why:** F does most of the work, and it fits only the kP and kI it was tuned with. With the finder's own kI, a
+small F error is hidden while the wheel is held, then shows up in a match with your kI. Tuned with your own
+gains, F is right for the robot as it is.
 
 ## Steps
 
@@ -44,7 +60,7 @@ Find the gains that hold a flywheel at its speed, and how fast it recovers after
 
    ![Let go of A, then hold A: the Driver Hub shows Top speed : 5600 RPM](../images/hub-flywheel-finder-step-top-speed.svg)
 
-2. Press **B**: the finder holds a speed (60% of the top). Change it with the D-pad to the speed you shoot at.
+2. Press **B**: the finder holds a speed (60% of the top, or 3000 RPM before step 1). Change it with the D-pad to the speed you shoot at.
 
    ![Press B: the Driver Hub shows Target : 3350 RPM and Error : 40 RPM](../images/hub-flywheel-finder-step-hold.svg)
 

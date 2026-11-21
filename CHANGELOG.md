@@ -2,6 +2,33 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- The Shot Tuner aims and sees like a match. With your robot in five files and a camera with `goal(...)`, it uses
+  the robot's own camera and aim: the camera's lighting test runs in INIT (hold Y 0.5 s to run it again; a short Y
+  press still changes what the D-pad changes), you choose the alliance in INIT (X blue, B red) and only that
+  alliance's goal counts, and RB turns the whole robot to the goal with TeleOp's aim (`toleranceDeg`, the saved
+  `cameraOffset`, the angle aim) and shoots once aimed and Ready. Not aimed for 2 s, or no goal in view: no shot.
+  Why: a table made from shots that were not aimed, or with another camera setting, does not fit the match. A
+  robot whose turret follows the goal: unchanged. Page: docs/tuning/13-shot-tuner.md.
+- The Flywheel Finder (from Tune and check) holds the wheel with the gains in `Tunables.java` when the launcher has
+  kP, kI and kF there (and their battery compensation): step 1 is not needed, RB / LB fine-tune the kF the robot
+  uses, and the Tunables line keeps your kP, kI and kD. Y switches to the finder's own gains (after step 1). Its
+  motor list starts on the flywheel, not the first name (often a drive wheel). Why: kF fits only the kP and kI it
+  was tuned with. Page: docs/tuning/06-flywheel-finder.md.
+
+- TeleOp warns at the top of the Driver Hub when the camera's lighting test saw no tag (`Webcam 1 lighting: NO TAGS
+  SEEN: aim at a tag and run the lighting test again`), until the camera sees a tag. Before, it showed only in INIT,
+  and the driver found out when the aim did nothing.
+
+### Added
+
+- `Chooser.select(name)`, `robot.launcher.writtenGains(tunables)`, `robot.aim().turnFor(turn)`, `robot.aim().camera()`,
+  `robot.aim().turretAims()`, and a camera's `checkInInit(t)`, `started()` and `knowsGoal()` (for OpModes that
+  drive and read the camera themselves, like the Shot Tuner). `FlywheelFinderOpMode.robotGains()`.
+
 ## v0.46.0 - 2026-11-20
 
 ### Added

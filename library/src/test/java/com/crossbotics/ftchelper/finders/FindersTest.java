@@ -467,4 +467,60 @@ public class FindersTest {
         assertEquals(Boolean.FALSE, d.get("launcher2"));
         assertEquals("a drive motor: not a flywheel", null, d.get("left"));
     }
+
+    // select(): a name in the list becomes the choice; a missing name or null leaves it as it was.
+    @Test public void chooserSelectsANameInTheList() {
+        Chooser c = new Chooser(Arrays.asList("lift", "claw", "arm"));
+        assertTrue(c.select("lift"));
+        assertEquals("lift", c.current());
+        assertFalse(c.select("flywheel"));
+        assertFalse(c.select(null));
+        assertEquals("lift", c.current());
+        assertFalse(new Chooser(Arrays.<String>asList()).select("arm"));
+    }
+
+    // The Flywheel Finder's list starts on Robot.java's flywheel motor, else a name like "flywheel", never a drive wheel.
+    @Test public void theFlywheelFinderStartsOnTheFlywheel() {
+        List<String> names = Arrays.asList("back_left", "back_right", "front_left", "launcher", "intake");
+        assertEquals("launcher", FlywheelFinderOpMode.startMotor(names, Arrays.asList("launcher")));
+        assertEquals("launcher", FlywheelFinderOpMode.startMotor(names, Arrays.<String>asList()));
+        assertEquals("shooterMotor", FlywheelFinderOpMode.startMotor(Arrays.asList("a", "shooterMotor"), Arrays.<String>asList()));
+        assertEquals("intake", FlywheelFinderOpMode.startMotor(names, Arrays.asList("intake")));   // Robot.java's wins
+        assertEquals(null, FlywheelFinderOpMode.startMotor(Arrays.asList("back_left", "lift"), Arrays.<String>asList()));
+    }
+
+    // The gains in Tunables.java, for Tune and check's Flywheel Finder: only a launcher with kP, kI and kF.
+    public static class GainsNumbers {
+        public static class Launcher {
+            public static double kP = 10, kI = 0, kF = 14.68, nominalVolts = 13.0;
+            public static boolean batteryCompensation = true;
+        }
+        public static class Launcher2 {
+            public static double kP = 12, kI = 1, kD = 0.5, kF = 13;
+        }
+    }
+
+    public static class GainsBot extends com.crossbotics.ftchelper.robot.RobotDefinition {
+        @Override protected void define() {
+            tunables(GainsNumbers.class);
+            drive(com.crossbotics.ftchelper.robot.Drive.tank("left", "right"));
+            add(com.crossbotics.ftchelper.robot.Launcher.flywheel("launcher", "gobilda-5203-6000"));
+            add(com.crossbotics.ftchelper.robot.Launcher.flywheel("launcher2", "gobilda-5203-6000"));
+            add(com.crossbotics.ftchelper.robot.Launcher.flywheel("launcher3", "gobilda-5203-6000"));
+        }
+    }
+
+    @Test public void tuneAndCheckKnowsEachFlywheelsGains() {
+        java.util.Map<String, double[]> g = TuneAndCheckOpMode.flywheelGains(new GainsBot().describe().modules(), GainsNumbers.class);
+        double[] one = g.get("launcher");
+        assertEquals(10, one[0], 1e-9);
+        assertEquals(0, one[1], 1e-9);
+        assertEquals("kD not written: 0", 0, one[2], 1e-9);
+        assertEquals(14.68, one[3], 1e-9);
+        assertEquals("battery compensation on: its volts", 13.0, one[4], 1e-9);
+        double[] two = g.get("launcher2");
+        assertEquals(0.5, two[2], 1e-9);
+        assertTrue("no battery compensation: NaN", Double.isNaN(two[4]));
+        assertEquals("no gains written: none (the finder's own)", null, g.get("launcher3"));
+    }
 }

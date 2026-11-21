@@ -521,6 +521,45 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return reversed;
     }
 
+    // The four gains writtenGains() reads.
+    private static final String[] GAIN_NAMES = {"kP", "kI", "kD", "kF"};
+
+    /**
+     * The speed-control gains written in {@code Tunables.java} for this launcher, read without the
+     * hardware (Robot.java described, not set up). The Flywheel Finder in Tune and check holds the wheel
+     * with them, so its fine-tuned {@code kF} fits the gains the robot really uses.
+     *
+     * <pre>{@code
+     * double[] g = robot.launcher.writtenGains(Tunables.class);   // {10, 0, 0, 14.68, 13.0}
+     * }</pre>
+     *
+     * @param tunables the robot's Tunables class ({@code robot.tunablesClass()}); null = the set-up robot's
+     * @return {kP, kI, kD, kF, nominalVolts}; nominalVolts is NaN when {@code batteryCompensation} is not
+     *     true (the gains are used as they are). kD is 0 when not written. Null when kP, kI or kF is not
+     *     written (the robot uses starting gains then), one is still MEASURE, nominalVolts is outside 9-14 V
+     *     with battery compensation on, or there is no Tunables class.
+     */
+    public double[] writtenGains(Class<?> tunables) {
+        Class<?> tc = tunables != null ? tunables : robot == null ? null : robot.tunablesClass();
+        if (tc == null) return null;
+        try {
+            TunableSection t = TunableSection.of(tc, name());
+            if (!t.has("kP") || !t.has("kI") || !t.has("kF")) return null;
+            boolean compensate = t.has("batteryCompensation") && t.flag("batteryCompensation", false);
+            double nominal = t.has("nominalVolts") ? t.number("nominalVolts", Flywheel.DEFAULT_NOMINAL_VOLTS) : Flywheel.DEFAULT_NOMINAL_VOLTS;
+            // The launcher refuses a nominalVolts outside 9-14 V at INIT: no gains here either (not "no compensation").
+            if (compensate && !(nominal >= 9 && nominal <= 14)) return null;
+            // (Names in a list, not as text in each call: the defaults here are not the launcher's defaults.)
+            String[] names = GAIN_NAMES;
+            double[] out = new double[5];
+            for (int i = 0; i < 4; i++) out[i] = t.has(names[i]) ? t.number(names[i], 0) : 0;
+            out[4] = compensate ? nominal : Double.NaN;
+            return out;
+        } catch (RuntimeException e) {
+            return null;   // a number still to MEASURE, or not a number: the finder uses its own gains
+        }
+    }
+
     /**
      * Another check before each piece is fed, e.g. {@code .requireReady("turret aimed", () -> turret.isAimed())}.
      * While it is false the launcher waits (and gives up after 3 s, saying which check failed).

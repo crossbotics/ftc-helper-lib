@@ -25,11 +25,14 @@ import java.util.List;
  * compensation is on too (from that voltage), so F changes are for the same voltage.
  *
  * <pre>
- * Choose:  D-pad up/down = motor, A = use it
+ * Choose:  D-pad up/down = motor, A = use it (the list starts on Robot.java's flywheel motor, or a name like "flywheel")
  * Step 1:  hold A = full power (at most 5 s). Release when the speed stops rising. Still rising at
  *          5 s (a heavy wheel)? It says so: the top speed may be higher, so F is a little high.
  * Step 2:  B = hold a speed on/off. D-pad up/down = +/- 100 RPM, right/left = +/- 25 RPM.
  *          RB / LB = F gain +2% / -2%. Feed a piece with the feeder or a stick (never fingers): it shows the recovery time.
+ *          From Tune and check with kP, kI and kF in Tunables.java: step 2 holds with THOSE gains (and their battery
+ *          compensation), so step 1 is not needed and RB / LB fine-tune the kF the robot uses. Y = this finder's own
+ *          gains from the top speed (after step 1), and back.
  *          X = the wheel spins the wrong way: reverse it (for both steps; adds .reversed())
  *          (From Tune and check, a motor starts the way Robot.java turns it: reversed() there = reversed here.)
  *          BACK = choose another motor
@@ -67,7 +70,20 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     private boolean aReleased = false;
     // X: the wheel spins the wrong way, so the motor runs reversed (the code line gets .reversed()).
     private boolean reversed = false;
-    private double[] gains = null;      // {P, I, D, F}
+    private double[] gains = null;      // {P, I, D, F}: the gains in use (step 2 holds with them)
+    // The gains Tunables.java has for this motor ({P, I, D, F, nominal volts or NaN}), or null; and true
+    // while step 2 uses them (Y switches to this finder's own gains from the top speed, and back).
+    private double[] robotGainsNow = null;
+    private boolean useRobot = false;
+    private boolean fTouched = false;   // RB / LB used since the motor was chosen (Tunables' gains: results only then)
+    // Step 2's guard: since when the wheel reads no forward speed while held (seconds; NaN = it does).
+    private double noSpeedSince = Double.NaN;
+    private String holdStopped = "";
+    /** Step 2 stops when the encoder reads no forward speed this long while the wheel is held (seconds). */
+    static final double NO_SPEED_STOP_SEC = 1.0;
+    // This finder's own gains, from the top speed (step 1), and the voltage then. Null / NaN = not measured.
+    private double[] finderGains = null;
+    private double finderVolts = Double.NaN;
     private double targetRpm = 0;
     private int lastShots = 0;
     private double shotAt = Double.NaN;
@@ -107,6 +123,36 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     }
 
     // The direction Robot.java gives the chosen motor: TRUE reversed, FALSE forward, null not known.
+    /**
+     * The speed-control gains Tunables.java has for each flywheel motor: {kP, kI, kD, kF, nominalVolts}
+     * (nominalVolts NaN = no battery compensation). The finder holds the wheel with them in step 2, so a
+     * fine-tuned F (RB/LB) fits the kP and kI the robot really uses; {@code Y} switches to the finder's own
+     * gains from the top speed. Default: none (your own finder). Tune and check fills it from Tunables.java.
+     *
+     * @return motor name to its gains; never null
+     */
+    protected java.util.Map<String, double[]> robotGains() {
+        return java.util.Collections.emptyMap();
+    }
+
+    /**
+     * The motor the list starts on: the first robot flywheel motor in the list ({@code known}), else the
+     * first name with "fly", "launch" or "shoot" in it, else null (the list's first). For tests.
+     *
+     * @param names the motor names in the configuration
+     * @param known the robot's flywheel motor names (may be empty)
+     */
+    static String startMotor(java.util.List<String> names, java.util.Collection<String> known) {
+        java.util.List<String> sorted = new ArrayList<>(names);
+        java.util.Collections.sort(sorted);
+        for (String n : sorted) if (known.contains(n)) return n;
+        for (String n : sorted) {
+            String low = n.toLowerCase(java.util.Locale.US);
+            if (low.contains("fly") || low.contains("launch") || low.contains("shoot")) return n;
+        }
+        return null;
+    }
+
     private Boolean robotDirection() {
         return motorName == null ? null : motorDirections().get(motorName);
     }
@@ -115,7 +161,12 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
 
     @Override
     protected void setup() {
-        chooser = new Chooser(new ArrayList<>(hardwareMap.getAllNames(DcMotorEx.class)));
+        java.util.List<String> names = new ArrayList<>(hardwareMap.getAllNames(DcMotorEx.class));
+        chooser = new Chooser(names);
+        // Start on the flywheel (Robot.java's launcher motor, else a name like "flywheel"), not a drive wheel.
+        java.util.Set<String> known = new java.util.HashSet<>(motorDirections().keySet());
+        known.addAll(robotGains().keySet());
+        chooser.select(startMotor(names, known));
     }
 
     @Override
@@ -136,6 +187,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
          .bindPress(Pad.G1, Btn.RB, () -> changeF(1.02))
          .bindPress(Pad.G1, Btn.LB, () -> changeF(1 / 1.02))
          .bindPress(Pad.G1, Btn.X, this::toggleReverse)
+         .bindPress(Pad.G1, Btn.Y, this::switchGains)
          .bindPress(Pad.G1, Btn.BACK, this::release);
     }
 
@@ -155,8 +207,36 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         topTicks = 0;
         stillRising = false;
         gains = null;
+        finderGains = null;
+        finderVolts = Double.NaN;
         recoverySec = Double.NaN;
         tuneVolts = Double.NaN;
+        // Tunables.java has gains for this motor: step 2 holds with them (no step 1 needed first).
+        double[] fromRobot = robotGains().get(motorName);
+        robotGainsNow = fromRobot == null ? null : fromRobot.clone();   // RB / LB change this copy, never Tune and check's
+        fTouched = false;
+        useRobot = robotGainsNow != null;
+        if (useRobot) useGains();
+    }
+
+    // Y: switch step 2 between the gains in Tunables.java and this finder's own (after step 1). Not while holding.
+    private void switchGains() {
+        if (motor == null || holding || robotGainsNow == null) return;
+        if (useRobot && finderGains == null) return;   // no own gains yet: measure the top speed first (step 1)
+        useRobot = !useRobot;
+        useGains();
+    }
+
+    // Puts the chosen gains in use: Tunables' (F fine-tuned from them) or this finder's own.
+    private void useGains() {
+        if (useRobot) {
+            gains = new double[] {robotGainsNow[0], robotGainsNow[1], robotGainsNow[2], robotGainsNow[3]};
+            tuneVolts = robotGainsNow[4];   // NaN: Tunables has no battery compensation, so none here either
+        } else {
+            gains = finderGains == null ? null : finderGains.clone();
+            tuneVolts = finderVolts;
+        }
+        writeResults();
     }
 
     private void release() {
@@ -176,6 +256,10 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     private void changeF(double factor) {
         if (gains == null) return;
         gains[3] *= factor;
+        fTouched = true;
+        // Kept with its source, so Y and back keeps the fine-tuned F.
+        if (useRobot) robotGainsNow[3] = gains[3];
+        else if (finderGains != null) finderGains[3] = gains[3];
         if (flywheel != null) flywheel.pidf(gains[0], gains[1], gains[2], gains[3]);
         writeResults();
     }
@@ -185,13 +269,16 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         if (motor == null || gains == null) return;
         if (topTicks < 0) return;   // the encoder counts backward: speed control would run away
         holding = !holding;
+        noSpeedSince = Double.NaN;
+        holdStopped = "";
         if (holding) {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             flywheel = new Flywheel(motorName, motor).countsPerRev(countsPerRev())
-                    .maxRpm(topRpm()).pidf(gains[0], gains[1], gains[2], gains[3]);
+                    .pidf(gains[0], gains[1], gains[2], gains[3]);
+            if (topRpm() > 0) flywheel.maxRpm(topRpm());   // no top speed yet (Tunables' gains): the default
             // From the voltage the gains were found at: an F you fine-tune now is for that voltage too.
             if (tuneVolts >= 9 && tuneVolts <= 14) flywheel.batteryCompensation(batteryReader(), tuneVolts);
-            if (targetRpm == 0) targetRpm = Math.round(topRpm() * 0.6 / 25) * 25.0;
+            if (targetRpm == 0) targetRpm = topRpm() > 0 ? Math.round(topRpm() * 0.6 / 25) * 25.0 : 3000;
             lastShots = 0;
             dropNow = lastDrop = smallestDrop = Double.NaN;
             drops = 0;
@@ -263,6 +350,20 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         if (holding) {
             flywheel.setRpm(targetRpm);
             flywheel.update();
+            // The encoder must read the wheel going forward. Backward (a swapped cable) or nothing (unplugged):
+            // speed control would push full power forever, so stop (step 1's backward check is skipped with
+            // Tunables' gains, so it is checked here).
+            double ticks = motor.getVelocity();
+            boolean forward = targetRpm <= 0 || FinderMath.ticksPerSecToRpm(ticks, countsPerRev()) > Math.min(100, targetRpm / 2);
+            if (forward) noSpeedSince = Double.NaN;
+            else if (Double.isNaN(noSpeedSince)) noSpeedSince = now();
+            else if (now() - noSpeedSince > NO_SPEED_STOP_SEC) {
+                stopAll();
+                plainPower();
+                holdStopped = "Stopped: the encoder read " + (ticks < 0 ? "BACKWARD" : "no") + " speed while held. Check the"
+                        + " encoder cable and port (and X: the direction).";
+                return;
+            }
             // A shot: the wheel's shot counter went up. Recovery = the time until it is ready again.
             if (flywheel.getShotCount() > lastShots) {
                 lastShots = flywheel.getShotCount();
@@ -316,8 +417,14 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         }
         if (Math.abs(avg) > Math.abs(topTicks)) {
             topTicks = avg;
-            tuneVolts = volts;   // the gains below are right for the battery as it is now
-            gains = FinderMath.flywheelPidf(topTicks);
+            // This finder's own gains, right for the battery as it is now. With Tunables' gains in use,
+            // they stay in use (Y switches); only the top speed is new.
+            finderVolts = volts;
+            finderGains = FinderMath.flywheelPidf(topTicks);
+            if (!useRobot) {
+                tuneVolts = finderVolts;
+                gains = finderGains.clone();
+            }
             writeResults();
         }
     }
@@ -326,6 +433,10 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         if (gains == null) return;
         String key = "flywheel:" + motorName;
         results.removeStartingWith(key + ":");
+        if (useRobot) {
+            writeRobotResults(key);
+            return;
+        }
         String line = "Flywheel.create(hardwareMap, \"" + motorName + "\")"
                 + ".countsPerRev(" + FinderResults.num(countsPerRev(), 1) + ")"
                 + (reversed ? ".reversed()" : "")
@@ -365,6 +476,39 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         }
     }
 
+    // Tunables' gains in use: the Tunables line keeps its kP, kI, kD (and nominalVolts) with the fine-tuned kF.
+    private void writeRobotResults(String key) {
+        if (!fTouched && Double.isNaN(recoverySec)) return;   // nothing found yet: Tunables.java already has these
+        results.set(key + ":0", "    // held with the gains in Tunables.java; kF fine-tuned here (RB/LB)"
+                + (topTicks != 0 ? "; top speed " + FinderResults.num(topRpm(), 0) + " RPM" : ""));
+        if (!Double.isNaN(recoverySec)) {
+            results.set(key + ":2", "    // recovery after a shot at " + FinderResults.num(targetRpm, 0) + " RPM: "
+                    + FinderResults.num(recoverySec, 2) + " s");
+        }
+        List<String> fields = new ArrayList<>();
+        fields.add("kP = " + FinderResults.num(gains[0], 2));
+        fields.add("kI = " + FinderResults.num(gains[1], 3));
+        fields.add("kD = " + FinderResults.num(gains[2], 3));
+        fields.add("kF = " + FinderResults.num(gains[3], 2));
+        if (!Double.isNaN(robotGainsNow[4])) fields.add("nominalVolts = " + FinderResults.num(robotGainsNow[4], 1));
+        results.set(key + ":t0", FinderResults.tunablesLine(motorName, fields));
+        Boolean inRobot = robotDirection();
+        if (inRobot == null ? reversed : inRobot != reversed) {
+            results.set(key + ":t1", reversed ? "Robot.java: add .reversed() to the \"" + motorName + "\" launcher"
+                    : "Robot.java: take .reversed() off the \"" + motorName + "\" launcher");
+        }
+    }
+
+    // The gains line: whose gains step 2 holds with, and what Y does.
+    private String gainsWords() {
+        String g = "kP " + FinderResults.num(gains[0], 2) + ", kI " + FinderResults.num(gains[1], 3) + ", kF " + FinderResults.num(gains[3], 2);
+        if (useRobot) {
+            return "Tunables.java (" + g + (Double.isNaN(robotGainsNow[4]) ? "" : ", for " + FinderResults.num(robotGainsNow[4], 1) + " V")
+                    + ")" + (finderGains != null ? " ({Y} = this finder's)" : "");
+        }
+        return "this finder's, from the top speed (" + g + ")" + (robotGainsNow != null ? " ({Y} = Tunables.java's)" : "");
+    }
+
     @Override
     protected void show(RobotTelemetry t) {
         if (motor == null) {
@@ -379,15 +523,19 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             t.line("Battery", FinderResults.num(volts, 2) + " V" + (tuneVolts >= 9 ? " (gains for " + FinderResults.num(tuneVolts, 1) + " V)" : ""));
             if (volts < Flywheel.LOW_BATTERY_VOLTS) t.warn("Battery low: charge it before measuring (the gains are for this voltage).");
         }
-        if (gains == null) {
+        if (topTicks == 0) {
             Boolean inRobot = robotDirection();
             String asRobot = inRobot == null ? "" : inRobot == reversed ? ", as in Robot.java" : ", NOT as in Robot.java";
             t.line("Direction", (reversed ? "reversed" : "normal") + asRobot + " ({X} = " + (reversed ? "normal" : "reverse") + ")");
             t.text("Step 1: hold {A} for full power until the speed stops rising.");
             t.text("Wheel spins the wrong way? Let go, press {X}, try again.");
-            return;
+            if (gains == null) return;
+            if (!holding) t.text("Or step 2 now, with the gains in Tunables.java: {B} = hold a speed.");
+        } else {
+            t.line("Top speed", FinderResults.num(topRpm(), 0) + " RPM");
         }
-        t.line("Top speed", FinderResults.num(topRpm(), 0) + " RPM");
+        t.line("Gains", gainsWords());
+        if (!holdStopped.isEmpty()) t.warn(holdStopped);
         // Forward power but the count goes down: the encoder disagrees with the motor. Speed control
         // cannot work like that (it would run away), so step 2 is not allowed.
         if (stillRising) {
@@ -421,8 +569,8 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             "2. Let go of {A}. Hold {A} = full power (max 5 s) until",
             "   the speed stops rising: gains worked out.",
             "   Wrong way? Let go, {X} = reverse, try again.",
-            "3. {B} = hold a speed (60% of top). D-pad up/down =",
-            "   +/-100 RPM, right/left = +/-25 RPM.",
+            "3. {B} = hold a speed (Tunables' gains if any,",
+            "   {Y} = own). D-pad +/-100, right/left +/-25 RPM.",
             "4. Too slow at every speed: {RB} (F +2%).",
             "   Too fast: {LB} (F -2%).",
             "5. Feed: feeder or stick, NO fingers. See recovery.",

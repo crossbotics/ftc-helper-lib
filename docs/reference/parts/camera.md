@@ -87,6 +87,9 @@ camera = add(Camera.webcam("Webcam 1").autoExposure());          // or your own 
    A webcam shows `public static double exposureMs = 6;` instead of `pipeline`.
 4. Back home, set `autoLighting = true` again.
 
+**When no setting saw a tag,** TeleOp shows a warning at the top of the Driver Hub (`Webcam 1 lighting: NO TAGS SEEN`)
+until the camera sees a tag, so the driver knows the aim may not work.
+
 **Do the test again** with `relight()` when the robot started with no tag in view, or the light changed
 ([Buttons to add](#buttons-to-add)).
 
@@ -184,6 +187,7 @@ from the camera:
 | Command | What it does |
 | --- | --- |
 | `relight()` | does the lighting test again. It gives false when there is no test to do |
+| `checkInInit(t)`, `started()` | TeleOp's INIT and START work for the camera (the lighting test), for an OpMode that does not run the robot's (the Shot Tuner) |
 
 | Question | What it tells you |
 | --- | --- |
@@ -191,6 +195,7 @@ from the camera:
 | `target(name)`, `target(id)` | that group or tag, or null when the camera does not see it |
 | `source()` | the [`TargetSource`](../../modules/vision.md) inside |
 | `lighting()` | the lighting test itself |
+| `knowsGoal()` | whether Robot.java gives it a `goal(...)` |
 | `liveViewOn()` | whether the webcam's live view is on |
 | `isLimelight()`, `isWebcam()`, `isHuskyLens()` | which kind it is |
 | `isPresent()` | whether the part is on the robot (an `optional()` part may not be) |

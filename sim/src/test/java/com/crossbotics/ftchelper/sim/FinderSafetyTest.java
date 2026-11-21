@@ -46,7 +46,7 @@ public class FinderSafetyTest {
     @Test public void flywheelFinderDoesNotStartOnTheChoosingPress() throws Exception {
         try (SimRun s = new SimRun()) {
             s.init("Flywheel Finder").start();
-            for (int i = 0; i < 4; i++) s.press(v -> s.g1().dpad_down = v);   // arm -> ... -> flywheel
+            assertTrue(String.join("\n", s.screen()), s.screenHas("> flywheel"));   // the list starts on the flywheel
             SimMotor fly = s.robot().motors.get("flywheel");
             s.g1().a = true;                             // choose it, and KEEP A down
             SimRun.pause(1.0);
@@ -96,7 +96,7 @@ public class FinderSafetyTest {
         for (boolean heavy : new boolean[] {true, false}) {
             try (SimRun s = new SimRun()) {
                 s.init("Flywheel Finder").start();
-                for (int i = 0; i < 4; i++) s.press(v -> s.g1().dpad_down = v);   // arm -> ... -> flywheel
+                assertTrue(String.join("\n", s.screen()), s.screenHas("> flywheel"));   // the list starts on the flywheel
                 s.press(v -> s.g1().a = v);
                 SimMotor fly = s.robot().motors.get("flywheel");
                 if (heavy) fly.lagSec = 3;               // 63% of a new speed in 3 s: still rising at 5 s
@@ -112,6 +112,46 @@ public class FinderSafetyTest {
         }
     }
 
+    /** A Flywheel Finder whose robot has gains in Tunables.java for "flywheel" (as Tune and check makes it). */
+    public static class TunedFlywheelFinder extends com.crossbotics.ftchelper.finders.FlywheelFinderOpMode {
+        @Override protected java.util.Map<String, double[]> robotGains() {
+            return java.util.Collections.singletonMap("flywheel", new double[] {10, 0, 0, 14.68, Double.NaN});
+        }
+    }
+
+    // Gains in Tunables.java: step 2 holds with THEM at once (no step 1), RB fine-tunes their kF, and the
+    // Tunables line keeps their kP and kI. After step 1, Y switches to the finder's own gains and back.
+    @Test public void flywheelFinderHoldsWithTheGainsInTunables() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.sim.ds.register("Tuned Flywheel Finder", "TeleOp", TunedFlywheelFinder.class);
+            s.init("Tuned Flywheel Finder").start();
+            assertTrue(String.join("\n", s.screen()), s.screenHas("> flywheel"));
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Gains : Tunables.java (kP 10.00, kI 0.000, kF 14.68)"), 1));
+            SimMotor fly = s.robot().motors.get("flywheel");
+            s.press(v -> s.g1().b = v);                  // step 2 at once: hold 3000 RPM with Tunables' gains
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Target : 3000 RPM"), 1));
+            assertTrue("it spins", SimRun.waitFor(() -> fly.velocity() > 500, 3));
+            s.press(v -> s.g1().right_bumper = v);       // F +2%: 14.97
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("kF = 14.97"), 1));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("kP = 10.00") && s.screenHas("kI = 0.000"));
+            s.press(v -> s.g1().b = v);                  // stop holding
+            s.press(v -> s.g1().y = v);                  // no top speed measured yet: Y does nothing
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Gains : Tunables.java"));
+            SimRun.pause(0.3);
+            s.g1().a = true;                             // step 1: the top speed
+            SimRun.pause(2.0);
+            s.g1().a = false;
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Top speed"), 1));
+            assertTrue("Tunables' gains stay in use", s.screenHas("Gains : Tunables.java (kP 10.00, kI 0.000, kF 14.97)"));
+            s.press(v -> s.g1().y = v);                  // Y: the finder's own
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Gains : this finder's"), 1));
+            s.press(v -> s.g1().y = v);                  // and back, with the fine-tuned F kept
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("kF 14.97)"), 1));
+            assertEquals("", s.error());
+        }
+    }
+
     /** A Flywheel Finder for a robot whose "flywheel" launcher has reversed() in Robot.java (as Tune and check makes it). */
     public static class ReversedFlywheelFinder extends com.crossbotics.ftchelper.finders.FlywheelFinderOpMode {
         @Override protected java.util.Map<String, Boolean> motorDirections() { return java.util.Collections.singletonMap("flywheel", true); }
@@ -123,7 +163,7 @@ public class FinderSafetyTest {
         try (SimRun s = new SimRun()) {
             s.sim.ds.register("Reversed Flywheel Finder", "TeleOp", ReversedFlywheelFinder.class);
             s.init("Reversed Flywheel Finder").start();
-            for (int i = 0; i < 4; i++) s.press(v -> s.g1().dpad_down = v);   // arm -> ... -> flywheel
+            assertTrue(String.join("\n", s.screen()), s.screenHas("> flywheel"));   // the list starts on the flywheel
             s.press(v -> s.g1().a = v);
             assertTrue(String.join("\n", s.screen()), s.screenHas("Direction : reversed, as in Robot.java"));
             SimMotor fly = s.robot().motors.get("flywheel");
