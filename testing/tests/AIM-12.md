@@ -7,7 +7,7 @@ where: both
 minutes: 15
 needs: [webcam, flywheel]
 kit_bots: []
-since: unreleased
+since: v0.46.0
 docs: [reference/parts/aim.md#aim-into-the-opening]
 ---
 

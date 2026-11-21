@@ -4034,7 +4034,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.46.0",
    "docs": [
     {
      "path": "docs/reference/parts/aim.md",
@@ -6603,7 +6603,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.46.0",
    "docs": [
     {
      "path": "docs/reference/parts/launcher.md",
@@ -7523,7 +7523,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.46.0",
    "docs": [
     {
      "path": "docs/reference/parts/launcher.md",
@@ -7593,7 +7593,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.46.0",
    "docs": [
     {
      "path": "docs/reference/parts/launcher.md",

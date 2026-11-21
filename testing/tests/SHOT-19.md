@@ -7,7 +7,7 @@ where: both
 minutes: 10
 needs: [flywheel, webcam]
 kit_bots: []
-since: unreleased
+since: v0.46.0
 docs: [reference/parts/launcher.md]
 ---
 

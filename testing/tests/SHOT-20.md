@@ -7,7 +7,7 @@ where: real
 minutes: 10
 needs: [flywheel]
 kit_bots: []
-since: unreleased
+since: v0.46.0
 docs: [reference/parts/launcher.md]
 ---
 
