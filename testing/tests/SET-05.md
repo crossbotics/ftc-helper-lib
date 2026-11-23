@@ -7,7 +7,7 @@ where: both
 minutes: 60
 needs: [any]
 kit_bots: [gobilda, gobilda-strafer, rev, andymark, studica]
-since: unreleased
+since: v0.48.0
 docs: [tuning/01-tune-and-check.md, modules/finders.md]
 ---
 

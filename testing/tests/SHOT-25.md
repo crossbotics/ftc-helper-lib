@@ -7,7 +7,7 @@ where: real
 minutes: 90
 needs: [flywheel, webcam]
 kit_bots: []
-since: unreleased
+since: v0.48.0
 docs: [tuning/14-group-shot-tuner.md]
 ---
 

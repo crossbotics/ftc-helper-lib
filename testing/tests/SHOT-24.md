@@ -7,7 +7,7 @@ where: real
 minutes: 60
 needs: [flywheel]
 kit_bots: []
-since: unreleased
+since: v0.48.0
 docs: [tuning/06-flywheel-tuner.md]
 ---
 

@@ -2387,7 +2387,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.48.0",
    "docs": [
     {
      "path": "docs/tuning/01-tune-and-check.md",
@@ -2997,7 +2997,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.48.0",
    "docs": [
     {
      "path": "docs/reference/parts/launcher.md",
@@ -3075,7 +3075,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.48.0",
    "docs": [
     {
      "path": "docs/tuning/06-flywheel-tuner.md",
@@ -3156,7 +3156,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.48.0",
    "docs": [
     {
      "path": "docs/tuning/14-group-shot-tuner.md",
@@ -7153,7 +7153,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.48.0",
    "docs": [
     {
      "path": "docs/reference/parts/launcher.md",

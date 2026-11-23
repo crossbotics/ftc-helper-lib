@@ -7,7 +7,7 @@ where: both
 minutes: 15
 needs: [flywheel]
 kit_bots: []
-since: unreleased
+since: v0.48.0
 docs: [reference/parts/launcher.md]
 ---
 
