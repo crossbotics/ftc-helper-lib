@@ -4,34 +4,40 @@
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Tune and check ---",
+        "--- Tune and check: 10 of 14 ---",
         "Robot: Robot",
-        "  Hardware Check: every device found, ...",
         "  ...",
-        "*> Odometry Tuner: pod directions and offsets",
+        "*> Odometry Tuner",
         "  ...",
-        "D-pad up/down = pick, A = open it. Then ▶."
+        "This tool: the odometry measures right.",
+        "D-pad up/down = choose. A = open it. Then ▶."
       ]
     },
     "odometry-tuner-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "*Odometry Tuner: press ▶ on the Driver Hub.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! After START the STICKS drive the robot, slowly.",
+        "!! Let go of the sticks = stop. Clear the floor.",
+        "Odometry tuner: checks the small measuring",
+        "wheels (pods) or sensor that track the robot.",
+        "You need: a tape line 48 in, with a start mark.",
+        "*Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "odometry-tuner-go-choose": {
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Odometry Tuner (Pinpoint) ---",
+        "!! The sticks drive it. Let go = stop.",
+        "--- Odometry tuner: choose a test ---",
+        "*Next: put it on the start mark. Do test 1.",
         "*> 1 Forward 48 in",
         "  2 Left 24 in",
-        "  3 Spin 3+ turns",
+        "  3 Spin 3 turns or more",
         "  4 Loop and back",
-        "A = start the test. The sticks drive slowly.",
-        "Pose : x 0.0, y 0.0 in, heading 0.0"
+        "D-pad up/down = choose. A = start the test."
       ]
     },
     "odometry-tuner-step-forward": {
@@ -39,10 +45,15 @@
       "where": "At 48 in, press:",
       "order": "press-first",
       "lines": [
-        "--- Odometry Tuner (Pinpoint) ---",
-        "...",
-        "Pose : x 0.4, y 47.6 in, heading 0.3",
-        "*Forward OK: 47.6 in for 48 (-0.8% off). Sideways ..."
+        "!! The sticks drive it. Let go = stop.",
+        "--- Odometry tuner: choose a test ---",
+        "*Forward direction is right. It measured",
+        "*47.6 in for 48 (0.8% too low)",
+        "Next: 2 Left 24 in.",
+        "  1 Forward 48 in",
+        "*> 2 Left 24 in",
+        "  3 Spin 3 turns or more",
+        "  4 Loop and back"
       ]
     },
     "odometry-tuner-step-left": {
@@ -50,10 +61,15 @@
       "where": "At 24 in to the left, press:",
       "order": "press-first",
       "lines": [
-        "--- Odometry Tuner (Pinpoint) ---",
-        "...",
-        "Pose : x -23.8, y 0.2 in, heading -0.4",
-        "*Left OK: 23.8 in for 24."
+        "!! The sticks drive it. Let go = stop.",
+        "--- Odometry tuner: choose a test ---",
+        "*Left direction is right.",
+        "Measured 23.8 in for 24 (not checked exactly).",
+        "Next: 3 Spin.",
+        "  1 Forward 48 in",
+        "  2 Left 24 in",
+        "*> 3 Spin 3 turns or more",
+        "  4 Loop and back"
       ]
     },
     "odometry-tuner-step-spin": {
@@ -61,11 +77,15 @@
       "where": "After 3 turns, press:",
       "order": "press-first",
       "lines": [
-        "--- Odometry Tuner (Pinpoint) ---",
+        "--- Odometry tuner: choose a test ---",
+        "Offsets measured (the line is below):",
+        "*X pod 84.2 mm RIGHT, Y pod 167.5 mm BACK",
+        "Next: install the line. Then run 4 Loop.",
         "...",
-        "*Offsets measured: X pod -84.2 mm left, Y pod ...",
-        "--- Copy into your code ---",
-        "*Robot.java: in the odometry(...) line,",
+        "--- NOT DONE ---",
+        "install the numbers, then run 4 Loop.",
+        "Open Robot.java:",
+        "  In odometry(...):",
         "*    .offsetsMm(-84.2, -167.5)"
       ]
     },
@@ -74,12 +94,14 @@
       "where": "Back on the mark, press:",
       "order": "press-first",
       "lines": [
-        "--- Odometry Tuner (Pinpoint) ---",
+        "--- Odometry tuner: choose a test ---",
+        "*Back on the mark: 0.64 in and 1.1 deg off.",
+        "OK (limits 1 in and 2 deg). Copy the line.",
         "...",
-        "Pose : x 0.5, y -0.4 in, heading 1.1",
-        "*Back on the mark within 0.64 in and 1.1 deg: ...",
-        "--- Copy into your code ---",
-        "*Tunables.Odometry: checked = true"
+        "--- DONE ---",
+        "Open Tunables.java, find class Odometry.",
+        "Change these lines (not there? add them):",
+        "*  public static boolean checked = true;"
       ]
     }
   }

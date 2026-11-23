@@ -18,6 +18,8 @@ import java.util.function.BooleanSupplier;
  * ready band can differ by more than the shot drop with no shot. In SPRAY it never stops early: the wheels
  * keep turning from one piece to the next.
  *
+ * <p>A continuous feed ({@link #startContinuous}) is never ended by a dip: only a stop or a jam ends it.
+ *
  * <p>The start of each feed is seen in {@link #update} too, so a feed that did not start through this
  * wrapper (the indexer's own feedOne) still gets its own starting count. A feed stop (ShotGate) that stops
  * the wheels on the shot calls {@link #stop}: a shot already seen then counts as fired.
@@ -66,7 +68,7 @@ final class ShotStopFeeder implements Feeder {
     @Override
     public void update() {
         inner.update();   // first: a feed that reached feedSec ends there (the time limit)
-        if (!indexer.isFeeding()) {
+        if (!indexer.isFeeding() || inner.isFeedingContinuously()) {
             started = false;
             return;
         }
@@ -105,13 +107,35 @@ final class ShotStopFeeder implements Feeder {
     @Override
     public void stop() {
         // A feed stop closing on the shot (ShotGate) stops the wheels: the piece went, so it counts as fired.
-        if (indexer.isFeeding() && started && shotSeen()) {
+        if (!inner.isFeedingContinuously() && indexer.isFeeding() && started && shotSeen()) {
             indexer.endFeedOnShot();
             lastEnd = "shot seen";
         } else {
             inner.stop();
         }
         started = false;
+    }
+
+    @Override
+    public boolean canFeedContinuously() {
+        return inner.canFeedContinuously();
+    }
+
+    @Override
+    public boolean startContinuous(double power) {
+        started = false;    // no shot to watch for: no dip ends a continuous feed
+        return inner.startContinuous(power);
+    }
+
+    @Override
+    public void stopContinuous() {
+        started = false;
+        inner.stopContinuous();
+    }
+
+    @Override
+    public boolean isFeedingContinuously() {
+        return inner.isFeedingContinuously();
     }
 
     @Override

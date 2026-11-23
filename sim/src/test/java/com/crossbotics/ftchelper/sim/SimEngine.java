@@ -161,6 +161,19 @@ final class SimEngine {
 
     private final Object placeLock = new Object();
 
+    /**
+     * Call before a hand move (a scenario's "set pose", "set piece", "push", "set preload"...): puts the robot on
+     * its INIT spot now (and, on the page, resets the field at an autonomous's INIT), if the physics has not done
+     * it yet. WHY: the physics thread does that on its next step, up to 10 ms after INIT showed its screen. A
+     * quick computer ran the next line first, and the physics then put the robot on its INIT spot over the
+     * "set pose" (it stood on BLUE's spot, not where the test put it: a file passed alone and failed in a folder).
+     * Done once per INIT spot, so the physics leaves the hand move alone after this. Do not call it holding the
+     * robot's or the Driver Station's lock.
+     */
+    void placeForInitBeforeHandMove() {
+        placeForInit();
+    }
+
     // True if the robot can stand at this pose (nothing overlaps).
     private boolean fits(com.crossbotics.ftchelper.util.FieldPose p) {
         synchronized (robot) {

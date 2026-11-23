@@ -13,7 +13,8 @@ import java.util.List;
  * that is what you want; in a test it means the second test file sees what the first one left behind
  * (a TeleOp test after an autonomous test failed its pick-up). So before each test: forget all of it,
  * put every Tunables number back to the value written in the code, and use an empty settings file
- * (tuned numbers saved on the pretend Control Hub do not count in a test: only the code does).
+ * (tuned numbers saved on the pretend Control Hub do not count in a test: only the code does), and no saved
+ * Flywheel Tuner session.
  */
 final class SimFresh {
     private SimFresh() { }
@@ -79,6 +80,14 @@ final class SimFresh {
         } catch (java.io.IOException e) {
             // no temporary file: the robot's own settings file is used (saved tuned numbers then count)
         }
+        // No Flywheel Tuner session from an earlier test: it would go on from there.
+        File tuner = com.crossbotics.ftchelper.finders.FlywheelTuneResults.file();
+        if (!tuner.delete() && tuner.exists()) System.err.println("Could not delete " + tuner);
+        new File(tuner.getPath() + ".new").delete();
+        // ...and no Group Shot Tuner session either.
+        File groups = com.crossbotics.ftchelper.finders.GroupShotTunerOpMode.savedFile();
+        if (!groups.delete() && groups.exists()) System.err.println("Could not delete " + groups);
+        new File(groups.getPath() + ".new").delete();
     }
 
     private static void save(Class<?> c, List<Saved> into) {

@@ -22,7 +22,8 @@ import java.util.Map;
  * Gamepad 1:
  *   D-pad up/down    = choose the sensor
  *   D-pad left/right = choose what is in front of it: a kind, or EMPTY (nothing)
- *   A                = measure it (20 readings, about half a second: hold the piece still)
+ *   A                = measure it (20 new readings: hold the piece still). The old measurement goes first,
+ *                      so a failed one never leaves an old line to copy
  *   B                = forget this sensor's measurements
  * Help: GUIDE (or hold START 1 s).
  * </pre>
@@ -44,18 +45,23 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
     /** How many readings one measurement averages. */
     static final int SAMPLES = 20;
     static final String EMPTY = "EMPTY";
+    /** A measurement with too few new readings stops after this long, seconds. */
+    static final double TIMEOUT_SEC = 5;
 
     /** Your robot in five files: {@code return new Robot();} (it needs a Pieces or a PieceSensor line). */
     protected abstract RobotDefinition robot();
 
-    private final List<PieceSensor> sensors = new ArrayList<>();
+    final List<PieceSensor> sensors = new ArrayList<>();   // (not private: for the tests, like the next two)
     private int sensorIndex = 0, kindIndex = 0;
     // The measurement running now: its readings (null = none running).
     private List<double[]> sampling = null;
     private String samplingWhat = "";
     // Per sensor: what was measured, by kind (or EMPTY): {value (hue or mm), saturation, distance mm}.
-    private final Map<PieceSensor, Map<String, double[]>> measured = new LinkedHashMap<>();
+    final Map<PieceSensor, Map<String, double[]>> measured = new LinkedHashMap<>();
     private String lastNote = "";
+    private double samplingSince = 0;
+    // Per sensor: why its measurements cannot give every line ("" = none).
+    private final Map<PieceSensor, String> problems = new LinkedHashMap<>();
     // The sensor's reading count at the last sample: only NEW readings are measured (a distance sensor
     // is read on a helper thread and may have no new one this loop).
     private int lastReading = -1;
@@ -99,13 +105,29 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
          .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> { if (sampling == null) { sensorIndex = (sensorIndex + 1) % sensors.size(); kindIndex = 0; } })
          .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> { if (sampling == null) kindIndex = (kindIndex + choices().size() - 1) % choices().size(); })
          .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> { if (sampling == null) kindIndex = (kindIndex + 1) % choices().size(); })
-         .bindPress(Pad.G1, Btn.A, () -> { if (sampling == null) { sampling = new ArrayList<>(); samplingWhat = choices().get(kindIndex); } })
+         .bindPress(Pad.G1, Btn.A, this::beginMeasuring)
          .bindPress(Pad.G1, Btn.B, () -> {
              sampling = null;
              measured.get(sensor()).clear();
-             results.removeStartingWith("piece:" + sensor().deviceName() + ":");
-             lastNote = "Forgot " + sensor().deviceName() + "'s measurements.";
+             writeLines(sensor());
+             lastNote = "Erased " + sensor().deviceName() + "'s numbers.";
          });
+    }
+
+    void beginMeasuring() {
+        if (sampling != null) return;
+        PieceSensor s = sensor();
+        sampling = new ArrayList<>();
+        samplingWhat = choices().get(kindIndex);
+        samplingSince = seconds();
+        lastNote = "";
+        // Measuring again: the old number, and every line worked out from it, goes first.
+        measured.get(s).remove(samplingWhat);
+        writeLines(s);
+    }
+
+    private static double seconds() {
+        return System.nanoTime() / 1e9;
     }
 
     private PieceSensor sensor() {
@@ -124,6 +146,12 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
         for (PieceSensor s : sensors) s.update();
         if (sampling == null) return;
         PieceSensor s = sensor();
+        if (seconds() - samplingSince > TIMEOUT_SEC) {
+            lastNote = "No reading of " + samplingWhat + " in " + FinderResults.num(TIMEOUT_SEC, 0) + " s: not measured."
+                    + "\nNext: check what it sees, and its cable. Then {A}.";
+            sampling = null;
+            return;
+        }
         if (s.readings() == lastReading) return;     // no new reading since the last sample
         lastReading = s.readings();
         double v = s.measured();
@@ -133,6 +161,8 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
         measured.get(s).put(samplingWhat, average(sampling, !s.measuresSize()));
         sampling = null;
         lastNote = "Measured " + samplingWhat + " at " + s.deviceName() + ".";
+        // On to the next thing to measure: the student only has to show it.
+        kindIndex = nextToMeasure(s, kindIndex);
         writeLines(s);
     }
 
@@ -160,9 +190,11 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
     }
 
     // The Tunables lines from what this sensor measured so far.
-    private void writeLines(PieceSensor s) {
-        String section = "Tunables." + s.name();
+    void writeLines(PieceSensor s) {
         String key = "piece:" + s.deviceName() + ":";
+        // All of this sensor's lines again: one that cannot be worked out now does not stay.
+        results.removeStartingWith(key);
+        String section = s.name(), problem = "";
         Map<String, double[]> m = measured.get(s);
         List<Double> values = new ArrayList<>();
         double farthestPiece = Double.NaN, leastSat = Double.NaN;
@@ -170,8 +202,7 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
             if (e.getKey().equals(EMPTY)) continue;
             double[] v = e.getValue();
             values.add(v[0]);
-            results.set(key + e.getKey(), section + ": " + e.getKey() + " = " + FinderResults.num(v[0], 0)
-                    + (s.measuresSize() ? "   // mm with it in front" : "   // its color (hue, degrees)"));
+            results.setTunable(key + "kind:" + e.getKey(), section, e.getKey(), FinderResults.num(v[0], 0));
             if (!Double.isNaN(v[2])) farthestPiece = Double.isNaN(farthestPiece) ? v[2] : Math.max(farthestPiece, v[2]);
             if (!Double.isNaN(v[1])) leastSat = Double.isNaN(leastSat) ? v[1] : Math.min(leastSat, v[1]);
         }
@@ -179,27 +210,68 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
         double gap = smallestGap(values, !s.measuresSize());
         if (!Double.isNaN(gap)) {
             if (s.measuresSize()) {
-                results.set(key + "tol", section + ": sizeToleranceMm = " + FinderResults.num(Math.max(2, gap / 2), 0));
-                if (gap < 10) lastNote = "Two kinds read only " + FinderResults.num(gap, 0) + " mm apart: they may be mixed up. Move the sensor?";
+                results.setTunable(key + "tol", section, "sizeToleranceMm", FinderResults.num(Math.max(2, gap / 2), 0));
+                if (gap < 10) problem = "Two kinds read only " + FinderResults.num(gap, 0) + " mm apart.\nThey may be mixed up. Next: move the sensor.";
             } else {
-                results.set(key + "tol", section + ": hueTolerance = " + FinderResults.num(Math.min(40, Math.max(5, gap / 2)), 0));
-                if (gap < 15) lastNote = "Two kinds' colors are only " + FinderResults.num(gap, 0) + " deg apart: they may be mixed up.";
+                results.setTunable(key + "tol", section, "hueTolerance", FinderResults.num(Math.min(40, Math.max(5, gap / 2)), 0));
+                if (gap < 15) problem = "Two colors are only " + FinderResults.num(gap, 0) + " deg apart.\nThey may be mixed up. Next: light it better.";
             }
         }
         double[] empty = m.get(EMPTY);
         if (empty != null && s.hasDistance() && !Double.isNaN(farthestPiece)) {
             double emptyMm = Math.min(empty[2], s.measuresSize() ? 2000 : 150);
-            if (emptyMm <= farthestPiece + 2) {
-                lastNote = "EMPTY reads no farther than a piece: the sensor cannot see when the spot is empty. Aim it at a far wall.";
+            if (Double.isNaN(emptyMm)) {
+                problem = "EMPTY gave no distance: no nearMm.\nNext: check the sensor, measure EMPTY again.";
+            } else if (emptyMm <= farthestPiece + 2) {
+                problem = "EMPTY reads no farther than a piece.\nNext: aim it at a far wall. Measure again.";
             } else {
-                results.set(key + "near", section + ": nearMm = " + FinderResults.num((emptyMm + farthestPiece) / 2, 0)
-                        + "   // a piece is there below this");
+                results.setTunable(key + "near", section, "nearMm", FinderResults.num((emptyMm + farthestPiece) / 2, 0));
             }
         }
         if (empty != null && !s.hasDistance() && !Double.isNaN(leastSat) && !Double.isNaN(empty[1])) {
-            if (empty[1] >= leastSat - 0.05) lastNote = "EMPTY looks as colorful as a piece: put a gray or black background behind the spot.";
-            else results.set(key + "sat", section + ": minSaturation = " + FinderResults.num((empty[1] + leastSat) / 2, 2));
+            if (empty[1] >= leastSat - 0.05) {
+                problem = "EMPTY looks as colorful as a piece.\nNext: gray or black behind it. Measure again.";
+            } else {
+                results.setTunable(key + "sat", section, "minSaturation", FinderResults.num((empty[1] + leastSat) / 2, 2));
+            }
         }
+        problems.put(s, problem);
+        updateStatus();
+    }
+
+    // The next kind (or EMPTY) that is not measured for this sensor, after this one; this one if none is.
+    private int nextToMeasure(PieceSensor s, int from) {
+        List<String> all = choices();
+        for (int i = 1; i <= all.size(); i++) {
+            int at = (from + i) % all.size();
+            if (!measured.get(s).containsKey(all.get(at))) return at;
+        }
+        return from;
+    }
+
+    // DONE when each sensor that was started has every kind and EMPTY, with no problem.
+    private void updateStatus() {
+        boolean any = false;
+        for (PieceSensor s : sensors) {
+            Map<String, double[]> m = measured.get(s);
+            if (m.isEmpty()) continue;
+            any = true;
+            String problem = problems.get(s);
+            if (problem != null && !problem.isEmpty()) {
+                results.notDone(s.deviceName() + " has a problem.");
+                return;
+            }
+            List<String> need = new ArrayList<>(s.kindNames());
+            need.add(EMPTY);
+            for (String kind : need) {
+                if (!m.containsKey(kind)) {
+                    results.notDone("measure " + kind + " at " + s.deviceName() + ".");
+                    return;
+                }
+            }
+        }
+        if (any) results.done();
+        else results.notDone("nothing is measured.");
     }
 
     // The smallest difference between any two values (hues go round the wheel). NaN with fewer than two.
@@ -217,38 +289,69 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
 
     @Override
     protected void showInit(RobotTelemetry t) {
-        t.text("Piece Tuner: " + sensors.size() + " sensor(s). Nothing moves. Press {PLAY}.");
+        t.warn("Nothing moves in this tool.");
+        t.text("Piece tuner: teaches each sensor what a game");
+        t.text("piece looks like.");
+        t.line("Piece sensors found", sensors.size());
+        t.text("You need: one piece of each kind.");
+    }
+
+    @Override
+    protected String stoppedWords() {
+        return "Nothing moves in this tool.";
+    }
+
+    // Help: nothing moves, and the sensors must keep reading (stopAll() closes them). A measurement ends.
+    @Override
+    protected void pause() {
+        if (sampling != null) lastNote = "Stopped for help: not measured. {A} = again.";
+        sampling = null;
     }
 
     @Override
     protected void show(RobotTelemetry t) {
         PieceSensor s = sensor();
-        t.section("Sensor " + (sensorIndex + 1) + "/" + sensors.size() + ": " + s.deviceName() + " (" + s.sensorType() + ")");
-        if (!s.problem().isEmpty()) t.warn(s.problem());
+        String what = choices().get(kindIndex);
+        t.section("Sensor " + (sensorIndex + 1) + " of " + sensors.size() + ": " + s.deviceName());
+        if (!s.problem().isEmpty()) {
+            t.warn(s.problem());
+            t.warn("Next: press STOP and check that sensor.");
+        }
+        if (sampling != null) {
+            t.text("Measuring " + samplingWhat + ": " + sampling.size() + " of " + SAMPLES + ". Hold still.");
+        } else {
+            if (what.equals(EMPTY)) t.text("Next: leave the spot empty. {A} = measure.");
+            else t.text("Next: hold " + what + " where it sits. {A} = measure.");
+            t.text("D-pad left/right = another kind, or EMPTY.");
+        }
+        t.line("Measuring for", "< " + what + " >");
         if (s.hasDistance()) t.line("Distance", FinderResults.num(s.distanceMm(), 0) + " mm");
-        if (!s.measuresSize()) t.line("Color", "hue " + FinderResults.num(s.hueDeg(), 0) + " deg, saturation " + FinderResults.num(s.saturation(), 2));
-        t.line("It sees", s.kind() + (s.rawKind().equals(s.kind()) ? "" : " (now " + s.rawKind() + ")"));
-        t.section("In front of it: < " + choices().get(kindIndex) + " >   (D-pad left/right)");
-        if (sampling != null) t.text("Measuring " + samplingWhat + ": " + sampling.size() + "/" + SAMPLES + " (hold still)");
-        else t.text("{A} = measure it, {B} = forget this sensor's, D-pad up/down = another sensor");
-        if (!lastNote.isEmpty()) t.text(lastNote);
-        if (!results.isEmpty()) t.text("Copy the lines below into Tunables.java (then rebuild): changes made only in the tuning menu are lost.");
+        if (!s.measuresSize()) {
+            t.line("Color number", Double.isNaN(s.hueDeg()) ? "no color seen" : FinderResults.num(s.hueDeg(), 0) + " of 360");
+            t.line("Color strength", FinderResults.num(s.saturation(), 2) + " of 1");
+        }
+        t.line("It sees now", s.rawKind() + " (uses installed numbers)");
+        warnLines(t, problems.containsKey(s) ? problems.get(s) : "");
+        textLines(t, lastNote);
+        t.text("{B} = erase this sensor's new numbers.");
+        if (sensors.size() > 1) t.text("D-pad up/down = another sensor.");
     }
 
     @Override
     protected String[] helpLines() {
         return new String[] {
-                "Shows each piece sensor's readings and measures",
-                "the numbers it needs. Nothing moves.",
+                "Teaches each sensor what a piece looks like.",
+                "Nothing moves in this tool.",
                 "D-pad up/down: choose the sensor.",
                 "D-pad left/right: what is in front of it",
                 "  (a kind of piece, or EMPTY).",
                 "{A}: measure (hold the piece where it sits).",
-                "{B}: forget this sensor's measurements.",
-                "Measure every kind and EMPTY, then copy the",
-                "lines into Tunables.java and rebuild.",
-                "Tuning-menu changes: copy them into",
-                "Tunables.java too, or they are lost."};
+                "{B}: erase this sensor's measurements.",
+                "Measure every kind and EMPTY.",
+                "At DONE: copy into Tunables.java, install.",
+                "New numbers work only after you install.",
+                "Changed some in the tuning menu? Copy those",
+                "into Tunables.java too, or they are lost."};
     }
 
     @Override

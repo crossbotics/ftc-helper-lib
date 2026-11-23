@@ -88,4 +88,19 @@ public class StepsMenuTest {
         t.onlyIf("Later", "A").start("A", 0).end().menuChoice("Later", "A", "B");
         assertNull(t.where);
     }
+
+    @Test public void numberAndAngleLinesAreReadByTheSteps() {
+        Gamepad g = new Gamepad();
+        InitMenu menu = new InitMenu(g);
+        Steps first = new Steps(null, menu, null);
+        first.menuNumber("Distance (in)", 0, 96, 1, 24).menuAngle("Direction (deg)", 5, 0);
+        assertEquals(Arrays.asList("Distance (in)", "Direction (deg)"), first.menuLabels);
+        right(g, menu);
+        down(g, menu);
+        right(g, menu);
+        assertEquals(25, first.number("Distance (in)"), 1e-9);
+        assertEquals(5, first.number("Direction (deg)"), 1e-9);
+        // Auto notices a change by reading every line as text.
+        assertEquals("25", menu.get("Distance (in)"));
+    }
 }

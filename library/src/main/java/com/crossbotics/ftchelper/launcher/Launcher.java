@@ -32,6 +32,9 @@ import java.util.function.LongSupplier;
  * <p>If it is not ready within {@link #readyTimeout}, it gives up the remaining shots and
  * {@link #whyNotReady()} says what was missing. That is your first debug clue.
  *
+ * <p>A group fed without a break (aimed, then no wait between pieces) is {@link #continuous()}: see
+ * {@link ContinuousFire}. Nothing changes until you start one.
+ *
  * <p>How it works: {@link #shoot} only adds to a count of "shots still to fire". Each loop,
  * {@link #update()} feeds ONE piece if everything is ready, and otherwise just checks again next loop.
  * No waiting anywhere (see docs/guides/non-blocking.md). Tutorial 17 builds a shooter step by step.
@@ -91,6 +94,12 @@ public class Launcher implements Subsystem {
     private double volleyGapSec = 1.0;
     private double lastFeedAt = Double.NEGATIVE_INFINITY;
     private final ShotStats stats = new ShotStats();
+    private final ContinuousFire group = new ContinuousFire(this);
+    // The distance the shot speed came from (NaN = setRpm, or none yet), and the most that speed may be
+    // (an estimate's limit; NaN = none).
+    private double shotDistance = Double.NaN, speedLimit = Double.NaN;
+    private List<String> problemLines = null;   // the last problem as short screen lines; null = one line
+    private boolean faultHandled = false;    // the feeder was stopped for this flywheel fault
     private double problemAt = 0;        // when lastProblem happened (seconds), for the warning's few seconds
 
     /** SPRAY feeds only when the wheel turns at least this share of its target speed (0.5). */
@@ -127,7 +136,12 @@ public class Launcher implements Subsystem {
 
     /** A shot table, used by {@link #setDistance}. */
     public Launcher table(ShotTable shotTable) {
+        boolean changed = table != null && shotTable != table;
         table = shotTable;
+        if (changed) {
+            shotDistance = Double.NaN;    // that distance was looked up in the other table
+            group.stop(ContinuousFire.End.TABLE_CHANGED);
+        }
         return this;
     }
 
@@ -231,18 +245,25 @@ public class Launcher implements Subsystem {
     /** Sets the shot speed by hand, in RPM. */
     public void setRpm(double rpm) {
         shotRpm = rpm;
+        shotDistance = Double.NaN;
+        speedLimit = Double.NaN;
     }
 
     /**
      * Sets the shot from the table: the speed, and the hood angle (plus {@link #hoodOffset}) when there is
      * a hood and the table has hood angles. Distance in the table's unit (inches in the examples). Safe to
      * call every loop, e.g. with the camera's distance: the hood is only sent a new angle when it changes
-     * by more than {@link #hoodDeadband} (0.25 deg).
+     * by more than {@link #hoodDeadband} (0.25 deg). An estimate past the table's ends
+     * ({@link ShotTable#extendEnds}) keeps its speed limit, after {@link #speedScale} and a boost too. A
+     * group that feeds keeps its own speed and hood: the new numbers wait for its end.
      */
     public void setDistance(double distance) {
         if (table == null) throw new IllegalStateException("Launcher.setDistance(...) has no shot table: add .table(...) where you make the Launcher (docs/modules/launcher.md)");
         ShotTable.Shot shot = table.lookup(distance);
         shotRpm = shot.rpm;
+        shotDistance = distance;
+        speedLimit = table.isEstimated(distance) ? table.getExtendMaxRpm() : Double.NaN;
+        if (group.isFeeding()) return;
         // A table with no hood column leaves the hood where it is (it would otherwise go to 0 degrees).
         if (hood != null && table.hasHood()) {
             double want = shot.hoodDeg + hoodOffsetDeg;
@@ -304,16 +325,23 @@ public class Launcher implements Subsystem {
         spinning = false;
         shotsLeft = 0;
         off = false;
+        group.stop(ContinuousFire.End.STOPPED);
     }
 
     /** Shoots {@code count} pieces (spins up first if needed). Adds to any shots still waiting. */
     public void shoot(int count) {
+        // Another fire command takes over from a group: the group ends, it never runs under the shots.
+        group.stop(ContinuousFire.End.OTHER_FIRE);
+        if (flywheel.isFaulted()) {
+            showProblem(faultLines());
+            return;
+        }
         spinUp();
         feeder.clearJam();          // the driver asks again: try again (a new jam is detected again)
         // Nothing was waiting: start the "ready" time limit fresh. (If shots were already waiting,
         // keep the old timer, so pressing again and again cannot keep it waiting forever.)
         if (shotsLeft == 0) waitingSince = Double.NaN;
-        lastProblem = "";
+        clearProblem();
         // No shot speed yet: refuse now with a clear reason, instead of waiting and then
         // "giving up" with a confusing flywheel message.
         if (shotRpm <= 0) {
@@ -324,9 +352,37 @@ public class Launcher implements Subsystem {
         shotsLeft += Math.max(0, count);
     }
 
-    /** Cancels the shots still waiting (keeps spinning). */
+    /** Cancels the shots still waiting, and ends a group of continuous fire now (keeps spinning). */
     public void stopShooting() {
         shotsLeft = 0;
+        group.stop(ContinuousFire.End.STOPPED);
+    }
+
+    /**
+     * The group of continuous fire of this launcher: start it, stop it, set it up, ask about it.
+     *
+     * <pre>{@code
+     * launcher.continuous().maxSec(3).boostRpm(0);
+     * launcher.continuous().start(() -> robot.aim().shotSight());
+     * }</pre>
+     */
+    public ContinuousFire continuous() {
+        return group;
+    }
+
+    /** The distance the shot speed came from ({@link #setDistance}); NaN after {@link #setRpm}, or with none. */
+    public double getShotDistance() {
+        return shotDistance;
+    }
+
+    /** The speed limit of the shot speed in use: an estimate's ({@link ShotTable#extendEnds}); NaN = none. */
+    public double getSpeedLimit() {
+        return speedLimit;
+    }
+
+    /** How long it waits to be ready before it gives up, seconds ({@link #readyTimeout}). */
+    public double getReadyTimeout() {
+        return readyTimeoutSec;
     }
 
     /** Fully off: no shots, no idle speed. Stays off until spinUp(), shoot() or idle(). */
@@ -341,7 +397,8 @@ public class Launcher implements Subsystem {
         // "try { ... } catch (RuntimeException e) { ... }" means: run this, and if it fails with an
         // error, do not crash right away; keep the error (e) and go on. We report the first error at the end.
         RuntimeException first = null;
-        try { feeder.stop(); } catch (RuntimeException e) { first = e; }
+        try { group.stop(ContinuousFire.End.STOPPED); } catch (RuntimeException e) { first = e; }
+        try { feeder.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
         try { flywheel.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
         if (hood != null) {
             try { hood.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
@@ -359,22 +416,50 @@ public class Launcher implements Subsystem {
      */
     @Override
     public void update() {
+        try {
+            runLoop();
+        } catch (RuntimeException e) {
+            // SAFETY: an error while a group runs must not leave the feeder running. The first error is the one to show.
+            try { group.stop(ContinuousFire.End.ERROR); } catch (RuntimeException alsoFailed) { /* the first one is shown */ }
+            throw e;
+        }
+    }
+
+    private void runLoop() {
         double now = clockNanos.getAsLong() / 1e9;   // seconds
         // Off: 0. Spinning: the shot speed. Otherwise: the idle speed.
         // ("a ? b : c ? d : e" reads: if a then b, else if c then d, else e.)
-        flywheel.setRpm(off ? 0 : spinning ? shotRpm * speedScale : idleRpm);
+        flywheel.setRpm(off ? 0 : spinning ? shotTarget() : idleRpm);
         flywheel.update();
+        group.beforeFeeder(now);      // before the feeder's update: a group that ends here feeds no more
+        boolean faulted = flywheel.isFaulted();
+        if (faulted) {
+            shotsLeft = 0;
+            if (!faultHandled) {
+                showProblem(faultLines());
+                feeder.stop();
+                faultHandled = true;  // only once it really stopped
+            }
+        } else {
+            faultHandled = false;
+        }
         stats.watch(now, flywheel.getRpm(), flywheel.isReady());
         feeder.update();
         if (hood != null) hood.update();
 
+        boolean groupWasActive = group.isActive();
+        group.afterFeeder(now);
         // A jammed feeder: cancel the shots. Pushing more pieces into a jam only makes it worse.
         // The driver clears it by pressing shoot again.
         if (feeder.isJammed()) {
             shotsLeft = 0;
-            problem("feeder jammed");
+            // (A group's own jam lines already say what to do.)
+            if (problemLines == null || group.getEnd() != ContinuousFire.End.JAM) problem("feeder jammed");
+            else problemAt = now;
             return;
         }
+        // A group feeds for itself, and a faulted wheel gets nothing.
+        if (groupWasActive || faulted) return;
         // Nothing to do this loop: no shots waiting, the feeder is still pushing the last piece,
         // or it is too soon after the last piece (the wheel needs a moment to get back to speed).
         if (shotsLeft == 0 || feeder.isBusy() || now < nextFeedAt) return;
@@ -405,6 +490,68 @@ public class Launcher implements Subsystem {
     // ---------------------------------------------------------------------------------------
     // Questions
     // ---------------------------------------------------------------------------------------
+
+    // The speed while spinning: the shot's (scaled, inside an estimate's limit), or a feeding group's own.
+    private double shotTarget() {
+        if (group.isFeeding()) return group.getSnapshot().feedRpm;
+        double rpm = shotRpm * speedScale;
+        return Double.isNaN(speedLimit) ? rpm : Math.min(rpm, speedLimit);
+    }
+
+    // ---- For ContinuousFire ----
+
+    double now() {
+        return clockNanos.getAsLong() / 1e9;
+    }
+
+    Feeder feeder() {
+        return feeder;
+    }
+
+    void dropWaitingShots() {
+        shotsLeft = 0;
+        waitingSince = Double.NaN;
+    }
+
+    void clearProblem() {
+        lastProblem = "";
+        problemLines = null;
+    }
+
+    // A problem in short lines, one idea each: what is wrong, then what to do.
+    void showProblem(List<String> lines) {
+        StringBuilder all = new StringBuilder();
+        for (String line : lines) all.append(all.length() == 0 ? "" : " / ").append(line);
+        problem(all.toString());
+        problemLines = new ArrayList<>(lines);
+    }
+
+    private List<String> faultLines() {
+        List<String> out = new ArrayList<>();
+        out.add("Can NOT fire: bad wheel speed reading");
+        out.add(Flywheel.FAULT_RESET);
+        return out;
+    }
+
+    boolean wheelAtSpeed() {
+        return spinning && flywheel.isReady();
+    }
+
+    boolean hoodMoving() {
+        return hood != null && !hood.isDone();
+    }
+
+    // The first requireReady check that says no; "" for none.
+    String failedCheck() {
+        for (int i = 0; i < checks.size(); i++) if (!checks.get(i).getAsBoolean()) return checkNames.get(i);
+        return "";
+    }
+
+    // After a group's feed: the next single keeps the time between pieces.
+    void groupFed(double atSec) {
+        nextFeedAt = atSec + shotIntervalSec;
+        waitingSince = Double.NaN;
+    }
 
     // The time after a feed within which the next piece is part of the same volley.
     private double volleyGap() {
@@ -465,20 +612,21 @@ public class Launcher implements Subsystem {
     /** What it is doing now (see {@link State}). */
     public State getState() {
         if (feeder.isBusy()) return State.FEEDING;
-        if (shotsLeft > 0) return State.WAITING_READY;
+        if (shotsLeft > 0 || group.isActive()) return State.WAITING_READY;
         if (off) return State.OFF;
         return spinning ? State.SPINNING : State.IDLE;
     }
 
-    /** True while shots are waiting or a piece is being fed. */
-    public boolean isShooting() { return shotsLeft > 0 || feeder.isBusy(); }
+    /** True while shots are waiting, a piece is being fed, or a group of continuous fire waits or feeds. */
+    public boolean isShooting() { return shotsLeft > 0 || feeder.isBusy() || group.isActive(); }
     /** Shots still waiting to be fired. */
     public int getShotsLeft() { return shotsLeft; }
-    /** Pieces fed since the OpMode started. */
+    /** Pieces fed since the OpMode started (one at a time: a group of continuous fire cannot count its pieces). */
     public int getShotsFired() { return fired; }
     // Remembers a problem and when, for the warning (shown PROBLEM_SHOW_SEC, then it clears itself).
     private void problem(String words) {
         lastProblem = words;
+        problemLines = null;
         problemAt = clockNanos.getAsLong() / 1e9;
     }
 
@@ -523,10 +671,18 @@ public class Launcher implements Subsystem {
     public void addTelemetry(RobotTelemetry t) {
         // A problem shows for a few seconds (a jam stays while the feeder says it is jammed).
         double now = clockNanos.getAsLong() / 1e9;
-        if (!lastProblem.isEmpty() && (now - problemAt < PROBLEM_SHOW_SEC || feeder.isJammed())) t.warn("Launcher " + lastProblem);
+        if (!lastProblem.isEmpty() && (now - problemAt < PROBLEM_SHOW_SEC || feeder.isJammed())) {
+            if (problemLines == null) t.warn("Launcher " + lastProblem);
+            else for (String line : problemLines) t.warn(line);
+        }
         // Waiting to fire: say for what (e.g. "waits for: turret aimed"), so the drivers know.
-        String waits = getState() == State.WAITING_READY ? whyNotReady() : "";
-        t.line("Launcher", "%s  left %d%s%s", getState(), shotsLeft, isReady() ? "  READY" : "", waits.isEmpty() ? "" : "  waits for: " + waits);
+        if (group.isActive()) {
+            // Its own short lines: how to stop, what is wrong, what to do. ("READY" would mislead: it may not be aimed.)
+            addGroupTelemetry(t);
+        } else {
+            String waits = getState() == State.WAITING_READY ? whyNotReady() : "";
+            t.line("Launcher", "%s  left %d%s%s", getState(), shotsLeft, isReady() ? "  READY" : "", waits.isEmpty() ? "" : "  waits for: " + waits);
+        }
         flywheel.addTelemetry(t);
         t.debug("Launcher waits for", whyNotReady().isEmpty() ? "-" : whyNotReady());
         t.debug("Launcher fired", fired);
@@ -534,6 +690,25 @@ public class Launcher implements Subsystem {
         stats.addTelemetry(t);
         feeder.addTelemetry(t);
         if (hood != null) hood.addTelemetry(t);
+    }
+
+    // A group's lines, in this order: how to stop, then the one problem and what to do.
+    private void addGroupTelemetry(RobotTelemetry t) {
+        if (group.isFeeding()) {
+            t.line("Fire", "feeder RUNNING. Let go to stop.");
+            t.line("Feed time", "%.1f seconds (limit %s)", group.getFeedSec(), plainNumber(group.getSnapshot().maxSec));
+            return;
+        }
+        t.line("Fire", "NOT yet. Let go to cancel.");
+        String problem = group.whyNotReady();
+        if (problem.isEmpty()) return;
+        t.line("Problem", problem);
+        t.line("Do this", group.whatToDo());
+    }
+
+    // 3 for 3.0, and 2.5 for 2.5.
+    private static String plainNumber(double v) {
+        return v == Math.rint(v) ? String.valueOf((long) v) : String.valueOf(v);
     }
 
     // Adds text to the list, with ", " between items.

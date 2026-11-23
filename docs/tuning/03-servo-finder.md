@@ -17,7 +17,7 @@ Find where a servo part stops at each end, and the positions you use between the
 
 3. The Servo Finder's INIT screen shows. Nothing moves yet. Press **▶** (start) on the Driver Hub.
 
-   ![The Servo Finder's INIT screen: Nothing moves until you nudge it. Press start](../images/hub-servo-finder-go-start.svg)
+   ![The Servo Finder's INIT screen: the servo can jump when you press A. Press start](../images/hub-servo-finder-go-start.svg)
 
 4. Press **D-pad up/down** until the arrow is on your servo's name, then press **A**. The names come from
    the robot configuration.
@@ -45,27 +45,27 @@ servo, the servo's catalog part).
 4. **Find the direction.** Press **D-pad left** once (a 0.01 step), then press **D-pad up** (bigger) a few
    times and watch the part. Write it down: "bigger = open", "bigger = up". No standard says which way a
    servo turns ([why](../conventions.md#servos-and-motors-which-way-is-bigger)). For a catalog servo, the
-   screen shows a **Hint** (goBILDA: "bigger = clockwise (seller)"). But only your test counts, because the
-   part's way depends on how you mount the servo.
+   screen shows the seller's word (goBILDA: "A bigger number turns it clockwise"). But only your test counts,
+   because the part's way depends on how you mount the servo.
 
-   ![Press D-pad up: the arm turns clockwise, and the Driver Hub shows Position : 0.600 and the Hint line](../images/hub-servo-finder-step-direction.svg)
+   ![Press D-pad up: the arm turns clockwise, and the Driver Hub shows Position : 0.600 and the seller's direction](../images/hub-servo-finder-step-direction.svg)
 
 5. **Find the first end, slowly.** Move toward one end in small steps (D-pad up/down) until the part
-   BARELY touches the frame. D-pad left makes the step smaller, down to 0.001. **A servo that hums is pushing on
+   is about to touch the frame. Stop before it presses. D-pad left makes the step smaller, down to 0.001. **A servo that hums is pushing on
    something: back off at once.** It gets hot and can strip its gears. Back off 0.01 more and press **X**.
 
-   ![At one end, press X: the arm is just before the frame, and the Driver Hub shows End X : 0.120](../images/hub-servo-finder-step-end-x.svg)
+   ![At one end, press X: the arm is just before the frame, and the Driver Hub shows Ends (X, B) : 0.120, -](../images/hub-servo-finder-step-end-x.svg)
 
 6. **Find the other end.** Move the part all the way back with the D-pad, past the middle, to the other
    end. Use a big step first, then small steps near the frame. Stop just before the frame in the same way,
    and press **B**.
 
-   ![At the other end, press B: the arm moved across to just before the other frame, and the Driver Hub shows End B : 0.880](../images/hub-servo-finder-step-end-b.svg)
+   ![At the other end, press B: the arm moved across to just before the other frame, and the Driver Hub shows Ends (X, B) : 0.120, 0.880](../images/hub-servo-finder-step-end-b.svg)
 
 7. **Save each position you need** (open, closed, rest, push...): move there and press **A**. Then copy the
    lines into `Tunables.java` ([Put the numbers in your code](#put-the-numbers-in-your-code)).
 
-   ![Press A at each position: the Driver Hub shows Tunables.Claw: P1 = 0.210, P2 = 0.770 under Copy into your code](../images/hub-servo-finder-step-positions.svg)
+   ![Press A at each position: the Driver Hub shows DONE, class Claw and a Java line for P1 and P2](../images/hub-servo-finder-step-positions.svg)
 
 8. **To make "bigger" go the other way** (for example, bigger = up), add `.reversed()` to the part in
    Robot.java. Then find the positions again: each old number becomes 1 minus it.
@@ -74,8 +74,8 @@ servo, the servo's catalog part).
 mirrored. Then put both arms on at the middle (step 3), so they match, and go on from step 4. If they do
 not quite meet, set `alsoTrim` afterward, in TeleOp.
 
-**At ▶**, the part goes straight to its first position from wherever it is, because a servo always knows
-its own angle. Keep hands clear.
+**In your TeleOp, at ▶**, the part goes straight to its first position from wherever it is: a servo holds
+its own angle, but it cannot tell the program that angle. Keep hands clear.
 
 ## The finder's buttons
 
@@ -90,30 +90,30 @@ its own angle. Keep hands clear.
    with the D-pad. Up/down moves it by the step. Left/right makes the step smaller/bigger (0.1, 0.05, 0.01,
    0.005, 0.001). The step starts at 0.05, and the screen shows it. Use a big step to get close, then a
    small one for the exact spot.
-2. Move it toward one end until it BARELY stops pushing on the frame. Listen: a straining servo hums.
+2. Move it slowly toward one end. Stop before the part presses on the frame. A straining servo hums.
    Back off a little (0.01), and press **X**. Do the same at the other end, and press **B**. From then on,
    the finder keeps the servo between them. To go past an end, for example to mark it again, hold **LB**
    while you nudge. The ends are for you: keep every position you save between them. In five files, there
    are no end lines to copy. The older helpers get the ends as the servo's limits.
 3. Move to each position you need (open, closed...) and press **A**. Rename P1, P2 in your code.
-   Five files: the line `Tunables.Claw: P1 = 0.210, P2 = 0.770` becomes
-   `public static double open = 0.210, closed = 0.770;` in `Tunables.Claw`. Keep every position
+   Five files: in class Claw, `public static double P1 = 0.210;` becomes
+   `public static double open = 0.210;` with your name. Keep every position
    between the ends that the finder shows. **Y** undoes the last saved position. **BACK** chooses another
    servo, and the lines found so far stay on the screen.
 
 **`reversed()` in Robot.java:** in **Tune and check**, the finder turns the servo the same way. The screen
-says `Direction: reversed, as in Robot.java`, so its numbers go straight into Tunables.java. Either order is
+says `Direction : reversed, as in Robot.java`, so its numbers go straight into Tunables.java. Either order is
 fine: `rest` may be higher or lower than `push`, and `open` higher or lower than `closed`. Which way a bigger
 number turns depends on the servo, because there is no standard. D-pad up shows you
 ([Signs and units](../conventions.md#servos-and-motors-which-way-is-bigger)).
 
 **A part on two servos** (`alsoServoReversed(...)` or `alsoServo(...)` in Robot.java): for example, a claw
 with a servo for each finger, or two feed arms. Choose the FIRST servo. In **Tune and check**, the second
-servo moves with it (mirrored or the same way, as Robot.java says), so the two never fight. The screen shows
-`Moves with it: claw_right (mirrored)`. You cannot choose the second servo alone. The finder does not use
+servo moves with it (mirrored or the same way, as Robot.java says). Their arms must match, or they push
+against each other: put both on at the middle. The screen shows `Moves with it : claw_right (mirrored)`. You cannot choose the second servo alone. The finder does not use
 `alsoTrim`: check it afterward, in TeleOp. A Servo Finder of your own (not from Tune and check) does not
 know Robot.java and moves only one servo. It would drag the other, unpowered servo through its gears. So
-take the other side's arm off first, or unplug the second servo's wire.
+disconnect the other servo from the part first. Unplugging its wire does not disconnect its gears.
 
 ## Fix a mistake
 
@@ -128,17 +128,17 @@ take the other side's arm off first, or unplug the second servo's wire.
 
 ## Put the numbers in your code
 
-When you have saved both ends and your positions, the screen looks like this. The marked lines are the ones for
-the robot in five files. The `PositionServo.create(...)` lines above them are for the older helpers.
+When you have saved both ends and your positions, the screen says DONE and looks like this. A project with
+no Robot.java gets `PositionServo.create(...)` lines in their place.
 
-![The Driver Hub with both ends marked (0.120 and 0.880), two saved positions, and the lines to copy: Tunables.Claw: P1 = 0.210, P2 = 0.770](../images/hub-servo-finder-done.svg)
+![The Driver Hub with both ends marked (0.120 and 0.880), DONE, and the lines to copy in class Claw: P1 = 0.210 and P2 = 0.770](../images/hub-servo-finder-done.svg)
 
 The robot uses `Tunables.java` and `Robot.java`, not the finder's screen. Take a photo of the screen,
 and type each line into the file. Or copy it from the [results file](01-tune-and-check.md#get-the-results-file-on-the-laptop):
 
 | The finder shows | Put it in |
 | --- | --- |
-| `Tunables.Claw: P1 = 0.210, P2 = 0.770` | the part's section in `Tunables.java`. Rename them: `public static double open = 0.210, closed = 0.770;` |
+| `Open Tunables.java, find class Claw.` and `public static double P1 = 0.210;` | class `Claw` in `Tunables.java`. Write your names: `public static double open = 0.210;` |
 
 ## Put an arm back on
 

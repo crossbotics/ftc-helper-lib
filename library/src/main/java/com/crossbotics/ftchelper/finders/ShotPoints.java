@@ -151,12 +151,17 @@ public final class ShotPoints {
      */
     public String tunablesLine(String section, String field) {
         if (points.isEmpty()) return "";
+        return "public static double[][] " + field + " = " + tableValue() + ";   // in Tunables." + section;
+    }
+
+    // The table's Java value: {{48, 2550}, {72, 2900}}.
+    String tableValue() {
         List<String> rows = new ArrayList<>();
         for (Saved s : points) {
             rows.add("{" + shortNum(s.shot.distance) + ", " + FinderResults.num(s.shot.rpm, 0)
                     + (hasHood ? ", " + trim(FinderResults.num(s.shot.hoodDeg, hoodDecimals)) : "") + "}");
         }
-        return "public static double[][] " + field + " = {" + FinderResults.commas(rows) + "};   // in Tunables." + section;
+        return "{" + FinderResults.commas(rows) + "}";
     }
 
     /** A hood number with no zeros that mean nothing: 12.5 -> "12.5", 0.42 -> "0.42", 350 -> "350". */
@@ -439,14 +444,14 @@ public final class ShotPoints {
          */
         public String mark(boolean hit) {
             double[] shot = unmarked.pollFirst();
-            if (shot == null) return "No shot to mark: shoot first ({RB}), then {A} = HIT or {B} = MISS.";
+            if (shot == null) return "No shot to mark: shoot first ({RB}).";
             if (tally.isEmpty()) tally.setSpot(shot[3]);
             else if (Double.isNaN(tally.spotIn())) tally.setSpot(shot[3]);
             tally.mark(shot[0], shot[1], hit, shot[2]);
             marks.addLast(new double[] {shot[0], shot[1], shot[2], shot[3], hit ? 1 : 0});
             if (marks.size() > 50) marks.pollFirst();   // undo goes back 50 marks at most
-            return (hit ? "HIT" : "MISS") + " at " + what(shot) + ": " + tally.hits(shot[0], shot[1]) + "/"
-                    + tally.shots(shot[0], shot[1]) + " in at this speed. (Wrong? left stick click = undo.)";
+            return (hit ? "HIT" : "MISS") + " at " + what(shot) + ".\n" + tally.hits(shot[0], shot[1]) + " of "
+                    + tally.shots(shot[0], shot[1]) + " went in at this speed.\nWrong? Left stick click = undo.";
         }
 
         /**
@@ -460,7 +465,7 @@ public final class ShotPoints {
             boolean hit = m[4] == 1;
             tally.unmark(m[0], m[1], hit, m[2]);
             unmarked.addFirst(new double[] {m[0], m[1], m[2], m[3]});
-            return "Took back the " + (hit ? "HIT" : "MISS") + " at " + what(m) + ": mark that shot again ({A} / {B}).";
+            return "Took back the " + (hit ? "HIT" : "MISS") + " at " + what(m) + ".\nMark that shot again ({A} or {B}).";
         }
 
         /**
@@ -472,7 +477,7 @@ public final class ShotPoints {
         public String dropLast() {
             double[] s = unmarked.pollLast();
             if (s == null) return "No shot waiting to be marked.";
-            return "Dropped the last shot (" + what(s) + "): it will not be marked.";
+            return "Forgot the last shot (" + what(s) + ").\nIt does not count.";
         }
 
         /**
@@ -489,8 +494,7 @@ public final class ShotPoints {
             if (!tally.isEmpty() && !Double.isNaN(spot) && Math.abs(distanceIn - spot) > SPOT_MOVE_IN) {
                 clear();
                 // (it says the limit, not the distance now: the robot may still be moving)
-                return "Moved more than " + FinderResults.num(SPOT_MOVE_IN, 0) + " in from where the shots were marked: "
-                        + "the hit counts start again here.";
+                return "Moved more than " + FinderResults.num(SPOT_MOVE_IN, 0) + " in: the counts start again here.";
             }
             int dropped = 0;
             for (Iterator<double[]> it = unmarked.iterator(); it.hasNext(); ) {
@@ -501,7 +505,7 @@ public final class ShotPoints {
                 }
             }
             if (dropped == 0) return "";
-            return "Moved: " + dropped + (dropped == 1 ? " shot" : " shots") + " fired at the old spot dropped (not marked).";
+            return "Moved: " + dropped + (dropped == 1 ? " shot" : " shots") + " from the old spot not counted.";
         }
 
         /** Forgets every shot and mark (a new table, after a save). */

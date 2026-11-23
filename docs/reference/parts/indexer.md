@@ -121,12 +121,14 @@ launcher's `fire()` instead: the launcher runs its indexer.
 | `clearJam()` | clears a jam |
 | `adjustPush(steps)` | a servo indexer: moves `push` by steps x `pushStep` (a D-pad trim in TeleOp) |
 | `onFeed(runnable)` | runs your code each time a feed really starts |
+| `startContinuous(power)`, `stopContinuous()` | a CR servo or motor: feeds with no break until you stop it (`Double.NaN` = its own power). No time, sensor or shot ends it, and it counts no piece. Stop it on the button's release. A launcher's [continuous fire](launcher.md#continuous-fire) does this for you |
 | `stop()` | stops |
 
 | Question | What it tells you |
 | --- | --- |
 | `isBusy()` | whether it still moves: a feed, or the arm coming back |
 | `isFeeding()` | whether a feed runs: true from its start until it ends (normally, jammed or stopped) |
+| `canFeedContinuously()`, `isFeedingContinuously()` | whether it can feed with no break; whether it does now |
 | `isJammed()` | whether it is jammed |
 | `pushNow()` | the `push` position in use (with the trim) |
 | `isServo()`, `isReversed()` | whether it is a servo indexer; whether it turns the other way |

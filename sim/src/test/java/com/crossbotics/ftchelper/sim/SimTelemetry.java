@@ -50,12 +50,32 @@ final class SimTelemetry {
     // one: about a real robot's loop time. (The simulator may wait; the library never does.)
     static final long LOOP_MS = 2;
     private long lastUpdate = 0;
+    // Slower loops, like a busy robot's (a camera, many motors): off (both LOOP_MS) unless a scenario sets
+    // them. The same lengths every run: a fixed seed.
+    private long loopMinMs = LOOP_MS, loopMaxMs = LOOP_MS;
+    private java.util.Random loopLengths = new java.util.Random(1);
+
+    /**
+     * How long each loop (screen update) takes from now on: somewhere from min to max, milliseconds.
+     *
+     * @param minMs 2 or more
+     * @param maxMs minMs to 1000
+     */
+    synchronized void loopTime(long minMs, long maxMs) {
+        if (minMs < LOOP_MS || maxMs < minMs || maxMs > 1000) {
+            throw new IllegalArgumentException("a loop time: " + LOOP_MS + " to 1000 milliseconds, the shorter first");
+        }
+        loopMinMs = minMs;
+        loopMaxMs = maxMs;
+        loopLengths = new java.util.Random(1);
+    }
 
     private void pace() {
         long now = System.nanoTime(), wait;
         synchronized (this) {
-            wait = lastUpdate + LOOP_MS * 1_000_000L - now;
-            lastUpdate = Math.max(now, lastUpdate + LOOP_MS * 1_000_000L);
+            long loopMs = loopMinMs == loopMaxMs ? loopMinMs : loopMinMs + loopLengths.nextInt((int) (loopMaxMs - loopMinMs + 1));
+            wait = lastUpdate + loopMs * 1_000_000L - now;
+            lastUpdate = Math.max(now, lastUpdate + loopMs * 1_000_000L);
         }
         if (wait <= 0) {
             synchronized (this) { lastUpdate = now; }

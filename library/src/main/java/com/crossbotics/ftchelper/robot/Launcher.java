@@ -2,11 +2,13 @@ package com.crossbotics.ftchelper.robot;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.crossbotics.ftchelper.hardware.MotorSetup;
+import com.crossbotics.ftchelper.launcher.ContinuousFire;
 import com.crossbotics.ftchelper.launcher.Feeder;
 import com.crossbotics.ftchelper.launcher.Flywheel;
 import com.crossbotics.ftchelper.launcher.Launcher.ShotMode;
 import com.crossbotics.ftchelper.match.Alliance;
 import com.crossbotics.ftchelper.match.MatchTimer;
+import com.crossbotics.ftchelper.launcher.ShotSight;
 import com.crossbotics.ftchelper.launcher.ShotTable;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.tuning.Tunable;
@@ -63,6 +65,16 @@ import java.util.List;
  * into each new camera distance, so the small moves of the camera's distance do not restart "ready". With
  * {@code lockSpeedWhileFiring = true}, the speed stays fixed while a shot waits or feeds (the camera's distance
  * can still move then, but not that shot's speed).
+ *
+ * <p><b>Opt-in, all off unless Tunables says so:</b>
+ * <ul>
+ * <li>{@code extendTableEnds = true}: each end of the shot table continues the line of its two rows, up to
+ *     {@code extendMaxRpm} (0.8 x the motor's top speed), shown as "estimated".</li>
+ * <li>{@code speedControl = "BANG_BANG"}: full power, feedforward or coast, in this loop, with an encoder
+ *     check ({@link Flywheel.SpeedControl}). After its fault, switch the flywheel off, then on.</li>
+ * <li>{@code continuousOnHold = true}: holding the fire button feeds one aimed group without a break
+ *     ({@link ContinuousFire}); a tap still fires one, and tap-then-hold still sprays.</li>
+ * </ul>
  *
  * <p><b>Several shot tables</b>, one per game piece (they fly differently): every
  * {@code speedByDistance...} table in the section is one, named by the rest of its name.
@@ -151,6 +163,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private String spinAtStartWhy = "";
     // True when the trimmed speed is cut to the motor's top speed (shown as "(motor limit)").
     private boolean atMotorLimit = false;
+    // That cut is an estimate's speed limit (extendTableEnds), not the motor's.
+    private boolean atTableLimit = false;
     // Last time's trim {percent, rpm steps}, offered at INIT until it is used or the trim is changed; null = none.
     private double[] offered = null;
     // A held D-pad: when the next step is due (seconds); NaN = not held.
@@ -218,6 +232,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     static final double EJECT_BAND = 0.5;
     /** Eject waits at most this long for the wheel to slow to (or reach) the eject speed, seconds. */
     static final double EJECT_SLOW_SEC = 3;
+    /** The same with bang-bang: it only coasts down (no brake, no reverse), and a heavy wheel coasts for long. */
+    static final double EJECT_COAST_SEC = 10;
     private boolean spinningBeforeEject = false;
     private double ejectRpm = 600, ejectSec = 1;
     // Tunables ejectFeedSec: a spinning feeder (CR servo or motor) runs only this long for an eject, so it
@@ -227,6 +243,21 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private boolean ejectFeedDone = false;
     // The distance to use before any goal was seen (Tunables fallbackDistanceIn); NaN = none.
     private double fallbackDistanceIn = Double.NaN;
+    // ---- Continuous fire (Tunables continuousOnHold) ----
+    // The fire button's press, with continuousOnHold: NONE = no press, or one that fires as without the option;
+    // UNDECIDED = down, not known yet if a tap or a hold (nothing feeds); GROUP = it asked for its one group;
+    // DEAD = it was ended, and nothing happens until the next press.
+    private enum Press { NONE, UNDECIDED, GROUP, DEAD }
+    private Press press = Press.NONE;
+    private boolean continuousOnHold = false;
+    // Tunables ballDropRpm: NaN = not written. And: the feed stop got its START (start() or startFeedForTuner()).
+    private double ballDropRpm = Double.NaN;
+    private boolean feedStarted = false;
+    // The alliance while no press or group was on: a different one ends them.
+    private Alliance allianceAtPress = null;
+    // The flywheel was switched off by a person while it had an encoder fault: the next "on" clears the fault.
+    private boolean offAfterFault = false;
+
     // Keeps camera glitches out of the distance (the middle of the last pictures, and the jump check).
     private com.crossbotics.ftchelper.vision.DistanceFilter distanceFilter = new com.crossbotics.ftchelper.vision.DistanceFilter();
 
@@ -644,6 +675,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     void build(Devices devices, TunableSection t) {
+        press = Press.NONE;
+        offAfterFault = false;
         if (distanceCamera != null && distanceCamera.robot != robot) {
             throw new IllegalStateException("Robot.java: " + name() + " takes its speed from a camera that is not "
                     + "added: write camera = add(Camera...) and speedFromDistance(camera)");
@@ -678,6 +711,17 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             if (!(drop > 0)) throw new IllegalStateException("Tunables." + name() + ".shotDropRpm = " + Shape.n(drop)
                     + ": it must be more than 0. Write a bigger number, or delete the line (default 150)");
             flywheel.shotDrop(drop);
+        }
+        // The tuners' pretend shot (ballDropRpm): the speed one real ball takes off the wheel. Only the Flywheel
+        // Tuner and the Group Shot Tuner use it, never the shot count. Not written: they use shotDropRpm.
+        ballDropRpm = Double.NaN;
+        feedStarted = false;
+        if (t.has("ballDropRpm")) {
+            double ball = t.number("ballDropRpm", 0);
+            if (!(ball > 0) || Double.isInfinite(ball)) {
+                throw badSetting("One ball's speed drop", "ballDropRpm", ball, "Use more than 0 RPM.", 200);
+            }
+            ballDropRpm = ball;
         }
         // At or under the ready band, the normal wobble of a wheel "at speed" can count as a shot.
         if (flywheel.getShotDrop() <= flywheel.getTolerance()) {
@@ -714,6 +758,14 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             numberNotes.add(name() + ": battery compensation on, nominalVolts not written: assuming "
                     + Shape.n(Flywheel.DEFAULT_NOMINAL_VOLTS) + " V (the Flywheel Finder shows yours; "
                     + "batteryCompensation = false turns it off)");
+        }
+        // A written kF also gives bang-bang its untuned start (kF 12.08 at 13 V: 0.00224 volts for each RPM).
+        setUpSpeedControl(devices, t, nominal, gainsFromCatalog ? Double.NaN : bangKvFromKf(kF, kind.countsPerRev, nominal));
+        boolean extendEnds = t.has("extendTableEnds") && t.flag("extendTableEnds", false);
+        double extendMax = t.has("extendMaxRpm") ? t.number("extendMaxRpm", 0) : EXTEND_MAX_SHARE * topRpm;
+        if (extendEnds && !(extendMax > 0 && extendMax <= topRpm)) {
+            throw badSetting("Estimate speed limit", "extendMaxRpm", extendMax,
+                    "Use more than 0, at most " + Shape.n(topRpm) + " RPM.", EXTEND_MAX_SHARE * topRpm);
         }
         if (t.has("trimStepPercent")) trimStepPct = Math.abs(t.number("trimStepPercent", 1));
         // Last time's trim (an earlier OpMode since the robot app started): offer it, never apply it.
@@ -778,7 +830,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                     indexer != null && !indexer.missing ? feed : null, indexer != null && indexer.isServo(),
                     pushers, assistSec, moveSec,
                     flywheel, stream, feedWheel != null && !feedWheel.missing ? feedWheel : null,
-                    () -> spinning);   // (true in an eject too: the wheel brings the piece to throw out)
+                    () -> spinning && !flywheel.isFaulted());   // (true in an eject too: the wheel brings the piece to throw out)
             if (feedWheelOutWith != null) {
                 final Intake out = feedWheelOutWith;
                 gate.wheelBacksOutWhile(() -> out.isPushingOut() && !part.isShooting());
@@ -811,6 +863,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         for (int i = 0; i < checks.size(); i++) part.requireReady(checkNames.get(i), checks.get(i));
         // Quick turn on fire (Tunables.Aim.aimOnFire): wait for the turn (up to aimOnFireSec). Always true when it is off.
         part.requireReady("turning to the goal", () -> robot.aim() == null || robot.aim().readyToFire(this));
+        setUpContinuous(t);
         // The shot modes (all optional: read only when written, so no "missing" note).
         if (t.has("quickBandRpm")) part.quickBand(t.number("quickBandRpm", Double.NaN));
         if (t.has("quickMaxWaitSec")) part.quickMaxWait(t.number("quickMaxWaitSec", 0.3));
@@ -883,6 +936,16 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 }
             }
             if (table.points().isEmpty()) continue;   // an empty table cannot give a speed
+            if (extendEnds) {
+                try {
+                    table.extendEnds(extendMax);
+                } catch (IllegalStateException bad) {
+                    throw new IllegalStateException(bad.getMessage() + "\n" + openTunables() + "\nThe table is " + field + ".", bad);
+                }
+                List<String> problems = table.extensionNotes();
+                if (!problems.isEmpty()) numberNotes.add("Check shot table " + field + ":");
+                numberNotes.addAll(problems);
+            }
             tables.put(e.getKey(), table);
             tableFields.put(e.getKey(), field);
             if (columns == 3) {
@@ -938,6 +1001,133 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                             + tools
                     : defaultsNote(motorId, fromCatalog, Character.toUpperCase(tools.charAt(0)) + tools.substring(1));
         }
+    }
+
+    /** An estimate's speed limit when extendMaxRpm is not written: this share of the motor's top speed. */
+    static final double EXTEND_MAX_SHARE = 0.8;
+
+    // Tunables speedControl and bang-bang's numbers. PID (the default) is left exactly as it was set up.
+    private void setUpSpeedControl(Devices devices, TunableSection t, double nominalVolts, double kvFromKf) {
+        String word = t.has("speedControl") ? t.word("speedControl", "PID") : "PID";
+        Flywheel.SpeedControl wanted;
+        if (word.equals("PID")) {
+            wanted = Flywheel.SpeedControl.PID;
+        } else if (word.equals("BANG_BANG")) {
+            wanted = Flywheel.SpeedControl.BANG_BANG;
+        } else {
+            throw new IllegalStateException("The speed control name is wrong."
+                    + "\nYou wrote \"" + word + "\"."
+                    + "\nUse \"PID\" or \"BANG_BANG\", in capitals."
+                    + "\n" + openTunables()
+                    + "\nFor normal speed control, write:"
+                    + "\npublic static String speedControl = \"PID\";");
+        }
+        double ks = t.has("bangKs") ? t.number("bangKs", 0) : 0;
+        double kv = t.has("bangKv") ? t.number("bangKv", 0) : Double.NaN;
+        double fullBelow = t.has("bangFullBelowRpm") ? t.number("bangFullBelowRpm", 200) : 200;
+        double coastAbove = t.has("bangCoastAboveRpm") ? t.number("bangCoastAboveRpm", 75) : 75;
+        double hysteresis = t.has("bangHysteresisRpm") ? t.number("bangHysteresisRpm", 50) : 50;
+        double most = t.has("bangMaxPower") ? t.number("bangMaxPower", 1) : 1;
+        if (!(ks >= 0) || Double.isInfinite(ks)) {
+            throw badSetting("Power to beat friction", "bangKs", ks, "Use 0 volts or more.", 0);
+        }
+        if (t.has("bangKv") && (!(kv > 0) || Double.isInfinite(kv))) {
+            throw badSetting("Power for each RPM", "bangKv", kv, "Use more than 0 volts for each RPM.",
+                    round(Flywheel.CATALOG_VOLTS / flywheel.getMaxRpm(), 5));
+        }
+        if (!(fullBelow > 0) || Double.isInfinite(fullBelow)) {
+            throw badSetting("Full power starts below", "bangFullBelowRpm", fullBelow, "Use more than 0 RPM.", 200);
+        }
+        if (!(coastAbove >= 0) || Double.isInfinite(coastAbove)) {
+            throw badSetting("Coasting starts above", "bangCoastAboveRpm", coastAbove, "Use 0 RPM or more.", 75);
+        }
+        if (!(hysteresis >= 0 && hysteresis < fullBelow)) {
+            throw badSetting("Switching gap", "bangHysteresisRpm", hysteresis,
+                    "Use 0 to less than " + Shape.n(fullBelow) + " RPM.", Math.min(50, fullBelow / 2));
+        }
+        if (!(most >= 0.3 && most <= 1)) {
+            throw badSetting("Most power", "bangMaxPower", most, "Use 0.3 to 1 (1 is full power).", 1);
+        }
+        // A written bangKv always wins. Then the team's own kF. Then (NaN) the catalog's guess.
+        boolean kvWritten = !Double.isNaN(kv);
+        if (!kvWritten) kv = kvFromKf;
+        flywheel.bangFeedforward(ks, kv).bangThresholds(fullBelow, coastAbove, hysteresis).bangMaxPower(most);
+        // Made only when bang-bang first asks: with PID nothing new reads the battery (no helper thread either).
+        final java.util.function.DoubleSupplier[] reader = {null};
+        flywheel.bangBattery(() -> {
+            if (reader[0] == null) reader[0] = devices.batteryReader();
+            return reader[0].getAsDouble();
+        }, nominalVolts >= 9 && nominalVolts <= 14 ? nominalVolts : Flywheel.DEFAULT_NOMINAL_VOLTS);
+        if (wanted == Flywheel.SpeedControl.PID) return;
+        flywheel.speedControl(wanted);
+        if (kvWritten) return;
+        numberNotes.add(Double.isNaN(kv) ? "Wheel power is a catalog guess (bangKv)."
+                : "Wheel power starts from your kF (bangKv).");
+        numberNotes.add("Not tuned yet: it may NOT hold the exact speed.");
+        numberNotes.add("Run the Flywheel Tuner.");
+    }
+
+    /**
+     * Bang-bang's untuned bangKv from a written kF, volts for each RPM. WHY: the hub's F gain already is the
+     * power that holds a speed (F x encoder counts a second / 32767 of full power, at the battery it was
+     * found on), and it was found on this wheel. The catalog only knows a motor with no load.
+     *
+     * @return kF x countsPerRev / 60 / 32767 x nominalVolts; NaN when that is not above 0 (then the catalog's guess)
+     */
+    static double bangKvFromKf(double kF, double countsPerRev, double nominalVolts) {
+        double kv = kF * countsPerRev / 60 / 32767 * nominalVolts;
+        return kv > 0 && !Double.isInfinite(kv) ? kv : Double.NaN;
+    }
+
+    // Tunables continuous...: the group's numbers, and an INIT note for what makes a hold refuse.
+    private void setUpContinuous(TunableSection t) {
+        continuousOnHold = t.has("continuousOnHold") && t.flag("continuousOnHold", false);
+        double maxSec = t.has("continuousMaxSec") ? t.number("continuousMaxSec", 3) : ContinuousFire.DEFAULT_MAX_SEC;
+        double boost = t.has("continuousBoostRpm") ? t.number("continuousBoostRpm", 0) : 0;
+        double feedPower = t.has("continuousFeedPower") ? t.number("continuousFeedPower", 1) : Double.NaN;
+        if (!(maxSec > 0 && maxSec <= 10)) {
+            throw badSetting("Fire time limit", "continuousMaxSec", maxSec, "Use more than 0, at most 10 seconds.", 3);
+        }
+        if (!(boost >= 0) || Double.isInfinite(boost)) {
+            throw badSetting("Extra wheel speed", "continuousBoostRpm", boost, "Use 0 RPM or more.", 0);
+        }
+        if (t.has("continuousFeedPower") && (!(Math.abs(feedPower) <= 1) || feedPower == 0)) {
+            boolean forward = indexer == null || !indexer.spins() || indexer.missing || indexer.wheelPower() >= 0;
+            throw badSetting("Nonstop feed power", "continuousFeedPower", feedPower,
+                    forward ? "Use more than 0, at most 1 (full power)." : "Use less than 0, down to -1 (full power).",
+                    forward ? 1 : -1);
+        }
+        part.continuous().maxSec(maxSec).boostRpm(boost).feedPower(feedPower);
+        boolean canFeed = part.continuous().canFire();
+        if (canFeed && !Double.isNaN(feedPower) && Math.signum(feedPower) == -Math.signum(indexer.wheelPower())) {
+            throw badSetting("Nonstop feed power", "continuousFeedPower", feedPower,
+                    "It turns backward: pieces would come out.", -feedPower);
+        }
+        if (!continuousOnHold) return;
+        if (!canFeed) {
+            numberNotes.add("Holding fire will NOT work: wrong feeder.");
+            numberNotes.add("It needs a roller or a spinning servo.");
+            numberNotes.add("Tap fire for one piece.");
+        } else if (!usesDistance()) {
+            numberNotes.add("Holding fire will NOT work: no distance.");
+            numberNotes.add("In Robot.java add speedFromDistance(camera).");
+            numberNotes.add("Until then, tap fire for one piece.");
+        }
+    }
+
+    // "Open Tunables.java, find class Launcher."
+    private String openTunables() {
+        return "Open Tunables.java, find class " + name() + ".";
+    }
+
+    // A number out of range stops INIT in short lines: what is wrong, the rule, where, and the line to write.
+    private IllegalStateException badSetting(String plain, String field, double value, String rule, double good) {
+        return new IllegalStateException("Wrong number: " + plain
+                + "\nYou wrote " + Shape.n(value) + "."
+                + "\n" + rule
+                + "\n" + openTunables()
+                + "\nChange this line:"
+                + "\npublic static double " + field + " = " + exact(good) + ";");
     }
 
     @Override
@@ -1003,6 +1193,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     @Override
     void start() {
         if (gate != null) gate.start();
+        feedStarted = true;
         if (usesDistance()) speedMode.on();
         if (spinAtStart && !missing) {
             spinning = true;
@@ -1016,16 +1207,23 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void spinUp() {
         needBuilt(part);
         touch();
+        // Off and on again by a person: the one thing that clears an encoder fault. (A fire press never does.)
+        if (offAfterFault) flywheel.clearFault();
+        offAfterFault = false;
         spinning = true;
         idleAfterShots = false;   // asked to stay spun up
         part.spinUp();
     }
 
-    /** Back to the idle speed ({@code idleRpm}, 0 = coast to a stop); cancels shots still waiting. */
+    /**
+     * Back to the idle speed ({@code idleRpm}, 0 = coast to a stop); cancels shots still waiting, and ends
+     * a group of continuous fire now.
+     */
     public void idle() {
         needBuilt(part);
         touch();
-        idleNow();
+        if (flywheel.isFaulted()) offAfterFault = true;
+        try { interruptFire(ContinuousFire.End.STOPPED); } finally { idleNow(); }
     }
 
     // Back to idle WITHOUT touch(): the automatic return after a shot fired while off (update()). touch()
@@ -1045,12 +1243,23 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return spinning && !missing;
     }
 
-    /** Spins up if idle, idles if spinning. */
+    /**
+     * Spins up if idle, idles if spinning. During a press or group of continuous fire it always switches
+     * off: the group ends now.
+     */
     @Override
     public void toggle() {
+        boolean faulted = flywheel != null && flywheel.isFaulted();
+        boolean groupOn = part != null && (press == Press.UNDECIDED || part.continuous().isActive());
         // Spun up only for a shot fired while off: this toggle means "keep it on" (the shot still goes).
-        if (spinning && !idleAfterShots) idle();
-        else spinUp();
+        // (Not for a group, and not for a faulted wheel: there it means "off".)
+        if (groupOn || (spinning && (!idleAfterShots || faulted))) {
+            idle();
+        } else {
+            // Faulted and already off by itself: this press is the "on" after that "off".
+            if (faulted) offAfterFault = true;
+            spinUp();
+        }
     }
 
     /**
@@ -1171,6 +1380,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      */
     public void useSpeed(double rpm) {
         touch();
+        double next = Double.isNaN(rpm) || rpm <= 0 ? Double.NaN : rpm;
+        if (part != null && Double.compare(next, fixedRpm) != 0) part.continuous().stop(ContinuousFire.End.CONTROL_CHANGED);
         fixedRpm = Double.isNaN(rpm) || rpm <= 0 ? Double.NaN : rpm;
     }
 
@@ -1207,27 +1418,36 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     /**
      * A ready-made action: one piece out through the launcher at a low speed ({@code ejectRpm}, 600, for
      * {@code ejectSec}, 1 s), e.g. a wrong-colour piece. It feeds once the wheel is near the eject speed
-     * (half to one and a half times it: a wheel at shooting speed slows down first, up to 3 s), then the
+     * (half to one and a half times it: a wheel at shooting speed slows down first, up to 3 s, or up to 10 s
+     * with bang-bang, which only coasts), then the
      * wheel goes back to what it did before. A spinning feeder (CR servo or motor) runs its {@code feedSec}, or
      * {@code ejectFeedSec} when that is set (shorter: one piece, not the next one too). "Eject" in the auto
      * builder's Action list; TeleOp: {@code g2.b.press(robot.launcher.ejectAction())}.
      */
     public Action ejectAction() {
+        double sec = ejectSec;      // as it is now; only the wait for the coast is asked while it runs
         return Action.named("Eject")
                 .then(this::eject)
-                .waitUntil("the piece out", () -> !ejecting, ejectSec + EJECT_SLOW_SEC + 1);
+                .waitUntil("the piece out", () -> !ejecting, () -> sec + ejectSlowSec() + 1);
+    }
+
+    // How long an eject waits for the wheel to slow. Bang-bang only coasts, so it needs longer.
+    private double ejectSlowSec() {
+        boolean coasts = flywheel != null && flywheel.getSpeedControl() == Flywheel.SpeedControl.BANG_BANG;
+        return coasts ? EJECT_COAST_SEC : EJECT_SLOW_SEC;
     }
 
     /** Starts an eject now (see {@link #ejectAction()}). */
     public void eject() {
         needBuilt(part);
         touch();
+        interruptFire(ContinuousFire.End.EJECT);
         if (!ejecting) spinningBeforeEject = spinning;
         ejecting = true;
         ejectFed = false;
         ejectFeedEndsAt = Double.NaN;
         ejectFeedDone = false;
-        ejectGiveUpAt = clock.getAsLong() / 1e9 + EJECT_SLOW_SEC;
+        ejectGiveUpAt = clock.getAsLong() / 1e9 + ejectSlowSec();
         spinning = true;
         part.stopShooting();
         if (gate != null) gate.cancel();
@@ -1256,7 +1476,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      * Sets the shot mode by hand: {@code ShotMode.CAREFUL}, {@code QUICK} or {@code SPRAY} (see
      * {@link com.crossbotics.ftchelper.launcher.Launcher.ShotMode}). {@code null} = the launcher chooses
      * (the default): a tap fires CAREFUL, a held button QUICK; in autonomous CAREFUL while there is time,
-     * QUICK when CAREFUL will not fit before the park time, SPRAY when QUICK will not fit either; in
+     * QUICK when CAREFUL will not fit before the park time, SPRAY when QUICK will not fit either (with
+     * {@code continuousOnHold} a held button fires a group instead, shown as CAREFUL: never SPRAY); in
      * TeleOp's last {@code sprayLastSec}, SPRAY. SPRAY only with {@code Tunables...sprayEnabled = true}.
      */
     public void shotMode(ShotMode mode) {
@@ -1283,6 +1504,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     // The mode for the next piece, and why. Asked every loop, so it follows the time left.
     private ShotMode chooseMode() {
         modeWhy = "";
+        // A group keeps its mode to its end (also into the last seconds), and never counts as SPRAY for the aim.
+        if (part.continuous().isActive()) {
+            modeWhy = "continuous";
+            return ShotMode.CAREFUL;
+        }
         if (forcedMode != null) {
             modeWhy = "set in code";
             return forcedMode;
@@ -1291,6 +1517,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             modeWhy = "tap, then hold";
             return ShotMode.SPRAY;
         }
+        // A press that began before the last seconds and may still become a group: not SPRAY.
+        if (press == Press.UNDECIDED) return ShotMode.CAREFUL;
         MatchTimer timer = MatchTimer.current();
         if (timer != null && timer.isRunning()) {
             if (timer.isAutonomous()) {
@@ -1301,12 +1529,18 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 if (!sprayOn || time >= left * secPerShot(ShotMode.QUICK)) return ShotMode.QUICK;
                 return ShotMode.SPRAY;
             }
-            if (sprayOn && sprayLastSec > 0 && timer.secondsLeft() <= sprayLastSec) {
+            if (inSprayTime(timer)) {
                 modeWhy = fmt("last %.0f s", sprayLastSec);
                 return ShotMode.SPRAY;
             }
         }
-        return holding ? ShotMode.QUICK : ShotMode.CAREFUL;
+        return holding && press == Press.NONE ? ShotMode.QUICK : ShotMode.CAREFUL;
+    }
+
+    // TeleOp's last sprayLastSec, with SPRAY allowed.
+    private boolean inSprayTime(MatchTimer timer) {
+        return timer != null && timer.isRunning() && !timer.isAutonomous()
+                && sprayOn && sprayLastSec > 0 && timer.secondsLeft() <= sprayLastSec;
     }
 
     /**
@@ -1348,10 +1582,20 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return most;
     }
 
-    /** True if a shot table is in use and the distance is inside its tested rows; null with no table (fixed speed). */
+    /**
+     * True if a shot table is in use and it reaches the distance (its tested rows, or an estimate with
+     * extendTableEnds); null with no table (fixed speed).
+     */
     Boolean inRange(double distanceIn) {
         if (tableName == null || tables.get(tableName) == null || Double.isNaN(distanceIn)) return null;
-        return tables.get(tableName).covers(distanceIn);
+        return tables.get(tableName).reaches(distanceIn);
+    }
+
+    // "estimated", "estimated, speed limited", or "" inside the measured rows (and with the option off).
+    String estimateWords(double distanceIn) {
+        ShotTable table = tableName == null ? null : tables.get(tableName);
+        if (table == null || !table.isEstimated(distanceIn)) return "";
+        return table.isSpeedLimited(distanceIn) ? "estimated, speed limited" : "estimated";
     }
 
     /**
@@ -1366,6 +1610,14 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      * a steady stream that does not wait for the speed (only with {@code sprayEnabled}; Tunables
      * {@code sprayOnTapHold = false} turns this one off). Without it, the same press keeps firing as above.</li>
      * </ul>
+     * With {@code Tunables continuousOnHold = true} a press first waits to be known. It spins up and aims
+     * at once, and feeds nothing:
+     * <ul>
+     * <li>let go before holdSec: one shot, as a tap;</li>
+     * <li>held to holdSec: one group of continuous fire ({@link ContinuousFire}: strictly aimed and ready,
+     * then no break until let go, or until one of its safety ends). An ended group needs a new press;</li>
+     * <li>tap, then hold, and a press that starts in the last {@code sprayLastSec}: SPRAY as above.</li>
+     * </ul>
      * Pair it with {@link #ceaseFire()} on release, or put both on a button with {@link #fireOn}.
      */
     public void fireWhileHeld() {
@@ -1377,7 +1629,16 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             heldShots = 0;
             pressedAt = now;
             afterTap = sprayOnTapHold && !Double.isNaN(tappedAt) && now - tappedAt <= tapGap.get();
-            fire();
+            press = Press.NONE;
+            if (continuousOnHold && !afterTap && forcedMode != ShotMode.SPRAY && !inSprayTime(MatchTimer.current())) {
+                beginPress();
+            } else {
+                fire();
+            }
+            return;
+        }
+        if (press != Press.NONE) {
+            pressHeld(now);
             return;
         }
         touch();
@@ -1413,6 +1674,10 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      */
     public void ceaseFire() {
         if (part == null) return;
+        if (press != Press.NONE) {
+            pressReleased();
+            return;
+        }
         touch();
         // The hold adds a shot only when nothing waits, so it is first in line: drop it if it still waits,
         // and keep the shots others (fire(), another button) added after it.
@@ -1433,6 +1698,136 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         spraying = false;
     }
 
+    // ---- The fire press with continuousOnHold ----
+
+    // The button went down: spin up and aim now. Nothing feeds until the press is known.
+    private void beginPress() {
+        touch();    // first: it may cancel an action, and halt() ends whatever press was on
+        boolean wasOff = !spinning;
+        press = Press.UNDECIDED;
+        allianceAtPress = robot.alliance();
+        askedToFire = true;
+        spinning = true;
+        part.spinUp();
+        if (wasOff) idleAfterShots = true;
+        if (robot.aim() != null) robot.aim().relock();
+    }
+
+    // The button is still down.
+    private void pressHeld(double now) {
+        if (press == Press.GROUP) {
+            if (part.continuous().isActive()) touch();
+            return;     // one press, one group: it never asks again
+        }
+        // (An ended press does not touch the launcher: an eject that ended it must go on.)
+        if (press != Press.UNDECIDED) return;
+        touch();
+        if (press != Press.UNDECIDED || now - pressedAt < holdTime.get()) return;   // (touch may have ended it)
+        press = Press.GROUP;
+        spinning = true;
+        ContinuousFire group = part.continuous();
+        if (!group.start(this::shotSight)) return;      // refused: the Driver Station says why
+        // What ends a group also refuses one, before it can feed.
+        if (robot.fireScreen != null) group.stop(robot.fireScreen);
+        else if (ejecting) group.stop(ContinuousFire.End.EJECT);
+        else if (intakePushesOut()) group.stop(ContinuousFire.End.INTAKE_REVERSE);
+    }
+
+    // The button came up: the feed stops in this call, before anything else.
+    private void pressReleased() {
+        Press was = press;
+        press = Press.NONE;
+        holding = false;
+        afterTap = false;
+        spraying = false;
+        tappedAt = Double.NaN;
+        part.continuous().stop(ContinuousFire.End.RELEASED);
+        if (was == Press.DEAD) return;
+        touch();
+        double now = clock.getAsLong() / 1e9;
+        // A tap: one shot, with a tap's own aim rule. Not while paused: the pause ended this press. A press still
+        // UNDECIDED is a tap too, even let go a moment after holdSec: the loop that makes it a group did not run yet.
+        if (was == Press.UNDECIDED && !robot.isPaused()) {
+            fire();
+            tappedAt = now;
+        }
+    }
+
+    // Ends the press and its group. The press stays ended until the button goes down again.
+    void interruptFire(ContinuousFire.End why) {
+        if (press != Press.NONE) press = Press.DEAD;
+        if (part != null) part.continuous().stop(why);
+    }
+
+    // For the aim: turn to the goal from the press to the group's end.
+    boolean wantsGroupAim() {
+        return part != null && !missing && (press == Press.UNDECIDED || part.continuous().isActive());
+    }
+
+    // For the aim: the camera offset a feeding group started with, NaN without one.
+    double groupAimOffset() {
+        if (part == null || !part.continuous().isFeeding()) return Double.NaN;
+        return part.continuous().getSnapshot().aimOffsetDeg;
+    }
+
+    private boolean intakePushesOut() {
+        for (Module<?> m : robot.modules()) if (m instanceof Intake && ((Intake) m).isPushingOut()) return true;
+        return false;
+    }
+
+    // Every loop, before the speed and the feeder: what ends a press or a group from outside the launcher.
+    private void watchGroup() {
+        ContinuousFire group = part.continuous();
+        if (press != Press.UNDECIDED && !group.isActive()) {
+            allianceAtPress = robot.alliance();
+            return;
+        }
+        if (allianceAtPress != null && allianceAtPress != robot.alliance()) {
+            interruptFire(ContinuousFire.End.ALLIANCE_CHANGED);
+        } else if (group.isActive() && intakePushesOut()) {
+            interruptFire(ContinuousFire.End.INTAKE_REVERSE);
+        } else if (group.isFeeding() && usesDistance() && (!speedMode.isOn() || !Double.isNaN(fixedRpm))) {
+            interruptFire(ContinuousFire.End.CONTROL_CHANGED);
+        }
+    }
+
+    /**
+     * What a group of continuous fire judges by: the aim's {@link Aim#shotSight()}, with the distance this
+     * launcher filtered for the speed (one bad picture does not end a group). No distance while the speed
+     * does not come from a distance.
+     *
+     * <pre>{@code
+     * robot.launcher.part().continuous().start(robot.launcher::shotSight);
+     * }</pre>
+     */
+    public ShotSight shotSight() {
+        if (part == null || missing || robot == null || robot.aim() == null) return ShotSight.NONE;
+        boolean known = speedMode.isOn() && Double.isNaN(fixedRpm) && distanceSource != Aim.Source.NONE;
+        return robot.aim().shotSight().withDistance(known ? lastDistance : Double.NaN);
+    }
+
+    /** True with Tunables {@code continuousOnHold = true}: holding the fire button fires a continuous group. */
+    public boolean continuousOnHold() {
+        return continuousOnHold;
+    }
+
+    /**
+     * The feeder power a group of continuous fire feeds with: Tunables {@code continuousFeedPower} when it is
+     * written, else the feeder's own power (with its sign). NaN for a feeder that cannot feed nonstop. The Group
+     * Shot Tuner tries a slower feed as a share of this.
+     */
+    public double nonstopFeedPower() {
+        if (part == null || missing || !part.continuous().canFire()) return Double.NaN;
+        double written = part.continuous().getFeedPower();
+        if (!Double.isNaN(written)) return written;
+        return indexer != null && !indexer.missing && indexer.spins() ? indexer.wheelPower() : Double.NaN;
+    }
+
+    /** True while a group of continuous fire waits or feeds. */
+    public boolean isFiringContinuously() {
+        return part != null && !missing && part.continuous().isActive();
+    }
+
     /** True while the fire button is held after a tap and spraying (see {@link #fireWhileHeld()}). */
     public boolean isSprayingOnHold() {
         return spraying;
@@ -1445,7 +1840,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     /**
      * Puts the fire button on {@code button} instead of RB, in {@code Controls.java}: everything RB does
-     * (tap: fire one, more taps: more shots, hold: keep firing, tap then hold: spray). {@code null}: no fire
+     * (tap: fire one, more taps: more shots, hold: keep firing, or a continuous group with
+     * {@code continuousOnHold}, tap then hold: spray). {@code null}: no fire
      * button. Example: {@code robot.launcher.fireOn(g2.lb);}
      *
      * @param button the new button (e.g. {@code g2.lb}), or null for none
@@ -1472,7 +1868,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     // "fire one; hold: keep firing" (+ "; tap, then hold: spray" when that is on).
     private String fireWords() {
-        return "fire one; hold: keep firing" + (sprayOnTapHold ? "; tap, then hold: spray" : "");
+        return (continuousOnHold ? "fire one; hold: fire nonstop when aimed" : "fire one; hold: keep firing")
+                + (sprayOnTapHold ? "; tap, then hold: spray" : "");
     }
 
     // Takes this launcher's suggested job off its button and, unless button is null, binds it again there.
@@ -1682,6 +2079,25 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return name == null ? null : tables.get(name.trim().toLowerCase(java.util.Locale.US));
     }
 
+    /**
+     * Tunables.Launcher.ballDropRpm: the speed one real ball takes off the wheel (RPM), for the tuners' pretend
+     * shot. NaN when it is not written (the tuners then use {@code shotDropRpm}). The shot count never uses it.
+     */
+    public double ballDropRpm() {
+        return ballDropRpm;
+    }
+
+    /**
+     * For a tuner that set the robot up but did not start it (so nothing moves in INIT): the feed stop goes to
+     * its hold position now, so it can open for each feed, and an always-on feed wheel may run while the
+     * flywheel is spun up ({@link #spinUp()}). Call it after a person pressed a button to shoot, never in INIT.
+     * Does nothing without a feed stop or a feed wheel, or when called again.
+     */
+    public void startFeedForTuner() {
+        if (gate != null && !feedStarted) gate.start();
+        feedStarted = true;
+    }
+
     /** Tunables.Launcher.speedRpm: the speed with no shot table (RPM). NaN before INIT. */
     public double speedRpm() {
         return speedRpm == null ? Double.NaN : speedRpm.get();
@@ -1707,13 +2123,16 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     // keep following the distance between pieces, and SPRAY does not wait for the speed). A robot that moved
     // more than LOCK_RELEASE_IN since the shot's distance is not held to it: the old speed would miss.
     private boolean speedLocked(double distanceNow) {
+        if (part.continuous().isFeeding()) return true;     // a group keeps the distance it started with
+        // A group that waits follows the distance: it takes its snapshot when the feed starts, not before.
+        if (part.continuous().isActive()) return false;
         if (!lockSpeedWhileFiring || modeNow != ShotMode.CAREFUL) return false;
         if (part.getShotsLeft() == 0 && !part.isShooting()) return false;
         return Double.isNaN(appliedDistance) || Math.abs(distanceNow - appliedDistance) <= LOCK_RELEASE_IN;
     }
 
     /** lockSpeedWhileFiring lets go when the distance moved more than this since the shot's (inches). */
-    static final double LOCK_RELEASE_IN = 4;
+    static final double LOCK_RELEASE_IN = ContinuousFire.DISTANCE_MOVE_IN;
 
     // Eases the distance the speed uses toward the newest one: each loop it closes the part of the gap that
     // dt / distanceSmoothSec says (an exponential, like a slow needle on a gauge). The first distance, one
@@ -1768,8 +2187,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return tables.isEmpty() ? "none" : commas(tables.keySet());
     }
 
-    // True if the speed comes from the distance (camera, odometry, or both).
-    private boolean usesDistance() {
+    /**
+     * True if Robot.java gives the speed a distance: {@code speedFromDistance(camera)}, {@code speedFromOdometry()},
+     * or both. The shot table then sets the speed (while {@link #speedMode()} is on, from START).
+     */
+    public boolean usesDistance() {
         return distanceCamera != null || distanceFromOdometry;
     }
 
@@ -1778,7 +2200,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return part != null && !missing && part.isReady();
     }
 
-    /** True while shots are waiting or a piece is being fed. */
+    /** True while shots are waiting, a piece is being fed, or a group of continuous fire waits or feeds. */
     public boolean isShooting() {
         return part != null && !missing && part.isShooting();
     }
@@ -1804,7 +2226,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             modeWhy = "eject";
             double now = clock.getAsLong() / 1e9;
             double rpm = Math.abs(flywheel.getRpm());
-            if (!ejectFed) {
+            if (flywheel.isFaulted()) {
+                endEject();     // a wheel that cannot be trusted feeds nothing
+            } else if (!ejectFed) {
                 // Feed only near the eject speed: a wheel still at shooting speed would throw it hard.
                 if (rpm >= (1 - EJECT_BAND) * ejectRpm && rpm <= (1 + EJECT_BAND) * ejectRpm) {
                     part.shoot(1);
@@ -1831,6 +2255,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             part.update();
             return;
         }
+        watchGroup();
         // A sensor (or other code) that picks the table: a NEW answer picks it.
         if (tableSupplier != null) {
             String now = tableSupplier.get();
@@ -1892,8 +2317,13 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         // the flywheel would cut it anyway, silently, and the trim on the screen would be a lie.
         double scale = 1 + (trimPct + allianceTrim()) / 100.0;
         double base = part.getShotRpm(), top = flywheel.getMaxRpm();
+        // An estimate past the table's ends has a limit of its own: the trim may not go past that either.
+        double estimateTop = part.getSpeedLimit();
+        boolean tableCaps = !Double.isNaN(estimateTop) && estimateTop < top;
+        if (tableCaps) top = estimateTop;
         atMotorLimit = base > 0 && base * scale >= top - 1e-6;
         if (base > 0 && base * scale > top) scale = top / base;
+        atTableLimit = tableCaps && atMotorLimit;
         part.speedScale(scale);
         modeNow = chooseMode();
         part.shotMode(modeNow);
@@ -1905,12 +2335,18 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     @Override
     public void stop() {
         if (part == null) return;
-        touch();
-        ejecting = false;   // an explicit stop stays stopped
-        spinning = false;
-        idleAfterShots = false;
-        shotsAtPause = 0;   // and a pause's waiting shots do not fire at resume
-        part.stop();
+        if (press != Press.NONE) press = Press.DEAD;
+        if (flywheel.isFaulted()) offAfterFault = true;
+        try {
+            touch();
+        } finally {
+            // SAFETY: also when the canceled action's own stop failed: the motor and feeder still get theirs.
+            ejecting = false;   // an explicit stop stays stopped
+            spinning = false;
+            idleAfterShots = false;
+            shotsAtPause = 0;   // and a pause's waiting shots do not fire at resume
+            part.stop();
+        }
     }
 
     private DcMotorEx flywheelMotor;
@@ -1921,13 +2357,24 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     @Override
     void pause() {
         if (part == null) return;
-        // Brake the wheel to a stop (it normally coasts down), and stop the feeder. "spinning" is kept,
+        // Brake the wheel to a stop (it normally coasts down), and stop the feeder. Bang-bang coasts (FLOAT): its
+        // plain power has no hub control behind it, and a brake would stop a fast, heavy wheel hard. "spinning" is kept,
         // and so are the shots still waiting (stop() would drop them).
         // A feed that has not pushed yet (the feed wheel staging, the feed stop opening): its piece is still
         // there, so it fires after the pause too.
         shotsAtPause = part.getShotsLeft() + (gate != null && gate.waitingToPush() ? 1 : 0);
-        flywheelMotor.setZeroPowerBehavior(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE);
-        part.stop();
+        // A group is not one of those: pause drops it, and resume does not bring it back.
+        try {
+            interruptFire(ContinuousFire.End.PAUSED);
+        } finally {
+            try {
+                if (flywheel.getSpeedControl() != Flywheel.SpeedControl.BANG_BANG) {
+                    flywheelMotor.setZeroPowerBehavior(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE);
+                }
+            } finally {
+                part.stop();    // SAFETY: the stop goes out even if the brake setting failed
+            }
+        }
     }
 
     @Override
@@ -1945,8 +2392,12 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         fixedRpm = Double.NaN;                    // a fire action's own speed ends with it
         if (ejecting && part != null) endEject();
         shotsAtPause = 0;                         // a cancel while paused drops them too
-        if (part != null) part.stopShooting();   // drop the shots still waiting; keep the speed
-        if (gate != null) gate.cancel();         // and the piece on its way: no late indexer push
+        try {
+            interruptFire(ContinuousFire.End.HALTED);
+        } finally {
+            if (part != null) part.stopShooting();   // drop the shots still waiting; keep the speed
+            if (gate != null) gate.cancel();         // and the piece on its way: no late indexer push
+        }
     }
 
     // An action that fires: how many shots the launcher had fired when the action took it, and whether
@@ -1986,24 +2437,43 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void addTelemetry(RobotTelemetry t) {
         if (part == null) return;
         if (!tableProblem.isEmpty()) t.warn(name() + ": " + tableProblem);
+        // A group's lines go first: how to stop comes before any number.
+        boolean groupFirst = part.continuous().isActive();
+        if (groupFirst) part.addTelemetry(t);
         // First: the trim and READY, the two things the operator glances at. Always with the speed from
         // the distance (the operator sees it is 0), else when used.
         if (usesDistance() || trimPct != 0 || adjustSteps != 0 || atMotorLimit || allianceTrim() != 0) {
-            t.line("Speed trim", trimWords() + (part.isReady() ? "  READY" : ""));
+            // (No READY during a group: the wheel can be ready while the aim is not.)
+            t.line("Speed trim", trimWords() + (!groupFirst && part.isReady() ? "  READY" : ""));
         }
         if (offered != null) t.line("Trim last time", lastTrimOffered() + " (double-tap D-pad up to use it)");
         if (indexer != null) indexer.addPushTrim(t);
         // While it fires: how strict it is, and why ("Fire: QUICK (12 s left)").
-        if (part.isShooting()) t.line("Fire", modeNow + (modeWhy.isEmpty() ? "" : " (" + modeWhy + ")"));
+        // (A group says its own lines: launcher.Launcher shows them.)
+        if (part.isShooting() && !part.continuous().isActive()) {
+            t.line("Fire", modeNow + (modeWhy.isEmpty() ? "" : " (" + modeWhy + ")"));
+        }
         // The distance and where it came from, e.g. "48 in (camera)"; "(last seen)" while no goal is seen.
         String where = !speedMode.isOn() || tableName == null ? "" : Double.isNaN(distanceIn()) ? "no goal yet"
                 : fmt("%.0f in (%s)", distanceIn(), distanceSource == Aim.Source.NONE ? "last seen" : distanceSource.words());
+        // Past the measured rows (extendTableEnds): say that the speed is an estimate.
+        if (!where.isEmpty() && !Double.isNaN(distanceIn())) {
+            String estimate = estimateWords(distanceIn());
+            if (!estimate.isEmpty()) {
+                boolean limited = atTableLimit || estimate.endsWith("limited");
+                where += ", estimated";      // short: the warning below says "speed limited"
+                if (limited && distanceSource != Aim.Source.NONE) {
+                    t.warn("Estimated, speed limited: may fall short.");
+                    t.warn("Drive closer to the goal.");
+                }
+            }
+        }
         if (tables.size() > 1) {
             t.line("Shot table", tableName.toUpperCase(java.util.Locale.US) + (where.isEmpty() ? "" : ", " + where));
         } else if (!where.isEmpty()) {
             t.line("Shot distance", where);
         }
-        part.addTelemetry(t);
+        if (!groupFirst) part.addTelemetry(t);
     }
 
     /** The trim for this alliance from Tunables ({@code redTrimPercent}, {@code blueTrimPercent}), percent. */
@@ -2019,6 +2489,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         // The alliance trim from Tunables, on top of the driver's: shown, so no speed change is hidden.
         double a = allianceTrim();
         if (a != 0) w += " (" + percent(a, true) + " " + (robot.alliance() == Alliance.RED ? "RED" : "BLUE") + ")";
+        if (atTableLimit) return w + " (speed limit)";
         if (atMotorLimit) return w + " (motor limit)";
         if (trimPct != 0 && Math.abs(trimPct) >= trimMaxPct) return w + " (limit)";
         return w;

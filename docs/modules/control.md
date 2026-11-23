@@ -148,3 +148,26 @@ lift.setPower(liftFf.power(targetSpeed, 0) + pid.calculate(target, lift.getCurre
 | `power(speed, accel, batteryVolts)` | the same, scaled for the battery now (not limited to -1..1) |
 | `topSpeed()` | the speed at full power |
 
+## FlywheelBangBang
+
+The arithmetic of bang-bang speed control for a flywheel, with no motor in it. Full power well below the
+speed wins back a shot's speed as fast as the motor can. It never gives negative power, so it never fights
+the wheel. [Flywheel](launcher.md#speed-control) runs it for you.
+
+```java
+FlywheelBangBang law = new FlywheelBangBang().feedforward(0.4, 0.00205).thresholds(200, 75, 50);
+double power = law.calculate(targetRpm, measuredRpm, batteryVolts, nowSec, false);
+```
+
+| Method | What it does |
+| --- | --- |
+| `.feedforward(ks, kv)` | holding volts = ks + kv x RPM. `Feedforward` uses other units: do not copy its numbers |
+| `.thresholds(full, coast, hysteresis)` | full power starts `full` below, coasting `coast` above. Each ends `hysteresis` later |
+| `.maxPower(p)` | the most power, 0.3 to 1 |
+| `calculate(target, rpm, volts, now, late)` | the power. Too fast always gives 0. `late` = no full power this time. A bad number or a target of 0 or less gives 0 |
+| `reset()`, `targetChanged()` | forgets everything; judges a new target afresh |
+| `getZone()` | OFF, FULL, NEAR or COAST |
+| `getKs()`, `getKv()`, `getFullBelowRpm()`, `getCoastAboveRpm()`, `getHysteresisRpm()`, `getMaxPower()` | the numbers in use |
+
+Below half the target, the power rises by `SPIN_UP_RISE_PER_SEC` (4 a second) at most. That eases a start
+from rest. The motor must be on FLOAT.

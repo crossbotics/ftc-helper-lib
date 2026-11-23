@@ -180,7 +180,7 @@ Storage means files on the Control Hub (`/sdcard/FIRST/ftc-helper/`). This table
 | When | What | Waits? |
 | --- | --- | --- |
 | the first `Tunable` is made, or the first `Profile.current()` | reads `settings.properties` once per app run (`SettingsFile.load`) | yes, once, in INIT |
-| tuning menu **A** (save) and **Y** (reset all) | `Tunable.saveAllInBackground` / `resetAllInBackground` write `settings.properties` | no: a background thread |
+| tuning menu **A** (save) and **Y** (erase all) | `Tunable.saveAllInBackground` / `resetAllInBackground` write `settings.properties` | no: a background thread |
 | the profile changes (`Profile.set`, the INIT menu's profile line) | writes `settings.properties` | no: a background thread |
 | a finder ends (`FinderOpMode`) | `finder-results.txt` | yes, after the motors stop, outside the loop |
 | each Characterizer test ends | a CSV in `characterizer/` | no: a background thread |

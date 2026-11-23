@@ -16,11 +16,15 @@
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "Aim tuner: finds the camera offset so shots go in the ...",
-        "!! Nobody in the line of fire. Eye protection on.",
-        "Camera : STREAMING 30 fps",
-        "*Press ▶ on the Driver Hub.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! Hold A: the ROBOT turns by itself.",
+        "!! RB SHOOTS. Safety glasses. Nobody in front.",
+        "!! The sticks drive. Let go = stop.",
+        "Aim tuner: makes shots go in the MIDDLE",
+        "of the goal, not left or right of it.",
+        "Starts from : 0.0 deg (Tunables.java)",
+        "Camera : STREAMING",
+        "*Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "aim-tuner-step-aim": {
@@ -28,24 +32,27 @@
       "where": "Press on gamepad 1:",
       "order": "press-first",
       "lines": [
-        "--- Aim tuner  (hold A = aim) ---",
-        "Offset : 0.0 deg  (D-pad right/up = aim more to the ...",
-        "Bearing : 0.1 deg (left = +)",
-        "*Still to turn : 0.1 deg",
+        "!! Hold A = the robot turns. Let go = stop.",
+        "--- Aim tuner ---",
+        "Next: hold A, then RB = shoot one.",
+        "Aim offset : 0.0 deg",
+        "Goal is 0.1 deg LEFT of the camera's middle.",
+        "*Still to turn : 0.1 deg LEFT",
         "Distance : 58.5 in",
-        "Launcher : ready",
-        "..."
+        "Launcher : ready"
       ]
     },
     "aim-tuner-step-shoot": {
       "button": "RB",
       "where": "Still holding A, press:",
       "lines": [
-        "--- Aim tuner  (hold A = aim) ---",
+        "!! RB shoots. Nobody in front. B = stop.",
+        "--- Aim tuner ---",
+        "Next: hold A, then RB = shoot one.",
+        "*Shot went LEFT: D-pad RIGHT.",
+        "*Shot went RIGHT: D-pad LEFT.",
         "...",
-        "Still to turn : 0.1 deg",
-        "*Launcher : ready",
-        "RB = shoot one, LB = flywheel off. Shots go left: ..."
+        "Launcher : ready"
       ]
     },
     "aim-tuner-step-offset": {
@@ -53,12 +60,15 @@
       "where": "Shots go right, so press:",
       "order": "press-first",
       "lines": [
-        "--- Aim tuner  (hold A = aim) ---",
-        "*Offset : -1.5 deg  (D-pad right/up = aim more to the ...",
+        "--- Aim tuner ---",
+        "*Aim offset : 1.5 deg to the LEFT",
         "...",
-        "--- Copy into your code ---",
-        "new AimController(...).offset(-1.5)   // with your aim ...",
-        "*Tunables.Aim: cameraOffset = -1.5   // whole-robot aim ..."
+        "--- Numbers found ---",
+        "Open Tunables.java, find class Aim.",
+        "Change these lines (not there? add them):",
+        "*  public static double cameraOffset = -1.5;",
+        "Copy it when shots at 2 or 3 distances",
+        "all go in the middle."
       ]
     }
   }

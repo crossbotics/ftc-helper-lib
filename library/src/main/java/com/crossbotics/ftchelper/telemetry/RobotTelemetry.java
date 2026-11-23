@@ -216,6 +216,16 @@ public class RobotTelemetry {
         return send;
     }
 
+    /**
+     * Throws away the lines and warnings that were not sent yet, to start this screen over (a "STOPPED"
+     * screen after a loop that ended part way).
+     */
+    public void discard() {
+        warnings.clear();
+        firstCount = 0;
+        lines.clear();
+    }
+
     /** The lines waiting to be sent, as text (used by tests and the hardware check). */
     public List<String> pending() {
         // Start with a copy of the warnings, then add each line as "label : value" (or plain text).

@@ -1,18 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 309" width="520" height="309" font-family="Helvetica, Arial, sans-serif" font-size="15">
-<rect width="520" height="309" fill="#ffffff"/>
-<text x="16" y="278" font-size="14" fill="#555">Fix the cables, then press:</text>
-<rect x="224" y="253" width="41" height="42" rx="21" fill="#ffd54d" stroke="#333" stroke-width="2"/>
-<text x="244.5" y="281" text-anchor="middle" font-size="19" font-weight="bold" fill="#222">Y</text>
-<rect x="6" y="6" width="508" height="233" rx="14" fill="#2b2f36"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 372" width="520" height="372" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="520" height="372" fill="#ffffff"/>
+<text x="16" y="341" font-size="14" fill="#555">Fix the cables, then press:</text>
+<rect x="224" y="316" width="41" height="42" rx="21" fill="#ffd54d" stroke="#333" stroke-width="2"/>
+<text x="244.5" y="344" text-anchor="middle" font-size="19" font-weight="bold" fill="#222">Y</text>
+<rect x="6" y="6" width="508" height="296" rx="14" fill="#2b2f36"/>
 <text x="22" y="36" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
-<rect x="16" y="50" width="488" height="179" rx="6" fill="#ffffff"/>
-<text x="26" y="76" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Encoder check: hold A (let go = stop), Y = again ---</text>
-<text x="26" y="97" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">"front_left" (drive) : OK: counts up (+412)</text>
-<text x="26" y="118" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="139" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">"back_right" (drive) : OK: counts up (+410)</text>
-<rect x="20" y="145" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="160" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">"lift" (Lift) : NO COUNTS: encoder cable missing? ...</text>
-<text x="26" y="181" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<rect x="20" y="187" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="202" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">!! 1 problem(s). Fix the cables, then Y to check again. ...</text>
+<rect x="16" y="50" width="488" height="242" rx="6" fill="#ffffff"/>
+<text x="26" y="76" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">!! Parts move while you hold A. Let go = stop.</text>
+<rect x="20" y="82" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="97" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">!! 1 problem(s). STOP before you touch a cable.</text>
+<text x="26" y="118" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Encoder check: 5 of 5 ---</text>
+<rect x="20" y="124" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="139" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Fix this one first: lift</text>
+<text x="26" y="160" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  It turned? Plug in its encoder cable.</text>
+<text x="26" y="181" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  It did not? Check its power wires, or a jam.</text>
+<text x="26" y="202" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Then run this check again.</text>
+<text x="26" y="223" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
+<text x="26" y="244" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">"lift" (Lift) : NO COUNTS</text>
+<rect x="20" y="250" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="265" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Y = check all again.</text>
 </svg>

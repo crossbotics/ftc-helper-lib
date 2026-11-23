@@ -19,6 +19,9 @@ import java.util.function.LongSupplier;
  *         .jamDetection(60, 0.2);                 // optional, needs the encoder cable
  * }</pre>
  *
+ * <p>It can also feed without a break ({@link #startContinuous}, for {@link ContinuousFire}): then only
+ * a stop or a jam ends it, not feedTime or the sensor.
+ *
  * <p>The {@link Launcher} calls {@link #feedOne()}; this class then times the feed in {@link #update()},
  * without ever waiting. Docs: docs/modules/launcher.md
  */
@@ -35,6 +38,8 @@ public class MotorFeeder implements Feeder {
     private JamDetector jam = null;             // null = no jam detection
 
     private boolean busy = false;
+    private boolean continuous = false;    // feeding without a break
+    private double continuousPower = 0;    // the power it started that with
     private boolean jammed = false;
     private double endAt = 0;       // when this feed ends at the latest (seconds)
     private double startedAt = 0;   // when this feed started (seconds)
@@ -108,6 +113,43 @@ public class MotorFeeder implements Feeder {
         motor.setPower(power);
     }
 
+    /** A motor can feed without a break. */
+    @Override
+    public boolean canFeedContinuously() {
+        return true;
+    }
+
+    /**
+     * Runs until {@link #stopContinuous()}, {@link #stop()} or a jam.
+     *
+     * @param feedPower -1 to 1; NaN = {@link #power}
+     * @return false while a single feed is busy
+     */
+    @Override
+    public boolean startContinuous(double feedPower) {
+        if (continuous) return true;
+        if (busy) return false;
+        continuousPower = Double.isNaN(feedPower) ? power : feedPower;
+        busy = true;
+        continuous = true;
+        jammed = false;
+        if (jam != null) jam.reset();
+        motor.setPower(continuousPower);
+        return true;
+    }
+
+    /** Stops the motor at once (always written). */
+    @Override
+    public void stopContinuous() {
+        stop();
+    }
+
+    /** True while it feeds without a break. */
+    @Override
+    public boolean isFeedingContinuously() {
+        return continuous;
+    }
+
     /** Once per loop: ends the feed when the time is up, the sensor sees the piece leave, or it jams. */
     @Override
     public void update() {
@@ -115,11 +157,12 @@ public class MotorFeeder implements Feeder {
         double now = now();
         // Barely turning while powered, for a while = jammed. Stop the motor (pushing harder could
         // break something or burn out the motor) and tell the launcher.
-        if (jam != null && jam.update(power, motor.getVelocity(), now)) {
+        if (jam != null && jam.update(continuous ? continuousPower : power, motor.getVelocity(), now)) {
             jammed = true;
             finish();
             return;
         }
+        if (continuous) return;   // no time per piece and no sensor end it
         // Give the sensor a moment: the piece may still be in view right after the start.
         // (The sensor is only asked after the first 0.03 s.)
         boolean gone = pieceGone != null && now - startedAt > 0.03 && pieceGone.getAsBoolean();
@@ -133,6 +176,7 @@ public class MotorFeeder implements Feeder {
     @Override
     public void stop() {
         busy = false;
+        continuous = false;
         motor.setPower(0);
     }
 
@@ -154,6 +198,7 @@ public class MotorFeeder implements Feeder {
     // Ends the feed: no longer busy, motor off.
     private void finish() {
         busy = false;
+        continuous = false;
         motor.setPower(0);
     }
 

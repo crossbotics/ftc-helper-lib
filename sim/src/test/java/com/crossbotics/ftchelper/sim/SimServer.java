@@ -320,6 +320,10 @@ final class SimServer {
         return true;
     }
 
+    // The page's actions that move the robot or the pieces by hand (SimEngine.placeForInitBeforeHandMove).
+    private static final java.util.Set<String> HAND_MOVES = new java.util.HashSet<>(java.util.Arrays.asList(
+            "push", "resetPose", "resetField", "piece", "preload", "pose"));
+
     // A Driver Station button or a panel control (recorded while the test recorder records).
     String command(Map<String, String> f) {
         String action = f.getOrDefault("action", "");
@@ -338,6 +342,8 @@ final class SimServer {
 
     private String commandNow(Map<String, String> f, String action) {
         try {
+            // a hand move right after INIT: the INIT spot first, so the physics cannot undo the move
+            if (HAND_MOVES.contains(action)) sim.placeForInitBeforeHandMove();
             switch (action) {
                 case "init": sim.ds.init(f.get("opmode")); return "ok";
                 case "start": sim.ds.start(); return "ok";
@@ -530,10 +536,9 @@ final class SimServer {
                 sim.robot.pieces.reset();
                 sim.jumps.incrementAndGet();
             }
-            final int screens = sim.ds.screen.updates();
             sim.ds.init(BuiltAuto.NAME, alliance);
             final int run = sim.ds.initCount;
-            Thread t = new Thread(() -> startWhenPlaced(run, screens), "built-auto-start");
+            Thread t = new Thread(() -> startWhenPlaced(run), "built-auto-start");
             t.setDaemon(true);
             t.start();
             StringBuilder b = new StringBuilder("{\"ok\":true,\"robotClass\":");
@@ -547,13 +552,14 @@ final class SimServer {
     // START once INIT has shown its screen and the robot stands on the start spot (at most 4 s), like a
     // drive team that waits for the robot to be placed. Not if INIT stopped with an error, or someone
     // pressed something else meanwhile.
-    private void startWhenPlaced(int run, int screensBefore) {
+    private void startWhenPlaced(int run) {
         try {
             long end = System.nanoTime() + 4_000_000_000L;
             while (System.nanoTime() < end) {
                 if (sim.ds.initCount != run || sim.ds.phase() != SimDriverStation.Phase.INIT || !sim.ds.error().isEmpty()) return;
                 com.crossbotics.ftchelper.util.FieldPose at = com.crossbotics.ftchelper.match.MatchMemory.placement();
-                boolean shown = sim.ds.screen.updates() > screensBefore;
+                // its own first screen, not the last OpMode's last one (SimDriverStation.shownSinceInit)
+                boolean shown = sim.ds.shownSinceInit();
                 boolean placed = at == null || Math.hypot(at.x - sim.robot.x, at.y - sim.robot.y) < 0.5;
                 if (shown && placed) {
                     Thread.sleep(300);   // a moment on the spot, so the page shows it there first

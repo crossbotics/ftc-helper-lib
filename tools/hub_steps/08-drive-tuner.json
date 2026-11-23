@@ -4,72 +4,75 @@
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Tune and check ---",
+        "--- Tune and check: 9 of 14 ---",
         "Robot: Robot",
-        "  Hardware Check: every device found, ...",
         "  ...",
-        "*> Drive Tuner: the wheel size, for the autonomous",
+        "*> Drive Tuner",
         "  ...",
-        "D-pad up/down = pick, A = open it. Then ▶."
+        "This tool: how far the wheels really go.",
+        "D-pad up/down = choose. A = open it. Then ▶."
       ]
     },
     "drive-tuner-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "Battery : 12.8 V",
-        "Drive tuner: wheel size and strafe correction for ...",
-        "*Tape 48 in long on the floor. ... Press ▶.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! The robot will DRIVE BY ITSELF after A.",
+        "!! Clear 5 ft ahead and on both sides. Stand back.",
+        "!! GUIDE or START stops a move.",
+        "Drive tuner: how far do the wheels really go?",
+        "*You need: a tape line 48 in long on the floor.",
+        "Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "drive-tuner-step-push-start": {
       "button": "A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Drive tuner ---",
-        "*> Push (by hand)",
-        "  Drive forward",
-        "  Strafe right",
-        "  Strafe left",
-        "  Turn 90 left",
+        "!! A starts a move by itself. Stand back.",
+        "--- Drive tuner: choose a test ---",
+        "Next: put it on the start mark. Do test 1.",
+        "*> 1 Push (by hand)",
         "D-pad up/down = choose, A = start",
-        "..."
+        "Power : 0.5  (D-pad left/right)"
       ]
     },
     "drive-tuner-step-push-end": {
       "button": "B",
       "where": "At 48 in, press:",
       "lines": [
-        "--- Drive tuner ---",
-        "Roll the robot BY HAND exactly 48 in, ... press B.",
+        "--- Drive tuner: push ---",
+        "Next: roll the robot BY HAND along the tape,",
+        "exactly 48 in. Then press B.",
         "*Wheel counts : [2134, 2129, 2140, 2131]",
-        "..."
+        "All should go up by about the same."
       ]
     },
     "drive-tuner-step-drive-start": {
       "button": "A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Drive tuner ---",
-        "  Push (by hand)",
-        "*> Drive forward",
-        "  ...",
+        "!! A starts a move by itself. Stand back.",
+        "--- Drive tuner: choose a test ---",
+        "Wheel size is now 3.850 in.",
+        "Next: run 2 Drive forward to check it.",
+        "*> 2 Drive forward",
         "D-pad up/down = choose, A = start",
-        "*Power : 0.6 (D-pad left/right: your autos' power)",
-        "Now using : wheel 3.850 in, strafe 1.000",
-        "Wheel size now 3.850 in. Next: the Drive test."
+        "*Power : 0.6  (D-pad left/right)"
       ]
     },
     "drive-tuner-step-drive-measure": {
       "button": "D-pad, then A",
       "where": "When it stops, press:",
       "lines": [
-        "--- Drive tuner ---",
-        "Measure how far it really went. ... then press A.",
-        "*Measured : 47.50 in",
-        "Now using : wheel 3.850 in, strafe 1.000",
-        "Drive: done."
+        "!! It stopped. No move starts until you measure.",
+        "--- Drive: done. Now measure it ---",
+        "Next: measure from the start mark to the same",
+        "edge of the same wheel now. Set that number.",
+        "*Your number : 47.50 in",
+        "D-pad up/down = 1 in, right/left = 0.25 in.",
+        "A = use your number."
       ]
     },
     "drive-tuner-step-calibrated": {
@@ -77,15 +80,17 @@
       "where": "When it measures 48.00 in, press:",
       "order": "press-first",
       "lines": [
-        "--- Drive tuner ---",
+        "--- Drive tuner: choose a test ---",
+        "*Strafe: 48.00 in. OK (within 0.5 in of 48).",
+        "Next: copy the lines below.",
         "...",
-        "*Strafe measures 48 in: right.",
-        "--- Copy into your code ---",
-        "...",
-        "*Robot.java: .wheelMm(96.8)   // in the drive(...) line",
-        "...",
-        "*Tunables.Drive: strafeCorrection = 1.180",
-        "*Tunables.Drive: calibrated = true   // the moves ..."
+        "--- DONE ---",
+        "Open Robot.java:",
+        "*  In drive(...): .wheelMm(96.8)",
+        "Open Tunables.java, find class Drive.",
+        "Change these lines (not there? add them):",
+        "*  public static double strafeCorrection = 1.180;",
+        "*  public static boolean calibrated = true;"
       ]
     }
   }

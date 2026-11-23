@@ -31,11 +31,11 @@ import java.util.List;
  * </pre>
  *
  * Each new number is used at once in this tuner (no rebuild): run the Drive and Strafe tests again
- * until they measure 48 (within 0.5 in: then it also shows {@code Tunables.Drive: calibrated = true}),
+ * until they measure 48 (within 0.5 in: then it also shows {@code public static boolean calibrated = true;}),
  * then copy the lines into your code. The screen keeps updating while a test moves. Leave 5 ft of space in front of and to
- * the sides of the robot. It shows each number twice: for {@code RobotSettings.auto()}
- * ({@code c.wheelDiameterIn = 3.937;}) and for the robot in five files ({@code Robot.java: .wheelMm(100.0)},
- * {@code Tunables.Drive: strafeCorrection = 1.120}).
+ * the sides of the robot. A robot in five files gets lines for Robot.java ({@code .wheelMm(100.0)}) and
+ * Tunables.java, class Drive. With {@code robotConfig()} they are for {@code RobotSettings.auto()}
+ * ({@code c.wheelDiameterIn = 3.937;}).
  *
  * <p>In your TeamCode, the robot in five files (next to Robot.java):
  * <pre>{@code
@@ -58,7 +58,8 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         return true;
     }
 
-    private static final String[] TESTS = {"Push (by hand)", "Drive forward", "Strafe right", "Strafe left", "Turn 90 left"};
+    private static final String[] TESTS = {"1 Push (by hand)", "2 Drive forward", "3 Strafe right (sideways)",
+            "4 Strafe left (only if needed)", "5 Turn 90 left (check only)"};
 
     /**
      * Your robot in five files: {@code return new Robot();}. The tuner uses its drive (motors, wheel,
@@ -89,6 +90,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     private DriveConfig driveConfig;
     private AutoDriveConfig autoConfig;
     private AutoDrive auto;
+    private boolean fiveFiles;   // the lines are for Robot.java and Tunables.java (else RobotSettings)
     private final List<DcMotorEx> wheels = new ArrayList<>();
     private int test = 0;
     // What the screen is waiting for: nothing, the end of a push, or a measured distance.
@@ -137,13 +139,17 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
             wheels.add(hardwareMap.get(DcMotorEx.class, driveConfig.backRight));
         }
         measured = testDistanceIn();
+        fiveFiles = hasRobotFiles() || robot() != null;
     }
 
     @Override
     protected void showInit(RobotTelemetry t) {
-        t.text("Drive tuner: wheel size and strafe correction for autonomous.");
+        t.warn("The robot will DRIVE BY ITSELF after {A}.");
+        t.warn("Clear 5 ft ahead and on both sides. Stand back.");
+        t.warn("{GUIDE} or {START} stops a move.");
+        t.text("Drive tuner: how far do the wheels really go?");
         // Two different lengths: the TAPE is as long as the test drive; the clear FLOOR is longer (it may overshoot).
-        t.text("Tape " + FinderResults.num(testDistanceIn(), 0) + " in long on the floor. Clear floor: 5 ft ahead and to the right. Press {PLAY}.");
+        t.text("You need: a tape line " + FinderResults.num(testDistanceIn(), 0) + " in long on the floor.");
     }
 
     @Override
@@ -198,16 +204,17 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         if (waiting == Wait.MEASURE) {
             // The results file says which power the numbers were measured at: written when a measurement
             // is set (not when the move ends: a STOP before A would label the old numbers).
-            results.set("drive:power", "// measured at power " + FinderResults.num(testPower, 1)
-                    + ": these numbers fit autonomous moves at that power");
+            results.set("drive:power", "Measured at power " + FinderResults.num(testPower, 1) + ": use it in autonomous.");
             // The new number is used at once (AutoDrive reads these settings on every move), so the
             // next test already uses it.
             boolean right = Math.abs(measured - testDistanceIn()) <= CLOSE_ENOUGH_IN;
             if (test == 1) driveRight = right;
             if (test == 2) strafeRight = right;
             if (right) {
-                lastResult = (test == 1 ? "Drive" : test == 2 ? "Strafe" : "Strafe left") + " measures " + FinderResults.num(testDistanceIn(), 0)
-                        + " in: right." + (test == 1 && canStrafe() && !strafeRight ? " Next: the Strafe test." : "");
+                lastResult = (test == 1 ? "Drive" : test == 2 ? "Strafe" : "Strafe left") + ": " + FinderResults.num(measured, 2)
+                        + " in. OK (within " + FinderResults.num(CLOSE_ENOUGH_IN, 1) + " in of " + FinderResults.num(testDistanceIn(), 0) + ")."
+                        + (!driveRight ? "\nNext: 2 Drive forward."
+                           : canStrafe() && !strafeRight ? "\nNext: 3 Strafe right." : "\nNext: copy the lines below.");
                 waiting = Wait.CHOOSE;
                 writeCalibrated();
                 return;
@@ -215,22 +222,21 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
             if (test == 1) {
                 double d = FinderMath.correctedDiameter(autoConfig.wheelDiameterIn, testDistanceIn(), measured);
                 autoConfig.wheelDiameterIn = d;
+                strafeRight = false;   // it was measured with the old wheel size
                 setDiameterResult(d);
-                lastResult = "Wheel size now " + FinderResults.num(d, 3) + " in. Run the Drive test again.";
+                lastResult = "Wheel size is now " + FinderResults.num(d, 3) + " in (not checked).\nNext: run 2 Drive forward again.";
             } else if (test == 2) {
                 double s = FinderMath.correctedStrafe(autoConfig.strafeCorrection, testDistanceIn(), measured);
                 autoConfig.strafeCorrection = s;
-                results.set("drive:strafe", "c.strafeCorrection = " + FinderResults.num(s, 3) + ";   // RobotSettings.auto()");
-                results.set("drive:strafe5", "Tunables.Drive: strafeCorrection = " + FinderResults.num(s, 3));
-                lastResult = "Strafe correction now " + FinderResults.num(s, 3) + ". Run the Strafe test again.";
+                setNumber("strafeCorrection", s);
+                lastResult = "Strafe correction is now " + FinderResults.num(s, 3) + ".\nNext: run 3 Strafe right again.";
             } else if (test == 3) {
                 // Left starts from the right's number until it has its own.
                 double from = Double.isNaN(autoConfig.strafeCorrectionLeft) ? autoConfig.strafeCorrection : autoConfig.strafeCorrectionLeft;
                 double s = FinderMath.correctedStrafe(from, testDistanceIn(), measured);
                 autoConfig.strafeCorrectionLeft = s;
-                results.set("drive:strafeL", "c.strafeCorrectionLeft = " + FinderResults.num(s, 3) + ";   // RobotSettings.auto()");
-                results.set("drive:strafeL5", "Tunables.Drive: strafeCorrectionLeft = " + FinderResults.num(s, 3));
-                lastResult = "Strafe left correction now " + FinderResults.num(s, 3) + ". Run the Strafe left test again.";
+                setNumber("strafeCorrectionLeft", s);
+                lastResult = "Strafe left correction is now " + FinderResults.num(s, 3) + ".\nNext: run 4 Strafe left again.";
             }
             waiting = Wait.CHOOSE;
             writeCalibrated();
@@ -257,11 +263,26 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
 
     // Once the Drive test (and on a mecanum the Strafe test) measures right: the line that lets autonomous run.
     private void writeCalibrated() {
-        if (driveRight && (strafeRight || !canStrafe())) {
-            results.set("drive:calibrated", "Tunables.Drive: calibrated = true   // the moves measure right: autonomous may run");
+        results.remove("drive:calibrated");
+        if (!driveRight) {
+            results.notDone("run 2 Drive forward until it says OK.");
+        } else if (canStrafe() && !strafeRight) {
+            results.notDone("run 3 Strafe right until it says OK.");
         } else {
-            results.removeStartingWith("drive:calibrated");
+            results.done();
+            // It lets autonomous run: only while the last measurements are right.
+            if (fiveFiles) results.setTunable("drive:calibrated", "Drive", "calibrated", "true");
+            else results.setIn("drive:calibrated", SETTINGS, "c.calibrationConfirmed = true;");
         }
+    }
+
+    private static final String SETTINGS = "In RobotSettings.java, in auto():";
+
+    // A found number, as a line for the place this project keeps it.
+    private void setNumber(String field, double value) {
+        String v = FinderResults.num(value, 3);
+        if (fiveFiles) results.setTunable("drive:" + field, "Drive", field, v);
+        else results.setIn("drive:" + field, SETTINGS, "c." + field + " = " + v + ";");
     }
 
     // Runs a test that moves the robot. BLOCKS on purpose until the move is done. STOP and GUIDE
@@ -276,15 +297,21 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         } finally {
             auto.setStopCondition(null);
             auto.setLoopHook(null);
+            // SAFETY: a button pressed during the move must not confirm or start anything when it ends.
+            waitForRelease();
         }
         if (helpKeyDown() && running()) {
-            lastResult = "Stopped by {GUIDE}/{START}: not measured.";
+            lastResult = "You stopped it: not measured.\nNext: clear the path and run it again.";
             waiting = Wait.CHOOSE;
             openHelp();
         }
     }
 
     private void runMove(int which) {
+        // A test run again is not right until it is measured right again.
+        if (which == 1) driveRight = false;
+        if (which == 2) strafeRight = false;
+        if (which == 1 || which == 2) writeCalibrated();
         switch (which) {
             case 1:
                 afterMove("Drive", auto.move(testDistanceIn(), 0, testPower));
@@ -297,8 +324,11 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
                 break;
             default:
                 auto.resetHeading();
-                lastResult = "Turn: " + auto.turn(90, 0.5) + ", IMU heading "
-                        + FinderResults.num(auto.headingDeg(), 1) + " deg (should be 90)";
+                AutoDrive.Result turned = auto.turn(90, 0.5);
+                lastResult = turned == AutoDrive.Result.DONE
+                        ? "Turn finished. The robot read " + FinderResults.num(auto.headingDeg(), 1) + " deg (90 is right)."
+                          + "\nNext: check it with a square on the floor."
+                        : "The turn " + howItEnded(turned) + ".\nNext: clear the floor and run it again.";
                 break;
         }
     }
@@ -308,10 +338,10 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         long now = System.nanoTime();
         if (now - movingShownAt < 100_000_000L) return;
         movingShownAt = now;
-        t.section("Drive tuner");
-        t.text(name + ": moving... ({GUIDE} or {START} stops it)");
-        t.line("Heading", FinderResults.num(auto.headingDeg(), 1) + " deg");
-        t.line("Wheel counts", java.util.Arrays.toString(auto.getWheelTicks()));
+        t.warn("The robot is moving. {GUIDE} or {START} = stop.");
+        t.section("Drive tuner: moving");
+        t.text(name);
+        t.line("Turn angle", FinderResults.num(auto.headingDeg(), 1) + " deg");
         t.update();
     }
 
@@ -320,17 +350,24 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     private void afterMove(String name, AutoDrive.Result result) {
         measured = testDistanceIn();
         if (result == AutoDrive.Result.DONE) {
-            lastResult = name + ": done.";
+            measuring = name;
+            lastResult = "";
             waiting = Wait.MEASURE;
         } else {
-            lastResult = name + ": " + result + ". Not measured: clear the path and run it again.";
+            lastResult = name + " " + howItEnded(result) + ": not measured.\nNext: clear the path and run it again.";
         }
     }
 
+    private String measuring = "";   // the move that is being measured, for the screen
+
     // The wheel size, for RobotSettings and for the robot in five files (Robot.java takes millimeters).
     private void setDiameterResult(double inches) {
-        results.set("drive:diameter", "c.wheelDiameterIn = " + FinderResults.num(inches, 3) + ";   // RobotSettings.auto()");
-        results.set("drive:diameter5", "Robot.java: .wheelMm(" + FinderResults.num(inches * 25.4, 1) + ")   // in the drive(...) line");
+        if (fiveFiles) {
+            results.setIn("drive:diameter", FinderResults.ROBOT_FILE,
+                    "In drive(...): .wheelMm(" + FinderResults.num(inches * 25.4, 1) + ")");
+        } else {
+            setNumber("wheelDiameterIn", inches);
+        }
     }
 
     // B: the push is done. Wheel size from the counts.
@@ -347,18 +384,25 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         waiting = Wait.CHOOSE;
         double avgTicks = FinderMath.pushTicks(deltas);
         if (Double.isNaN(avgTicks)) {
-            lastResult = "The wheels disagree (" + java.util.Arrays.toString(deltas) + "): a wheel did not count "
-                    + "or turns the wrong way. Check the motor directions (Hardware Check) and the encoder cables.";
+            lastResult = "The wheels disagree: not measured."
+                    + "\nCounts " + java.util.Arrays.toString(deltas)
+                    + "\nNext: run Motor Direction Check, Encoder Check.";
             return;
         }
         if (avgTicks < 0) {
-            lastResult = "Every wheel counted DOWN: the motor directions are wrong, or you pushed backward.";
+            lastResult = "Every wheel counted DOWN: not measured."
+                    + "\nPush it FORWARD. The same again?"
+                    + "\nNext: run Motor Direction Check.";
             return;
         }
         double d = FinderMath.wheelDiameterFromPush(avgTicks, testDistanceIn(), autoConfig.ticksPerRev, autoConfig.gearRatio);
         autoConfig.wheelDiameterIn = d;
+        // A new wheel size: the moves measured with the old one prove nothing now.
+        driveRight = false;
+        strafeRight = false;
         setDiameterResult(d);
-        lastResult = "Wheel size now " + FinderResults.num(d, 3) + " in. Next: the Drive test.";
+        writeCalibrated();
+        lastResult = "Wheel size is now " + FinderResults.num(d, 3) + " in.\nNext: run 2 Drive forward to check it.";
     }
 
     @Override
@@ -371,48 +415,64 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
 
     @Override
     protected void show(RobotTelemetry t) {
-        t.section("Drive tuner");
         if (waiting == Wait.PUSHING) {
+            t.warn("No motor power: you move the robot by hand.");
+            t.section("Drive tuner: push");
+            t.text("Next: roll the robot BY HAND along the tape,");
+            t.text("exactly " + FinderResults.num(testDistanceIn(), 0) + " in. Then press {B}.");
             int[] now = auto.getWheelTicks();
             int[] deltas = new int[now.length];
             for (int i = 0; i < now.length; i++) deltas[i] = now[i] - pushStart[i];
-            t.text("Roll the robot BY HAND exactly " + FinderResults.num(testDistanceIn(), 0) + " in, straight. Then press {B}.");
             // Each wheel: they should all go up by about the same amount.
             t.line("Wheel counts", java.util.Arrays.toString(deltas));
+            t.text("All should go up by about the same.");
         } else if (waiting == Wait.MEASURE) {
-            t.text("Measure how far it really went. Set it with the D-pad, then press {A}.");
-            t.line("Measured", FinderResults.num(measured, 2) + " in");
+            t.warn("It stopped. No move starts until you measure.");
+            t.section(measuring + ": done. Now measure it");
+            if (isStrafe(test)) {
+                t.text("Next: measure straight across, from the tape to");
+                t.text("the " + (test == 2 ? "left" : "right") + " wheels. Set that number.");
+            } else {
+                t.text("Next: measure from the start mark to the same");
+                t.text("edge of the same wheel now. Set that number.");
+            }
+            t.line("Your number", FinderResults.num(measured, 2) + " in");
+            t.text("D-pad up/down = 1 in, right/left = 0.25 in.");
+            t.text("{A} = use your number.");
         } else {
+            t.warn("{A} starts a move by itself. Stand back.");
+            t.warn("{GUIDE} or {START} stops a move.");
+            t.section("Drive tuner: choose a test");
+            if (lastResult.isEmpty()) t.text("Next: put it on the start mark. Do test 1.");
+            else textLines(t, lastResult);
             for (int i = 0; i < TESTS.length; i++) {
                 if (isStrafe(i) && !canStrafe()) continue;
                 t.text((i == test ? "> " : "  ") + TESTS[i]);
             }
             t.text("D-pad up/down = choose, {A} = start");
-            t.line("Power", FinderResults.num(testPower, 1) + " (D-pad left/right: your autos' power)");
+            t.line("Power", FinderResults.num(testPower, 1) + "  (D-pad left/right)");
         }
-        t.line("Now using", "wheel " + FinderResults.num(autoConfig.wheelDiameterIn, 3) + " in, strafe "
-                + FinderResults.num(autoConfig.strafeCorrection, 3)
-                + (Double.isNaN(autoConfig.strafeCorrectionLeft) ? "" : ", left " + FinderResults.num(autoConfig.strafeCorrectionLeft, 3)));
-        if (!lastResult.isEmpty()) t.text(lastResult);
+        t.debug("In use now", "wheel " + FinderResults.num(autoConfig.wheelDiameterIn, 3) + " in, strafe "
+                + FinderResults.num(autoConfig.strafeCorrection, 3));
     }
 
     @Override
     protected String[] helpLines() {
         String d = FinderResults.num(testDistanceIn(), 0) + " in";
         return new String[] {
-            "Wheel size + strafe correction. Tape " + d + " long;",
-            "  clear floor 5 ft ahead and to each side.",
-            "D-pad up/down = a test, l/r = power. {A} = start.",
-            "{GUIDE} or {START} stops a moving test (not measured).",
-            "Push: {A}, roll the robot BY HAND exactly " + d + ",",
-            "  straight along the tape, then {B}.",
-            "Drive: drives " + d + ". Measure it, set the real",
-            "  distance (D-pad up/down 1 in, l/r 0.25 in), {A}.",
-            "Strafe (mecanum): the same, right. Strafe left: left",
-            "Turn: turns 90 left: check it with a square.",
-            "Each new number is used at once: repeat Drive and",
-            "  Strafe until they measure " + d + ".",
-            "Power: as your autos. Then copy the lines.",
+            "Finds how far the wheels really go.",
+            "Clear floor 5 ft ahead and on both sides.",
+            "{GUIDE} or {START} stops a move (not measured).",
+            "Start each test with a wheel edge on the mark.",
+            "1 Push: {A}, roll it by hand " + d + ", {B}.",
+            "2 Drive: it drives " + d + ". You measure to",
+            "  the same wheel edge, set that, press {A}.",
+            "3 Strafe = drive sideways (mecanum only).",
+            "4 Left: only if it slips more that way.",
+            "5 Turn: it turns 90 left. Check with a square.",
+            "Repeat 2 and 3 until they say OK.",
+            "Power: the same as your autonomous moves.",
+            "Copy the lines when it says DONE.",
         };
     }
 

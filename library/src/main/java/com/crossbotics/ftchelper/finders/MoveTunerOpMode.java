@@ -35,8 +35,8 @@ import java.util.List;
  * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
  * </pre>
  *
- * Each new number is used at once in this tuner (no rebuild): run the test again until it says OK,
- * then copy the lines into your code. It measures with the odometry when the robot has it (it sees a
+ * Each new number is used at once in this tuner (no rebuild). Each test ends PASSED, RUN AGAIN or CAN'T FIX
+ * (and says what to do): run it again until it says PASSED, then copy the lines when the screen says DONE. It measures with the odometry when the robot has it (it sees a
  * wheel that skids), else with the wheel counts. Leave 5 ft of space around the robot. Every test
  * ends about where it began.
  *
@@ -63,7 +63,9 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
         return true;
     }
 
-    private static final String[] TESTS = {"1 Creep", "2 Stops", "3 Turns", "4 Drift", "5 Move and turn"};
+    private static final String[] TESTS = {"1 Creep: least power to move", "2 Stops: where a move ends",
+            "3 Turns: how a turn ends", "4 Drift: is it straight (check only)", "5 Move and turn: sideways and turning"};
+    private static final String[] NAMES = {"1 Creep", "2 Stops", "3 Turns", "4 Drift", "5 Move and turn"};
     private static final int CREEP = 0, STOPS = 1, TURNS = 2, DRIFT = 3, MOVE_TURN = 4;
 
     /**
@@ -103,7 +105,12 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
     private MoveMath.StillWatch still;
     // The screen's report: the last test's table and what to do next.
     private final List<String> report = new ArrayList<>();
+    // The same test's numbers in detail (each move or turn): under the lines to copy.
+    private final List<String> details = new ArrayList<>();
     private long movingShownAt = 0;
+    private boolean fiveFiles;   // the lines are for Tunables.java (else RobotSettings)
+    // Each number-finding test that ran: did its last run pass?
+    private final boolean[] ran = new boolean[5], passed = new boolean[5];
 
     // Stops: which slowDownIn step is being tried, and the slowDownIn before the test.
     private int stopsStep;
@@ -154,6 +161,7 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
     protected void setup() {
         RobotDefinition robot = robot();
         RobotConfig config = robotConfig();
+        fiveFiles = hasRobotFiles() || (config == null && robot != null);
         if (config == null) {
             if (robot == null) {
                 throw new IllegalStateException("The move tuner needs your robot: add "
@@ -187,9 +195,15 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
 
     @Override
     protected void showInit(RobotTelemetry t) {
-        t.text("Move tuner: how exactly autonomous moves stop and turns end.");
-        t.text("Clear floor: 5 ft around the robot. Press {PLAY}.");
-        if (!calibrated) t.warn("Run the Drive Tuner first, then set calibrated = true.");
+        t.warn("The robot will DRIVE and TURN BY ITSELF.");
+        t.warn("Clear 5 ft all around. Everybody back.");
+        t.warn("{GUIDE} or {START} stops any test.");
+        t.text("Move tuner: makes autonomous moves stop");
+        t.text("in the right place.");
+        if (!calibrated) {
+            t.warn("Run the Drive Tuner first.");
+            t.warn("Then set calibrated = true in class Drive.");
+        }
     }
 
     @Override
@@ -225,8 +239,9 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
     private void pressA() {
         if (runningTest >= 0) return;
         if (!calibrated) {
-            setReport("Run the Drive Tuner first: the wheel size must be right.",
-                    "Then set Tunables.Drive: calibrated = true.");
+            setReport("Not started. Run the Drive Tuner first.",
+                    "Then set calibrated = true in Tunables.java,",
+                    "class Drive. Install it. Come back here.");
             return;
         }
         pendingTest = test;   // step() starts it
@@ -239,6 +254,13 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
     @Override
     protected void step() {
         if (odo != null) odo.update();
+        // SAFETY: START or GUIDE ends every test at once, also the Creep and the wait between two moves
+        // (the moves that wait watch the same keys themselves).
+        if (runningTest >= 0 && helpKeyDown()) {
+            abort("You stopped it: not measured.", "Next: run the test again.");
+            openHelp();
+            return;
+        }
         if (pendingTest >= 0) {
             int which = pendingTest;
             pendingTest = -1;
@@ -270,11 +292,16 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
 
     private void begin(int which) {
         report.clear();
+        details.clear();
         done.clear();
         queue.clear();
         runningTest = which;
-        results.set("move:power", "// measured at power " + FinderResults.num(testPower, 1)
-                + ": these numbers fit autonomous moves at that power");
+        if (which != DRIFT) {
+            ran[which] = true;
+            passed[which] = false;   // until this run passes
+        }
+        updateStatus();
+        results.set("move:power", "Measured at power " + FinderResults.num(testPower, 1) + ": use it in autonomous.");
         switch (which) {
             case CREEP:
                 creepAxis = 0;
@@ -341,15 +368,17 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
         } finally {
             auto.setStopCondition(null);
             auto.setLoopHook(null);
+            // SAFETY: a button pressed during the move must not start anything when it ends.
+            waitForRelease();
         }
         tr.seconds = seconds() - tr.startSec;
         if (helpKeyDown() && running()) {
-            abort("Stopped by {GUIDE}/{START}: not measured. Run the test again.");
+            abort("You stopped it: not measured.", "Next: run the test again.");
             openHelp();
             return;
         }
         if (tr.result == AutoDrive.Result.STOPPED) {
-            abort("Stopped: not measured.");
+            abort("Stopped: not measured.", "Next: run the test again.");
             return;
         }
         current = tr;
@@ -454,16 +483,20 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
 
     private void endCreep() {
         runningTest = -1;
-        report.add("Rolls forward at " + creepText(creepForward)
-                + (mecanum() ? ", right at " + creepText(creepRight) : ""));
         double s = MoveMath.moveMinPowerFromCreep(creepForward, creepRight);
-        if (Double.isNaN(s)) {
-            report.add("It did not roll at " + FinderResults.num(MoveMath.CREEP_MAX_POWER, 1)
-                    + ". Is something holding it? Check the wheels.");
-            return;
+        String stuck = Double.isNaN(creepForward) ? "forward" : mecanum() && Double.isNaN(creepRight) ? "to the right" : null;
+        if (!Double.isNaN(s)) setNumber("moveMinPower", s, 2);
+        else forget("moveMinPower");
+        if (stuck != null) {
+            ended(CREEP, MoveMath.Outcome.RUN_AGAIN, "it did not roll " + stuck + " at " + FinderResults.num(MoveMath.CREEP_MAX_POWER, 1),
+                    "Next: free it, check the wheels, run 1 again.");
+        } else {
+            ended(CREEP, MoveMath.Outcome.PASSED, "moveMinPower is now " + FinderResults.num(s, 2),
+                    "(a little extra, for a low battery)", "Next: 2 Stops.");
         }
-        setNumber("moveMinPower", s, 2);
-        report.add("moveMinPower now " + FinderResults.num(s, 2) + " (with a margin). Next: Stops.");
+        details.add("It starts to roll at power " + creepText(creepForward) + " forward"
+                + (mecanum() ? "," : "."));
+        if (mecanum()) details.add("  and " + creepText(creepRight) + " to the right.");
     }
 
     private static String creepText(double power) {
@@ -483,14 +516,16 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
             if (tr.distanceIn == 24) slowest24 = Math.max(slowest24, tr.seconds);
         }
         double slowDown = autoConfig.slowDownIn;
-        report.add("slowDownIn " + FinderResults.num(slowDown, 0) + ": slide " + FinderResults.num(worst, 1)
-                + " in, 24 in " + FinderResults.num(slowest24, 1) + " s" + (stalled ? ", STUCK" : ""));
+        details.add("slowDownIn " + FinderResults.num(slowDown, 0) + ": slide " + pastEnd(worst) + ", "
+                + FinderResults.num(slowest24, 1) + " s");
         done.clear();
         if (stalled) {
             runningTest = -1;
-            setNumber("slowDownIn", slowDown, 0);
-            report.add("A move did not finish: it stalled near the end.");
-            report.add("Run Creep (moveMinPower), or clear the path.");
+            // A run that did not finish found nothing: the number from before, and no line to copy.
+            autoConfig.slowDownIn = slowDownBefore;
+            forget("slowDownIn");
+            ended(STOPS, MoveMath.Outcome.RUN_AGAIN, "a move did not finish",
+                    "Next: clear the path. Still stuck? Run 1 Creep.");
             return;
         }
         // The smallest slowDownIn wins unless a bigger one stops clearly better (WHY: each inch of
@@ -503,8 +538,12 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
         if (MoveMath.stopsOk(worst, false)) {
             runningTest = -1;
             setNumber("slowDownIn", slowDown, 0);
-            report.add("OK: slowDownIn " + FinderResults.num(slowDown, 0) + ". Copy the lines.");
-            if (odo == null) report.add("(Wheel counts: check one move with a tape.)");
+            if (odo == null) {
+                ended(STOPS, MoveMath.Outcome.PASSED, "slowDownIn " + FinderResults.num(slowDown, 0),
+                        "Wheel counts miss a skid: check with a tape.", "Next: 3 Turns.");
+            } else {
+                ended(STOPS, MoveMath.Outcome.PASSED, "slowDownIn " + FinderResults.num(slowDown, 0), "Next: 3 Turns.");
+            }
             return;
         }
         stopsStep++;
@@ -515,15 +554,16 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
         }
         runningTest = -1;
         setNumber("slowDownIn", bestSlowDown, 0);
-        report.add("None stopped within " + FinderResults.num(MoveMath.SLIDE_OK_IN, 1) + " in. Best: slowDownIn "
-                + FinderResults.num(bestSlowDown, 0) + ".");
+        String why = "none stopped within " + FinderResults.num(MoveMath.SLIDE_OK_IN, 1) + " in";
+        String best = "The best was slowDownIn " + FinderResults.num(bestSlowDown, 0) + ".";
         if (!MoveMath.clearlyBetter(bestSlide, firstSlide)) {
             // Slowing down longer did not help: every move already arrives at moveMinPower.
-            report.add("slowDownIn does not help: each move ends at moveMinPower "
-                    + FinderResults.num(autoConfig.moveMinPower, 2) + ".");
-            report.add("Run Creep for a lower moveMinPower, then Stops again.");
+            ended(STOPS, MoveMath.Outcome.CANT_FIX, why, best,
+                    "Slowing longer does not help.",
+                    "Next: run 1 Creep, then 2 Stops again.");
         } else {
-            report.add("Try a lower power, or Creep for a lower moveMinPower.");
+            ended(STOPS, MoveMath.Outcome.CANT_FIX, why, best,
+                    "Next: use less power, or run 1 Creep first.");
         }
     }
 
@@ -536,21 +576,23 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
         int swings = 0;
         boolean timedOut = false;
         for (Trial tr : done) {
-            report.add((tr.turnDeg > 0 ? "+" : "") + FinderResults.num(tr.turnDeg, 0) + ": past " + FinderResults.num(tr.trace.overshootDeg, 1)
-                    + ", off " + FinderResults.num(tr.endErrorDeg, 1) + " deg, " + FinderResults.num(tr.seconds, 1) + " s"
-                    + (tr.result == AutoDrive.Result.DONE ? "" : " " + tr.result));
+            details.add("Turn " + FinderResults.num(Math.abs(tr.turnDeg), 0) + (tr.turnDeg > 0 ? " left" : " right")
+                    + ": past " + FinderResults.num(tr.trace.overshootDeg, 1)
+                    + ", off " + FinderResults.num(tr.endErrorDeg, 1) + " deg, " + FinderResults.num(tr.seconds, 1) + " s");
+            if (tr.result != AutoDrive.Result.DONE) details.add("  That turn " + howItEnded(tr.result) + ".");
             overshoot = Math.max(overshoot, tr.trace.overshootDeg);
             swings = Math.max(swings, tr.trace.swings);
             endError = Math.max(endError, tr.endErrorDeg);
             if (tr.result != AutoDrive.Result.DONE) timedOut = true;
             if (Math.abs(tr.turnDeg) == 90) slowest90 = Math.max(slowest90, tr.seconds);
         }
-        report.add("Worst: past " + FinderResults.num(overshoot, 1) + " deg, swings " + swings
-                + ", end off " + FinderResults.num(endError, 1) + " deg");
-        report.add("90 deg in " + FinderResults.num(slowest90, 1) + " s" + (timedOut ? ", a turn ran out of time" : ""));
+        report.add("Worst turn: past " + verdict(overshoot, MoveMath.OVERSHOOT_OK_DEG)
+                + ", off " + verdict(endError, autoConfig.turnToleranceDeg));
+        details.add("Turn 90 took " + FinderResults.num(slowest90, 1) + " s (limit " + FinderResults.num(MoveMath.SLOW_90_SEC, 0)
+                + "). Swings: " + swings + ".");
         MoveMath.Suggestion s = MoveMath.suggestTurn(overshoot, swings, endError, timedOut, slowest90,
                 autoConfig.turnKp, autoConfig.turnKd, autoConfig.turnMinPower, autoConfig.turnToleranceDeg);
-        showSuggestion(s, "Turns");
+        showSuggestion(s, TURNS, "Next: 4 Drift.");
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -559,16 +601,22 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
 
     private void endDrift() {
         double worst = 0;
+        boolean stuck = false;
         for (Trial tr : done) {
-            report.add(directionName(tr.directionDeg) + " " + FinderResults.num(tr.distanceIn, 0) + " in: heading "
-                    + FinderResults.num(tr.headingChangeDeg, 1) + " deg, slide " + FinderResults.num(tr.slideIn, 1) + " in");
+            details.add(directionName(tr.directionDeg) + " " + FinderResults.num(tr.distanceIn, 0) + " in: turned "
+                    + FinderResults.num(Math.abs(tr.headingChangeDeg), 1) + " deg, " + pastEnd(tr.slideIn));
             worst = Math.max(worst, Math.abs(tr.headingChangeDeg));
+            if (tr.result != AutoDrive.Result.DONE) stuck = true;
         }
-        if (worst <= MoveMath.DRIFT_OK_DEG) {
-            report.add("OK: the heading stays within " + FinderResults.num(MoveMath.DRIFT_OK_DEG, 0) + " deg.");
+        if (stuck) {
+            ended(DRIFT, MoveMath.Outcome.RUN_AGAIN, "a move did not finish", "Next: clear the path. Run 4 again.");
+        } else if (worst <= MoveMath.DRIFT_OK_DEG) {
+            ended(DRIFT, MoveMath.Outcome.PASSED, "the heading stays within " + FinderResults.num(MoveMath.DRIFT_OK_DEG, 0) + " deg",
+                    mecanum() ? "Next: 5 Move and turn." : "Next: copy the lines when it says DONE.");
         } else {
-            report.add("The robot turns while it drives. Check the weight and the wheels;");
-            report.add(mecanum() ? "  moveWithTurn holds the heading on long moves." : "  turn back (turnTo) after long moves.");
+            ended(DRIFT, MoveMath.Outcome.CANT_FIX, "it turns while it drives",
+                    "Next: check the weight and the wheels. Or:",
+                    mecanum() ? "  moveWithTurn holds the angle on long moves." : "  turn back (turnTo) after long moves.");
         }
     }
 
@@ -584,32 +632,86 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
         double lag = 0, overshoot = 0;
         boolean stuck = false;
         for (Trial tr : done) {
-            report.add(directionName(tr.directionDeg) + " to " + FinderResults.num(tr.targetHeadingDeg, 0) + " deg: "
-                    + (tr.result == AutoDrive.Result.DONE ? "" : tr.result + ", ") + "off " + FinderResults.num(tr.lagDeg, 1)
-                    + " deg at the end of the move");
+            double to = tr.targetHeadingDeg;
+            details.add(directionName(tr.directionDeg)
+                    + (to == 0 ? ", turning back" : ", turning " + FinderResults.num(Math.abs(to), 0) + (to > 0 ? " left" : " right"))
+                    + ": off " + FinderResults.num(tr.lagDeg, 1) + " deg");
+            if (tr.result != AutoDrive.Result.DONE) details.add("  That move " + howItEnded(tr.result) + ".");
             lag = Math.max(lag, tr.lagDeg);
             overshoot = Math.max(overshoot, tr.trace.overshootDeg);
             if (tr.result != AutoDrive.Result.DONE) stuck = true;
         }
-        report.add("Worst: off " + FinderResults.num(lag, 1) + " deg, past target "
-                + FinderResults.num(overshoot, 1) + " deg" + (stuck ? ", a move did not finish" : ""));
-        MoveMath.Suggestion s = MoveMath.suggestMoveTurn(lag, overshoot, autoConfig.moveTurnScale, autoConfig.moveMaxTurnPower);
-        showSuggestion(s, "Move and turn");
+        report.add("Worst: off " + verdict(lag, MoveMath.TURN_LAG_OK_DEG)
+                + ", past " + verdict(overshoot, MoveMath.MOVE_TURN_OVERSHOOT_OK_DEG));
+        MoveMath.Suggestion s = MoveMath.suggestMoveTurn(lag, overshoot, autoConfig.moveTurnScale, autoConfig.moveMaxTurnPower, stuck);
+        showSuggestion(s, MOVE_TURN, "Next: copy the lines when it says DONE.");
     }
 
     // ---------------------------------------------------------------------------------------------
     // Numbers and the screen
     // ---------------------------------------------------------------------------------------------
 
-    private void showSuggestion(MoveMath.Suggestion s, String testName) {
-        if (s.ok()) {
-            report.add("OK: " + s.why + ".");
-            return;
+    private void showSuggestion(MoveMath.Suggestion s, int which, String afterPass) {
+        String again = "Next: run " + NAMES[which] + " again.";
+        if (s.outcome == MoveMath.Outcome.PASSED) {
+            ended(which, s.outcome, s.why, afterPass);
+        } else if (s.outcome == MoveMath.Outcome.CANT_FIX) {
+            // No number fixes it: the ones tried on the way did not pass, so they are not lines to copy.
+            forget("moveTurnScale");
+            forget("moveMaxTurnPower");
+            ended(which, s.outcome, s.why, "Next: use less move power. Or turn first,", "then move (two steps).");
+        } else if (s.field == null) {
+            ended(which, s.outcome, s.why, "Next: clear the path.", again);
+        } else {
+            int decimals = s.field.startsWith("turnK") ? 4 : s.field.equals("turnToleranceDeg") ? 1 : 2;
+            setNumber(s.field, s.value, decimals);
+            ended(which, s.outcome, s.why, s.field + " is now " + FinderResults.num(s.value, decimals) + ".", again);
         }
-        int decimals = s.field.startsWith("turnK") ? 4 : s.field.equals("turnToleranceDeg") ? 1 : 2;
-        setNumber(s.field, s.value, decimals);
-        report.add(s.field + " now " + FinderResults.num(s.value, decimals) + ": " + s.why + ".");
-        report.add("Run " + testName + " again.");
+    }
+
+    // A test ended: its verdict and what to do go first on the screen, the numbers measured after them.
+    private void ended(int which, MoveMath.Outcome outcome, String why, String... whatToDo) {
+        List<String> top = new ArrayList<>();
+        String line = outcome.words + ": " + why + ".";
+        if (line.length() <= FinderResults.SCREEN_WIDTH) {
+            top.add(line);
+        } else {
+            top.add(outcome.words + ":");
+            top.add("  " + why + ".");
+        }
+        java.util.Collections.addAll(top, whatToDo);
+        report.addAll(0, top);
+        passed[which] = outcome == MoveMath.Outcome.PASSED;
+        updateStatus();
+    }
+
+    private void updateStatus() {
+        for (int i = 0; i < NAMES.length; i++) {
+            if (ran[i] && !passed[i]) {
+                results.notDone(NAMES[i] + " has not passed.");
+                return;
+            }
+        }
+        for (boolean r : ran) {
+            if (r) {
+                results.done();
+                return;
+            }
+        }
+    }
+
+    // "2.1 deg OK" or "5.4 deg too much": every number with its verdict.
+    private static String verdict(double value, double limit) {
+        return FinderResults.num(value, 1) + " deg" + (value <= limit ? " OK" : " too much");
+    }
+
+    private static String pastEnd(double slideIn) {
+        return FinderResults.num(Math.abs(slideIn), 1) + (slideIn < 0 ? " in short" : " in past");
+    }
+
+    // No line to copy for this number.
+    private void forget(String field) {
+        results.remove("move:" + field);
     }
 
     // A new number: used at once (AutoDrive reads its settings on every move), and the lines to copy.
@@ -626,17 +728,18 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
             default: throw new IllegalArgumentException(field);
         }
         String v = FinderResults.num(value, decimals);
-        results.set("move:" + field, "c." + field + " = " + v + ";   // RobotSettings.auto()");
-        results.set("move:" + field + "5", "Tunables.Drive: " + field + " = " + v);
+        if (fiveFiles) results.setTunable("move:" + field, "Drive", field, v);
+        else results.setIn("move:" + field, "In RobotSettings.java, in auto():", "c." + field + " = " + v + ";");
     }
 
     private void setReport(String... lines) {
         report.clear();
+        details.clear();
         for (String l : lines) report.add(l);
     }
 
     // Stops the test now (GUIDE, STOP, help): what it measured so far is not used.
-    private void abort(String why) {
+    private void abort(String... why) {
         auto.stop();
         queue.clear();
         done.clear();
@@ -645,7 +748,8 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
         if (runningTest == STOPS) autoConfig.slowDownIn = slowDownBefore;
         runningTest = -1;
         report.clear();
-        report.add(why);
+        details.clear();
+        java.util.Collections.addAll(report, why);
     }
 
     // The screen while a move runs (about 10 times a second).
@@ -653,70 +757,85 @@ public abstract class MoveTunerOpMode extends FinderOpMode {
         long now = System.nanoTime();
         if (now - movingShownAt < 100_000_000L) return;
         movingShownAt = now;
-        t.section("Move tuner");
         showRunning(t);
-        t.line("Heading", FinderResults.num(auto.headingDeg(), 1) + " deg");
+        t.line("Turn angle", FinderResults.num(auto.headingDeg(), 1) + " deg");
         t.update();
     }
 
     private void showRunning(RobotTelemetry t) {
-        t.text(TESTS[runningTest] + ": running... ({GUIDE} or {START} stops it)");
+        t.warn("The robot moves. {GUIDE} or {START} = stop.");
+        t.section("Move tuner: test " + (runningTest + 1));
+        t.text(NAMES[runningTest] + ": running... Stand back.");
         if (runningTest == CREEP) {
-            t.line("Power", FinderResults.num(creepPower, 2) + (creepAxis == 0 ? " forward" : " right"));
+            t.line("Power", FinderResults.num(creepPower, 2) + (creepAxis == 0 ? " forward" : " to the right"));
         } else if (runningTest == STOPS) {
             t.line("Trying", "slowDownIn " + FinderResults.num(autoConfig.slowDownIn, 0));
+            for (String l : details) t.text(l);
         }
-        for (String l : report) t.text(l);
+    }
+
+    @Override
+    boolean showsResults() {
+        return runningTest < 0;
+    }
+
+    @Override
+    void showDetails(RobotTelemetry t) {
+        if (runningTest >= 0 || details.isEmpty()) return;
+        t.section("Details of the last test");
+        for (String l : details) t.text(l);
     }
 
     @Override
     protected void show(RobotTelemetry t) {
-        t.section("Move tuner");
         if (runningTest >= 0) {
             showRunning(t);
             return;
         }
-        for (int i = 0; i < TESTS.length; i++) {
-            if (!available(i)) continue;
-            t.text((i == test ? "> " : "  ") + TESTS[i]);
+        t.warn("{A} starts moves by itself. Stand back.");
+        t.warn("{GUIDE} or {START} stops any test.");
+        if (!calibrated) t.warn("Run the Drive Tuner first.");
+        t.section("Move tuner: choose a test");
+        if (report.isEmpty()) {
+            t.text("Next: do the tests in order, from 1.");
+            for (int i = 0; i < TESTS.length; i++) {
+                if (!available(i)) continue;
+                t.text((i == test ? "> " : "  ") + TESTS[i]);
+            }
+        } else {
+            for (String l : report) t.text(l);
+            // One line: the last result needs the screen.
+            t.text("> " + TESTS[test]);
         }
         t.text("D-pad up/down = choose, {A} = start");
-        t.line("Power", FinderResults.num(testPower, 1) + " (D-pad left/right: your autos' power)");
-        t.line("Now using", "moveMinPower " + FinderResults.num(autoConfig.moveMinPower, 2) + ", slowDownIn "
+        t.line("Power", FinderResults.num(testPower, 1) + "  (D-pad left/right)");
+        t.debug("In use", "moveMinPower " + FinderResults.num(autoConfig.moveMinPower, 2) + ", slowDownIn "
                 + FinderResults.num(autoConfig.slowDownIn, 0));
-        t.line("Turns", "Kp " + FinderResults.num(autoConfig.turnKp, 4) + ", Kd " + FinderResults.num(autoConfig.turnKd, 4)
-                + ", min " + FinderResults.num(autoConfig.turnMinPower, 2) + ", tol " + FinderResults.num(autoConfig.turnToleranceDeg, 1));
-        if (mecanum()) {
-            t.line("Move and turn", "scale " + FinderResults.num(autoConfig.moveTurnScale, 2) + ", max "
-                    + FinderResults.num(autoConfig.moveMaxTurnPower, 2));
-        }
-        t.line("Measures with", odo != null ? "the odometry" : "the wheel counts");
-        if (!calibrated) t.warn("Run the Drive Tuner first, then set calibrated = true.");
-        for (String l : report) t.text(l);
+        t.debug("Measures with", odo != null ? "the odometry" : "the wheel counts");
     }
 
     @Override
     protected String[] helpLines() {
         return new String[] {
-            "How exactly moves stop and turns end. Clear floor",
-            "  5 ft around. Run it after the Drive Tuner.",
-            "D-pad up/down = a test, l/r = power. {A} = start.",
-            "{GUIDE} or {START} stops a test (not measured).",
-            "1 Creep: power rises until it rolls: moveMinPower",
-            "2 Stops: 6, 12, 24 in out and back; tries",
-            "  slowDownIn 0 to 12 until the slide is small.",
-            "3 Turns: 90, 135, 45 and back: turnKp/Kd/MinPower",
-            "4 Drift: 48 in moves: heading change (report).",
-            "5 Move and turn: sideways + 90 deg turn:",
-            "  moveTurnScale, moveMaxTurnPower.",
-            "Each new number is used at once: run the test",
-            "  again until it says OK. Then copy the lines.",
+            "Makes moves stop in the right place.",
+            "Do the Drive Tuner first. Clear 5 ft all around.",
+            "{GUIDE} or {START} stops any test (not measured).",
+            "D-pad left/right = power, as your autonomous.",
+            "1 Creep: least power to roll (moveMinPower).",
+            "2 Stops: the slide past the end (slowDownIn).",
+            "3 Turns: turnKp, turnKd, turnMinPower,",
+            "   turnToleranceDeg. One change each run.",
+            "4 Drift: does it stay straight (check only).",
+            "5 Move and turn: moveTurnScale,",
+            "   moveMaxTurnPower (mecanum only).",
+            "Run a test again until it says PASSED.",
+            "New numbers are used at once. Copy at DONE.",
         };
     }
 
     @Override
     protected void pause() {
-        if (runningTest >= 0) abort("Paused: run the test again.");
+        if (runningTest >= 0) abort("Stopped for help: not measured.", "Next: run the test again.");
         if (auto != null) auto.stop();
     }
 

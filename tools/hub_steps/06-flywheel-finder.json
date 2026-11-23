@@ -4,30 +4,35 @@
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Tune and check ---",
+        "--- Tune and check: 7 of 14 ---",
         "Robot: Robot",
-        "  Hardware Check: every device found, ...",
         "  ...",
-        "*> Flywheel Finder: the flywheel's gains",
+        "*> Flywheel Finder",
         "  ...",
-        "D-pad up/down = pick, A = open it. Then ▶."
+        "This tool: hold the flywheel's speed.",
+        "D-pad up/down = choose. A = open it. Then ▶."
       ]
     },
     "flywheel-finder-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "Flywheel finder: top speed, speed-control gains, ...",
-        "*!! Hands away from the wheel. Eye protection on.",
-        "Press ▶ on the Driver Hub.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! The flywheel runs at up to FULL power.",
+        "*!! Safety glasses. Hands and loose clothes away.",
+        "!! Robot on a block. Nobody in front of it.",
+        "Flywheel finder: finds the numbers that",
+        "hold the flywheel's speed.",
+        "Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "flywheel-finder-go-choose": {
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Choose the flywheel motor (D-pad, then A) ---",
+        "!! Safety glasses. Hands away from the flywheel.",
+        "--- Flywheel finder: choose the motor ---",
+        "D-pad up/down = choose. A = use it.",
         "  ...",
         "  intake",
         "*> launcher",
@@ -39,12 +44,12 @@
       "where": "Let go of A, then hold it:",
       "order": "press-first",
       "lines": [
-        "--- Flywheel \"launcher\"  (BACK = another) ---",
-        "Speed : 5590 RPM",
-        "Battery : 12.80 V (gains for 12.8 V)",
+        "!! A or B spins the flywheel. Hands clear.",
+        "--- Flywheel \"launcher\": step 2 of 2 ---",
+        "Next: press B. The wheel spins at the target.",
+        "B again = stop.",
         "*Top speed : 5600 RPM",
-        "F gain : 12.54 (RB/LB)",
-        "Step 2: B = hold a speed. (Or hold A again to ...",
+        "Hold A = measure the top speed again.",
         "..."
       ]
     },
@@ -53,13 +58,13 @@
       "where": "Press on gamepad 1:",
       "order": "press-first",
       "lines": [
-        "--- Flywheel \"launcher\"  (BACK = another) ---",
-        "...",
-        "Top speed : 5600 RPM",
-        "F gain : 12.54 (RB/LB)",
-        "*Target : 3350 RPM (D-pad)",
-        "*Error : 40 RPM",
-        "Ready : YES",
+        "!! The flywheel spins. B = stop. Hands clear.",
+        "--- Flywheel \"launcher\": step 2 of 2 ---",
+        "Next: push ONE piece in with a rod.",
+        "NEVER fingers.",
+        "*Target : 3350 RPM",
+        "Speed : 3310 RPM",
+        "*Speed check : 40 RPM too SLOW",
         "..."
       ]
     },
@@ -68,13 +73,14 @@
       "where": "When it stays too slow, press:",
       "order": "press-first",
       "lines": [
-        "--- Flywheel \"launcher\"  (BACK = another) ---",
+        "!! The flywheel spins. B = stop. Hands clear.",
+        "--- Flywheel \"launcher\": step 2 of 2 ---",
+        "Target : 3350 RPM",
+        "Speed : 3345 RPM",
+        "*Speed check : 5 RPM too SLOW: OK",
+        "At speed : YES",
         "...",
-        "*F gain : 12.79 (RB/LB)",
-        "Target : 3350 RPM (D-pad)",
-        "*Error : 5 RPM",
-        "...",
-        "Too slow at every speed: F up (RB). Too fast: F down (LB)."
+        "*  public static double kF = 12.79;"
       ]
     }
   }

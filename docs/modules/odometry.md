@@ -782,7 +782,7 @@ ends it. GUIDE shows help (or hold the gamepad's START button for 1 s). Each tes
 | 1 Forward 48 in | push or drive the robot 48 in straight forward along a tape, B | the forward pod's direction, and how far off the distance is (sideways drift too). OTOS: `Tunables.Odometry: linearScalar = ...` (multiply it with the one in use). Pods more than 2% off: check the pod type (Pinpoint) or `ticksPerMm(...)` (dead wheels), and the tape. More than 10% off: "was it really 48 in?" The mistake is in the test, and not in the pods, so there is nothing to copy |
 | 2 Left 24 in | push or drive it 24 in straight to its LEFT, B | the sideways pod's direction (a tank robot: push it) |
 | 3 Spin 3+ turns | turn it in place at least 3 times (right stick), B | only the numbers to change: `Robot.java: in the odometry(...) line, .offsetsMm(-84.2, -167.5)`, or `.trackWidthIn(..).perpForwardIn(..)` (three wheels), or `.parallelLeftIn(..).perpForwardIn(..)` (two). `.reversed(...)` and the pod type stay as written. OTOS: no offsets ([turn scale by hand](#otos-turn-scale-by-hand)) |
-| 4 Loop and back | start on a tape mark, drive anywhere, come back onto the mark facing the same way, B | within 1 in and 2 degrees: `Tunables.Odometry: checked = true` |
+| 4 Loop and back | start on a tape mark, drive anywhere, come back onto the mark facing the same way, B | within 1 in and 2 degrees, on the installed numbers: `public static boolean checked = true;` in class `Odometry` |
 
 When a pod counts the wrong way, the Forward or Left test says so. It also says which name to put in
 (or take out of) `.reversed(...)`. On a Pinpoint, the Spin test measures the turn from the odometry's

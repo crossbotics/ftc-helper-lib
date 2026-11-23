@@ -4,8 +4,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.crossbotics.ftchelper.auto.AutoStep;
+import com.crossbotics.ftchelper.control.FlywheelBangBang;
 import com.crossbotics.ftchelper.core.Subsystem;
 import com.crossbotics.ftchelper.hardware.MotorSetup;
+import com.crossbotics.ftchelper.safety.EncoderGuard;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.util.MathUtil;
 import java.util.function.DoubleSupplier;
@@ -43,12 +45,38 @@ import java.util.function.LongSupplier;
  * flywheel.batteryCompensation(Hw.batteryReader(hardwareMap), 12.6);   // 12.6 V: from the Flywheel Finder
  * }</pre>
  *
+ * <p><b>Two speed controls.</b> PID (the hub's, the default) is the one described above. BANG_BANG
+ * ({@link #speedControl(SpeedControl)}) runs in {@link #update()}: full power well below the target, a
+ * steady feedforward power near it, coast above it, never reverse ({@link FlywheelBangBang}). It depends on
+ * the loop: after a gap of more than {@link #LOOP_GAP_SEC} that update gives no full power, and the Driver
+ * Station warns. A loop that is stuck cannot stop the motor: no code can while it does not run. An encoder
+ * check ({@link EncoderGuard}) switches the power off until {@link #clearFault()}.
+ * <pre>{@code
+ * flywheel.bangFeedforward(0.4, 0.00205).bangThresholds(200, 75, 50)
+ *         .bangBattery(Hw.batteryReader(hardwareMap), 12.8);
+ * flywheel.speedControl(Flywheel.SpeedControl.BANG_BANG);     // only while stopped
+ * }</pre>
+ *
  * <p>RPM = revolutions (turns) per minute. The hub works in encoder counts per second, so this class
  * converts between the two. Tutorial 17 builds a shooter step by step.
  *
  * Docs: docs/modules/launcher.md
  */
 public class Flywheel implements Subsystem {
+    /** Who holds the speed: PID (the hub's speed control, the default) or BANG_BANG (full, feedforward, coast). */
+    public enum SpeedControl { PID, BANG_BANG }
+
+    /** BANG_BANG: a loop later than this (seconds) uses the feedforward only, and the Driver Station warns. */
+    public static final double LOOP_GAP_SEC = 0.08;
+    /** BANG_BANG: the power is written again when it changes by this much (0 and full power: at once). */
+    public static final double POWER_RESEND = 0.01;
+    /** The battery that catalog top speeds are for, volts: the starting kV when none was found. */
+    public static final double CATALOG_VOLTS = 12;
+    // How long the "late loop" warning stays, seconds.
+    private static final double GAP_SHOW_SEC = 3;
+    /** The way out of an encoder fault, as the screen says it. */
+    static final String FAULT_RESET = "Switch the flywheel off, then on.";
+
     // "implements Subsystem": it has update/stop/addTelemetry/name like every mechanism helper.
     private final String name;
     private final DcMotorEx motor;
@@ -86,6 +114,22 @@ public class Flywheel implements Subsystem {
     private int lowReadings = 0;
     // The good readings of the last BATTERY_FILTER_SEC: {time s, volts}, oldest first.
     private final java.util.ArrayDeque<double[]> recentVolts = new java.util.ArrayDeque<>();
+
+    // ---- Bang-bang (opt-in): all of it unused while the hub's PID holds the speed ----
+    private SpeedControl control = SpeedControl.PID;
+    private final FlywheelBangBang law = new FlywheelBangBang();
+    private final EncoderGuard guard = new EncoderGuard();
+    private double bangKs = 0;
+    private double bangKv = Double.NaN;           // NaN = not found yet: from the top speed
+    private DoubleSupplier bangVolts = null;
+    private double bangNominalVolts = Double.NaN;
+    private double powerSent = Double.NaN;        // the power written last; NaN = none, or a write failed
+    private boolean powerMode = false;            // plain power and FLOAT are set on the motors
+    private double bangUpdatedAt = Double.NaN;    // the last update with a target, seconds
+    private double gapAt = Double.NEGATIVE_INFINITY, gapSec = 0;
+    private String encoderFault = "";
+    // Counts each change of the speed control or its numbers, refused ones too: a group of continuous fire ends on it.
+    private int controlRevision = 0;
 
     /** The volts the gains are for when nothing else is said: a charged battery under load (as {@code Feedforward}). */
     public static final double DEFAULT_NOMINAL_VOLTS = 12.8;
@@ -166,6 +210,9 @@ public class Flywheel implements Subsystem {
     /** Spins the other way for positive speeds. */
     public Flywheel reversed() {
         MotorSetup.of(motor).reversed().coast().runUsingEncoder().done();
+        // The setup put speed mode on: bang-bang must set plain power again before its next write.
+        powerMode = false;
+        powerSent = Double.NaN;
         return this;
     }
 
@@ -173,12 +220,15 @@ public class Flywheel implements Subsystem {
      * A second motor on the same flywheel. It gets the same speed command, so <b>it needs its own encoder
      * cable</b> (the hub's speed control reads it). If its encoder reads nothing while the wheel spins,
      * the follower is switched off and a warning shows (without an encoder, its speed control would
-     * drive it to full power and fight the first motor).
+     * drive it to full power and fight the first motor). In BANG_BANG it gets the first motor's power and
+     * its encoder is not used.
      * It gets the same {@link #pidf} gains, whether you call pidf before or after this.
      */
     public Flywheel follower(HardwareMap hardwareMap, String followerName, boolean reversed) {
         follower = MotorSetup.get(hardwareMap, followerName).reversed(reversed).coast().runUsingEncoder().done();
         applyGainsToFollower();
+        powerMode = false;          // bang-bang: this motor too needs plain power first
+        powerSent = Double.NaN;
         return this;
     }
 
@@ -186,6 +236,8 @@ public class Flywheel implements Subsystem {
     void attachFollowerForTests(DcMotorEx followerMotor) {
         follower = followerMotor;
         applyGainsToFollower();
+        powerMode = false;
+        powerSent = Double.NaN;
     }
 
     // If pidf() was already called, give the new follower the same gains (F scaled for the battery).
@@ -205,7 +257,9 @@ public class Flywheel implements Subsystem {
      * hub gets F x (tuned volts / volts now); these numbers stay the ones you tuned.
      */
     public Flywheel pidf(double p, double i, double d, double f) {
-        gains = new double[] {p, i, d, f};
+        double[] now = {p, i, d, f};
+        if (!java.util.Arrays.equals(gains, now)) controlRevision++;
+        gains = now;
         sendGains();
         return this;
     }
@@ -258,6 +312,158 @@ public class Flywheel implements Subsystem {
         return this;
     }
 
+    // ---- Speed control: PID or bang-bang ----
+
+    /**
+     * Chooses who holds the speed. Only while stopped (a target of 0: call {@link #stop()} first): a switch
+     * at speed would hand a fast wheel to a controller that does not know it. A switch writes power 0
+     * first, and clears a bang-bang fault (you switched it off yourself).
+     *
+     * <pre>{@code
+     * flywheel.stop();
+     * flywheel.speedControl(Flywheel.SpeedControl.BANG_BANG);
+     * }</pre>
+     *
+     * @param wanted PID or BANG_BANG
+     * @return true if that control is in use now; false if it was refused (the wheel has a speed to hold)
+     */
+    public boolean speedControl(SpeedControl wanted) {
+        if (wanted == null) throw new IllegalArgumentException("No speed control was given.\nUse PID or BANG_BANG.");
+        if (wanted == control) return true;
+        controlRevision++;
+        if (targetRpm != 0) return false;
+        forgetBangBang();
+        powerMode = false;
+        lastSent = Double.NaN;        // whatever the last control sent does not count for the new one
+        writeZero();
+        // Only after the motor took the 0: a failed write keeps the old control.
+        control = wanted;
+        encoderFault = "";
+        ready = false;
+        inBandSince = Double.NaN;
+        nextVoltsAt = Double.NaN;
+        return true;
+    }
+
+    /** The speed control in use. */
+    public SpeedControl getSpeedControl() {
+        return control;
+    }
+
+    /**
+     * BANG_BANG: the steady power near the target, volts = ks + kv x target RPM, divided by the battery.
+     * Not the units of {@link com.crossbotics.ftchelper.control.Feedforward}. The Flywheel Tuner finds them.
+     *
+     * @param ks volts to overcome friction, 0 or more
+     * @param kv volts for each RPM, above 0; NaN = the safe start, {@link #CATALOG_VOLTS} / {@link #maxRpm}
+     */
+    public Flywheel bangFeedforward(double ks, double kv) {
+        boolean derived = Double.isNaN(kv);
+        if (!(ks >= 0) || Double.isInfinite(ks) || (!derived && (!(kv > 0) || Double.isInfinite(kv)))) {
+            throw new IllegalArgumentException("Wrong holding power numbers.\nYou gave " + ks + " and " + kv + "."
+                    + "\nFirst (bangKs): use 0 or more.\nSecond (bangKv): use more than 0.");
+        }
+        if (ks != bangKs || Double.compare(kv, bangKv) != 0) controlRevision++;
+        bangKs = ks;
+        bangKv = kv;
+        return this;
+    }
+
+    /**
+     * BANG_BANG: where full power and coasting start, and how much later each ends (RPM).
+     *
+     * @param fullBelow  full power starts more than this below the target (200)
+     * @param coastAbove coasting starts more than this above it (75)
+     * @param hysteresis each ends this much later (50); less than fullBelow
+     */
+    public Flywheel bangThresholds(double fullBelow, double coastAbove, double hysteresis) {
+        boolean changed = fullBelow != law.getFullBelowRpm() || coastAbove != law.getCoastAboveRpm()
+                || hysteresis != law.getHysteresisRpm();
+        law.thresholds(fullBelow, coastAbove, hysteresis);
+        if (changed) controlRevision++;
+        return this;
+    }
+
+    /**
+     * BANG_BANG: the most power, and the power when well below the target. Default 1.
+     *
+     * @param power 0.3 to 1
+     */
+    public Flywheel bangMaxPower(double power) {
+        boolean changed = power != law.getMaxPower();
+        law.maxPower(power);
+        if (changed) controlRevision++;
+        return this;
+    }
+
+    /**
+     * BANG_BANG: where the battery's volts come from, for its feedforward. The same filter and limits as
+     * {@link #batteryCompensation} (the highest of the last second; at most 0.8 to 1.3 x the power at
+     * nominalVolts). Without a reader it divides by nominalVolts. PID never reads it.
+     *
+     * @param batteryVolts asked every {@link #BATTERY_READ_SEC} s, so it must answer at once
+     *                     ({@code Hw.batteryReader(hardwareMap)})
+     * @param nominalVolts the volts used with no reading, and the middle of the limits: 9 to 14
+     */
+    public Flywheel bangBattery(DoubleSupplier batteryVolts, double nominalVolts) {
+        if (!(nominalVolts >= 9 && nominalVolts <= 14)) {
+            throw new IllegalArgumentException("Wrong tuning battery: " + nominalVolts + " volts."
+                    + "\nUse 9 to 14 volts (nominalVolts).");
+        }
+        bangVolts = batteryVolts;
+        bangNominalVolts = nominalVolts;
+        return this;
+    }
+
+    /**
+     * Clears a BANG_BANG encoder fault. Call it only when a person switched the flywheel off and on
+     * again, never from a fire button: holding fire must not clear a fault.
+     */
+    public void clearFault() {
+        if (encoderFault.isEmpty()) return;
+        encoderFault = "";
+        forgetBangBang();
+        inBandSince = Double.NaN;
+        ready = false;
+    }
+
+    /** True while a BANG_BANG encoder fault holds the power at 0 (always false in PID). */
+    public boolean isFaulted() {
+        return !encoderFault.isEmpty();
+    }
+
+    /** The hub's gains as given to {@link #pidf}, {P, I, D, F} (a copy); null when none were given. */
+    public double[] getPidf() {
+        return gains == null ? null : gains.clone();
+    }
+
+    /** BANG_BANG: kS in use, volts. */
+    public double getBangKs() { return bangKs; }
+
+    /** BANG_BANG: kV in use, volts for each RPM: yours, or the one from the top speed. */
+    public double getBangKv() {
+        return !Double.isNaN(bangKv) ? bangKv : maxRpm > 0 ? CATALOG_VOLTS / maxRpm : 0;
+    }
+
+    /** BANG_BANG: full power starts this far below the target, RPM. */
+    public double getBangFullBelowRpm() { return law.getFullBelowRpm(); }
+    /** BANG_BANG: coasting starts this far above the target, RPM. */
+    public double getBangCoastAboveRpm() { return law.getCoastAboveRpm(); }
+    /** BANG_BANG: the hysteresis, RPM. */
+    public double getBangHysteresisRpm() { return law.getHysteresisRpm(); }
+    /** BANG_BANG: the most power. */
+    public double getBangMaxPower() { return law.getMaxPower(); }
+    /** BANG_BANG: what its last answer was (full, near, coast); OFF in PID. */
+    public FlywheelBangBang.Zone getBangZone() { return law.getZone(); }
+    /** BANG_BANG: the power written last (0 with none). In PID the hub decides the power: 0 here. */
+    public double getCommandedPower() { return Double.isNaN(powerSent) ? 0 : powerSent; }
+
+    /**
+     * A count that goes up with each change of the speed control or its numbers (a refused switch too).
+     * A tuner's trial, or a group of fire, is only valid while it stays the same.
+     */
+    public int getControlRevision() { return controlRevision; }
+
     /** Ready when within this many RPM of the target. Default 75. */
     public Flywheel tolerance(double rpmTolerance) {
         toleranceRpm = Math.abs(rpmTolerance);
@@ -298,6 +504,7 @@ public class Flywheel implements Subsystem {
             inBandSince = Double.NaN;
             ready = false;
             armedForShot = false;
+            if (control == SpeedControl.BANG_BANG) law.targetChanged();
         }
         targetRpm = clamped;
     }
@@ -306,12 +513,23 @@ public class Flywheel implements Subsystem {
     @Override
     public void stop() {
         setRpm(0);
+        if (control == SpeedControl.BANG_BANG) {
+            // SAFETY: always written, whatever was sent last: power we set ourselves has no hub behind it
+            // that would ever bring it down.
+            forgetBangBang();
+            powerMode = false;    // set the modes again before the next power
+            writeZero();
+            // A bang-bang wheel always coasts down (FLOAT), even if something set BRAKE: a hard stop of a fast,
+            // heavy wheel strains the motor, gears and belts.
+            floatAll();
+            return;
+        }
         // Send the 0 now, not in the next update(), so it stops at once.
         send(0);
     }
 
-    /** "" or a problem, e.g. the follower's encoder not reading. */
-    public String getFault() { return fault; }
+    /** "" or a problem, e.g. the follower's encoder not reading, or a bang-bang encoder fault. */
+    public String getFault() { return encoderFault.isEmpty() ? fault : encoderFault; }
 
     // ---------------------------------------------------------------------------------------
     // Every loop
@@ -322,13 +540,57 @@ public class Flywheel implements Subsystem {
     public void update() {
         double now = clockNanos.getAsLong() / 1e9;   // seconds
         checkBattery(now);
+        if (control == SpeedControl.BANG_BANG) {
+            updateBangBang(now);
+            return;
+        }
         // Turn RPM into what the hub wants, encoder counts per second:
         // turns per minute / 60 = turns per second; x counts per turn = counts per second.
         send(targetRpm / 60.0 * countsPerRev);
         // And back the other way for the measured speed.
         rpm = motor.getVelocity() / countsPerRev * 60.0;
         checkFollower(now);
+        watchSpeed(now);
+    }
 
+    // One loop of bang-bang. It reads first: the power is worked out from this loop's speed.
+    private void updateBangBang(double now) {
+        rpm = motor.getVelocity() / countsPerRev * 60.0;
+        double power = 0;
+        if (targetRpm > 0) {
+            // The check uses the power that was on while this speed came to be.
+            if (encoderFault.isEmpty()) {
+                String why = guard.update(getCommandedPower(), rpm, now);
+                if (!why.isEmpty()) encoderFault = why;
+            }
+            if (encoderFault.isEmpty()) {
+                boolean late = !Double.isNaN(bangUpdatedAt) && now - bangUpdatedAt > LOOP_GAP_SEC;
+                if (late) {
+                    gapAt = now;
+                    gapSec = now - bangUpdatedAt;
+                }
+                law.feedforward(bangKs, getBangKv());
+                power = law.calculate(targetRpm, rpm, bangBatteryVolts(), now, late);
+            } else {
+                law.reset();
+            }
+            bangUpdatedAt = now;
+        } else {
+            // 0 or below: no power (never reverse), and the next start is a start from rest.
+            forgetBangBang();
+        }
+        sendPower(power);
+        if (encoderFault.isEmpty()) {
+            watchSpeed(now);
+        } else {
+            ready = false;
+            armedForShot = false;
+            inBandSince = Double.NaN;
+        }
+    }
+
+    // Ready, and the shot count, from this loop's speed (both controls).
+    private void watchSpeed(double now) {
         // Not spinning on purpose: never ready, nothing to count.
         if (targetRpm == 0) {
             ready = false;
@@ -365,6 +627,12 @@ public class Flywheel implements Subsystem {
 
     /** The highest speed it may be asked for (see {@link #maxRpm}). */
     public double getMaxRpm() { return maxRpm; }
+
+    /** Encoder counts in one turn of the flywheel (see {@link #countsPerRev}). */
+    public double getCountsPerRev() { return countsPerRev; }
+
+    /** The time the speed must stay in the ready band before it is "ready", seconds (see {@link #settleTime}). */
+    public double getSettleTime() { return settleSec; }
 
     /** A drop of more than this many RPM counts as a shot ({@link #shotDrop}). */
     public double getShotDrop() { return shotDropRpm; }
@@ -405,6 +673,18 @@ public class Flywheel implements Subsystem {
 
     /** The FTC motor inside, for anything this helper does not do. */
     public DcMotorEx getMotor() { return motor; }
+
+    /**
+     * Every motor that turns this wheel now: the main motor, then the follower (when there is one and it was
+     * not switched off). The Flywheel Tuner gives each the same plain power, so it measures the wheel the
+     * robot really has.
+     */
+    public java.util.List<DcMotorEx> getMotors() {
+        java.util.List<DcMotorEx> out = new java.util.ArrayList<>();
+        out.add(motor);
+        if (follower != null && !followerDisabled) out.add(follower);
+        return out;
+    }
     @Override public String name() { return name; }
 
     /**
@@ -414,6 +694,21 @@ public class Flywheel implements Subsystem {
     @Override
     public void addTelemetry(RobotTelemetry t) {
         if (!fault.isEmpty()) t.warn(name + ": " + fault);
+        if (!encoderFault.isEmpty()) {
+            // One idea a line: what happened (and that it is safe), why, what to check, how to go on.
+            t.warn("Flywheel power OFF: bad speed reading");
+            t.warn(encoderFault);
+            t.warn("Check the motor and encoder wires.");
+            t.warn(FAULT_RESET);
+        }
+        if (control == SpeedControl.BANG_BANG) {
+            if (clockNanos.getAsLong() / 1e9 - gapAt < GAP_SHOW_SEC) {
+                t.warn(String.format(java.util.Locale.US, "Program too slow: %.2f seconds (limit %.2f)", gapSec, LOOP_GAP_SEC));
+                t.warn("Full power was skipped for safety.");
+                t.warn("If this repeats, set speedControl to \"PID\".");
+            }
+            t.debug(name + " power", String.format(java.util.Locale.US, "%.0f%%, %s", getCommandedPower() * 100, zoneWords()));
+        }
         // Two low readings in a row (after the filter: the battery was low for over a second).
         if (lowReadings >= 2) {
             t.warn(name + String.format(java.util.Locale.US, ": battery %.1f V: low. The flywheel gets back to speed slower: charge or swap it", volts));
@@ -441,10 +736,12 @@ public class Flywheel implements Subsystem {
     // BATTERY_FILTER_SEC (a dip under load is not a weaker battery), and sends a new F only when it really
     // changed (sending costs loop time).
     private void checkBattery(double now) {
-        if (batteryVolts == null) return;
+        boolean bang = control == SpeedControl.BANG_BANG;
+        DoubleSupplier source = bang && bangVolts != null ? bangVolts : batteryVolts;
+        if (source == null) return;
         if (!Double.isNaN(nextVoltsAt) && now < nextVoltsAt) return;
         nextVoltsAt = now + BATTERY_READ_SEC;
-        double reading = batteryVolts.getAsDouble();
+        double reading = source.getAsDouble();
         // Forget readings older than the filter's time.
         recentVolts.removeIf(r -> now - r[0] > BATTERY_FILTER_SEC + 1e-9);
         // No sensor (NaN), a reading too old, or one no 12 V battery gives: keep what we have.
@@ -455,13 +752,95 @@ public class Flywheel implements Subsystem {
         for (double[] r : recentVolts) v = Math.max(v, r[1]);
         volts = v;
         lowReadings = v < LOW_BATTERY_VOLTS ? lowReadings + 1 : 0;
-        if (gains == null) return;   // no F to scale (pidf() was not called)
+        if (gains == null || bang) return;   // no F to scale (pidf() was not called, or bang-bang uses none)
         // A weaker battery: more power for the same push. 12.6 V tuned, 11.5 V now: F x 1.10.
         double want = MathUtil.clamp(nominalVolts / v, MIN_F_SCALE, MAX_F_SCALE);
         if (Math.abs(want - fScale) > RESEND_SHARE * fScale) {
             fScale = want;
             sendGains();
         }
+    }
+
+    // ---- Bang-bang's own send path (plain power, never a hub speed command) ----
+
+    // The volts to divide by: the filtered battery, kept to the limits battery compensation uses.
+    private double bangBatteryVolts() {
+        double nominal = Double.isNaN(bangNominalVolts) ? nominalVolts : bangNominalVolts;
+        if (Double.isNaN(volts)) return nominal;
+        return MathUtil.clamp(volts, nominal / MAX_F_SCALE, nominal / MIN_F_SCALE);
+    }
+
+    private void sendPower(double power) {
+        if (!powerMode) {
+            // SAFETY: a 0 goes out first, before the modes are set, so a failing setMode cannot keep a power on.
+            if (power == 0) writeZero();
+            prepareForPower(motor);
+            if (follower != null) prepareForPower(follower);
+            powerMode = true;
+        }
+        if (!Double.isNaN(powerSent)) {
+            boolean exact = power == 0 || power == law.getMaxPower();   // the two that must be exactly right
+            if (power == powerSent || (!exact && Math.abs(power - powerSent) < POWER_RESEND)) return;
+        }
+        powerSent = Double.NaN;       // until every motor took it
+        if (power == 0) {
+            // Only the power: the mode is set already, and setting it again each coast would cost loop time.
+            RuntimeException first = null;
+            try { motor.setPower(0); } catch (RuntimeException e) { first = e; }
+            if (follower != null) {
+                try { follower.setPower(0); } catch (RuntimeException e) { if (first == null) first = e; }
+            }
+            if (first != null) throw first;
+            powerSent = 0;
+            return;
+        }
+        motor.setPower(power);
+        if (follower != null && !followerDisabled) follower.setPower(power);
+        powerSent = power;
+    }
+
+    private String zoneWords() {
+        switch (law.getZone()) {
+            case FULL: return "speeding up";
+            case NEAR: return "holding speed";
+            case COAST: return "too fast, slowing";
+            default: return "off";
+        }
+    }
+
+    private static void prepareForPower(DcMotorEx m) {
+        m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        // FLOAT: with brake, every coast would be a hard slow-down, and the control would fight it.
+        m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+    }
+
+    // Power 0 to each motor, even if the other one fails.
+    private void writeZero() {
+        powerSent = Double.NaN;
+        RuntimeException first = null;
+        try { coast(motor); } catch (RuntimeException e) { first = e; }
+        if (follower != null) {
+            try { coast(follower); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (first != null) throw first;
+        powerSent = 0;
+    }
+
+    // FLOAT on each motor, even if the other one fails.
+    private void floatAll() {
+        RuntimeException first = null;
+        try { motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); } catch (RuntimeException e) { first = e; }
+        if (follower != null) {
+            try { follower.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (first != null) throw first;
+    }
+
+    // Forgets what bang-bang was doing (not a fault: only clearFault or a switch clears that).
+    private void forgetBangBang() {
+        law.reset();
+        guard.reset();
+        bangUpdatedAt = Double.NaN;
     }
 
     // Sends a speed (encoder counts per second) to the motor, and to the follower if it is working.

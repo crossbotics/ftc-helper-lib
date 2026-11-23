@@ -308,9 +308,10 @@ a 48 in strip of tape on the floor, with a mark at its start.
    `.robotSizeMm(...).podsFromEdgesMm(...)`. Dead wheels get `.trackWidthIn(..).perpForwardIn(..)`.
 4. Send the code again.
 5. **Loop and back:** drive away at least 24 in and come back onto the mark. Within 1 in and 2 degrees,
-   the screen says `Tunables.Odometry: checked = true`. Write it in `Tunables.java`.
+   the screen says DONE and `public static boolean checked = true;` in class `Odometry`. Write it in
+   `Tunables.java`.
 
-An OTOS gets `Tunables.Odometry: linearScalar = ...` from the Forward test.
+An OTOS gets a `linearScalar` line from the Forward test: install it, then run Loop and back.
 
 ## 4. Check it, then tune it
 

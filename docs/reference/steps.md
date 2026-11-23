@@ -32,8 +32,9 @@ What `Steps` can do:
 | `start(where, headingDeg)` | where to place the robot (shown in INIT) and which way it faces |
 | `start(where, xIn, yIn, headingDeg)` | the same, plus the spot in inches. The simulator puts the robot there in INIT ([The start spot](#the-start-spot)) |
 | `menuYesNo(label, yes)`, `menuChoice(label, options...)` | a choice for the drivers in INIT |
+| `menuNumber(label, min, max, step, start)`, `menuAngle(label, stepDeg, startDeg)` | a number or an angle for the drivers in INIT. Hold the D-pad to step fast |
 | `onlyIf(label)` / `onlyIf(label, option)` ... `end()` | the steps in between run only for that choice. A `start(...)` or `parkWithSeconds(...)` in between is used only for that choice, and the INIT note follows the menu ([choose the start in INIT](../building-autos/08-advanced-autos.md#a-whole-example-one-auto-the-drivers-choose)) |
-| `isYes(label)`, `choice(label)` | reads a choice |
+| `isYes(label)`, `choice(label)`, `number(label)` | reads a choice |
 | `forward(label, inches, power)`, `back(...)` | drive forward / backward |
 | `left(label, inches, power)`, `right(...)` | slide to the robot's left / right, still facing the same way (mecanum only) |
 | `move(label, inches, directionDeg, power)` | drive at an angle: counterclockwise, like a heading (0 forward, 90 left, 180 back, -90 right) |

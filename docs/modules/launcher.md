@@ -56,6 +56,9 @@ stateDiagram-v2
     IDLE --> OFF: stop()
 ```
 
+A group of [continuous fire](#continuousfire) has its own path: it waits until aimed and ready, then feeds
+until something ends it.
+
 The two safety rules: **never feed into a slow flywheel**, and **never wait forever**.
 
 ---
@@ -87,6 +90,7 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 | `.shotDrop(rpm)` | a drop this big after "ready" counts as a shot |
 | `setRpm(r)`, `stop()`, `update()` | use. `stop()` and speed 0 COAST, so a fast wheel never brakes hard |
 | `isReady()`, `getRpm()`, `getTargetRpm()`, `getMaxRpm()`, `getShotCount()`, `getFault()` | read |
+| `getCountsPerRev()`, `getSettleTime()`, `getTolerance()`, `getShotDrop()` | read its encoder counts per turn, the time in the ready band before "ready", the ready band and the shot drop (the Flywheel Tuner uses them) |
 | `spinUpStep(rpm, timeout)` | autonomous step |
 
 **Check your speed reading** before you trust it. The RPM on telemetry must match a tachometer (a
@@ -139,6 +143,32 @@ waits for the hubs ([non-blocking](../guides/non-blocking.md)). `() -> Hw.batter
 too, but then each reading holds up the loop for a few milliseconds.
 The robot in five files turns it on when `Tunables.Launcher` has `batteryCompensation = true` and a `kF` ([robot.md](../reference/parts/launcher.md#speed-trim-and-battery-compensation)).
 
+### Speed control
+
+PID is the default. Bang-bang gives full power well below the speed, a holding power near it and no power
+above it ([FlywheelBangBang](control.md#flywheelbangbang)). It is not proven on a real robot yet.
+
+```java
+flywheel.bangFeedforward(0.4, 0.00205).bangThresholds(200, 75, 50)
+        .bangBattery(Hw.batteryReader(hardwareMap), 12.8);
+flywheel.stop();                                              // switch only while stopped
+flywheel.speedControl(Flywheel.SpeedControl.BANG_BANG);
+```
+
+| Method | What it does |
+| --- | --- |
+| `speedControl(c)`, `getSpeedControl()` | switches (only with a target of 0; it returns false if refused); the one in use |
+| `.bangFeedforward(ks, kv)` | holding volts = ks + kv x RPM, divided by the battery. `kv` NaN = 12 / `maxRpm` |
+| `.bangThresholds(full, coast, hysteresis)` | where full power and coasting start, and how much later they end, RPM |
+| `.bangMaxPower(p)` | the most power, 0.3 to 1 |
+| `.bangBattery(reader, nominal)` | the battery for the holding power, with battery compensation's filter and limits |
+| `isFaulted()`, `getFault()`, `clearFault()` | the speed sensor fault ([EncoderGuard](safety.md#encoderguard)). Call `clearFault()` only for a person's off and on, never from a fire button |
+| `getPidf()`, `getBangKs()`, `getBangKv()`, `getBangFullBelowRpm()`, `getBangCoastAboveRpm()`, `getBangHysteresisRpm()`, `getBangMaxPower()` | the numbers in use |
+| `getBangZone()`, `getCommandedPower()` | bang-bang's last choice and power (PID: the hub decides, so 0) |
+| `getControlRevision()` | a count that rises with each change of the control or its numbers, refused ones too |
+
+In bang-bang, `stop()` writes power 0 every time, whatever was sent last. A follower motor gets the same power.
+
 ## ShotTable
 
 ```java
@@ -153,7 +183,20 @@ The table draws straight lines between your points, for the speed AND the hood. 
 uses the nearest end, so it never guesses beyond what you tested. `add(distance, rpm)` (no hood angle) makes
 a table that never moves the hood: `hasHood()` is true only once a point has a hood angle. The hood number
 is in the hood's own scale: degrees, or a servo position if your hood works in positions.
-`covers(distance)` says whether a distance is inside your points. When game pieces fly differently, make one
+`covers(distance)` says whether a distance is inside your points.
+
+To guess past the ends, choose it: `table.extendEnds(4800)` continues each end's line, up to 4800 RPM.
+
+| Method | What it does |
+| --- | --- |
+| `.extendEnds(maxRpm)` | turns the guesses on. It stops on two rows with one distance |
+| `extendsEnds()`, `getExtendMaxRpm()` | whether it is on; the speed limit |
+| `isEstimated(d)` | whether the speed at this distance is a guess |
+| `reaches(d)` | whether the speed is usable: tested, or a guess that did not pass the limit |
+| `isSpeedLimited(d)` | whether the guess was cut to the limit |
+| `extensionNotes()` | short lines for INIT when an end stays flat |
+
+`covers(d)` still means tested. The hood keeps the end row's angle. When game pieces fly differently, make one
 table per piece (BIOBUZZ: POLLEN is a 2.8 in ball, NECTAR a 3.6 in ball). Swap tables with `launcher.table(other)`.
 To fill a table, follow [tutorial 17](../tutorials/17-launcher.md#4-fill-the-shot-table). In the robot in five
 files, each `speedByDistance...` line in `Tunables.Launcher` is one table. Your code picks one by name with
@@ -165,6 +208,10 @@ files, each `speedByDistance...` line in `Tunables.Launcher` is one table. Your 
 An interface (a list of methods a class promises to have): `feedOne()`, `isBusy()`, `update()`, `stop()`,
 and optional `isJammed()` and `clearJam()`. The launcher decides WHEN to feed. The feeder only knows HOW.
 For a new feeding mechanism next season, write a class with these methods, and the launcher works with it.
+
+A feeder that can run with no break also writes `canFeedContinuously()`, `startContinuous(power)`,
+`stopContinuous()` and `isFeedingContinuously()`. Then [ContinuousFire](#continuousfire) can use it. The stop
+must reach every device, even if one fails. Do not fake it with `feedOne()` again and again.
 See [Extending](../guides/extending.md).
 
 ## MotorFeeder
@@ -230,6 +277,7 @@ turret counterclockwise. If it turns the other way, add `.reversed()`.
 | `addWarnings(t)` | only the warnings of `addTelemetry` (a fault, not homed, out of range), for code that writes its own line (the five files' [Turret](../reference/parts/turret.md) does) |
 | `getAngle()`, `getTargetAngle()`, `isAimed()`, `isOutOfRange()`, `isHomed()`, `isHoming()`, `getFault()` | read. `isAimed()` is false for an out-of-range target. It only says whether the turret reached its LAST target. When the goal can get lost (a camera), also check that the camera sees the goal now. The robot in five files' [`Turret.isAimed()`](../reference/parts/turret.md) does |
 | `getTolerance()`, `degreesOutOfRange(deg)` | the aimed tolerance; how far past the limits a direction is (0 = it can point there) |
+| `getCameraOffset()` | the camera offset in use (degrees, left = +) |
 | `aimStep(deg, timeout)` | autonomous step |
 | `fence(lo, hi)`, `fence(lo, hi, upPower, downPower)`, `clearFence()`, `isHeld()` | an [interlock rule](../reference/parts/interlock.md) sets these every loop. A target past `lo`..`hi` goes the other way round, or waits at the edge. The caps (0 to 1) limit the power toward each side, so the turret brakes in time |
 
@@ -272,7 +320,10 @@ Launcher launcher = new Launcher(flywheel, feeder)
 | `speedScale(s)`, `getSpeedScale()` | the shot speed x `s` (1.03 = +3%), a live trim for a match. It does not change the idle speed. 1 = as set |
 | `getShotRpm()` | the shot speed before `speedScale` (from `setRpm` or the table) |
 | `getHood()`, `getTable()`, `hasTable()` | the hood (or null); the table (or null); whether you gave a table |
-| `spinUp()`, `shoot(n)`, `stopShooting()` | commands |
+| `spinUp()`, `shoot(n)`, `stopShooting()` | commands. `shoot` and `stopShooting` end a group of continuous fire |
+| `continuous()` | the group of [continuous fire](#continuousfire) |
+| `getShotDistance()`, `getSpeedLimit()` | the distance behind the shot speed (NaN after `setRpm`); a guess's speed limit (NaN = none) |
+| `getReadyTimeout()` | the longest wait to be ready, seconds |
 | `idle()` | back to the idle speed |
 | `stop()` | fully OFF, even the idle speed, until `spinUp()`, `shoot()` or `idle()` |
 | `update()` | call it every loop. It updates the flywheel, feeder and hood for you |
@@ -287,6 +338,46 @@ Launcher launcher = new Launcher(flywheel, feeder)
 
 A volley is a group of shots in a row. A piece asked for within `shotInterval` + 1 s of the last feed
 belongs to the same volley. The robot in five files chooses the mode itself ([Firing](../reference/parts/launcher.md#firing-shot-modes-feed-stop-piece-path)).
+
+### ContinuousFire
+
+`launcher.continuous()` is one group of fire with no break between pieces. `launcher.update()` runs it, so
+TeleOp and tuners use the same code.
+
+```java
+ContinuousFire group = launcher.continuous();
+launcher.setDistance(36);                                     // the speed from the table
+group.start(() -> robot.aim().shotSight());                   // once, when the button goes down
+// every loop: launcher.update();
+group.stop();                                                 // the button came up: the feed stops now
+```
+
+It starts feeding only with a goal, a distance the table reaches, a strict aim and a launcher that is ready.
+It keeps its table, distance, speed and offset to the end. It never starts again by itself. The list of what
+ends it: [continuous fire](../reference/parts/launcher.md#continuous-fire).
+
+| Method | What it does |
+| --- | --- |
+| `start(sight)` | asks for one group. It never feeds in this call. False = refused |
+| `stop()`, `stop(End)` | ends it now: let go, or for that reason |
+| `.maxSec(s)`, `getMaxSec()` | the most seconds of feed (3) |
+| `.feedPower(p)`, `getFeedPower()` | the feeder's power in a group (NaN = its own) |
+| `.boostRpm(r)`, `getBoostRpm()` | speed added from the feed's start, inside the speed limit (0) |
+| `canFire()` | whether the feeder can feed with no break |
+| `getState()` (IDLE, WAITING, FEEDING), `isActive()`, `isFeeding()` | where it is |
+| `whyNotReady()`, `whatToDo()` | the first thing wrong while it waits ("NOT aimed"), and what to do |
+| `getEnd()`, `getEndWords()`, `getEndLines()` | why it ended, as a value, one line, or the screen's lines |
+| `getSnapshot()` | what the feed started with: `table`, `distanceIn`, `targetRpm`, `feedRpm`, `control`, `controlRevision`, `aimOffsetDeg`, `feedPower`, `maxSec` |
+| `getSight()` | the sight from the last update |
+| `getFeedSec()` | how long the feeder was told to run. This is not the time the pieces took |
+
+It cannot count balls: a group adds nothing to `getShotsFired()` or `ShotStats`.
+
+### ShotSight
+
+What a group judges by, for one loop: `goalSeen`, `distanceIn`, `aimErrorDeg`, `aimed`, `toleranceDeg`,
+`lockMarginDeg` and `aimOffsetDeg`. `robot.aim().shotSight()` makes one. `withDistance(inches)` gives a copy
+with another distance. `ShotSight.NONE` sees nothing.
 
 ### ShotStats
 

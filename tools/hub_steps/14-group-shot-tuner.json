@@ -1,0 +1,17 @@
+{
+  "pictures": {
+    "group-shot-tuner-go-menu": {
+      "button": "D-pad, then A",
+      "where": "Press on gamepad 1:",
+      "lines": [
+        "--- Tune and check: 13 of 14 ---",
+        "Robot: Robot",
+        "  ...",
+        "*> Group Shot Tuner",
+        "  ...",
+        "This tool: PID or bang-bang, with real balls.",
+        "D-pad up/down = choose. A = open it. Then ▶."
+      ]
+    }
+  }
+}

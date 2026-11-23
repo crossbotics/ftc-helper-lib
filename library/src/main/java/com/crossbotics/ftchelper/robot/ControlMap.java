@@ -589,6 +589,12 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         shown.add(new Shown(label, value));
     }
 
+    // The button map or the tuning menu is open: a group of continuous fire ends, and does not come back.
+    @Override
+    protected final void screensShown(boolean menu, boolean help) {
+        if (robot() != null) robot().screensShown(menu, help);
+    }
+
     @Override
     protected final void everyLoop() {
         boolean menu = isTuningMenuOpen();

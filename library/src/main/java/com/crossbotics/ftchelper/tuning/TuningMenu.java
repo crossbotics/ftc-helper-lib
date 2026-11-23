@@ -20,7 +20,9 @@ import java.util.List;
  *
  * <p>While open: D-pad up/down = choose, D-pad right/left = change by one step,
  * right/left bumper = step x10, A = save on the hub, X = put the chosen one back to the code value,
- * Y = put ALL back to the code values (and delete the saved values).
+ * B = the page with the lines to copy (only looking: nothing changes there), Y then Y again = put ALL
+ * back to the code values (and delete the saved values; any other button cancels). Copy, install and
+ * check that nothing differs before you erase: erasing first goes back to the old installed numbers.
  *
  * <p>{@code menu::toggle} hands over the menu's toggle method itself (a "method reference"), so the
  * button can run it later. Profiles: docs/guides/profiles.md.
@@ -40,6 +42,9 @@ public class TuningMenu {
     private volatile String message = "";
     // B: show the changed values as lines to copy into the code, instead of the list.
     private boolean showCode = false;
+    private int codePage = 0;
+    // Y was pressed once: the screen asks, and only a second Y resets.
+    private boolean resetAsked = false;
     // Each button's state in the last loop, to spot the loop where it was just pressed
     // (an "edge"), so holding a button does not repeat the action every loop.
     // Same order as "now" in update(): up, down, right, left, A, X, Y, B.
@@ -82,6 +87,9 @@ public class TuningMenu {
         else open = Profile.current().isPractice();
         // Opening clears the old note; closing keeps it.
         message = open ? "" : message;
+        resetAsked = false;
+        showCode = false;
+        codePage = 0;
     }
 
     /** True while the menu is open. Do not drive with the same gamepad while it is open. */
@@ -97,7 +105,30 @@ public class TuningMenu {
         if (open) {
             // Not the numbers of a part that is not on the robot: changing them would do nothing.
             List<Tunable> all = Tunable.shown();
-            if (!all.isEmpty()) {
+            if (resetAsked) {
+                // SAFETY: the question is open. A second Y resets, any other button only closes the question.
+                if (pressed(now, 6)) {
+                    resetAsked = false;
+                    showCode = false;
+                    message = "Erasing...";
+                    Tunable.resetAllInBackground(ok -> message = ok ? "Erased: all use the installed code now."
+                            : "Erase FAILED. Try again.");
+                } else {
+                    for (int i = 0; i < now.length; i++) {
+                        if (pressed(now, i)) {
+                            resetAsked = false;
+                            message = "Canceled: nothing was erased.";
+                        }
+                    }
+                }
+            } else if (showCode) {
+                // The lines to copy: the D-pad only turns the page (a number must not change out of sight).
+                int pages = Math.max(1, (codeScreen().size() + CODE_PAGE - 1) / CODE_PAGE);
+                if (pressed(now, 0)) codePage = (codePage + pages - 1) % pages;
+                if (pressed(now, 1)) codePage = (codePage + 1) % pages;
+                if (pressed(now, 7)) showCode = false;
+                if (pressed(now, 6)) resetAsked = true;
+            } else if (!all.isEmpty()) {
                 // Keep the choice inside the list (new tunables may have been made, or some forgotten).
                 selected = Math.max(0, Math.min(selected, all.size() - 1));
                 Tunable t = all.get(selected);
@@ -116,19 +147,18 @@ public class TuningMenu {
                 // robot loop never waits; the message changes when it is done.
                 if (pressed(now, 4)) {
                     message = "Saving...";
-                    Tunable.saveAllInBackground(ok -> message = ok ? "Saved on the hub." : "SAVE FAILED.");
+                    Tunable.saveAllInBackground(ok -> message = ok ? "Saved on the Control Hub."
+                            : "Save FAILED: not stored. {B} = lines to copy.");
                 }
-                if (pressed(now, 5)) { t.reset(); message = t.name() + " back to the code value."; }
+                if (pressed(now, 5)) { t.reset(); message = t.name() + " is back to the code value."; }
                 // B shows the changed values as code lines (and writes them to the robot log, to copy
                 // from a laptop); B again goes back to the list.
                 if (pressed(now, 7)) {
-                    showCode = !showCode;
-                    if (showCode) logCode();
+                    showCode = true;
+                    codePage = 0;
+                    logCode();
                 }
-                if (pressed(now, 6)) {
-                    message = "Resetting...";
-                    Tunable.resetAllInBackground(ok -> message = ok ? "All back to code values." : "RESET FAILED.");
-                }
+                if (pressed(now, 6)) resetAsked = true;
             }
         }
         // Remember this loop's buttons for the next loop, even while closed, so a button held
@@ -144,12 +174,30 @@ public class TuningMenu {
     public void addTelemetry(RobotTelemetry t) {
         if (!open) return;
         List<Tunable> all = Tunable.shown();
+        if (resetAsked) {
+            int lost = Tunable.countChanged();
+            t.warn("Erase ALL saved tuning?");
+            t.warn("Every number goes back to the INSTALLED code.");
+            t.section("TUNING: are you sure?");
+            if (lost > 0) {
+                t.text(lost + (lost == 1 ? " tuned value" : " tuned values") + " will be LOST.");
+                t.text("Keep them? Cancel. Then {B} = lines to copy.");
+            } else {
+                t.text("Nothing differs: nothing will change.");
+            }
+            t.text("{Y} again = yes, erase. Any other button = no.");
+            return;
+        }
+        if (showCode) {
+            showCodePage(t);
+            return;
+        }
+        t.warn("A change works at once. Hands clear.");
         t.section("TUNING (practice)");
         double v = volts();
         if (!Double.isNaN(v)) {
             if (v < LOW_BATTERY_VOLTS) {
-                t.warn(String.format(java.util.Locale.US, "Battery %.1f V: low. Tune on a charged battery (%.1f V or more): "
-                        + "numbers tuned now are too strong later", v, LOW_BATTERY_VOLTS));
+                t.warn(String.format(java.util.Locale.US, "Battery %.1f V: low. Change it before you tune.", v));
             }
             t.text(String.format(java.util.Locale.US, "Battery %.1f V (noted with each change)", v));
         }
@@ -160,17 +208,12 @@ public class TuningMenu {
             t.text("Not on the robot (hidden): " + names);
         }
         if (all.isEmpty()) {
-            t.text("No tunables. Make some with Tunable.number(...).");
+            t.text("No numbers to tune.");
+            t.text("Next: close the menu. (Your own number:");
+            t.text("Tunable.number(...) in your code.)");
             return;
         }
-        if (showCode) {
-            List<String> lines = Tunable.changedAsCode();
-            t.text("Copy into Tunables.java (then {Y} = reset all):");
-            if (lines.isEmpty()) t.text("  nothing differs from the code");
-            for (String line : lines) t.text("  " + line);
-            t.text("{B} back to the list");
-            return;
-        }
+        t.text("Next: D-pad up/down = choose, right/left = change.");
         // Show only the page that holds the chosen tunable (8 per page), so the list fits on screen.
         // Whole-number division drops the remainder: e.g. selected 10 gives page start 8.
         int first = (selected / PAGE) * PAGE;
@@ -183,9 +226,61 @@ public class TuningMenu {
                     : tu.source().isEmpty() ? "" : "  (" + tu.source() + ")";
             t.text(mark + tu.name() + " = " + tu.display() + changed);
         }
-        t.text(String.format(java.util.Locale.US, "%d/%d  D-pad: choose/change  bumper: x10", selected + 1, all.size()));
-        t.text("{A} save   {X} reset this   {Y} reset all   {B} as code");
+        t.text(String.format(java.util.Locale.US, "%d of %d. Hold {LB} or {RB}: 10 steps a press.", selected + 1, all.size()));
+        t.text("{A} = save on the hub. {X} = put this one back.");
+        t.text("{B} = lines to copy. {Y} = erase all (asks).");
         if (!message.isEmpty()) t.text(message);
+    }
+
+    // How many lines of code fit on one page.
+    private static final int CODE_PAGE = 10;
+
+    // The changed values as exact Java, each class once with its lines under it.
+    private static List<String> codeScreen() {
+        java.util.Map<String, List<Tunable>> byClass = new java.util.LinkedHashMap<>();
+        for (Tunable t : Tunable.all()) {
+            if (!t.isChanged()) continue;
+            List<Tunable> of = byClass.get(t.group());
+            if (of == null) {
+                of = new java.util.ArrayList<>();
+                byClass.put(t.group(), of);
+            }
+            of.add(t);
+        }
+        List<String> out = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<String, List<Tunable>> e : byClass.entrySet()) {
+            boolean named = !e.getKey().isEmpty();
+            out.add(named ? "Open Tunables.java, find class " + e.getKey() + "." : "In your code, its Tunable.number(...) line:");
+            for (Tunable t : e.getValue()) {
+                out.add(named ? "  public static double " + t.fieldName() + " = " + t.asWritten() + ";"
+                        : "  " + t.fieldName() + ": start it at " + t.asWritten());
+                if (!t.voltsNote().isEmpty()) out.add("  " + t.voltsNote().trim());
+            }
+        }
+        return out;
+    }
+
+    // B's page: the steps in the order that keeps the numbers, then the lines.
+    private void showCodePage(RobotTelemetry t) {
+        List<String> lines = codeScreen();
+        if (lines.isEmpty()) {
+            t.section("TUNING: lines to copy");
+            t.text("Nothing differs from the installed code.");
+            t.text("{Y} = erase the saved values (safe now).");
+            t.text("{B} = back to the list.");
+            return;
+        }
+        t.warn("Do NOT erase ({Y}) before steps 1 to 3.");
+        int pages = (lines.size() + CODE_PAGE - 1) / CODE_PAGE;
+        int page = Math.min(codePage, pages - 1);
+        t.section("TUNING: lines to copy, page " + (page + 1) + " of " + pages);
+        t.text("1. Change these lines on the laptop.");
+        t.text("2. Build and install the app.");
+        t.text("3. Look here again: nothing may differ.");
+        t.text("4. Then {Y} = erase the saved values.");
+        for (int i = page * CODE_PAGE; i < Math.min(lines.size(), (page + 1) * CODE_PAGE); i++) t.text(lines.get(i));
+        if (pages > 1) t.text("D-pad up/down = another page.");
+        t.text("{B} = back to the list.");
     }
 
     // The changed values in the robot log (logcat, tag "ftc-helper"), to copy from a laptop.

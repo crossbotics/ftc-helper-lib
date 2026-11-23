@@ -2,6 +2,9 @@ package com.crossbotics.ftchelper.finders;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Runs a finder (or the Hardware Check) inside another OpMode: "Tune and check"
@@ -14,10 +17,32 @@ public final class Hosting {
     // BACK held in the LAST check: only a new press counts (the press that opened the menu does not).
     private boolean backWas;
     private boolean left = false;
+    // What Robot.java told the menu: there is one, each device's Tunables class, the parts in degrees.
+    private final boolean fiveFiles;
+    private final Map<String, String> sections;
+    private final Set<String> inDegrees;
 
-    Hosting(LinearOpMode host) {
+    Hosting(LinearOpMode host, boolean fiveFiles, Map<String, String> sections, Set<String> inDegrees) {
         this.host = host;
+        this.fiveFiles = fiveFiles;
+        this.sections = Collections.unmodifiableMap(sections);
+        this.inDegrees = Collections.unmodifiableSet(inDegrees);
         this.backWas = host.gamepad1 != null && host.gamepad1.back;
+    }
+
+    /** True when the menu found a Robot.java: the results are then lines for Tunables.java. */
+    boolean fiveFiles() {
+        return fiveFiles;
+    }
+
+    /** This device's class in Tunables.java, or null when Robot.java does not say. */
+    String section(String device) {
+        return sections.get(device);
+    }
+
+    /** True when this device's part counts in degrees (an arm, a turret), not in motor counts. */
+    boolean inDegrees(String device) {
+        return inDegrees.contains(device);
     }
 
     /** True after BACK in INIT: the finder ended so the host can show its menu again. */

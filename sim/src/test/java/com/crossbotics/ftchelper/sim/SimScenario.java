@@ -220,6 +220,7 @@ public final class SimScenario {
             }
             sim.ds.stop();
         } finally {
+            restoreSensorsAndLoop();
             restoreTunables();
         }
     }
@@ -255,11 +256,14 @@ public final class SimScenario {
         // quick computer checked the robot before the physics had seen the INIT (not yet on its spot, the
         // intake not yet dropped): a file passed alone and failed after another one (SimEngine.awaitStep).
         if (cmd.equals("expect") || cmd.equals("print") || cmd.equals("start")) sim.awaitStep(1);
+        // Lines that move the robot or the pieces by hand: first the INIT spot (and the page's field reset), so
+        // the physics cannot put the robot back on its INIT spot after the move (SimEngine.placeForInitBeforeHandMove).
+        if (cmd.equals("set") || cmd.equals("push")) sim.placeForInitBeforeHandMove();
         switch (cmd) {
             case "init": {
-                int before = sim.ds.activity();
                 sim.ds.init(t.get(1));
-                if (!SimRun.waitFor(() -> sim.ds.activity() > before || !sim.ds.error().isEmpty()
+                // its own first screen (SimDriverStation.shownSinceInit)
+                if (!SimRun.waitFor(() -> sim.ds.shownSinceInit() || !sim.ds.error().isEmpty()
                         || sim.ds.phase() == SimDriverStation.Phase.STOPPED, 3)) {
                     note = "waited 3 s: the OpMode shows nothing in INIT";
                 }
@@ -374,11 +378,30 @@ public final class SimScenario {
                         if (t.size() < 4) throw new IllegalArgumentException("set encoder NAME none|own|OTHER");
                         sim.robot.setEncoder(t.get(2), t.get(3));
                         break;
-                    // set tunable Section.field VALUE: a Tunables number for this file only
+                    // set sensor NAME STEP_RPM LAG_SEC, or set sensor NAME off: what the OpMode reads as a flywheel's
+                    // speed (in steps, and late), for this file only
+                    case "sensor": {
+                        boolean off = t.size() == 4 && t.get(3).equals("off");
+                        if (!off && t.size() != 5) throw new IllegalArgumentException("set sensor NAME STEP_RPM LAG_SEC | off   (e.g. set sensor launcher 43 0.05)");
+                        sim.robot.setSensor(t.get(2), off ? 0 : Double.parseDouble(t.get(3)), off ? 0 : Double.parseDouble(t.get(4)));
+                        if (off) sensorsSet.remove(t.get(2));
+                        else sensorsSet.add(t.get(2));
+                        break;
+                    }
+                    // set loop MIN_MS MAX_MS, or set loop off: how long each loop takes, for this file only
+                    case "loop": {
+                        boolean off = t.size() == 3 && t.get(2).equals("off");
+                        if (!off && t.size() != 4) throw new IllegalArgumentException("set loop MIN_MS MAX_MS | off   (e.g. set loop 20 60)");
+                        sim.ds.screen.loopTime(off ? SimTelemetry.LOOP_MS : Long.parseLong(t.get(2)),
+                                off ? SimTelemetry.LOOP_MS : Long.parseLong(t.get(3)));
+                        loopSet = !off;
+                        break;
+                    }
+                    // set tunable Section.field VALUE: a Tunables value for this file only
                     case "tunable":
                         ok(n, line, setTunable(t));
                         return;
-                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | scatter off|realistic|rough|file | field start | device NAME missing|present | encoder NAME none|own|OTHER | tunable Section.field VALUE");
+                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | scatter off|realistic|rough|file | field start | device NAME missing|present | encoder NAME none|own|OTHER | sensor NAME STEP_RPM LAG_SEC|off | loop MIN_MS MAX_MS|off | tunable Section.field VALUE");
                 }
                 ok(n, line, "");
                 return;
@@ -394,6 +417,17 @@ public final class SimScenario {
             default:
                 throw new IllegalArgumentException("unknown command \"" + cmd + "\"");
         }
+    }
+
+    // What "set sensor" and "set loop" changed: put back at the end of the file.
+    private final java.util.Set<String> sensorsSet = new java.util.LinkedHashSet<>();
+    private boolean loopSet = false;
+
+    private void restoreSensorsAndLoop() {
+        for (String name : sensorsSet) sim.robot.setSensor(name, 0, 0);
+        sensorsSet.clear();
+        if (loopSet) sim.ds.screen.loopTime(SimTelemetry.LOOP_MS, SimTelemetry.LOOP_MS);
+        loopSet = false;
     }
 
     // Notes for the current line (e.g. a wait that ran out of time).
@@ -604,15 +638,17 @@ public final class SimScenario {
                 if (!t.get(2).equals("pressed") && !t.get(2).equals("open")) throw new IllegalArgumentException("pressed or open");
                 return;
             case "motor":
-                need(t, 5, "expect motor NAME power|ticks|velocity|amps OP VALUE");
-                if (!java.util.Arrays.asList("power", "ticks", "velocity", "amps").contains(t.get(2))) {
-                    throw new IllegalArgumentException("motor field: power, ticks, velocity or amps");
+                need(t, 5, "expect motor NAME power|ticks|velocity|amps|lowest OP VALUE");
+                if (!java.util.Arrays.asList("power", "ticks", "velocity", "amps", "lowest").contains(t.get(2))) {
+                    throw new IllegalArgumentException("motor field: power, ticks, velocity, amps or lowest");
                 }
                 op(t, 3);
                 return;
             case "servo":
-                need(t, 5, "expect servo NAME target|actual OP VALUE");
-                if (!t.get(2).equals("target") && !t.get(2).equals("actual")) throw new IllegalArgumentException("servo field: target or actual");
+                need(t, 5, "expect servo NAME target|actual|power OP VALUE");
+                if (!java.util.Arrays.asList("target", "actual", "power").contains(t.get(2))) {
+                    throw new IllegalArgumentException("servo field: target, actual, or power (a continuous servo)");
+                }
                 op(t, 3);
                 return;
             case "step":
@@ -781,11 +817,22 @@ public final class SimScenario {
                     case "ticks": v = m.encoder(); break;
                     case "velocity": v = m.velocity(); break;
                     case "amps": v = m.amps; break;
-                    default: throw new IllegalArgumentException("motor field: power, ticks, velocity or amps");
+                    case "lowest": v = m.lowestPower(); break;
+                    default: throw new IllegalArgumentException("motor field: power, ticks, velocity, amps or lowest");
                 }
                 return compare(v, t.subList(3, t.size()), why);
             }
             case "servo": {
+                if (t.get(2).equals("power")) {
+                    // A continuous (CR) servo: the power the code set.
+                    double[] cr = sim.robot.crServos.get(t.get(1));
+                    if (cr == null) throw new IllegalArgumentException("no continuous servo \"" + t.get(1) + "\" in the robot file (crservo.NAME)");
+                    double v;
+                    synchronized (sim.robot) {
+                        v = cr[0];
+                    }
+                    return compare(v, t.subList(3, t.size()), why);
+                }
                 SimRobot.SimServo s = sim.robot.servos.get(t.get(1));
                 if (s == null && sim.robot.lights.containsKey(t.get(1))) {
                     throw new IllegalArgumentException("\"" + t.get(1) + "\" is a light: expect light " + t.get(1) + " = GREEN");

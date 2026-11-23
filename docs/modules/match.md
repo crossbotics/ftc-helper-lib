@@ -91,11 +91,14 @@ while (opModeInInit()) {                 // repeats until ▶ is pressed (instea
 | `delay(maxSeconds)` | adds a start delay, in 1 s steps |
 | `choice(label, options...)` | adds a list. The first option is the default |
 | `yesNo(label, startYes)` | adds a YES/NO line |
+| `number(label, min, max, step, start)` | adds a number, for example a distance in 1 in steps. It stops at min and max |
+| `angle(label, stepDeg, startDeg)` | adds an angle in degrees. After 180 it goes on at -180 + step |
 | `profile()` | adds PRACTICE/COMPETITION. The menu saves it when the drivers change it |
 | `update()`, `addTelemetry(t)` | call them every INIT loop |
-| `getAlliance()`, `getDelaySec()`, `get(label)`, `isYes(label)` | read the choices |
+| `getAlliance()`, `getDelaySec()`, `get(label)`, `isYes(label)`, `getNumber(label)` | read the choices |
 
-The buttons: D-pad up/down chooses a line, and left/right changes it. X and B are alliance shortcuts.
+The buttons: D-pad up/down chooses a line, and left/right changes it. On a number or angle line, hold
+left/right to keep stepping. X and B are alliance shortcuts.
 `EasyAuto` builds this menu for you.
 
 ## MatchMemory

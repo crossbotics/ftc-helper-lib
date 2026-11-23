@@ -57,7 +57,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
  *       = +/- 0.01, bumpers = +/- 0.1, X = 0.5. (A servo cannot tell where it is, so nothing moves before A.)</li>
  *   <li>Sensors: just read the values.</li>
  * </ul>
- * Changing the chosen device stops the last one. Put the robot on a block first.
+ * Changing the chosen device stops the last one. Then, and at START and when help closes, every stick and
+ * button must be let go before one can move a device (SAFETY: a held stick would move the next device).
+ * Put the robot on a block first.
  * Help: GUIDE (or hold START 1 s) = a help page with every button, like the finders; while it is open,
  * every motor and CR servo is stopped and the buttons do nothing.
  * (A CR servo is a "continuous rotation" servo: it spins like a small motor instead of going to a position.)
@@ -75,7 +77,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
 
 
     // How many devices fit on one screen page of the list.
-    private static final int PAGE = 6;
+    private static final int PAGE = 4;
 
     // One device found in the configuration: its name, what kind it is, and the SDK object.
     private static final class Device {
@@ -135,7 +137,6 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         RobotTelemetry t = new RobotTelemetry(telemetry);
         findDevices();
         startImus();   // IMU start-up can take a moment: do it in INIT, never in the loop
-        t.text("Found " + devices.size() + " devices. Robot on a block! Press {PLAY}.");
         // Robot.java against this configuration (only if robot() gives the robot).
         robotLines = robotCheck();
         // INIT: the screen until START (GUIDE shows the help here too).
@@ -145,9 +146,16 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
                 showHelp(t);
                 t.text("Press {PLAY} on the Driver Hub to begin.");
             } else {
-                t.text("Found " + devices.size() + " devices. Robot on a block! Press {PLAY}.");
+                t.warn("Robot on a block. Hands clear.");
+                t.warn("After START the stick and {A} move parts.");
+                t.warn("Let go of the stick = motor power off.");
+                t.text("Hardware Check: test each device, one at a time.");
+                t.line("Devices found", devices.size());
                 for (String line : robotLines) t.text(line);
-                t.text("{GUIDE} (center button), or hold {START} 1 s = help.");
+                t.text("Press {PLAY} on the Driver Hub to start.");
+                t.text("STOP (■) on the Driver Hub ends it any time.");
+                if (hosting != null) t.text("{BACK} = back to the menu.");
+                t.text("Help: {GUIDE}, or hold {START} 1 s.");
             }
             t.update();
         }
@@ -155,7 +163,10 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         // try/finally: the "finally" part runs however the loop ends (STOP pressed, or an error),
         // so every motor and CR servo is always stopped at the end.
         // BACK in "Tune and check" (INIT): back to its menu, nothing ran.
-        if (hosting != null && hosting.stopRequested()) return;
+        if (hosting != null ? hosting.stopRequested() : isStopRequested()) return;
+        rememberButtons();   // a button held through START is not a press
+        waitForRelease = true;
+        Throwable failure = null;
         try {
             while (running()) {
                 updateHelp();
@@ -163,21 +174,48 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
                     // Help open: nothing moves while the driver reads, and no button acts.
                     stopAll();
                     showHelp(t);
-                    t.text("Help open: motors stopped. {GUIDE} (or hold {START}) = back.");
+                    t.text("Help is open: motor power off.");
                     t.update();
                     // the buttons held now must not act when help closes
                     rememberButtons();
+                    waitForRelease = true;
                     continue;
                 }
+                if (waitForRelease && allLetGo(gamepad1)) waitForRelease = false;
                 handleInput();
                 show(t);
-                t.text("{GUIDE} (or hold {START} 1 s) = help");
+                if (waitForRelease) t.warnFirst("Let go of all sticks and buttons.");
+                t.text("Help: {GUIDE}, or hold {START} 1 s.");
                 t.update();
             }
+        } catch (Throwable e) {
+            failure = e;
+            throw e;
         } finally {
             if (reader != null) reader.shutdown();
             stopAll();
+            if (failure == null) {
+                t.discard();
+                t.section("Hardware Check: STOPPED");
+                t.text("Motor power is off. Parts may still roll.");
+                t.text("A servo may still move to its last position.");
+                t.update();
+            }
         }
+    }
+
+    // SAFETY: true from START, a newly chosen device and closed help, until everything was let go once.
+    private boolean waitForRelease = true;
+
+    // True when nothing on this gamepad is pressed or pushed.
+    private static boolean allLetGo(com.qualcomm.robotcore.hardware.Gamepad g) {
+        double dead = 0.1;
+        return Math.abs(g.left_stick_x) < dead && Math.abs(g.left_stick_y) < dead
+                && Math.abs(g.right_stick_x) < dead && Math.abs(g.right_stick_y) < dead
+                && g.left_trigger < dead && g.right_trigger < dead
+                && !g.a && !g.b && !g.x && !g.y && !g.left_bumper && !g.right_bumper
+                && !g.dpad_up && !g.dpad_down && !g.dpad_left && !g.dpad_right
+                && !g.back && !g.start && !g.guide && !g.left_stick_button && !g.right_stick_button;
     }
 
     // ---- Help (the same keys as the finders) ----
@@ -211,19 +249,19 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
     /** The help page's lines (GUIDE, or hold START 1 s). */
     protected String[] helpLines() {
         return new String[] {
-            "Tests each device in the configuration.",
-            "Robot on a block first!",
-            "D-pad up/down = choose a device (stops the last).",
-            "Motor / CR servo: right stick = power (50%;",
-            "  hold {RB} = full). {A} = zero the encoder.",
-            "  Check: + power turns the way you expect and",
-            "  the encoder counts UP.",
-            "Servo: first a START POINT near where it sits",
-            "  (nothing moves), {A} = move it there. Then D-pad",
-            "  right/left = +/-0.01, bumpers = +/-0.1, {X} = 0.5.",
-            "IMU: turn the robot left, yaw must go UP.",
-            "Sensors: just read the values.",
-            "Steps: docs, Tests > Checks before practice",
+            "Tests each device. Robot on a block first!",
+            "D-pad up/down = choose. The last one stops.",
+            "Motor or CR servo: right stick = power.",
+            "  Half power. Hold {RB} = up to FULL power.",
+            "  Stick UP: the motor count must go UP.",
+            "  {A} = set the motor count to 0.",
+            "Servo: set a number near where it sits now.",
+            "  Not sure? Take its arm off and use 0.50.",
+            "  {A} = it JUMPS there. D-pad right/left = 0.01,",
+            "  {RB}/{LB} = 0.1, {X} = the middle (0.50).",
+            "IMU: turn the robot left by hand. The turn",
+            "  angle must go UP (hub logo up, USB forward).",
+            "Wheel directions: use Motor Direction Check.",
         };
     }
 
@@ -252,10 +290,10 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         if (r == null) return out;
         List<String> missing = r.checkConfiguration(hardwareMap);
         if (missing.isEmpty()) {
-            out.add("Robot.java: every device is in the configuration");
+            out.add("Robot.java: every part it names was found.");
             return out;
         }
-        out.add("Robot.java devices not in this configuration:");
+        out.add("Robot.java names parts that were NOT found:");
         out.addAll(missing);
         return out;
     }
@@ -308,9 +346,19 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         if (pressed(now, 1)) selected = (selected + 1) % devices.size();
         // SAFETY: a new device was chosen, so stop the motors and CR servos. Otherwise the last
         // motor would keep spinning while you look at something else.
-        if (selected != before) stopAll();
+        if (selected != before) {
+            stopAll();
+            waitForRelease = true;
+        }
 
         Device d = devices.get(selected);
+        // SAFETY: nothing moves, and no button acts, until everything was let go.
+        if (waitForRelease) {
+            if (d.device instanceof DcMotorEx) ((DcMotorEx) d.device).setPower(0);
+            else if (d.device instanceof CRServo) ((CRServo) d.device).setPower(0);
+            System.arraycopy(now, 0, was, 0, was.length);
+            return;
+        }
         // The stick: pushing UP gives a negative number in the SDK, so we flip it (up = positive power).
         // Tiny values are ignored: a stick that does not quite center itself must not creep a motor.
         double stick = Math.abs(gamepad1.right_stick_y) < 0.05 ? 0 : -gamepad1.right_stick_y;   // ignore stick drift
@@ -365,19 +413,13 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
 
     // Shows the battery, the device list (one page) and the chosen device's readings.
     private void show(RobotTelemetry t) {
-        // Battery: only the first voltage sensor is shown (each hub has one), then "break" leaves the loop.
-        for (VoltageSensor v : hardwareMap.getAll(VoltageSensor.class)) {
-            double volts = v.getVoltage();
-            // Under 12 V the motors are weaker than usual, so a test may look like a fault. (0 = no reading.)
-            if (volts > 0 && volts < 12.0) t.warn(String.format(Locale.US, "Battery low: %.2f V", volts));
-            t.line("Battery", "%.2f V", volts);
-            break;
-        }
         if (devices.isEmpty()) {
-            t.text("No devices in the active configuration.");
+            t.warn("No devices in the robot configuration.");
+            t.text("Next: press STOP. On the Driver Hub, choose");
+            t.text("or make your robot's configuration.");
             return;
         }
-        t.section("Devices (D-pad up/down)");
+        t.section("Devices: " + (selected + 1) + " of " + devices.size());
         // Only the page that holds the chosen device: the first device on that page, then up to PAGE devices.
         int first = (selected / PAGE) * PAGE;
         for (int i = first; i < Math.min(devices.size(), first + PAGE); i++) {
@@ -385,15 +427,24 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             // "> " marks the chosen device
             t.text((i == selected ? "> " : "  ") + d.name + "  (" + d.kind + ")");
         }
-        t.text(String.format(Locale.US, "%d of %d", selected + 1, devices.size()));
         Device d = devices.get(selected);
-        t.section(d.name);
         // A broken or unplugged device can throw an error when read. Catch it and show a warning
         // instead, so the check keeps running and you can test the other devices.
         try {
             describe(d, t);
         } catch (RuntimeException e) {
-            t.warn("Could not read " + d.name + ": " + e.getMessage());
+            t.warn("Could not read " + d.name + ". Press STOP, check its");
+            t.warn("cable and port. (" + e.getMessage() + ")");
+        }
+        t.text("D-pad up/down = another device.");
+        // The battery: only the first voltage sensor (each hub has one). 0 = no reading.
+        for (VoltageSensor v : hardwareMap.getAll(VoltageSensor.class)) {
+            double volts = v.getVoltage();
+            double low = com.crossbotics.ftchelper.tuning.TuningMenu.LOW_BATTERY_VOLTS;
+            // A weak battery makes weak motors, so a test may look like a fault.
+            if (volts > 0 && volts < low) t.warn(String.format(Locale.US, "Battery %.1f V is low. Change it first.", volts));
+            else if (volts > 0) t.line("Battery", "%.1f V: OK", volts);
+            break;
         }
     }
 
@@ -402,52 +453,65 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         HardwareDevice h = d.device;
         if (h instanceof DcMotorEx) {
             DcMotorEx m = (DcMotorEx) h;
-            t.text("Right stick = power ({RB} = full), {A} = zero encoder");
-            t.text("No limits here! A lift or arm: short taps, know its hard stop, hands clear.");
-            t.line("Power", "%.2f", m.getPower());
-            t.line("Encoder", m.getCurrentPosition());
-            t.line("Speed", "%.0f ticks/s", m.getVelocity());
-            t.line("Current", "%.2f A", m.getCurrent(CurrentUnit.AMPS));
-            t.text("Check: positive power turns the way you expect, and the encoder counts UP.");
+            t.warn("No limits: it can crash into its end.");
+            t.warn("Short taps. Hands clear. Let go = power off.");
+            t.text("Next: push the right stick UP a little.");
+            t.text("The motor count must go UP.");
+            t.line("Motor count", m.getCurrentPosition());
+            t.line("Power", "%.2f  (hold {RB} = full)", m.getPower());
+            t.line("Current", "%.1f A", m.getCurrent(CurrentUnit.AMPS));
+            t.debug("Speed", "%.0f counts/s", m.getVelocity());
+            t.text("Count goes down? Press STOP. Check its wires.");
         } else if (h instanceof CRServo) {
-            t.text("Right stick = power ({RB} = full)");
-            t.line("Power", "%.2f", ((CRServo) h).getPower());
+            t.warn("It can spin at once. Let go = power off.");
+            t.text("Next: push the right stick a little.");
+            t.line("Power", "%.2f  (hold {RB} = full)", ((CRServo) h).getPower());
         } else if (h instanceof Servo) {
             if (Double.isNaN(d.servoPosition)) {
-                t.line("Start point", String.format(Locale.US, "%.2f  ({A} = move the servo there)", d.startAt));
-                t.text("Choose a start point near where the servo sits now. Nothing moves until {A}.");
-                t.text("D-pad L/R = 0.01, bumpers = 0.1, {X} = 0.5");
+                t.warn("{A} = the servo JUMPS to this number.");
+                t.warn("Hands clear. Nothing moves until {A}.");
+                t.text("Next: set a number near where it sits now.");
+                t.text("0 and 1 are its two ends. 0.5 is the middle.");
+                t.line("Start point", String.format(Locale.US, "%.2f", d.startAt));
+                t.text("D-pad right/left = 0.01. {RB}/{LB} = 0.1.");
             } else {
-                t.text("D-pad L/R = 0.01, bumpers = 0.1, {X} = 0.5");
-                t.line("Position", "%.2f", d.servoPosition);
-                t.text("Write down the positions you need (open, closed...).");
+                t.warn("Every press moves the servo. Hands clear.");
+                t.text("Next: check that it moves freely.");
+                t.line("Position", "%.2f  (0 to 1)", d.servoPosition);
+                t.text("D-pad right/left = 0.01. {RB}/{LB} = 0.1.");
             }
         } else if (h instanceof IMU) {
             IMU imu = (IMU) h;
             // yaw = turning left/right, pitch = nose up/down, roll = tipping sideways
             YawPitchRollAngles a = imu.getRobotYawPitchRollAngles();
-            t.line("Yaw", "%.1f deg", a.getYaw(AngleUnit.DEGREES));
-            t.line("Pitch / Roll", "%.1f / %.1f deg", a.getPitch(AngleUnit.DEGREES), a.getRoll(AngleUnit.DEGREES));
-            t.text("Uses logo UP, USB FORWARD here. Turn left: yaw must go UP (if your hub is mounted that way).");
+            t.text("Next: turn the robot LEFT by hand.");
+            t.text("The turn angle must go UP.");
+            t.line("Turn angle", "%.1f deg", a.getYaw(AngleUnit.DEGREES));
+            t.debug("Pitch / Roll", "%.1f / %.1f deg", a.getPitch(AngleUnit.DEGREES), a.getRoll(AngleUnit.DEGREES));
+            t.text("Only true for a hub with logo up, USB forward.");
         } else if (h instanceof TouchSensor) {
-            t.line("Pressed", ((TouchSensor) h).isPressed());
+            t.text("Next: press it by hand. This must change.");
+            t.line("Pressed", ((TouchSensor) h).isPressed() ? "YES" : "no");
         } else if (h instanceof DigitalChannel) {
-            t.line("State", ((DigitalChannel) h).getState());
+            t.text("Next: trigger it by hand. This must change.");
+            t.line("On", ((DigitalChannel) h).getState() ? "true" : "false");
             t.text("REV magnetic switch: false = magnet near.");
         } else if (h instanceof ColorSensor) {
             ColorSensor c = (ColorSensor) h;
-            t.line("R G B", "%d %d %d", c.red(), c.green(), c.blue());
+            t.text("Next: hold a colored thing in front of it.");
+            t.line("Red, green, blue", "%d, %d, %d", c.red(), c.green(), c.blue());
             // many color sensors (like the REV one) can also measure distance: show it too
             if (h instanceof DistanceSensor) showDistance((DistanceSensor) h, t);
         } else if (h instanceof DistanceSensor) {
             showDistance((DistanceSensor) h, t);
         } else if (h instanceof AnalogInput) {
             AnalogInput a = (AnalogInput) h;
-            t.line("Voltage", "%.3f V (max %.1f)", a.getVoltage(), a.getMaxVoltage());
+            t.line("Voltage", "%.3f V (most: %.1f)", a.getVoltage(), a.getMaxVoltage());
         } else if (h instanceof Limelight3A) {
             Limelight3A ll = (Limelight3A) h;
             t.line("Connected", ll.isConnected());
-            t.text("Open its web page (limelight.local:5801) to see the picture.");
+            t.text("To see its picture, open in a web browser:");
+            t.text("  limelight.local:5801");
         } else if (h instanceof HuskyLens) {
             // Slow I2C requests: on a helper thread, so the buttons never wait. This shows the last answer.
             final HuskyLens husky = (HuskyLens) h;
@@ -463,7 +527,8 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             });
             t.line("Answers", huskyAnswers == null ? "asking..." : huskyAnswers ? "yes" : "NO: check the cable, and its Protocol Type");
             for (HuskyLens.Block b : huskyBoxes) t.line("Sees", "taught number %d at x %d, y %d, size %d x %d", b.id, b.x, b.y, b.width, b.height);
-            t.text("It shows what its screen is set to. Taught number 0 = not taught yet.");
+            t.text("It shows what its own screen is set to.");
+            t.text("Taught number 0 = not taught yet.");
         } else {
             // anything else (e.g. a webcam): at least show what the SDK calls it
             t.line("Type", h.getDeviceName());

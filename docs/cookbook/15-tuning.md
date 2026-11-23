@@ -62,8 +62,8 @@ public class MotorFinder extends MotorFinderOpMode {
 
 **Use it:** first put the lift all the way down, because the count starts at 0 there. Choose the motor
 (D-pad, A). Move it slowly with the right stick. Press X a little above the bottom and B a little below the top.
-Then press A at each height you need. Copy the line it shows (`Tunables.Lift: min = 0, max = 2580, P1 = 1200`)
-into `Tunables.java` and rename P1 (`low`).
+Then press A at each height you need. In Tune and check it shows the lines for class `Lift` in `Tunables.java`
+(`public static double min = 0;`, `max = 2580`, `P1 = 1200`). Copy them and rename P1 (`low`).
 **Why:** a wrong top limit drives the lift into its hard stop. Measured limits keep it safe.
 **More:** [Motor Finder](../tuning/05-motor-finder.md).
 
@@ -171,6 +171,6 @@ public class HoodFinder extends HoodFinderOpMode {
 ```
 
 **Why:** the hood needs its stops and angles. Nudge the hood to each stop, back off a hair, and press X
-and B. The finder writes `Tunables.Hood: posA = ..., posB = ...`. Before X / B, hold LB + D-pad to type
+and B. The finder writes `posA` and `posB` lines for class `Hood`. Before X / B, hold LB + D-pad to type
 in the angle you measured (or press A for a point in between, for a linkage). Copy the lines into `Tunables.java`.
 **More:** [Hood Finder](../tuning/04-hood-finder.md).

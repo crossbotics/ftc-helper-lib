@@ -16,8 +16,8 @@ import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
  * motor or wire is changed. <b>Put the robot on a block first</b>: the wheels spin.
  *
  * <p>Hold X = front-left (tank: left), Y = front-right (tank: right), A = back-left, B = back-right: that
- * motor runs at 30% while held. Each wheel must roll the way that drives the robot forward. A wheel that rolls
- * backward: add its name to {@code reversed(...)} on the drive line in Robot.java (or take it out).
+ * motor runs at 30% while held. Each wheel must roll the way that drives the robot forward. For the wheel you
+ * ran last, the screen shows the exact {@code .reversed(...)} to write if it rolled backward.
  *
  * <p>It is in "Tune and check" for every robot in five files with a drive. On its own, in TeamCode:
  * <pre>{@code
@@ -42,6 +42,7 @@ public abstract class MotorDirectionCheckOpMode extends FinderOpMode {
     private final boolean[] reversedNow = new boolean[4];
     private final boolean[] held = new boolean[4];
     private boolean tank = false;
+    private int lastRun = -1;   // the wheel that ran last (its fix is on the screen), -1 = none yet
 
     @Override protected String finderName() { return "Motor direction check"; }
 
@@ -66,7 +67,9 @@ public abstract class MotorDirectionCheckOpMode extends FinderOpMode {
     @Override
     protected void showInit(RobotTelemetry t) {
         t.warn("Wheels off the ground! Put the robot on a block.");
-        t.text("Then press {PLAY}. Hold a button to spin one motor.");
+        t.warn("Holding a button spins a wheel. Let go = stop.");
+        t.text("Motor direction check:");
+        t.text("does each wheel roll FORWARD?");
     }
 
     @Override
@@ -83,19 +86,45 @@ public abstract class MotorDirectionCheckOpMode extends FinderOpMode {
         // One motor at a time: two buttons held = none runs (so each wheel is seen alone).
         int count = 0;
         for (int i = 0; i < 4; i++) if (held[i] && motors[i] != null) count++;
-        for (int i = 0; i < 4; i++) if (motors[i] != null) motors[i].setPower(count == 1 && held[i] ? POWER : 0);
+        boolean ready = count == 1;
+        for (int i = 0; i < 4; i++) {
+            if (motors[i] == null) continue;
+            motors[i].setPower(ready && held[i] ? POWER : 0);
+            if (ready && held[i]) lastRun = i;
+        }
     }
 
     @Override
     protected void show(RobotTelemetry t) {
-        t.section("Hold a button: that wheel must roll FORWARD");
-        String[] key = tank ? new String[] {"{X} left", "{Y} right", "{A}", "{B}"} : new String[] {"{X} front-left", "{Y} front-right", "{A} back-left", "{B} back-right"};
+        t.warn("Hands off the wheels. Let go = stop.");
+        t.section("Motor direction check");
+        t.text("Next: hold a button. The TOP of that wheel");
+        t.text("must move toward the FRONT of the robot.");
+        String[] key = tank ? new String[] {"{X} left", "{Y} right", "{A} back left", "{B} back right"}
+                : new String[] {"{X} front-left", "{Y} front-right", "{A} back-left", "{B} back-right"};
         for (int i = 0; i < 4; i++) {
             if (motors[i] == null) continue;
-            t.line(key[i], "\"" + names[i] + "\"" + (reversedNow[i] ? " (reversed)" : "") + (held[i] && heldCount() == 1 ? "  RUNNING" : ""));
+            String now = held[i] && heldCount() == 1 ? "  RUNNING" : reversedNow[i] ? " (reversed in code)" : "";
+            t.line(key[i], "\"" + names[i] + "\"" + now);
         }
         if (heldCount() > 1) t.warn("One button at a time");
-        t.text("Backward? Add its name to reversed(...) on the drive line in Robot.java (or take it out).");
+        if (lastRun < 0) return;
+        t.text("\"" + names[lastRun] + "\" rolled FORWARD? It is right.");
+        t.text("It rolled BACKWARD? In Robot.java, drive line:");
+        t.text("  " + reversedFix(lastRun));
+        t.text("Write that, install it, then check again.");
+    }
+
+    // The whole reversed(...) with this one wheel turned around. The whole list, because with no reversed(...)
+    // written the left side is reversed already: "take its name out" would then be impossible.
+    private String reversedFix(int flip) {
+        StringBuilder names = new StringBuilder();
+        for (int i = 0; i < 4; i++) {
+            if (motors[i] == null || reversedNow[i] == (i == flip)) continue;
+            if (names.length() > 0) names.append(", ");
+            names.append('"').append(this.names[i]).append('"');
+        }
+        return ".reversed(" + names + ")";
     }
 
     private int heldCount() {
@@ -109,13 +138,15 @@ public abstract class MotorDirectionCheckOpMode extends FinderOpMode {
         return new String[] {
             "Checks that each drive wheel rolls forward.",
             "1. Robot on a block: the wheels spin.",
-            "2. Hold {X}, {Y}, {A} or {B}: one motor runs at 30%.",
+            "2. Hold one button: that wheel turns slowly.",
             "   {X} = front-left, {Y} = front-right,",
-            "   {A} = back-left, {B} = back-right (tank: {X}, {Y}).",
-            "3. Each wheel must roll the way that drives",
-            "   the robot FORWARD.",
-            "4. One backward: add its name to reversed(...)",
-            "   in Robot.java's drive line (or take it out).",
+            "   {A} = back-left, {B} = back-right.",
+            "   Tank with 2 motors: {X} = left, {Y} = right.",
+            "3. The top of the wheel must move toward the",
+            "   front of the robot.",
+            "4. It does not: write the .reversed(...) line",
+            "   from the screen. Install it. Check again.",
+            "\"reversed in code\" is normal for some wheels.",
             "Run it again after any motor or wire change.",
         };
     }

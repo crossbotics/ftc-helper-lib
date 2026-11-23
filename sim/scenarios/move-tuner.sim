@@ -6,14 +6,14 @@ expect screen has "Move tuner"
 start
 expect screen has "> 1 Creep"
 press g1.a
-expect within 20 screen has "moveMinPower now"
-expect screen has "Tunables.Drive: moveMinPower ="
+expect within 20 screen has "moveMinPower is now"
+expect screen has "public static double moveMinPower ="
 press g1.dpad_down
 press g1.dpad_down
 press g1.dpad_down
 expect screen has "> 4 Drift"
 press g1.a
-expect within 60 screen has "OK: the heading stays within 2 deg"
+expect within 60 screen has "PASSED: the heading stays within 2 deg"
 press g1.guide
 expect screen has "help"
 press g1.guide

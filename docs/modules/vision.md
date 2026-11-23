@@ -376,8 +376,8 @@ in. `ccwPower` gives the same power counterclockwise positive, for your own head
 
 `turnPower` gives **0** when there is no target, the picture is old, or there is no bearing. So the
 robot never turns toward something it cannot see now. The D part changes only on a NEW picture, so a
-repeated picture never fakes motion. Also: `isAimed()`, and `reset()` (call it when the driver lets go
-of the aim button).
+repeated picture never fakes motion. Also: `isAimed()`, `getOffset()` (the offset in use), and `reset()` (call
+it when the driver lets go of the aim button).
 
 The robot in five files has this built in. `g1.rb.toggle(robot.aimMode())` turns the whole robot to
 the goal while the driver drives, with the odometry as a backup ([Aim](../reference/parts/aim.md)). It is

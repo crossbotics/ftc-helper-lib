@@ -51,6 +51,7 @@ public final class Action {
         final BooleanSupplier until;     // null for "then" and timed waits
         final double seconds;            // timed wait, or the time limit of a waitUntil
         final String what;               // for the Driver Station
+        java.util.function.DoubleSupplier limit;   // a time limit known only when it runs; null = seconds
         Step(Runnable[] doNow, BooleanSupplier until, double seconds, String what) {
             this.doNow = doNow;
             this.until = until;
@@ -121,6 +122,15 @@ public final class Action {
      */
     public Action waitUntil(String what, BooleanSupplier condition, double timeoutSec) {
         steps.add(new Step(null, condition, Math.max(0, timeoutSec), what));
+        return this;
+    }
+
+    // The same wait, with a time limit asked while it runs: an action made before INIT cannot know a
+    // number from Tunables yet (the launcher's eject waits longer with bang-bang).
+    Action waitUntil(String what, BooleanSupplier condition, java.util.function.DoubleSupplier limitSec) {
+        Step s = new Step(null, condition, 0, what);
+        s.limit = limitSec;
+        steps.add(s);
         return this;
     }
 
@@ -229,7 +239,8 @@ public final class Action {
                 // Nothing to wait for: the step before only told missing parts what to do.
             } else if (s.until != null) {
                 if (!s.until.getAsBoolean()) {
-                    if (now - stepStart >= s.seconds) finish("timed out waiting for " + s.what);
+                    double limit = s.limit == null ? s.seconds : s.limit.getAsDouble();
+                    if (now - stepStart >= limit) finish("timed out waiting for " + s.what);
                     return;
                 }
             } else if (now - stepStart < s.seconds) {

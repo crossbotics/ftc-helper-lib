@@ -155,7 +155,7 @@ public class TuneAndCheckTest {
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Drive tuner"), 1));
             s.start();
             s.press(v -> s.g1().dpad_down = v);           // Push -> Drive forward
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("> Drive forward"), 1));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("> 2 Drive forward"), 1));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Power : 0.5"));
             s.press(v -> s.g1().dpad_right = v);          // the test power: the autos' 0.6
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Power : 0.6"), 1));
@@ -177,7 +177,7 @@ public class TuneAndCheckTest {
             assertTrue(String.join("\n", s.screen()), s.screenHas("SHARE = back to this menu"));
             s.press(v -> s.g1().dpad_down = v);          // Hardware Check -> Servo Finder
             s.press(v -> s.g1().a = v);                  // × opens it
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("PS (center button), or hold OPTIONS 1 s = help."), 1));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Help: PS, or hold OPTIONS 1 s."), 1));
             assertFalse(String.join("\n", s.screen()), s.screenHas("{"));
             assertEquals("", s.error());
         } finally {

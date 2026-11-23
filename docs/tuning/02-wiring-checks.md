@@ -22,7 +22,7 @@ other number trusts the wiring.
 3. The check's INIT screen shows. Nothing moves yet. Put the robot on a block, and press **▶** (start) on
    the Driver Hub.
 
-   ![The Hardware Check's INIT screen: Found 12 devices. Robot on a block! Press start](../images/hub-hardware-check-go-start.svg)
+   ![The Hardware Check's INIT screen: what moves, how to stop it, then press start](../images/hub-hardware-check-go-start.svg)
 
 For the next check, press STOP, then INIT again, and pick it in the menu.
 
@@ -32,6 +32,10 @@ The Hardware Check finds every device and moves each motor and servo. It spins a
 direction, so it does not check `reversed(...)`: the next check does. What to look for, device by device:
 [Hardware check](../tests/03-checks-before-practice-and-matches.md#3-hardware-check-after-a-wiring-or-configuration-change).
 
+**It waits for your hands.** At ▶, when you choose another device, and when help closes, let go of every
+stick and button. Until then, nothing moves. Without this, a stick that you still hold would move the next
+device.
+
 ## Motor Direction Check: each wheel rolls forward
 
 The Hardware Check spins a motor in its raw direction. This check uses your directions, so it shows what
@@ -39,16 +43,18 @@ the robot will do. It spins ONE drive motor at a time at 30%, set up exactly as 
 its direction comes from `reversed(...)` on the drive line.
 
 1. Hold **X** (front-left), **Y** (front-right), **A** (back-left) or **B** (back-right). On a tank drive,
-   X = left and Y = right. The screen shows the motor's name, and "(reversed)" when Robot.java reverses it.
+   X = left and Y = right. The screen shows the motor's name, and "(reversed in code)" when the code reverses
+   it. That is normal for some wheels.
 
    ![Hold X: the front-left wheel spins, and the Driver Hub shows X front-left : "front_left" RUNNING](../images/hub-motor-direction-check-step-hold.svg)
 
-2. Each wheel must roll the way that drives the robot FORWARD. For the robot in five files, the front is
-   the end that Robot.java says.
-3. When a wheel rolls backward, add its name to `reversed(...)` on the drive line in Robot.java (or take it
-   out). Build and install the code, then check it again: press STOP, then INIT, open Motor Direction Check, and press ▶.
+2. The top of each wheel must move toward the front of the robot. Then that wheel drives the robot FORWARD.
+   For the robot in five files, the front is the end that Robot.java says.
+3. When a wheel rolls backward, let go. The screen shows the whole `.reversed(...)` for that wheel's fix.
+   Write it on the drive line in Robot.java, in place of any that is there. Build and install the code, then
+   check it again: press STOP, then INIT, open Motor Direction Check, and press ▶.
 
-   ![Check it again, hold X: the Driver Hub shows X front-left : "front_left" (reversed) RUNNING](../images/hub-motor-direction-check-step-fixed.svg)
+   ![Check it again, hold X: the Driver Hub shows X front-left : "front_left" RUNNING](../images/hub-motor-direction-check-step-fixed.svg)
 
 4. When the wrong wheel turns, its name in the robot configuration is on the wrong port. Swap the names on
    the Driver Hub, not the wires.
@@ -71,24 +77,25 @@ motor port's count, and shows a result for each motor:
 | OK: counts up (or down) | its own port counted, the way the check pushed it | nothing |
 | NO COUNTS | no port counted | plug in the encoder cable, or replace it. Or the motor did not turn: check that you saw it move |
 | counts on "X" instead | another motor's port counted | the encoder cables are swapped: put each one in its own motor's port |
-| counts on "lift_right" instead: plug the encoder cable into "lift_left"'s port | a two-motor lift or arm: the library reads only the first motor's encoder | move the cable to the first motor's port |
+| counts on "lift_right" instead: plug the encoder cable into "lift_left" | a two-motor lift or arm: the library reads only the first motor's encoder | move the cable to the first motor's port |
 | counts BACKWARD | its port counted the other way from the push | the motor's power wires are swapped (red and black), or an outside encoder is mounted the other way |
-| no counts (fine: nothing reads this encoder) | an intake or feeder with no encoder cable | nothing |
+| no counts (fine: not used) | an intake or feeder with no encoder cable | nothing |
 | could not read its encoder | the hub did not answer | press **Y** to check again. When the result stays, check the hub's cables |
 | NOT IN THE CONFIGURATION | Robot.java names a motor the configuration does not have | add it to the configuration, or mark the part `optional()` |
 
 1. Put the robot on a block, with lifts and arms down. In **Tune and check**, open **Encoder Check**, then
    press **▶**.
 
-   ![The Encoder Check's INIT screen: Then press start. Hold A: each motor gets a short push](../images/hub-encoder-check-go-start.svg)
+   ![The Encoder Check's INIT screen: holding A moves each part, let go = stop](../images/hub-encoder-check-go-start.svg)
 
 2. Hold **A**. Each motor gets its short push in turn. When you let go of **A**, everything stops at once.
 
    ![Hold A: the Driver Hub shows "back_left" (drive) : PUSHING, and OK for the motors before it](../images/hub-encoder-check-step-hold.svg)
 
-3. Read the results. Fix the cables. Press **Y** to check again.
+3. Read the results. The screen says which motor to fix first, and how. Press STOP before you touch a cable.
+   Fix it, then run the check again (**Y** starts over).
 
-   ![Fix the cables, then press Y: the Driver Hub shows "lift" (Lift) : NO COUNTS and 1 problem(s)](../images/hub-encoder-check-step-again.svg)
+   ![The Driver Hub shows "lift" (Lift) : NO COUNTS, 1 problem(s) and what to fix first](../images/hub-encoder-check-step-again.svg)
 
 
 The check sets up each motor as Robot.java says (its direction). It pushes the motor toward the side where
@@ -110,7 +117,8 @@ Run it on every new robot, and again after you change any motor or cable.
 
 ## Fix a mistake
 
-- **Hardware Check:** it only reads the devices. There is nothing to undo.
+- **Hardware Check:** it moves motors and servos, and saves nothing. Let go of the stick, and the motor's
+  power is off. A servo stays at the last number you sent it.
 - **Motor Direction Check:** a wheel runs only while you hold its button. Let go, and it stops.
 - **Encoder Check:** press **Y** to run the check again.
 
@@ -130,8 +138,8 @@ These checks give no numbers to copy. You fix what they find in two places:
 ## Done when
 
 - The Hardware Check finds every device.
-- every drive wheel rolls the way that drives the robot forward.
-- every motor says OK (or "no counts (fine...)" for a motor whose encoder nothing reads).
+- Every drive wheel rolls the way that drives the robot forward.
+- The screen says `Done:`, and every motor says OK (or "no counts (fine...)" for a motor whose encoder nothing reads).
 
 ---
 

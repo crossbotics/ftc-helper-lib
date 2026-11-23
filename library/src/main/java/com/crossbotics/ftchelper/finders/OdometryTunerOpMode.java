@@ -22,7 +22,8 @@ import java.util.List;
  * how far it measures, and where the pods sit (the offsets). Then it writes the lines to copy.
  *
  * <pre>
- * The sticks drive the robot slowly (30%) in every test. D-pad up/down = choose a test, A = start, B = done.
+ * The sticks drive the robot slowly (30%), also between tests, once they were let go after START, help and
+ * the end of a test. D-pad up/down = choose a test, A = start, B = done.
  *   Forward:  push or drive the robot 48 in straight forward along the tape. (Directions, distance.)
  *   Left:     push or drive it 24 in straight to its left. (The sideways pod's direction.)
  *   Spin:     turn it in place at least 3 times (right stick). (The offsets / track width.)
@@ -42,7 +43,7 @@ import java.util.List;
  */
 public abstract class OdometryTunerOpMode extends FinderOpMode {
     // Numbered: the chooser lists them in name order.
-    private static final String[] TESTS = {"1 Forward 48 in", "2 Left 24 in", "3 Spin 3+ turns", "4 Loop and back"};
+    private static final String[] TESTS = {"1 Forward 48 in", "2 Left 24 in", "3 Spin 3 turns or more", "4 Loop and back"};
 
     /** Your robot in five files: {@code return new Robot();} (it must have an odometry(...) line). */
     protected abstract RobotDefinition robot();
@@ -93,6 +94,16 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
     }
 
     @Override
+    protected void showInit(RobotTelemetry t) {
+        t.warn("After START the STICKS drive the robot, slowly.");
+        t.warn("Let go of the sticks = stop. Clear the floor.");
+        t.text("Odometry tuner: checks the small measuring");
+        t.text("wheels (pods) or sensor that track the robot.");
+        t.text("You can push it by hand instead.");
+        t.text("You need: a tape line 48 in, with a start mark.");
+    }
+
+    @Override
     protected void bind(ControllerBindings c) {
         c.bindPress(Pad.G1, Btn.DPAD_UP, () -> { if (running < 0) chooser.previous(); })
          .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> { if (running < 0) chooser.next(); })
@@ -108,6 +119,10 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         odoTurnDeg = 0;
         lastOdoH = 0;
         farthestIn = 0;
+        // A test run again: what it found before is not true any more until it passes again.
+        if (test == 0) results.remove("odo:linear");
+        if (test == 2) results.remove("odo:offsets");
+        if (test == 3) notChecked("finish 4 Loop and back.");
         podsAtStart = null;   // taken in the next loop, after the device has read fresh counts
         lastResult = "";
     }
@@ -127,13 +142,17 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
             FieldPose p = odo.pose();
             farthestIn = Math.max(farthestIn, Math.hypot(p.x, p.y));
         }
-        driving.update(gamepad1, 0.3);
+        // SAFETY: a stick already pushed at START, after help or at the end of a test does not drive.
+        if (inputsReady()) driving.update(gamepad1, 0.3);
+        else driving.hold();
     }
 
     private void finish() {
         FieldPose p = odo.pose();
         int test = running;
         running = -1;
+        driving.hold();
+        waitForRelease();   // the result is on the screen: the sticks drive again after they were let go
         switch (test) {
             case 0: forward(p); break;
             case 1: left(p); break;
@@ -142,41 +161,68 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         }
     }
 
+    // Not checked (any more): no "checked = true" to copy.
+    private void notChecked(String why) {
+        results.remove("odo:checked");
+        results.notDone(why);
+    }
+
+    // A test that failed: its words, and the odometry is not checked.
+    private void failed(String words) {
+        notChecked("the last test failed. Run it again.");
+        lastResult = words;
+    }
+
     private void forward(FieldPose p) {
         if (Math.abs(p.y) < 6) {
-            lastResult = "It measured only " + FinderResults.num(p.y, 1) + " in forward: did the robot move? Check the cables.";
+            failed("It measured only " + FinderResults.num(Math.abs(p.y), 1) + " in forward."
+                    + "\nNext: did it move? Yes: check the cables.");
             return;
         }
         if (p.y < 0) {
-            lastResult = "Forward counted BACKWARD: the forward-measuring pod is reversed. " + reverseHint(true);
+            failed("Forward counted BACKWARD.\n" + reverseHint(true));
             return;
         }
         double scale = 48 / p.y;
         double offPct = (1 / scale - 1) * 100;
         if (Math.abs(offPct) > 10) {
-            lastResult = "It measured " + FinderResults.num(p.y, 1) + " in: was it really 48 in? Measure along the tape "
-                    + "and run the test again (more than 10% off is a test mistake, not the pods).";
+            failed("It measured " + FinderResults.num(p.y, 1) + " in for 48: over 10% off."
+                    + "\nNext: was it 48 in on the tape? Test again."
+                    + "\nStill off? Check the pod settings in Robot.java.");
             return;
         }
-        lastResult = "Forward OK: " + FinderResults.num(p.y, 1) + " in for 48 (" + FinderResults.num(offPct, 1)
-                + "% off). Sideways drift " + FinderResults.num(p.x, 1) + " in.";
+        // Under 0.05% shows as 0.0%: "exact", never "0.0% too low".
+        lastResult = "Forward direction is right. It measured"
+                + "\n" + FinderResults.num(p.y, 1) + " in for 48 (" + (Math.abs(offPct) < 0.05 ? "exact"
+                : FinderResults.num(Math.abs(offPct), 1) + "% too " + (offPct < 0 ? "low" : "high")) + ")";
         if (spec.kindName().equals("otos")) {
-            results.set("odo:linear", "Tunables.Odometry: linearScalar = " + FinderResults.num(scale, 3) + "   // times the one in use now");
+            // The final setting, not a number to multiply: the one in Tunables.java times what was measured.
+            double now = codeValue(robot.tunablesClass(), "Odometry", "linearScalar", 1.0);
+            results.setTunable("odo:linear", "Odometry", "linearScalar", FinderResults.num(now * scale, 3));
+            notChecked("install linearScalar, then run 4 Loop.");
         } else if (Math.abs(scale - 1) > 0.02) {
-            lastResult += spec.kindName().equals("pinpoint")
-                    ? " More than 2% off: check the pod type (4-bar or swingarm) and the tape."
-                    : " More than 2% off: check ticksPerMm(...) for your pods, and the tape.";
+            notChecked("Forward is more than 2% off.");
+            lastResult += "\nOver 2% off: check the tape, and in Robot.java"
+                    + (spec.kindName().equals("pinpoint") ? "\nthe pod type (4-bar or swingarm)." : "\nticksPerMm(...) for your pods.");
+            return;
         }
+        lastResult += "\nNext: 2 Left 24 in.";
     }
 
     private void left(FieldPose p) {
         if (Math.abs(p.x) < 4) {
-            lastResult = "It measured only " + FinderResults.num(-p.x, 1) + " in to the left: did it move? A tank robot cannot: push it.";
+            failed("It measured only " + FinderResults.num(Math.abs(p.x), 1) + " in sideways."
+                    + "\nNext: did it move? A tank: push it by hand.");
             return;
         }
-        lastResult = p.x < 0
-                ? "Left OK: " + FinderResults.num(-p.x, 1) + " in for 24."
-                : "Left counted RIGHT: the sideways-measuring pod is reversed. " + reverseHint(false);
+        if (p.x > 0) {
+            failed("Left counted RIGHT.\n" + reverseHint(false));
+            return;
+        }
+        // Only the direction is checked here: not how exact the distance is.
+        lastResult = "Left direction is right."
+                + "\nMeasured " + FinderResults.num(-p.x, 1) + " in for 24 (not checked exactly)."
+                + "\nNext: 3 Spin.";
     }
 
     private void spin() {
@@ -185,9 +231,11 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         if (podsAtStart == null) podsAtStart = podsNow;
         // (a hair less than 3 counts: nobody stops exactly on the mark)
         if (Math.abs(turnRad) < (SPIN_TURNS - 0.1) * 2 * Math.PI) {
-            lastResult = "Only " + FinderResults.num(Math.toDegrees(Math.abs(turnRad)) / 360, 1) + " turns: spin at least 3 (right stick), then {B}.";
+            failed("Only " + FinderResults.num(Math.toDegrees(Math.abs(turnRad)) / 360, 1) + " turns."
+                    + "\nNext: spin at least 3 (right stick), then {B}.");
             return;
         }
+        notChecked("install the numbers, then run 4 Loop.");
         double perMm = spec.podTicksPerMm();
         switch (spec.kindName()) {
             case "pinpoint": {
@@ -198,37 +246,48 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
                 double xLeft = -dx / turnRad, yForward = dy / turnRad;
                 // Only the numbers to change: the rest of the line (pods, .reversed) stays as it is.
                 // Written from the edges: the measured center numbers replace podsFromEdgesMm (they are exact).
-                results.set("odo:offsets", "Robot.java: in the odometry(...) line, .offsetsMm("
-                        + FinderResults.num(xLeft, 1) + ", " + FinderResults.num(yForward, 1) + ")"
-                        + (spec.podsFromEdges() ? " in place of .podsFromEdgesMm(...)" : ""));
-                lastResult = "Offsets measured: X pod " + FinderResults.num(xLeft, 1) + " mm left, Y pod "
-                        + FinderResults.num(yForward, 1) + " mm forward. Change those two numbers in Robot.java, rebuild, then the Loop test.";
+                String line = "In odometry(...):";
+                String code = "  .offsetsMm(" + FinderResults.num(xLeft, 1) + ", " + FinderResults.num(yForward, 1) + ")";
+                if (spec.podsFromEdges()) {
+                    results.setIn("odo:offsets", FinderResults.ROBOT_FILE, line, code, "in place of .podsFromEdgesMm(...)");
+                } else {
+                    results.setIn("odo:offsets", FinderResults.ROBOT_FILE, line, code);
+                }
+                lastResult = "Offsets measured (the line is below):"
+                        + "\nX pod " + side(xLeft, "LEFT", "RIGHT", 1, "mm") + ", Y pod " + side(yForward, "FRONT", "BACK", 1, "mm")
+                        + "\nNext: install the line. Then run 4 Loop.";
                 break;
             }
             case "otos": {
                 FieldPose p = odo.pose();
                 double measured = Math.toRadians(Angles.wrapDegrees(p.headingDeg));
-                lastResult = "OTOS: for the turn scale, spin exactly 10 turns by hand on a mark and compare the heading "
-                        + "with 0 (docs/modules/odometry.md). The IMU says " + FinderResults.num(Math.toDegrees(turnRad), 0)
-                        + " deg; the OTOS ends at " + FinderResults.num(Math.toDegrees(measured), 1) + " deg.";
+                notChecked("run 4 Loop and back.");
+                lastResult = "IMU turned " + FinderResults.num(Math.toDegrees(turnRad), 0) + " deg. OTOS ends at "
+                        + FinderResults.num(Math.toDegrees(measured), 1) + "."
+                        + "\nTurn scale: push it 10 turns exactly on a mark."
+                        + "\nIt should end at 0 (docs: odometry).";
                 break;
             }
             case "threeWheels": {
                 double l = signed(0), r = signed(1), pp = signed(2);
                 double track = (r - l) / perMm / 25.4 / turnRad;
                 double perp = pp / perMm / 25.4 / turnRad;
-                results.set("odo:offsets", "Robot.java: in the odometry(...) line, .trackWidthIn("
-                        + FinderResults.num(track, 2) + ").perpForwardIn(" + FinderResults.num(perp, 2) + ")");
-                lastResult = "Track width " + FinderResults.num(track, 2) + " in, sideways pod " + FinderResults.num(perp, 2) + " in forward.";
+                results.setIn("odo:offsets", FinderResults.ROBOT_FILE, "In odometry(...):",
+                        "  .trackWidthIn(" + FinderResults.num(track, 2) + ")",
+                        "  .perpForwardIn(" + FinderResults.num(perp, 2) + ")");
+                lastResult = "Pods apart " + FinderResults.num(track, 2) + " in. Sideways pod " + side(perp, "FRONT", "BACK", 2, "in")
+                        + "\nNext: install the lines. Then run 4 Loop.";
                 break;
             }
             default: {
                 double par = signed(0), pp = signed(1);
                 double left = -par / perMm / 25.4 / turnRad;
                 double perp = pp / perMm / 25.4 / turnRad;
-                results.set("odo:offsets", "Robot.java: in the odometry(...) line, .parallelLeftIn("
-                        + FinderResults.num(left, 2) + ").perpForwardIn(" + FinderResults.num(perp, 2) + ")");
-                lastResult = "Forward pod " + FinderResults.num(left, 2) + " in left, sideways pod " + FinderResults.num(perp, 2) + " in forward.";
+                results.setIn("odo:offsets", FinderResults.ROBOT_FILE, "In odometry(...):",
+                        "  .parallelLeftIn(" + FinderResults.num(left, 2) + ")",
+                        "  .perpForwardIn(" + FinderResults.num(perp, 2) + ")");
+                lastResult = "Forward pod " + side(left, "LEFT", "RIGHT", 2, "in") + ", side pod " + side(perp, "FRONT", "BACK", 2, "in")
+                        + "\nNext: install the lines. Then run 4 Loop.";
                 break;
             }
         }
@@ -237,26 +296,55 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
     private void loop(FieldPose p) {
         double err = Math.hypot(p.x, p.y), turn = Math.abs(Angles.wrapDegrees(p.headingDeg));
         if (farthestIn < LOOP_MIN_IN) {
-            lastResult = "It went only " + FinderResults.num(farthestIn, 1) + " in from the mark: drive at least "
-                    + FinderResults.num(LOOP_MIN_IN, 0) + " in away (around the field is best), then back to the mark, then {B}.";
+            failed("It went only " + FinderResults.num(farthestIn, 1) + " in from the mark."
+                    + "\nNext: drive " + FinderResults.num(LOOP_MIN_IN, 0) + " in or more away, come back, {B}.");
             return;
         }
-        if (err <= 1.0 && turn <= 2.0) {
-            results.set("odo:checked", "Tunables.Odometry: checked = true");
-            lastResult = "Back on the mark within " + FinderResults.num(err, 2) + " in and " + FinderResults.num(turn, 1)
-                    + " deg: the odometry is good. Set checked = true in Tunables.Odometry.";
+        String off = FinderResults.num(err, 2) + " in and " + FinderResults.num(turn, 1) + " deg";
+        if (err > 1.0 || turn > 2.0) {
+            failed("Off by " + off + " (limits 1 and 2)."
+                    + "\nNext: run 1, 2 and 3 again. Install their"
+                    + "\nlines. Then run 4 Loop again.");
+        } else if (results.has("odo:offsets") || results.has("odo:linear")) {
+            // This loop ran on the numbers that are installed, not on the new ones shown below.
+            notChecked("install the new numbers, then run 4 Loop.");
+            lastResult = "Back on the mark: " + off + " off."
+                    + "\nBut that was with the OLD numbers."
+                    + "\nNext: install the lines. Run 4 Loop again.";
         } else {
-            lastResult = "Off by " + FinderResults.num(err, 1) + " in and " + FinderResults.num(turn, 1)
-                    + " deg. Run Forward, Left and Spin again, copy their lines, rebuild, and try again.";
+            results.setTunable("odo:checked", "Odometry", "checked", "true");
+            results.done();
+            lastResult = "Back on the mark: " + off + " off."
+                    + "\nOK (limits 1 in and 2 deg). Copy the line.";
         }
     }
 
     private String reverseHint(boolean forwardPod) {
-        switch (spec.kindName()) {
-            case "pinpoint": return "Add \"" + (forwardPod ? "x" : "y") + "\" to .reversed(...) in Robot.java (or take it out).";
-            case "otos": return "Check the OTOS's mounting direction (mountIn heading).";
-            default: return "Flip that pod's name in .reversed(...): the counts are below.";
+        String kind = spec.kindName();
+        if (kind.equals("pinpoint")) return flip(forwardPod ? "x" : "y");
+        if (kind.equals("otos")) return "Next: check the OTOS's direction (mountIn).";
+        // Dead wheels: the pods that measured that way and counted backward (threeWheels: left, right, sideways).
+        List<String> names = spec.names();
+        int forwardPods = names.size() - 1;
+        if (!forwardPod) return flip(names.get(forwardPods));
+        for (int i = 0; i < forwardPods; i++) {
+            if (podsAtStart != null && signed(i) < 0) return flip(names.get(i));
         }
+        return "Next: run Encoder Check. Then test again.";
+    }
+
+    // The one fix for this pod: add its name to .reversed(...), or take it out, from what the code says now.
+    private String flip(String pod) {
+        String name = "\"" + pod + "\"";
+        return (spec.isReversed(pod) ? "Next: in Robot.java, take " + name + " out of"
+                : "Next: in Robot.java, add " + name + " to")
+                + "\n  .reversed(...) on the odometry line.";
+    }
+
+    // "84.0 mm LEFT": a direction in words, never a sign to remember.
+    private static String side(double v, String plus, String minus, int decimals, String unit) {
+        String size = FinderResults.num(Math.abs(v), decimals);
+        return size + " " + unit + (Double.parseDouble(size) == 0 ? "" : " " + (v < 0 ? minus : plus));
     }
 
     // A dead-wheel pod's change since the test began, with its .reversed(...) setting.
@@ -282,36 +370,56 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
     @Override
     protected void show(RobotTelemetry t) {
         FieldPose p = odo.pose();
-        if (!odo.isReady()) t.warn(odo.kind() + ": " + odo.status());
-        if (running < 0) {
-            t.section("Odometry Tuner (" + odo.kind() + ")");
-            chooser.addTelemetry(t, "");
-            t.text("{A} = start the test. The sticks drive slowly.");
-        } else {
-            t.section(TESTS[running] + ": {B} when done");
-            t.text(new String[]{
-                    "Push or drive it 48 in straight forward along the tape.",
-                    "Push or drive it 24 in straight to its LEFT.",
-                    "Turn in place at least 3 times (right stick), then stop.",
-                    "Drive anywhere, then back onto the tape mark, facing the same way."}[running]);
+        t.warn("The sticks drive it. Let go = stop.");
+        if (!odo.isReady()) {
+            t.warn(odo.kind() + ": " + odo.status());
+            t.warn("Next: wait. Still there? Check its cable.");
         }
-        t.line("Pose", "x " + FinderResults.num(p.x, 1) + ", y " + FinderResults.num(p.y, 1) + " in, heading "
-                + FinderResults.num(p.headingDeg, 1));
-        if (podsNow != null && podsAtStart != null && running >= 0) {
+        if (running < 0) {
+            t.section("Odometry tuner: choose a test");
+            if (lastResult.isEmpty()) t.text("Next: put it on the start mark. Do test 1.");
+            else textLines(t, lastResult);
+            chooser.addTelemetry(t, "");
+            t.text("D-pad up/down = choose. {A} = start the test.");
+            return;
+        }
+        t.section(TESTS[running]);
+        textLines(t, new String[]{
+                "Next: move it 48 in straight forward on the tape.",
+                "Next: move it 24 in straight to its LEFT.",
+                "Next: turn in place 3 times or more (right\nstick). Then stop.",
+                "Next: drive 24 in or more away. Come back onto\nthe mark, facing the same way."}[running]);
+        t.text("{B} = I am done (the test ends).");
+        if (running == 2) {
+            boolean pinpoint = spec.kindName().equals("pinpoint");
+            t.line("Turns", FinderResults.num(Math.abs(pinpoint ? odoTurnDeg : imuTurnDeg) / 360, 1) + " of 3");
+        } else {
+            t.line("Moved", side(p.y, "forward", "back", 1, "in"));
+            t.line("Sideways", side(p.x, "to the right", "to the left", 1, "in"));
+            t.line("Turned", side(p.headingDeg, "left", "right", 1, "deg"));
+        }
+        if (podsNow != null && podsAtStart != null) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < podsNow.length; i++) sb.append(i == 0 ? "" : ", ").append((long) (podsNow[i] - podsAtStart[i]));
-            t.line("Pod counts", sb.toString());
+            t.debug("Pod counts", sb.toString());
         }
-        if (!lastResult.isEmpty()) t.text(lastResult);
     }
 
     @Override
     protected String[] helpLines() {
         return new String[]{
-                "Sticks: drive slowly (30%). D-pad: choose a test. {A}: start. {B}: done.",
-                "Forward: 48 in along the tape. Left: 24 in to the left. Spin: 3+ turns in place.",
-                "Loop: start on a tape mark, drive anywhere, come back to it. Within 1 in = checked.",
-                "Copy the lines it shows into Robot.java and Tunables.java (also saved in finder-results.txt)."};
+                "Sticks = drive slowly. Let go = stop.",
+                "Or push the robot by hand.",
+                "D-pad = choose. {A} = start. {B} = I am done.",
+                "1 Forward: 48 in along the tape.",
+                "2 Left: 24 in to the robot's left.",
+                "3 Spin: turn in place 3 times or more.",
+                "   Install the line it shows.",
+                "4 Loop: start on the mark. Drive 24 in or",
+                "   more away. Come back, facing the same way.",
+                "   Within 1 in and 2 deg = checked.",
+                "Copy the lines into Robot.java, Tunables.java.",
+        };
     }
 
     @Override

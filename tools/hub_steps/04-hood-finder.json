@@ -4,24 +4,26 @@
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Tune and check ---",
+        "--- Tune and check: 5 of 14 ---",
         "Robot: Robot",
         "  ...",
-        "  Servo Finder: a servo's ends and positions",
-        "*> Hood Finder: the hood's two stops",
+        "*> Hood Finder",
         "  ...",
-        "D-pad up/down = pick, A = open it. Then ▶."
+        "This tool: the hood's two ends.",
+        "D-pad up/down = choose. A = open it. Then ▶."
       ]
     },
     "hood-finder-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "Hood finder: the hood's two stops (and its angles) ...",
-        "*Servo hood: nothing moves until you choose a start",
-        "*point and press A.",
-        "Press ▶ on the Driver Hub.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! Hands clear of the hood.",
+        "!! The servo can JUMP when you press A.",
+        "Hood finder: finds the hood's two ends.",
+        "*Nothing moves until you press A.",
+        "Its numbers go in Tunables.java, class Hood.",
+        "Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "hood-finder-step-start": {
@@ -30,12 +32,12 @@
       "pos": 0.5,
       "note": "the hood's servo at the start point",
       "lines": [
-        "--- Hood \"hood\" (servo) ---",
-        "*Position : 0.500",
-        "Step : 0.050  (D-pad left = smaller, right = bigger)",
-        "Angle here : - (hold LB + D-pad to give one)",
-        "Stop A : - (X)",
-        "Stop B : - (B)",
+        "!! A = the servo JUMPS to this number.",
+        "--- Hood \"hood\": first move ---",
+        "Next: set a number near where it sits now.",
+        "0 and 1 are its two ends. 0.5 is the middle.",
+        "*Start point : 0.500",
+        "Step : 0.050  (D-pad left/right)",
         "..."
       ],
       "stops": [
@@ -51,14 +53,14 @@
       "frm": 0.5,
       "note": "stop A: just before the stop",
       "lines": [
-        "--- Hood \"hood\" (servo) ---",
-        "Position : 0.205",
-        "Step : 0.005  (D-pad left = smaller, right = bigger)",
-        "...",
-        "*Stop A : 0.205",
-        "Stop B : - (B)",
-        "...",
-        "Stop A = 0.205 (no angle)"
+        "!! Every step moves the hood. Hands clear.",
+        "--- Hood \"hood\": its two ends ---",
+        "Next: go to the other end, then back a little.",
+        "B = save it as end B.",
+        "Position : 0.205  (0 to 1)",
+        "*End A : 0.205",
+        "End B : not saved",
+        "..."
       ],
       "stops": [
         0.205,
@@ -73,15 +75,15 @@
       "frm": 0.205,
       "note": "stop B: just before the other stop",
       "lines": [
-        "--- Hood \"hood\" (servo) ---",
-        "Position : 0.648",
+        "Position : 0.648  (0 to 1)",
+        "End A : 0.205",
+        "*End B : 0.648",
         "...",
-        "Stop A : 0.205",
-        "*Stop B : 0.648",
-        "...",
-        "--- Copy into your code ---",
-        "*Tunables.Hood: posA = 0.205, posB = 0.648",
-        "// Copy into Tunables.java: the robot uses the file, ..."
+        "--- DONE ---",
+        "Open Tunables.java, find class Hood.",
+        "Change these lines (not there? add them):",
+        "*  public static double posA = 0.205;",
+        "*  public static double posB = 0.648;"
       ],
       "stops": [
         0.205,
@@ -94,12 +96,13 @@
       "where": "Press on gamepad 1:",
       "order": "press-first",
       "lines": [
-        "--- Hood \"hood\" (servo) ---",
-        "Position : 0.648",
-        "Step : 0.005  (D-pad left = smaller, right = bigger)",
-        "*Angle here : 25.0 (hold LB + D-pad)",
-        "Stop A : 0.205 at 0.0",
-        "Stop B : 0.648",
+        "!! Every step moves the hood. Hands clear.",
+        "--- Hood \"hood\": its two ends ---",
+        "Position : 0.648  (0 to 1)",
+        "End A : 0.205, 0.0 deg",
+        "End B : 0.648",
+        "*Angle here : 25.0 deg",
+        "Enter an angle: hold LB, use the D-pad.",
         "..."
       ]
     }

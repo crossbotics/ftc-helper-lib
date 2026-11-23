@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.sim;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -93,6 +94,119 @@ public class SimScenarioTest {
             }
         }
         assertTrue(String.join("\n", failed), failed.isEmpty());
+    }
+
+    // A hand move right after INIT, with the physics held still until that move is done (so the order is the same
+    // on every computer): the physics must not then put the robot on its INIT spot over it, or reset the field
+    // under it (the page resets it at an autonomous's INIT). That lost the "set pose" of a file run in a folder,
+    // where INIT shows its screen before the next physics step (10 ms): the robot was on BLUE's spot instead.
+    @Test public void aHandMoveRightAfterInitIsNotUndoneByThePhysics() throws Exception {
+        List<String> failed = new ArrayList<>();
+        handMove(failed, sim -> sim.robot.x == 30, null,
+                "init \"Main TeleOp\"",
+                "set pose 30 -30 0",
+                "expect robot x = 30 0.5",
+                "expect robot y = -30 0.5");
+        // the spot changes with the alliance chosen in INIT: the same there
+        handMove(failed, sim -> sim.robot.x == 30, null,
+                "init \"Main TeleOp\"",
+                "press g1.b",
+                "set pose 30 -30 0",
+                "expect robot x = 30 0.5",
+                "expect robot y = -30 0.5");
+        // the page's INIT of an autonomous resets the field: before a piece is put down by hand, not after it
+        handMove(failed, SimScenarioTest::pieceAt30,
+                sim -> pieceAt30(sim) ? null : "the piece put down after INIT is gone",
+                "init \"Score and Park\"",
+                "set piece POLLEN 30 -30",
+                "loops 3",
+                "expect phase INIT",
+                "expect error none");
+        assertTrue(String.join("\n", failed), failed.isEmpty());
+    }
+
+    // A piece at x 30, y -30 (where the test put one down by hand; no piece starts there).
+    private static boolean pieceAt30(SimEngine sim) {
+        for (Object[] p : sim.robot.pieces.drawn()) {
+            if (Math.abs((Double) p[1] - 30) < 1 && Math.abs((Double) p[2] + 30) < 1) return true;
+        }
+        return false;
+    }
+
+    // Runs the lines with the physics held still at its first step until "moved" is true (at most 10 s), then
+    // checks "after" (null: nothing more; it returns what is wrong, or null). Adds a failure to the list.
+    private static void handMove(List<String> failed, java.util.function.Predicate<SimEngine> moved,
+            java.util.function.Function<SimEngine, String> after, String... lines) throws Exception {
+        SimScenario.freshMatch();
+        SimEngine sim = new SimEngine(SimRobot.load(Paths.get("robots/starter.properties")), SimDriverStation.Scope.LIBRARY);
+        sim.freshAutoInit = true;    // as on the page
+        sim.robot.setPose(-40, -40, 0);   // somewhere else than any INIT spot
+        java.util.concurrent.CountDownLatch held = new java.util.concurrent.CountDownLatch(1);
+        sim.onStep = () -> {
+            if (held.getCount() == 0) return;
+            held.countDown();
+            try {
+                SimRun.waitFor(() -> moved.test(sim), 10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();   // shutdown: the physics thread ends
+            }
+        };
+        sim.start();
+        try {
+            assertTrue("the physics never ran", held.await(3, java.util.concurrent.TimeUnit.SECONDS));
+            SimScenario s = new SimScenario(sim);
+            s.run(java.util.Arrays.asList(lines));
+            String wrong = after == null ? null : after.apply(sim);
+            if (s.failures() > 0 || wrong != null) {
+                failed.add(lines[1] + ":\n" + String.join("\n", s.report()) + (wrong == null ? "" : "\n" + wrong));
+            }
+        } finally {
+            sim.shutdown();
+        }
+    }
+
+    /** Sends one more screen as it stops, as a program stopped in the middle of its INIT loop does. */
+    public static class ScreenAtStop extends com.qualcomm.robotcore.eventloop.opmode.LinearOpMode {
+        @Override public void runOpMode() {
+            telemetry.addLine("first ready");
+            telemetry.update();
+            waitForStart();
+            telemetry.addLine("first stopping");
+            telemetry.update();
+        }
+    }
+
+    /** Takes a moment to make its parts, then names its start spot and shows its screen. */
+    public static class SlowFirstScreen extends com.qualcomm.robotcore.eventloop.opmode.LinearOpMode {
+        @Override public void runOpMode() {
+            sleep(300);
+            com.crossbotics.ftchelper.match.MatchMemory.setPlacement(new com.crossbotics.ftchelper.util.FieldPose(-56, -55, 0), "");
+            telemetry.addLine("second ready");
+            telemetry.update();
+            waitForStart();
+        }
+    }
+
+    // INIT over a program still in INIT: the first one's last screen is not the second one's first screen
+    // (the scenario went on before the second had named its start spot, which then undid a "set pose").
+    @Test public void initWaitsForItsOwnFirstScreenNotTheLastProgramsLastOne() throws Exception {
+        SimScenario.freshMatch();
+        SimEngine sim = new SimEngine(SimRobot.load(Paths.get("robots/starter.properties")), SimDriverStation.Scope.LIBRARY);
+        sim.ds.register("First", "Autonomous", ScreenAtStop.class);
+        sim.ds.register("Second", "Autonomous", SlowFirstScreen.class);
+        sim.start();
+        try {
+            SimScenario s = new SimScenario(sim);
+            s.run(java.util.Arrays.asList(
+                    "init \"First\"",
+                    "init \"Second\"",
+                    "set pose 30 -30 0",
+                    "expect within 2 screen has \"second ready\"",
+                    "expect robot x = 30 0.5"));
+            assertEquals(String.join("\n", s.report()), 0, s.failures());
+        } finally {
+            sim.shutdown();
+        }
     }
 
     private static void run(File dir, String robot, SimDriverStation.Scope scope, List<String> failed) throws Exception {

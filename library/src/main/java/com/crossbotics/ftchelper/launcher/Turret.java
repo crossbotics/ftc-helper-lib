@@ -384,6 +384,11 @@ public class Turret implements Subsystem {
         return this;
     }
 
+    /** The camera offset in use, degrees (what {@link #cameraOffset(double)} set, 0 if never set). */
+    public double getCameraOffset() {
+        return cameraOffsetDeg;
+    }
+
     /** {@link #aimAtTarget} ignores camera pictures older than this (milliseconds). Default 150. */
     public Turret maxTargetAgeMs(double ms) {
         maxAgeMs = Math.abs(ms);

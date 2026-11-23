@@ -43,6 +43,7 @@ t.update();                                             // ONCE, at the end of t
 | `setMinIntervalMs(ms)` | for a faster loop: send at most every N ms (100 = 10 per second is enough). The next send keeps the warnings from the loops it skipped |
 | `update()` | sends the screen (warnings first) and starts a fresh one. It turns button marks such as `{A}` into the names on the driver's controller ([ButtonNames](gamepad.md#buttonnames)) |
 | `pending()`, `raw()` | the lines that wait to be sent (for tests); the SDK telemetry |
+| `discard()` | throws away the lines and warnings not sent yet (for a screen that is drawn again from the start) |
 
 **To choose standard or debug:** ask whether the DRIVER needs this during a match. Yes = `line`. No = `debug`.
 The mechanism helpers already split their lines this way.

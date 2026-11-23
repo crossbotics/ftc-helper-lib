@@ -223,6 +223,36 @@ final class TunableSection {
     }
 
     /**
+     * A word from the section ({@code public static String speedControl = "PID";}), {@code fallback} if it
+     * is missing (or DEFAULT). A field that is not text stops INIT: a word typed as a number would be
+     * taken for the default, silently.
+     *
+     * @param field    the field name
+     * @param fallback the library's default
+     */
+    String word(String field, String fallback) {
+        Field f = field(field);
+        if (f == null) {
+            if (!marked.containsKey(field)) missing.add(field);
+            return fallback;
+        }
+        Object value;
+        try {
+            f.setAccessible(true);
+            value = f.get(null);
+        } catch (IllegalAccessException e) {
+            value = null;
+        }
+        if (f.getType() != String.class || value == null) {
+            throw new IllegalStateException("A setting must be a word in quotes."
+                    + "\nOpen Tunables.java, find class " + name + "."
+                    + "\nChange this line:"
+                    + "\npublic static String " + field + " = \"" + fallback + "\";");
+        }
+        return (String) value;
+    }
+
+    /**
      * A table of rows, e.g. {@code {{24, 2200}, {48, 2550}}}, or null if there is none.
      *
      * @param field the field name, e.g. "speedByDistance"

@@ -390,6 +390,15 @@ public abstract class EasyTeleOp extends LinearOpMode {
         return jobs;
     }
 
+    /**
+     * Every loop after START, before the team's buttons and parts run: which library screens are open. A
+     * robot in five files ends a group of continuous fire when one opens. Default: nothing.
+     *
+     * @param menu the tuning menu is open
+     * @param help the button map is open
+     */
+    protected void screensShown(boolean menu, boolean help) { }
+
     /** Extra lines for the Driver Station during INIT (before START), every INIT loop. */
     protected void addInitTelemetry(RobotTelemetry t) { }
 
@@ -733,6 +742,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
             while (opModeIsActive()) {
                 // The library's buttons (pause, field-centric, menus...); only the menu's while it is open.
                 keys.update(gamepad1, gamepad2, tuning.isOpen());
+                // Before any button runs: a screen that just opened ends what must not run under it.
+                screensShown(tuning.isOpen(), helpOpen && help != null);
                 if (!tuning.isOpen()) watchMissingSetPose();
                 operator.update(gamepad1, gamepad2);
                 timer.update();

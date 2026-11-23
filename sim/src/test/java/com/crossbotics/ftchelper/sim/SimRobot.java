@@ -613,6 +613,7 @@ final class SimRobot {
     synchronized void setEncoder(String name, String from) {
         SimMotor m = motors.get(name);
         if (m == null) throw new IllegalArgumentException("set encoder: no motor \"" + name + "\" in the robot file (motors: " + motors.keySet() + ")");
+        m.noEncoder = from.equals("none");
         if (from.equals("own")) {
             m.encoderOverride = null;
         } else if (from.equals("none")) {
@@ -648,6 +649,21 @@ final class SimRobot {
     void setBattery(double volts) {
         if (Double.isNaN(volts) || Double.isInfinite(volts)) return;
         batteryVolts = Math.max(9, Math.min(14, volts));
+    }
+
+    /**
+     * A flywheel's speed reading in steps and late, for this run ({@link SimMotor#sensor}); 0, 0 = exact.
+     *
+     * @param name    the flywheel motor
+     * @param stepRpm one step, RPM
+     * @param lagSec  how old the reading is, seconds
+     */
+    synchronized void setSensor(String name, double stepRpm, double lagSec) {
+        SimMotor m = motors.get(name);
+        if (m == null || m.kind != SimMotor.Kind.FLYWHEEL) {
+            throw new IllegalArgumentException("set sensor: no flywheel motor \"" + name + "\" in the robot file (motors: " + motors.keySet() + ")");
+        }
+        m.sensor(stepRpm, lagSec);
     }
 
     /** All outputs off (the FTC app does this when an OpMode stops). */

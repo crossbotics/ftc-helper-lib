@@ -19,7 +19,7 @@ Find the flywheel speed (and hood angle) that hits the goal at each distance.
    (the `Alliance` line). Only that alliance's goal counts. Point the camera at a tag: the camera's lighting
    test runs now, as in a match. Wait until its line says it is done, then press **▶** (start) on the Driver Hub.
 
-   ![The Shot Tuner's INIT screen: The flywheel stays off until you press LB. Press start](../images/hub-shot-tuner-go-start.svg)
+   ![The Shot Tuner's INIT screen: what fires and moves, LB = flywheel on. Press start](../images/hub-shot-tuner-go-start.svg)
 
 ## One table or two
 
@@ -61,7 +61,7 @@ Load only that kind of piece, and tune. The screen shows no `Table` line.
    and do every spot. Then pick NECTAR, load only NECTAR, and do every spot again. A NECTAR shot marked in
    the POLLEN table makes both tables wrong.
 3. **Check the `Table` line before you press X.** X saves the point in the table that the screen shows.
-   `Points: POLLEN 4, NECTAR 0` says how many points each table has.
+   `Distances saved : POLLEN 4, NECTAR 0` says how many distances each table has.
 4. **Copy one line for each table** (step 7 below).
 5. **Tell the launcher which piece it holds, in a match.** In `Robot.java`, on the launcher's line:
    - **A piece sensor (best):** `.tableFrom(pieces.nextKind())` picks the table for the next piece, by
@@ -85,19 +85,19 @@ and aim, the same code as TeleOp and the autos:
   distance is the tags' distance, as the launcher reads it in a match.
 - **The aim:** **RB** turns the whole robot to the goal with TeleOp's aim (`Tunables.Aim`: `toleranceDeg`, the
   saved `cameraOffset`, the angle aim when `angleAim` is on), then shoots when it is aimed and `Ready`. The
-  `Aim` line shows how far off it is. The robot keeps facing the goal after the shot. Your turn stick still wins.
+  `Aim` line shows how far off it is while it turns. The robot keeps facing the goal after the shot. Your turn stick still wins.
 - **No shot** when the camera does not see the goal (an odometry guess does not count here), the robot is not
   aimed for 2 s, or the flywheel is not `Ready` in 4 s. The screen says why. So the table holds only aimed shots.
   After each shot the aim lets go: the robot does not turn by itself while you move it to the next spot.
 
-A robot whose turret follows the goal: the turret aims in a match, so the tuner shoots where the robot points
-(point it with the sticks), and the distance is to the first target the camera sees, as before. Its lighting
+A robot whose turret follows the goal: the turret aims in a match, but **this tool does not turn it**. Point
+the turret at the goal yourself, then point the robot with the sticks. The tuner shoots where it points, and the distance is to the first target the camera sees, as before. Its lighting
 test and alliance choice still run. A camera with no `goal(...)`: the first target with a distance, as before.
 
 ## Where the distance comes from
 
 The table holds a speed for each **distance** to the goal. The tuner gets the distance in one of three
-ways. The screen says which one, after the distance: `Distance : 36.2 in (camera, 12 readings)`.
+ways. The screen says which one, after the distance: `Distance : 36.2 in (camera, averaged)`.
 
 | Way | When | You can tune from |
 | --- | --- | --- |
@@ -123,7 +123,7 @@ line: go out toward your corner. The farthest spot is about 66 in from the goal.
 **Before you start:**
 
 1. **The odometry works.** Robot.java has an `odometry(...)` line, and the
-   [Odometry Tuner](09-odometry-tuner.md) is done (`Tunables.Odometry: checked = true`).
+   [Odometry Tuner](09-odometry-tuner.md) is done (`checked = true` in class `Odometry`).
 2. **The goal point is in `Tunables.Aim`:** `goalX` and `goalY`, in inches, for the BLUE goal, seen from
    your drivers' wall. x counts to the right from the center line, and y counts from the center toward the
    far wall. Take
@@ -141,8 +141,8 @@ line: go out toward your corner. The farthest spot is about 66 in from the goal.
 4. Drive with the sticks to your first spot, and tune there (the steps below). Then drive to the next
    spot. The distance follows the robot.
 
-The screen also shows a `bearing`: how far the goal is to the side. Turn the robot with the sticks until
-the bearing is near 0, so that the robot points at the goal before you shoot.
+A robot that does not aim by itself shoots where it points. Turn it with the sticks until its launcher
+points at the goal before you shoot.
 
 **When the camera also sees the goal,** the screen shows both: `Distance` (from the camera) and
 `Odometry says` (from the odometry). They should be within a few inches. When they are far apart, the goal
@@ -151,8 +151,8 @@ you. Fix it before you tune: one table must fit both.
 
 **Odometry drifts a little over time,** most after bumps. When the distance looks wrong, press STOP: it
 saves the points so far in the results file (step 7). Put the robot back in the middle of the field, and
-INIT again. The new run starts with no points, and its table line has only the new ones. So put the lines
-of both runs together by hand in `Tunables.java`: one `{distance, speed}` pair per point, nearest first.
+INIT again. The new run starts with no points, and its table line has only the new ones. The line replaces the whole
+table, so shoot every distance again in that run before you copy it.
 
 ## Steps
 
@@ -171,27 +171,27 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    from ([Where the distance comes from](#where-the-distance-comes-from)). Press **LB** to start the
    flywheel (it is off at the start).
 
-   ![At the nearest spot, press LB: the Driver Hub shows Speed : 2600 RPM, measured 2594, the distance, and Ready : YES](../images/hub-shot-tuner-step-spin.svg)
+   ![At the nearest spot, press LB: the Driver Hub shows Speed : 2600 RPM, now 2594, the distance, and Ready : YES](../images/hub-shot-tuner-step-spin.svg)
 
 3. The speed starts at what your table already gives at this distance (or `Tunables.Launcher.speedRpm`),
    so you only fine-tune. Shoot 3-5 (**RB** one at a time, or hold **RT**). A robot that aims turns to the
    goal first ([It aims and sees like a match](#it-aims-and-sees-like-a-match)).
 
-   ![Press RB: the Driver Hub shows Shots fired : 1, 1 to mark](../images/hub-shot-tuner-step-shoot.svg)
+   ![Press RB: the Driver Hub shows Next: mark the oldest shot, and Shots to mark : 1](../images/hub-shot-tuner-step-shoot.svg)
 
 4. After each shot, press **A** = HIT or **B** = MISS. The marks go to the shots in the order you
    fired them. Each shot keeps the speed, hood angle and distance it was **fired** with. So when you change the speed or the hood before
-   you mark, the mark does not move. The screen shows `Hits at 2600: 3/4` and every speed tried here
-   (`Tried here: 2500: 1/3, 2600: 3/4 (best)`). Change the speed with the D-pad, and shoot 3-5 again.
+   you mark, the mark does not move. The screen shows `Went in at 2600 RPM : 3 of 4` and the speeds tried here
+   (`Tried 2500: 1 of 3`, `Tried 2600: 3 of 4 (best)`). Change the speed with the D-pad, and shoot 3-5 again.
    A short **Y** press steps through what the D-pad changes: SPEED, HOOD with a hood, TABLE with two tables, and
    DISTANCE. DISTANCE is a distance you type in when neither the camera nor the odometry gives one. 2-3
    speeds are usually enough.
    - **When you pressed the wrong one,** a **left stick click** takes back the last HIT / MISS. That shot
      waits to be marked again.
-   - **A "shot" with no piece:** the wheel slowed down by itself, so `Shots fired` went up. A
-     **right stick click** drops the last shot that is not marked yet.
+   - **A "shot" with no piece:** the feeder can run with no piece, and that still waits in `Shots to mark`. A
+     **right stick click** forgets the last shot that is not marked yet.
 
-   ![After each shot, press A = HIT or B = MISS: the Driver Hub shows Hits at 2600 : 3/4 and Tried here : 2500: 1/3, 2600: 3/4 (best)](../images/hub-shot-tuner-step-mark.svg)
+   ![After each shot, press A = HIT or B = MISS: the Driver Hub shows Went in at 2600 RPM : 3 of 4, and 3 of 4 went in at this speed](../images/hub-shot-tuner-step-mark.svg)
 
 5. Press **X** to save. The tuner keeps the speed with the **best hit ratio** at this distance. In a tie,
    it keeps the one with more shots. You must mark all shots before you save. With no shots marked at all,
@@ -199,24 +199,30 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    it also saves the hood angle that you fired those shots with. Each point also keeps the flywheel speed
    **measured** as the pieces were fed. When the flywheel was well under the speed asked for, it
    **sagged**. The last shot or a low battery slowed it, and it was not back yet. Then the screen warns.
-   Wait for `Ready: YES` between shots and charge the battery, or the table will not match a match. To
+   Wait for `Ready : YES` between shots and charge the battery, or the table will not match a match. To
    delete a wrong point, stand there and **hold BACK 1 s**. It is a hold, so that nobody presses it by
    mistake.
 
-   ![Press X: the Driver Hub shows Saved 24.2 in -> 2600 RPM (3/4 in) POLLEN](../images/hub-shot-tuner-step-save.svg)
+   ![Press X: the Driver Hub shows Saved 24.2 in: use 2600 RPM, POLLEN and 3 of 4 went in](../images/hub-shot-tuner-step-save.svg)
 
 6. Move 1-2 ft further from the goal (drive with the sticks) and do it again. The spots do not need to be
    in a line. When the wall or a field part is in the way, go out at another angle
    ([BIOBUZZ](#tune-from-any-spot-with-odometry)). When the distance moves more than 4 in, the
    hit counts start again by themselves. The tuner also drops the unmarked shots fired at the old spot.
-   `Points: POLLEN 3, NECTAR 0  (4-6 per table)` says how far you are: 4-6 points per table cover the
+   `Distances saved : POLLEN 3, NECTAR 0 (need 4 to 6)` says how far you are: 4-6 points per table cover the
    field. Then go to the next table (step 1).
 7. **Copy the tables into `Tunables.java`**: the robot uses the file, not the tuner's screen. There is
-   one line per table, like `public static double[][] speedByDistancePollen = {{24, 2600}, {48, 3100}};   // in Tunables.Launcher`
+   one table each, under `Open Tunables.java, find class Launcher.`, like
+   `public static double[][] speedByDistancePollen = {{24, 2600}, {48, 3100}};` (a long table takes more
+   screen lines: it is still one Java statement)
    (with a hood: `{{24, 2600, 4}, {48, 3100, 12.5}}`, where the third number is the hood).
-   It replaces the line with the same name in `Tunables.Launcher`. When you press STOP, the tuner also
-   saves the lines on the Control Hub (`/sdcard/FIRST/ftc-helper/finder-results.txt`). Older helpers: the
-   `new ShotTable()` lines go into your Robot class (each with a comment like `// 4/5 in, measured 2531 RPM`).
+   **It replaces the whole table with the same name.** It holds ONLY the distances you saved in this run.
+   The tuner never mixes in old rows: only the newest counts are true for the robot as it is now. The
+   screen says how many rows in your code it replaces, for example `This replaces 7 rows in your code with
+   these 5.` It warns when the new table has fewer rows than your code, and it says NOT DONE under 4 rows.
+   Shoot the missing distances before you copy. When you press STOP, the tuner also
+   saves the lines on the Control Hub (`/sdcard/FIRST/ftc-helper/finder-results.txt`). A tuner with no
+   Robot.java shows `new ShotTable()` lines in their place: they go into your Robot class (each with a comment like `// 4/5 in, measured 2531 RPM`).
    Between the points, the launcher **blends** the speed: halfway between two points, it uses the speed
    halfway between theirs. Outside them, it uses the nearest point.
 
@@ -226,7 +232,7 @@ robot at the goal with the sticks. **With a hood**
 (`.hood(...)` in Robot.java, or the older helpers' `.hood(servo)`), **Y** also chooses HOOD. The D-pad then
 steps the hood by a fifth / a fiftieth of its range: 5 / 0.5 deg for a 0-25 deg hood. The hood starts at
 the table's hood for this distance, like the speed. Each speed and hood angle is its own try in the hit
-counts (`Tried here: 2550 @ hood 10: 3/4 (best), 2550 @ hood 12.5: 1/3`). X saves the hood angle that you fired the
+counts (`Tried 2550, hood 10: 3 of 4 (best)`). X saves the hood angle that you fired the
 winning shots with.
 
 A weak battery changes how far the shots go, so charge the battery before you tune speeds. The screen
@@ -259,11 +265,13 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 
 ## Done when
 
-- each table has 4-6 points, copied into `Tunables.Launcher`.
+- each table has 4-6 points (the screen says DONE), copied into `Tunables.Launcher`.
+- you read what each copied table replaced.
 - with both kinds: the launcher picks the right table in a match (a piece sensor, or a driver's button).
 
 ---
 
-**Next:** [Piece Tuner: what each sensor sees](14-piece-tuner.md).
+**Next:** [Group Shot Tuner: PID or bang-bang, with real balls](14-group-shot-tuner.md) (with Continuous fire), or
+[Piece Tuner: what each sensor sees](14-piece-tuner.md).
 
 **Look it up:** [Launcher: In Tunables.java](../reference/parts/launcher.md#in-tunablesjava).

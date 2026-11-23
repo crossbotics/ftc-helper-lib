@@ -246,7 +246,7 @@ Servo Finder still run: they do not read `Tunables.java`. For a lift's `min` and
 2. Put the lift at the bottom. Choose `lift` (D-pad, then A): its count starts at 0 there.
 3. Move it with gamepad 1's right stick. Press **X** a little above the bottom block (`min`) and **B** a little
    below the top block (`max`).
-4. It shows the numbers: `Tunables.Lift: min = 0, max = 2580`.
+4. It shows the numbers: `LOW end (X) : 0` and `HIGH end (B) : 2580`.
 5. Write each number in place of `MEASURE`, build, and INIT your TeleOp again.
 
 - A part that is `optional()` and not on the robot does not stop on `MEASURE`.
@@ -326,15 +326,27 @@ under "Tuned on this robot (copy into Tunables.java)", for example `Tunables.Lif
 
 ## How to read a finder's lines
 
-The [finders](../tuning/README.md) measure numbers on the robot and show the lines to copy. Each line
-names the section first:
+The [finders](../tuning/README.md) measure numbers on the robot and show the lines to copy. The results start
+with DONE or NOT DONE. Then they name the file and the class, and give exact Java lines:
 
-| The finder shows | Copy into Tunables.java |
+```java
+--- DONE ---
+Open Tunables.java, find class Lift.
+Change these lines (not there? add them):
+  public static double min = 0;
+  public static double max = 2580;
+  public static double P1 = 1200;
+Write your names for P1, P2 (low, high).
+```
+
+| The finder shows | Do this |
 | --- | --- |
-| `Tunables.Lift: min = 0, max = 2580, P1 = 1200` | in `public static class Lift`: set `min`, `max` and a position. Rename `P1` to a real name (`high`) |
-| `Tunables.Claw: P1 = 0.210, P2 = 0.770` | in `Claw`: rename them `open` and `closed` |
-| `public static double[][] speedByDistance = {{24, 2200}, {48, 2550}};   // in Tunables.Launcher` | the whole line, into `Launcher` (replace the old one) |
-| `Tunables.Odometry: checked = true` | in `Odometry`: `public static boolean checked = true;` |
+| `Open Tunables.java, find class Lift.` | open `Tunables.java` and find `public static class Lift` |
+| `Change these lines (not there? add them):` | replace each line that has the same name. A line that is not there: add it in that class |
+| `When it says DONE, change these lines:` | NOT DONE yet: finish the tool first. Copy nothing yet |
+| `public static double P1 = 1200;` | copy it, then rename `P1` to a real name (`high`) |
+| `public static double[][] speedByDistance = {` | the whole table, over several lines: it replaces the old table |
+| `Open Robot.java:` | the line after it goes in `Robot.java`, in the part it names |
 
 The finders are: [Servo Finder](../tuning/03-servo-finder.md),
 [Motor Finder](../tuning/05-motor-finder.md),

@@ -76,6 +76,7 @@ public static class Launcher {                                  // "launcher" in
 | `stepRpm` | one D-pad press changes a fixed speed by this | RPM | 100 | yes, at once | none | the drivers want bigger or smaller steps |
 | `readyBandRpm` | "at speed" means within this of the target | RPM | 60 | no | test | it waits too long to fire (more) or shots vary (less) |
 | `shotDropRpm` | a drop of more than this after "at speed" counts as a shot: the Shot Tuner's shot count, `stopOnShot`, the feed stop and the Feed Stop Finder's test shot use it. Keep it more than `readyBandRpm`: at or under it, INIT shows a note, because the wheel's normal wobble can count as a shot | RPM | 150 | no (at INIT) | Flywheel Finder ("Shots seen" and "Shot drop") | it misses shots (less) or counts shots with no piece (more) |
+| `ballDropRpm` | the speed ONE real ball takes off the wheel. Only the [Flywheel Tuner](../../tuning/06-flywheel-tuner.md) and the [Group Shot Tuner](../../tuning/14-group-shot-tuner.md) use it, for their pretend shot. Shot counting never uses it | RPM | not set: the tuners use `shotDropRpm` | no (at INIT) | Flywheel Finder ("Shot drop") | the tuners time the way back after a shot that is too small (more) |
 | `idleRpm` | the speed between shots (0 = stop) | RPM | 0 | no | test | the first shot takes too long to spin up |
 | `shotIntervalSec` | the least time between two shots | seconds | 0.25 | no | Flywheel Finder (the recovery) | quick shots land short (more) |
 | `maxFiringQueue` | a tap on RB or `fire()`: the most shots that may wait at once. The launcher ignores more taps. The piece being fed now does not count. 0 = no queue: the launcher ignores a press while a shot is on its way (waiting or being fed). `fire(n)` and actions have no limit | shots | 4 | no | none | taps fire more (or fewer) shots than the drivers mean (0: one press, one shot) |
@@ -110,6 +111,19 @@ public static class Launcher {                                  // "launcher" in
 | `ejectRpm` | `ejectAction()`: the low speed that pushes one piece out | RPM | 600 | no | test | the piece does not clear the robot (more) or flies too far (less) |
 | `ejectSec` | `ejectAction()`: how long the eject lasts | seconds | 1 | no | test | the piece is still in the robot at the end (more) |
 | `ejectFeedSec` | `ejectAction()` with a spinning feeder (CR servo or motor): it runs only this long, so it pushes one piece and not the next one too; 0 = its own `feedSec` | seconds | 0 | no | test | two pieces come out (less), or none does (more) |
+| `extendTableEnds` | lets the shot table guess past its tested rows: each end keeps the line of its two rows. The screen says "estimated" there ([table ends](#speeds-past-the-ends-of-the-table)) | true/false | false | no | test | the goal is a little outside your tested distances (true) |
+| `extendMaxRpm` | with `extendTableEnds`: the fastest speed a guess may ask for. The trim and the boost cannot go past it there | RPM | 0.8 x the motor's top speed (6000 RPM motor: 4800) | no | test | far guesses never reach speed (less) |
+| `speedControl` | who holds the wheel's speed: `"PID"` (the hub, steady) or `"BANG_BANG"` (full power, holding power or no power). INIT stops on another word ([speed control](#speed-control-pid-or-bang-bang)) | text | "PID" | no | test | the wheel gets back to speed too slowly after a shot (try `"BANG_BANG"`) |
+| `bangKs` | bang-bang holding power: the volts that beat friction. Holding volts = `bangKs` + `bangKv` x RPM | volts | 0 | no | Flywheel Tuner | the wheel holds too slow at every speed (more) |
+| `bangKv` | bang-bang holding power: the volts for each RPM of speed | volts for each RPM | from your `kF` (below); with no `kF`, 12 / the motor's top speed (6000 RPM motor: 0.002). INIT says which, and that it is not tuned | no | Flywheel Tuner | the wheel holds too slow (more) or too fast (less) |
+| `bangFullBelowRpm` | bang-bang: full power starts this far below the wanted speed | RPM | 200 | no | Flywheel Tuner | it gets back to speed too slowly (less) or overshoots (more) |
+| `bangCoastAboveRpm` | bang-bang: the power goes to 0 this far above the wanted speed, and the wheel coasts | RPM | 75 | no | Flywheel Tuner | it runs too fast (less) or coasts too often (more) |
+| `bangHysteresisRpm` | bang-bang: full power and coasting end this much later than they start, so a jumpy reading does not switch them on and off. Less than `bangFullBelowRpm` | RPM | 50 | no | Flywheel Tuner | the power switches on and off too often (more) |
+| `bangMaxPower` | bang-bang: the most power | 0.3 to 1 | 1 | no | test | belts slip, or the battery dips too far (less) |
+| `continuousOnHold` | holding the fire button feeds one aimed group with no break. A tap still fires one ([continuous fire](#continuous-fire)) | true/false | false | no | test | you need fast groups, and they still score (true) |
+| `continuousMaxSec` | continuous fire: the most seconds one hold may feed | seconds, at most 10 | 3 | no | test: feed a full load | the feed ends before your last piece (more) |
+| `continuousFeedPower` | continuous fire: the feeder's power during a group. Use the same direction as the feeder's `power` | power | the feeder's `power` | no | test | full pace still misses after the wheel is tuned (less: the last thing to try) |
+| `continuousBoostRpm` | continuous fire: speed added when the feed starts. It is never added before the first piece, and it ends with the group | RPM | 0 | no | test | later pieces land short and the wheel slows down (more); they land long (less) |
 | `lockSpeedWhileFiring` | with the speed from the distance: while a tapped shot (CAREFUL) waits for "ready" and feeds, its speed stays fixed. The camera's distance can still move then, but it does not move that shot's speed or restart "ready"; `Shot distance` shows the distance the shot uses. It lets go if the distance moves more than 4 in (the robot drove: the old speed would miss). A held stream (QUICK) and SPRAY keep following the distance | true/false | false | no | none | firing waits, or a shot's speed changes while it waits (true) |
 
 **The shot table** (`speedByDistance`):
@@ -162,9 +176,14 @@ Use them in `Controls.java`, `Actions.java` and autos: `robot.launcher.fire()`.
 | `fire()` | spins up if needed, and feeds as soon as it is at speed. It gives up after 3 s and says why. Each `fire()` adds one shot, up to `maxFiringQueue` waiting (Tunables, default 4). The launcher ignores more taps. With `maxFiringQueue = 0` there is no queue: the launcher ignores a press while a shot is on its way. A press of RB counts the same way |
 | `fire(n)` | fires n pieces. No limit |
 | - | When it fires while idle (the driver switched the wheel off), it spins up for the shots and goes back to idle after the last one |
-| `fireWhileHeld()`, `ceaseFire()` | the launcher's RB job. Every press fires at once, like a tap on `fire()` (one more shot, up to `maxFiringQueue`). While held, it feeds the next piece as soon as the last is fed (QUICK). A tap, then a second press within `Buttons.tapGapSec` that is held, sprays while held (SPRAY, with `sprayEnabled` and `sprayOnTapHold`). On release, the hold adds no more shots, and the taps' shots still go. When you put your own double tap or long press on the same button, a press no longer fires at once |
+| `fireWhileHeld()`, `ceaseFire()` | the launcher's RB job. (With `continuousOnHold`, see [continuous fire](#continuous-fire).) Every press fires at once, like a tap on `fire()` (one more shot, up to `maxFiringQueue`). While held, it feeds the next piece as soon as the last is fed (QUICK). A tap, then a second press within `Buttons.tapGapSec` that is held, sprays while held (SPRAY, with `sprayEnabled` and `sprayOnTapHold`). On release, the hold adds no more shots, and the taps' shots still go. When you put your own double tap or long press on the same button, a press no longer fires at once |
 | `fireAction(n)`, `fireAllAction()` | ready-made [actions](../steps.md#action): fire n pieces ("Fire 2"), or every piece the robot holds ("Fire all": a `Pieces` part's count, else the intake's `holds(...)`, else 4). It is done when the last one has left. Its time limit is 3 s + 2 s a piece. `.action(robot.launcher.fireAction(1))` in an autonomous, `g1.y.press(robot.launcher.fireAllAction())` in TeleOp. It runs only the launcher: the intake keeps doing what it does |
 | `fireAction(n, rpm)`, `fireAllAction(rpm)` | the same, at this flywheel speed (RPM), then back to the usual one (`speedRpm` or the shot table). A stopped action goes back too. For a robot with **no camera** that shoots from a spot it knows: `.action(robot.launcher.fireAllAction(2250))`. The auto builder's **flywheel** box on a fire action writes it. A speed above the motor's top speed stops INIT |
+| `part().continuous()` | the group of continuous fire, for your own code or a tuner: [ContinuousFire](../../modules/launcher.md#continuousfire) |
+| `shotSight()` | what a group judges by: the goal, the filtered distance and the strict aim |
+| `continuousOnHold()`, `isFiringContinuously()` | whether the option is on; whether a group waits or feeds |
+| `nonstopFeedPower()` | the feeder power a group feeds with: `continuousFeedPower` when written, else the feeder's own (NaN for a feeder that cannot feed nonstop). The Group Shot Tuner tries 90% and 80% of it |
+| `usesDistance()` | whether Robot.java gives the speed a distance (`speedFromDistance(camera)`, `speedFromOdometry()`) |
 | `readyAction(timeoutSec)` | a ready-made action: spins up, and is done when ready ("Ready to launch") |
 | `ejectAction()`, `eject()` | pushes one piece out at a low speed (`ejectRpm` 600, `ejectSec` 1) ("Eject"). It feeds once the wheel is near that speed (a wheel at shooting speed slows first). Then the wheel goes back to what it was doing |
 | `useSpeed(rpm)`, `useNormalSpeed()` | uses one speed from now on (the speed trim still applies) until `useNormalSpeed()`. For most code, the fire actions above are better: they go back by themselves |
@@ -223,13 +242,76 @@ Before each piece, the launcher picks how strict it is. You do not need to set i
 | Mode | Waits for the speed | Feed stop | When |
 | --- | --- | --- | --- |
 | CAREFUL | every piece: within `readyBandRpm` for 0.15 s, and every check | opens for each piece | a tap of the fire button; autonomous while there is time |
-| QUICK | the first piece like CAREFUL; the next ones within `quickBandRpm`, or after `quickMaxWaitSec` | opens for each piece | a held fire button; autonomous when CAREFUL will not fit before the park time |
+| QUICK | the first piece like CAREFUL; the next ones within `quickBandRpm`, or after `quickMaxWaitSec` | opens for each piece | a held fire button (without `continuousOnHold`); autonomous when CAREFUL will not fit before the park time |
 | SPRAY | no: the wheel only has to turn at half its speed or more | stays open until the last piece | only with `sprayEnabled = true`: the last `sprayLastSec` of TeleOp, and autonomous when QUICK will not fit either |
 
 In autonomous, the launcher counts the time to the park (`parkWithSeconds(...)`,
 [keep time to park](../steps.md#keep-time-to-park)): the pieces still to fire x the time a piece takes in each
 mode. It measures that time from the last volleys, or else estimates it. While it fires, the Driver Station says `Fire: QUICK (12 s left)`.
 `robot.launcher.shotMode(ShotMode.CAREFUL)` sets a mode by hand (`null` = choose again).
+
+### Continuous fire
+
+A group of pieces goes fastest when the feeder does not stop between them. With `continuousOnHold = true`,
+holding the fire button does that. It is off unless you write it, and it is **not proven on a real robot yet**.
+
+**Safety:** the robot can turn by itself from the press to the end of the group. The feeder runs until you let
+go or something below ends it. Let go of the button to stop.
+
+| What you do | What the robot does |
+| --- | --- |
+| press | spins up and turns to the goal at once. It feeds nothing yet |
+| let go before `holdSec` (0.3 seconds) | fires one piece, like a tap. The tap's own aim rule applies |
+| hold | waits until it sees the goal, is aimed and the wheel is at speed. Then it feeds with no break |
+| tap, then hold | SPRAY, as before (with `sprayEnabled`) |
+| press in the last `sprayLastSec` of TeleOp | SPRAY, as before. A group that already started stays a group |
+
+**It starts feeding only when all of these are true.** No time limit lets a bad aim through. Aim mode being on
+does not let it through either. After 3 seconds it gives up and says what is wrong.
+
+- The camera sees the goal now. The odometry backup does not count: a pose can drift.
+- The distance is in the shot table, or in its [estimated part](#speeds-past-the-ends-of-the-table).
+- The aim is inside `toleranceDeg`.
+- The wheel is steady at its speed, and the hood and your other checks are ready.
+
+When the feed starts, the robot keeps that table, distance, speed and aim offset to the end. The aim keeps
+turning to the goal. The driver's turn stick wins.
+
+**These end the group.** The feed stops in that loop. It never starts again by itself: press fire again.
+
+| What ended it | What the screen says |
+| --- | --- |
+| you let go, pressed the off button, or stopped the robot | nothing: you asked for it |
+| pause | the pause warning. Going on does not bring the group back |
+| the button list or the tuning menu opened | <samp>Firing stopped: button list is open</samp>, <samp>Firing stopped: tuning menu is open</samp> |
+| the camera's light test started | <samp>Firing stopped: camera is testing the light</samp> |
+| an eject, or the intake runs backward | <samp>Firing stopped: pushing a piece out</samp>, <samp>Firing stopped: intake is running backward</samp> |
+| another table, alliance or speed setting | <samp>Firing stopped: shot table changed</samp> (or the alliance, or the speed setting) |
+| another fire command | <samp>Firing stopped: another shot was asked for</samp> |
+| your code canceled the action | <samp>Firing stopped: action was canceled</samp> |
+| the feeder jammed, or something else stopped it | <samp>Firing stopped: feeder is jammed</samp>, <samp>Firing stopped: feeder was turned off</samp> |
+| the speed sensor failed (bang-bang) | <samp>Firing stopped: bad wheel speed reading</samp> |
+| the wheel fell under half its speed | <samp>Firing stopped: wheel below half speed</samp> |
+| the camera did not see the goal for more than 0.5 seconds (the odometry backup does not count) | <samp>Firing stopped: goal NOT seen</samp> |
+| the aim was off for more than 0.3 seconds (`toleranceDeg` + `lockMarginDeg`) | <samp>Firing stopped: NOT aimed</samp> |
+| the distance changed by more than 4 inches | <samp>Firing stopped: distance changed too much</samp> |
+| `continuousMaxSec` passed | <samp>Firing stopped: time limit reached</samp> |
+
+The screen's next line says what to do.
+
+**With a feed stop:** the stop closes in the same loop as the feed stops. A ball that is in the stop at that
+moment can be pinched. No robot with a feed stop has tried continuous fire yet: watch the first groups, and
+tell us what you see.
+
+**It needs:**
+
+- a feeder that can run nonstop: `Indexer.crServo(...)` or `Indexer.motor(...)`. A push servo cannot. INIT says
+  so, and a hold fires nothing.
+- `speedFromDistance(camera)` or `speedFromOdometry()`, and a way to aim.
+
+**It cannot count balls.** The wheel has no time to be "ready" between two pieces. So a group adds nothing to
+the shot count, the firing stats or a `Pieces` counter's feeds. It also cannot see a jam on a CR servo.
+Autonomous still fires one piece at a time.
 
 ### Feed stop
 
@@ -321,6 +403,51 @@ Use them to set `quickBandRpm`, `quickMaxWaitSec` and `shotIntervalSec`.
 (0 at first) make every shot on that alliance a little faster or slower, on top of the speed trim. You keep
 one table and two small trims.
 
+## Speeds past the ends of the table
+
+Without this, a goal farther than your last row gets the last row's speed, and the aim does not lock there.
+`extendTableEnds = true` continues the line of the two rows at each end:
+
+- The screen says <samp>estimated</samp> outside your tested rows. The aim can lock there.
+- The guess never goes past `extendMaxRpm`. Past that point the screen says <samp>estimated, speed limited</samp>
+  and <samp>Drive closer to the goal.</samp> The aim does not lock there.
+- Closer than your first row, a guess under half of the first row's speed is too slow to trust. The aim does
+  not lock there.
+- A hood keeps the angle of the end row.
+- An end stays flat when its speed drops as the distance grows, or the table has one row. INIT says so.
+- Two rows with the same distance stop INIT. Delete one.
+
+Delete any end rows that you made up and did not shoot. Do it in the same change that turns this on.
+
+## Speed control: PID or bang-bang
+
+`speedControl = "PID"` is the normal one: the hub holds the speed. `speedControl = "BANG_BANG"` is for trying
+a faster recovery after each shot. It is **not proven on a real robot yet**. Each keeps its own numbers.
+
+| The wheel is | Bang-bang gives |
+| --- | --- |
+| well below its speed | full power (`bangMaxPower`). From rest the power eases in |
+| near its speed | holding power from `bangKs` and `bangKv`, corrected for the battery |
+| above its speed | no power. It coasts. It never reverses |
+
+- **The starting `bangKv` comes from your `kF`** when you wrote a `kF` and no `bangKv`. Your `kF` was found on
+  your wheel, so it is a better start than the catalog. The math:
+  `bangKv` = `kF` x counts per turn / 60 / 32767 x `nominalVolts`. For example, `kF` 12.08 with 28 counts and
+  13.0 V gives 0.002237. With no `nominalVolts` line, the math uses the library's starting value.
+- **With no written `kF`, the starting `bangKv` is a guess** from the motor's catalog speed.
+- **Both starts are not tuned for bang-bang.** INIT says which one it uses. The wheel may not hold the exact
+  speed until the [Flywheel Tuner](../../tuning/06-flywheel-tuner.md) finds your numbers. A `bangKv` that you
+  write always wins. PID does not use any of this.
+- **It needs a fast program.** After a gap over 0.08 seconds it skips full power once, and the screen says
+  <samp>Program too slow</samp>. A program that is completely stuck cannot stop the motor.
+- **It watches the speed sensor.** Power with no speed for 0.5 seconds, a backward speed or a bad number turns
+  the power off and stops feeding. Holding fire does not clear this. Fix the wires, then switch the flywheel
+  off and on. If it already went off by itself after your shot, one press to switch it on is enough. This check
+  cannot catch a wrong speed that looks believable.
+- **An eject waits longer,** up to 10 seconds, because the wheel only coasts down.
+
+To go back, write `public static String speedControl = "PID";`.
+
 ## Speed trim and battery compensation
 
 **Speed trim** is a fix during a match, when every shot is a bit short or long (a worn wheel, softer
@@ -394,7 +521,7 @@ robot.launcher.tableOn(g2.dpadRight);
 | Line | What the button does |
 | --- | --- |
 | `spinOn(g2.lb)` | spins up / down |
-| `fireOn(g2.rb)` | a tap fires one (more taps: more shots). Held, it keeps firing. With SPRAY on, a tap then a hold sprays. It calls `fireWhileHeld()`, then `ceaseFire()` on release |
+| `fireOn(g2.rb)` | a tap fires one (more taps: more shots). Held, it keeps firing (with `continuousOnHold`: one aimed group, [continuous fire](#continuous-fire)). With SPRAY on, a tap then a hold sprays. It calls `fireWhileHeld()`, then `ceaseFire()` on release |
 | `speedOn(g2.dpadUp, g2.dpadDown)` | a tap is one speed step. Held, one more step after 0.5 s, then every 0.25 s (4 a second). With a shot table, the steps trim the speed in percent (`trimStepPercent`); with a fixed speed, +/- `stepRpm`. A double-tap of `down` goes back to no trim (and sets the hood trim back to 0). When last match's trim is offered at INIT, a double-tap of `up` uses it |
 | `tableOn(g2.dpadRight)` | picks the next shot table. It works only with two tables or more |
 

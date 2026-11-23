@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.robot;
 
+import com.crossbotics.ftchelper.launcher.ShotSight;
 import com.crossbotics.ftchelper.match.Alliance;
 import com.crossbotics.ftchelper.odometry.PoseTracker;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
@@ -45,6 +46,11 @@ import java.util.function.LongSupplier;
  * back when the shots are done. The driver's turn stick still wins. No goal in view: it fires as before, with no
  * turn. Goal lost during the turn (a blurred picture): it waits up to {@code aimOnFireSec}, then fires.
  * Not while the launcher sprays (the last seconds, or tap-then-hold): SPRAY does not wait. It uses the same turn numbers as whole-robot aim ({@code turnKp} and the others).
+ *
+ * <p><b>Continuous fire</b> ({@code Tunables.Launcher.continuousOnHold}): from the press until the group
+ * ends, the robot turns to the goal (the driver's turn stick wins). The group's start is strict
+ * ({@link #shotSight()}): {@code aimOnFireSec} never lets it through, and neither does aim mode being on.
+ * While it feeds it keeps the {@code cameraOffset} it started with.
  *
  * <p><b>Whole-robot aim and a following turret are separate modes.</b> Use one: a robot with a turret
  * that follows the goal ({@code follows(camera)} or {@code followsOdometry()}) aims with the turret;
@@ -597,6 +603,50 @@ public final class Aim {
         return g != null && withinLock(corrected(g).bearingDeg);
     }
 
+    // ----------------------------- continuous fire -----------------------------
+
+    /**
+     * What continuous fire judges the aim by, now: a fresh goal (the camera, or the odometry backup), whether
+     * the camera itself sees it ({@link ShotSight#fromCamera}), its distance, the error, and whether it is inside
+     * {@code toleranceDeg}, strictly: no lock margin and no time limit that lets it pass, with aim mode on or
+     * off. A group starts only when the camera sees the goal; during a group the odometry backup may still
+     * steer, but it does not stop the "goal lost" clock. A turret that follows the goal answers with its own aim.
+     *
+     * <pre>{@code
+     * launcher.continuous().start(() -> robot.aim().shotSight().withDistance(filteredInches));
+     * }</pre>
+     */
+    public ShotSight shotSight() {
+        double tol = toleranceDeg.getAsDouble();
+        Turret turret = followingTurretInRobot();
+        double offset = turret == null ? offsetNow() : Double.NaN;
+        TargetObservation g = goal();
+        if (g == null) return new ShotSight(false, Double.NaN, Double.NaN, false, tol, lockMarginDeg, offset);
+        double error = turret == null ? corrected(g).bearingDeg : turret.aimErrorDeg();
+        boolean aimed = turret == null ? Math.abs(error) <= tol : turret.isAimed();
+        return new ShotSight(true, !g.fromOdometry(), g.distanceIn, error, aimed, tol, lockMarginDeg, offset);
+    }
+
+    // True while a launcher's press or group of continuous fire wants the whole robot turned to the goal.
+    // Asked of the launchers each time, so it cannot stay on after the group is gone.
+    private boolean groupTurning() {
+        boolean wanted = false;
+        for (Module<?> m : robot.modules()) {
+            if (m instanceof Launcher && m.isPresent() && ((Launcher) m).wantsGroupAim()) wanted = true;
+        }
+        return wanted && followingTurretInRobot() == null;
+    }
+
+    // The camera offset in use: the live one, or the one a feeding group started with.
+    private double offsetNow() {
+        for (Module<?> m : robot.modules()) {
+            if (!(m instanceof Launcher) || !m.isPresent()) continue;
+            double kept = ((Launcher) m).groupAimOffset();
+            if (!Double.isNaN(kept)) return kept;
+        }
+        return cameraOffset.getAsDouble();
+    }
+
     // A turret that follows the goal (follows(camera) or followsOdometry() in Robot.java), or null.
     Turret followingTurretInRobot() {
         for (Module<?> m : robot.modules()) {
@@ -624,7 +674,7 @@ public final class Aim {
     }
 
     double assistTurn(double driverTurn) {
-        if (!mode.isOn() && !isTurningToFire()) {
+        if (!mode.isOn() && !isTurningToFire() && !groupTurning()) {
             driverTurning = false;
             if (controller != null) controller.reset();
             return driverTurn;
@@ -676,17 +726,17 @@ public final class Aim {
     // points at it). The odometry's bearing is already from the robot's front: no offset.
     private TargetObservation corrected(TargetObservation g) {
         if (g.fromOdometry()) return g;
-        return new TargetObservation(g.id, g.name, g.bearingDeg - cameraOffset.getAsDouble(), g.distanceIn, g.timeNanos);
+        return new TargetObservation(g.id, g.name, g.bearingDeg - offsetNow(), g.distanceIn, g.timeNanos);
     }
 
     // ----------------------------- how far off -----------------------------
 
     /**
      * How many degrees the aim is off now (any sign), NaN if unknown. With whole-robot aim on (or a quick
-     * turn on fire working): the robot's front to the goal. Otherwise, a turret that is following: its error. Neither: NaN.
+     * turn on fire or continuous fire working): the robot's front to the goal. Otherwise, a turret that is following: its error. Neither: NaN.
      */
     public double errorDeg() {
-        if (mode.isOn() || isTurningToFire()) {
+        if (mode.isOn() || isTurningToFire() || groupTurning()) {
             TargetObservation g = goal();
             return g == null ? Double.NaN : corrected(g).bearingDeg;
         }
@@ -695,13 +745,13 @@ public final class Aim {
     }
 
     /**
-     * True when aimed: whole-robot aim on and within {@code toleranceDeg}, or a following turret that
+     * True when aimed: whole-robot aim on (or turning for a fire press) and within {@code toleranceDeg}, or a following turret that
      * is aimed AT THE GOAL NOW (see {@link Turret#isAimed()}: a goal seen this moment, homed, in range).
      * Losing the goal makes it false at once, so a launcher gated on it never fires blind. Use it as a
      * launcher check: {@code .requireReady("aimed", () -> aim().isAimed())}.
      */
     public boolean isAimed() {
-        if (mode.isOn() || isTurningToFire()) return withinLock(errorDeg());
+        if (mode.isOn() || isTurningToFire() || groupTurning()) return withinLock(errorDeg());
         Turret t = followingTurret();
         return t != null && t.isAimed();
     }
@@ -764,7 +814,10 @@ public final class Aim {
         NOT_SEEN,
         /** The goal is known (camera, or the odometry backup). */
         SEEN,
-        /** ... and its distance is inside the launcher's shot table (or the launcher has no table). */
+        /**
+         * ... and its distance is inside the launcher's shot table, or an estimate its extended ends reach
+         * ({@code Tunables.Launcher.extendTableEnds}), or the launcher has no table.
+         */
         IN_RANGE,
         /** ... and the robot (or the following turret) points at it, within {@code toleranceDeg}. */
         LOCKED;
@@ -791,14 +844,17 @@ public final class Aim {
             lockedLast = false;   // lost: a goal that comes back must get inside the tolerance again
             return Stage.NOT_SEEN;
         }
-        Boolean range = null;
-        for (Module<?> m : robot.modules()) {
-            if (m instanceof Launcher && m.isPresent()) { range = ((Launcher) m).inRange(g.distanceIn); break; }
-        }
+        Launcher launcher = firstLauncher();
+        Boolean range = launcher == null ? null : launcher.inRange(g.distanceIn);
         if (Boolean.FALSE.equals(range)) return Stage.SEEN;
         Turret t = followingTurret();
         boolean locked = t != null ? t.isAimed() : withinLock(corrected(g).bearingDeg);
         return locked ? Stage.LOCKED : Stage.IN_RANGE;
+    }
+
+    private Launcher firstLauncher() {
+        for (Module<?> m : robot.modules()) if (m instanceof Launcher && m.isPresent()) return (Launcher) m;
+        return null;
     }
 
     // The Driver Station line: "Goal: LOCKED (camera, 52 in, 0.8 deg off)".
@@ -812,8 +868,12 @@ public final class Aim {
         }
         Turret t = followingTurret();
         double off = t != null ? t.aimErrorDeg() : corrected(g).bearingDeg;
+        Launcher launcher = firstLauncher();
+        // Past the measured rows with extended ends: "estimated", or "estimated, speed limited".
+        String estimate = launcher == null ? "" : launcher.estimateWords(g.distanceIn);
+        String range = !estimate.isEmpty() ? ", " + estimate : st == Stage.SEEN ? ", out of the shot table's range" : "";
         return st.words() + " (" + sourceOf(g).words() + (Double.isNaN(g.distanceIn) ? "" : Module.fmt(", %.0f in", g.distanceIn))
-                + (st == Stage.SEEN ? ", out of the shot table's range" : "")
+                + range
                 + (Double.isNaN(off) ? "" : Module.fmt(", %.1f deg off", off)) + ")";
     }
 

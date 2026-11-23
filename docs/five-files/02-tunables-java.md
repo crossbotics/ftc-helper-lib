@@ -97,8 +97,8 @@ Every drive number, with its units: [Tunables: Drive](../reference/parts/drive.m
 
 You find most numbers on the robot, with a finder or by testing. Two ways give you a number:
 
-- **A finder** (Tune and check, on the Driver Hub) measures it and shows the line to copy, for example
-  `Tunables.Drive: strafeCorrection = 1.210`. The finders: [Tune and check](../tuning/README.md).
+- **A finder** (Tune and check, on the Driver Hub) measures it and shows the lines to copy, for example
+  "Open Tunables.java, find class Drive." and `public static double strafeCorrection = 1.210;`. The finders: [Tune and check](../tuning/README.md).
 - **The tuning menu** changes a number while the robot runs. In the PRACTICE profile, after ▶, hold
   **GUIDE** for 1 second. Use the D-pad to choose and change a number, and press **A** to save
   ([tuning menu](../tuning/16-live-tuning.md)).

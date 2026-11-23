@@ -81,11 +81,11 @@ public class MoveTunerSimTest {
         try (SimRun s = new SimRun()) {
             open(s);
             run(s, "1 Creep", 30);
-            assertTrue(screen(s), s.screenHas("moveMinPower now"));
-            assertTrue(screen(s), s.screenHas("Tunables.Drive: moveMinPower = "));
+            assertTrue(screen(s), s.screenHas("moveMinPower is now"));
+            assertTrue(screen(s), s.screenHas("public static double moveMinPower = "));
             run(s, "2 Stops", 200);
             assertTrue(screen(s), s.screenHas("slowDownIn 0: slide"));
-            assertTrue(screen(s), s.screenHas("Tunables.Drive: slowDownIn = "));
+            assertTrue(screen(s), s.screenHas("public static double slowDownIn = "));
             assertEquals("", s.error());
         }
     }
@@ -94,9 +94,9 @@ public class MoveTunerSimTest {
         try (SimRun s = new SimRun()) {
             open(s);
             run(s, "3 Turns", 60);
-            assertTrue(screen(s), s.screenHas("+90: past"));
-            assertTrue(screen(s), s.screenHas("Worst: past"));
-            assertTrue(screen(s), s.screenHas("OK:") || s.screenHas("Tunables.Drive: turn"));
+            assertTrue(screen(s), s.screenHas("Turn 90 left: past"));
+            assertTrue(screen(s), s.screenHas("Worst turn: past"));
+            assertTrue(screen(s), s.screenHas("PASSED:") || s.screenHas("public static double turn"));
             assertEquals("", s.error());
         }
     }
@@ -105,8 +105,8 @@ public class MoveTunerSimTest {
         try (SimRun s = new SimRun()) {
             open(s);
             run(s, "4 Drift", 90);
-            assertTrue(screen(s), s.screenHas("Forward 48 in: heading"));
-            assertTrue(screen(s), s.screenHas("Left 48 in: heading"));
+            assertTrue(screen(s), s.screenHas("Forward 48 in: turned"));
+            assertTrue(screen(s), s.screenHas("Left 48 in: turned"));
             assertEquals("", s.error());
         }
     }
@@ -115,7 +115,7 @@ public class MoveTunerSimTest {
         try (SimRun s = new SimRun()) {
             open(s);
             run(s, "5 Move and turn", 90);
-            assertTrue(screen(s), s.screenHas("Right to 90 deg:"));
+            assertTrue(screen(s), s.screenHas("Right, turning 90 left:"));
             assertTrue(screen(s), s.screenHas("Worst: off"));
             assertEquals("", s.error());
         }

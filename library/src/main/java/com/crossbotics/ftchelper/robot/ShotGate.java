@@ -23,6 +23,10 @@ import java.util.function.LongSupplier;
  * the indexer also waits for it ({@code feedStopMoveSec}).
  * The next feed waits until the wheel stops.
  *
+ * <p>A continuous feed (continuous fire) needs an indexer that spins: the stop opens, the indexer starts
+ * once it is open (and the feed wheel staged the first piece), and the stop, the feed wheel, the indexer
+ * and the pushing parts all stay on until it is stopped. No dip and no backup time end it.
+ *
  * <p>The feed stop goes to "hold" at START, never in INIT (nothing moves before the match), and gets a
  * position only when its position changes.
  */
@@ -55,6 +59,8 @@ final class ShotGate implements Feeder {
     private double wheelOffAt = -1;        // only while firing: when the feed wheel stops, seconds (-1 = off)
     private double wheelFrom = 0;          // only while firing: when the feed wheel starts, seconds
     private double wheelSent = Double.NaN; // the feed wheel's last power sent (NaN = none yet)
+    private boolean continuous = false;     // feeding without a break
+    private double continuousPower = Double.NaN;
     private BooleanSupplier backOut = null; // true: run the feed wheel backward (an intake pushes out), or null
 
     ShotGate(Servo stop, double hold, double release, double openSec, Feeder indexer, boolean pusherIndexer,
@@ -88,7 +94,7 @@ final class ShotGate implements Feeder {
 
     @Override
     public void feedOne() {
-        if (feeding) return;
+        if (feeding || continuous) return;
         feeding = true;
         feedAt = now();
         indexerStarted = false;
@@ -118,13 +124,17 @@ final class ShotGate implements Feeder {
     @Override
     public boolean isBusy() {
         // A feed wheel only while firing: busy until it stops, so the next shot cannot cut its stopSec short.
-        return feeding || (indexer != null && indexer.isBusy())
+        return feeding || continuous || (indexer != null && indexer.isBusy())
                 || (wheel != null && !wheel.wheelAlwaysOn() && wheelOffAt >= 0 && now() < wheelOffAt);
     }
 
     @Override
     public void update() {
         double t = now();
+        if (continuous) {
+            updateContinuous(t);
+            return;
+        }
         if (feeding) {
             // The indexer pushes once the feed stop is open and the feed wheel has staged the piece.
             if (indexer != null && !indexerStarted && t - feedAt >= pushAfter) {
@@ -177,6 +187,87 @@ final class ShotGate implements Feeder {
         }
     }
 
+    // ---- A feed without a break ----
+
+    @Override
+    public boolean canFeedContinuously() {
+        return indexer != null && indexer.canFeedContinuously();
+    }
+
+    @Override
+    public boolean startContinuous(double power) {
+        if (continuous) return true;
+        if (!canFeedContinuously() || isBusy()) return false;
+        continuous = true;      // first: if a part below fails, a stop still knows what to switch off
+        continuousPower = power;
+        feedAt = now();
+        indexerStarted = false;
+        mustOpen = stop != null && !(started && sent == release);
+        open = stop != null;
+        pushAfter = mustOpen ? moveSec : 0;
+        if (wheel != null && !wheel.wheelAlwaysOn()) {
+            pushAfter = Math.max(pushAfter, wheel.stageSec());
+            wheelOffAt = -1;    // no time ends the wheel either
+            sendWheel(true);
+        }
+        if (stop != null && started) send(release);
+        if (assistSec > 0 && !mustOpen) for (Intake p : pushers) p.pushForShot(true);
+        if (pushAfter <= 0) startContinuousIndexer();
+        return true;
+    }
+
+    // Pushes against an open stop only: after moveSec (and the feed wheel's stageSec).
+    private void startContinuousIndexer() {
+        indexerStarted = true;
+        if (!indexer.startContinuous(continuousPower)) stopContinuous();
+    }
+
+    private void updateContinuous(double t) {
+        if (!indexerStarted && t - feedAt >= pushAfter) startContinuousIndexer();
+        if (!continuous) return;
+        indexer.update();
+        // The indexer ended it (a jam, or it was stopped): everything else stops too.
+        if (indexerStarted && !indexer.isFeedingContinuously()) {
+            stopContinuous();
+            return;
+        }
+        if (stop != null && started) send(release);
+        boolean push = assistSec > 0 && t - feedAt >= (mustOpen ? moveSec : 0);
+        for (Intake p : pushers) p.pushForShot(push);
+        if (wheel != null) sendWheel(!wheel.wheelAlwaysOn() || (started && spunUp.getAsBoolean()));
+    }
+
+    @Override
+    public void stopContinuous() {
+        if (!continuous) return;
+        continuous = false;
+        feeding = false;
+        open = false;
+        indexerStarted = false;
+        wheelOffAt = -1;
+        // SAFETY: every part gets its stop, even if one throws. (An always-on feed wheel follows the flywheel.)
+        RuntimeException first = null;
+        if (indexer != null) {
+            try { indexer.stopContinuous(); } catch (RuntimeException e) { first = e; }
+        }
+        if (wheel != null && !wheel.wheelAlwaysOn()) {
+            wheelSent = Double.NaN;     // always written, not skipped as "the same"
+            try { sendWheel(false); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        for (Intake p : pushers) {
+            try { p.pushForShot(false); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (stop != null && started) {
+            try { send(hold); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (first != null) throw first;
+    }
+
+    @Override
+    public boolean isFeedingContinuously() {
+        return continuous;
+    }
+
     /** The feed wheel runs backward while this is true and nothing is being fed (Launcher.feedWheelOutWith). */
     void wheelBacksOutWhile(BooleanSupplier when) {
         backOut = when;
@@ -190,8 +281,9 @@ final class ShotGate implements Feeder {
 
     private void sendWheelPower(double p) {
         if (p == wheelSent) return;
-        wheelSent = p;
+        wheelSent = Double.NaN;   // until it is sent: a failed write is sent again
         wheel.runWheel(p);
+        wheelSent = p;
     }
 
     /** True while a feed waits to push (the feed stop opening, the feed wheel staging): its piece has not gone. */
@@ -224,13 +316,25 @@ final class ShotGate implements Feeder {
     @Override
     public void stop() {
         feeding = false;
+        continuous = false;
         open = false;
         wheelOffAt = -1;
         wheelSent = Double.NaN;
-        if (wheel != null) wheel.runWheel(0);
-        for (Intake p : pushers) p.pushForShot(false);
-        if (stop != null && started) send(hold);
-        if (indexer != null) indexer.stop();
+        // SAFETY: every part gets its stop, even if one throws.
+        RuntimeException first = null;
+        if (wheel != null) {
+            try { wheel.runWheel(0); } catch (RuntimeException e) { first = e; }
+        }
+        for (Intake p : pushers) {
+            try { p.pushForShot(false); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (stop != null && started) {
+            try { send(hold); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (indexer != null) {
+            try { indexer.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (first != null) throw first;
     }
 
     /**
@@ -238,6 +342,7 @@ final class ShotGate implements Feeder {
      * stop closes, the pushers go back.
      */
     void cancel() {
+        stopContinuous();
         feeding = false;
         open = false;
         wheelOffAt = -1;   // only while firing: it stops (always on: it goes on running with the flywheel)
@@ -262,7 +367,7 @@ final class ShotGate implements Feeder {
 
     /** True while a piece is being fed. */
     boolean isFeeding() {
-        return feeding;
+        return feeding || continuous;
     }
 
     /** True while the feed stop is open (or opening). */

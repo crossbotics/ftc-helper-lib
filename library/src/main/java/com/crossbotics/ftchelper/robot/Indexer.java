@@ -40,6 +40,9 @@ import java.util.function.LongSupplier;
  * runs per piece), and {@code stopOnShot} (true: a launcher's feed stops when the flywheel sees the shot,
  * and {@code feedSec} is the time limit). Added on its own (no launcher), its usual button (a line in Controls.java) is operator RB: feed one.
  *
+ * <p>A CR servo or motor can also feed without a break ({@link #startContinuous}: a launcher's continuous
+ * fire): only a stop or a jam ends that, not {@code feedSec} or a shot seen, and no piece is counted.
+ *
  * <p>A feed wheel ({@code Launcher.feedWheel(Indexer.crServo("feeder_wheel"))}): a CR servo or motor that
  * moves the pieces up to the pusher (the launcher's {@code feeder}). Its Tunables: {@code power},
  * {@code alwaysOn} (false: it runs only while firing), {@code stageSec} (it runs this long before the
@@ -265,8 +268,16 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     // A CR servo indexer: the same power to its servo and its second servo (alsoServo...), if it has one.
     private void setCrPower(double p) {
-        wheelCr.setPower(p);
-        if (wheelCr2 != null) wheelCr2.setPower(p);
+        if (p != 0 || wheelCr2 == null) {
+            wheelCr.setPower(p);
+            if (wheelCr2 != null) wheelCr2.setPower(p);
+            return;
+        }
+        // SAFETY: a stop reaches both servos, even if the first one fails.
+        RuntimeException first = null;
+        try { wheelCr.setPower(0); } catch (RuntimeException e) { first = e; }
+        try { wheelCr2.setPower(0); } catch (RuntimeException e) { if (first == null) first = e; }
+        if (first != null) throw first;
     }
 
     /** True for a CR servo or a motor (they can be a feed wheel), false for a push servo. */
@@ -334,9 +345,44 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         feedWatchers.add(watcher);
     }
 
-    /** True from the start of a feed until it ends (normally, jammed or stopped). */
+    /** True from the start of a feed until it ends (normally, jammed or stopped), and during a continuous feed. */
     public boolean isFeeding() {
-        return feeding && !missing;
+        return (feeding && !missing) || isFeedingContinuously();
+    }
+
+    /** True for a CR servo or motor feeder on the robot (not a push servo, not a feed wheel). */
+    @Override
+    public boolean canFeedContinuously() {
+        return feeder != null && !missing && spins() && !feedWheel;
+    }
+
+    /**
+     * Feeds without a break until {@link #stopContinuous()}, {@link #stop()}, a pause or a jam. No piece is
+     * counted ({@link #onFeed}, {@link Pieces}): nobody knows how many go. A launcher's continuous fire calls
+     * it for you.
+     *
+     * @param feedPower -1 to 1 with the feeder's own sign; NaN = Tunables {@code power}
+     * @return false for a push servo, a feed wheel, a missing part, or while a single feed is busy
+     */
+    @Override
+    public boolean startContinuous(double feedPower) {
+        if (!canFeedContinuously()) return false;
+        touch();
+        applyTunables();
+        return feeder.startContinuous(feedPower);
+    }
+
+    /** Ends a continuous feed now (nothing without one). */
+    @Override
+    public void stopContinuous() {
+        if (!isFeedingContinuously()) return;
+        try { touch(); } finally { stopFeeder(); }
+    }
+
+    /** True while it feeds without a break. */
+    @Override
+    public boolean isFeedingContinuously() {
+        return feeder != null && !missing && feeder.isFeedingContinuously();
     }
 
     // Feeds, and tells the listeners if a feed really started (a call while busy is ignored).
@@ -385,6 +431,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     @Override
     public void clearJam() {
         if (feeder != null) feeder.clearJam();
+    }
+
+    // A canceled action: a timed feed ends by itself, a continuous one would run on. So it stops.
+    @Override
+    void halt() {
+        if (isFeedingContinuously()) stopFeeder();
     }
 
     @Override
@@ -656,6 +708,14 @@ public final class Indexer extends Module<Indexer> implements Feeder {
             @Override public void clearJam() { feeder.clearJam(); }
             @Override public void update() { Indexer.this.update(); }
             @Override public void stop() { stopFeeder(); }
+            @Override public boolean canFeedContinuously() { return Indexer.this.canFeedContinuously(); }
+            @Override public boolean startContinuous(double feedPower) {
+                if (!canFeedContinuously()) return false;
+                applyTunables();
+                return feeder.startContinuous(feedPower);
+            }
+            @Override public void stopContinuous() { stopFeeder(); }
+            @Override public boolean isFeedingContinuously() { return Indexer.this.isFeedingContinuously(); }
             @Override public String name() { return Indexer.this.name(); }
             @Override public void addTelemetry(RobotTelemetry t) { feeder.addTelemetry(t); }
         };
@@ -664,6 +724,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     // A CR servo (and its second servo, if any) that runs for feedSec per piece, then stops.
     private final class TimedCrServo implements Feeder {
         private double endAt = -1;    // seconds; -1 = not feeding
+        private boolean continuous = false;    // feeding without a break (then endAt is not used)
 
         private double now() {
             return clock.getAsLong() / 1e9;
@@ -676,15 +737,36 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         }
 
         @Override public boolean isBusy() {
-            return endAt >= 0;
+            return continuous || endAt >= 0;
+        }
+
+        @Override public boolean canFeedContinuously() {
+            return true;
+        }
+
+        @Override public boolean startContinuous(double feedPower) {
+            if (continuous) return true;
+            if (isBusy()) return false;
+            continuous = true;    // first: if the second servo fails, a stop still knows it runs
+            setCrPower(Double.isNaN(feedPower) ? power.get() : feedPower);
+            return true;
+        }
+
+        @Override public void stopContinuous() {
+            stop();
+        }
+
+        @Override public boolean isFeedingContinuously() {
+            return continuous;
         }
 
         @Override public void update() {
-            if (endAt >= 0 && now() >= endAt) stop();
+            if (!continuous && endAt >= 0 && now() >= endAt) stop();
         }
 
         @Override public void stop() {
             endAt = -1;
+            continuous = false;
             setCrPower(0);
         }
 

@@ -8,7 +8,6 @@ import com.crossbotics.ftchelper.robot.Hood;
 import com.crossbotics.ftchelper.robot.Launcher;
 import com.crossbotics.ftchelper.robot.Module;
 import com.crossbotics.ftchelper.robot.MotorPositions;
-import com.crossbotics.ftchelper.robot.PieceSensor;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.testing.HardwareCheckOpMode;
@@ -25,12 +24,13 @@ import java.util.function.Supplier;
  * "Tune and check": every check and finder for your robot in one OpMode, always on the Driver Station
  * (TeleOp list, group "Finders"). Nothing to copy: the library adds it.
  *
- * <p>INIT shows a menu. D-pad up/down picks a tool, A opens it (its own INIT screen: read its safety
+ * <p>INIT shows a menu: the tools, and what the chosen one is for. D-pad up/down chooses a tool, A opens it (its own INIT screen: read its safety
  * note), START runs it. BACK in the tool's INIT goes back to the menu. To change tools after START:
  * STOP, then INIT again (the menu starts on the last tool).
  *
  * <p>The menu lists only the tools that fit Robot.java: the Hood Finder for a robot with a hood, the
- * Flywheel Finder and Shot Tuner for a robot with a launcher, and so on. It finds your robot by itself:
+ * Flywheel Finder and Shot Tuner for a robot with a launcher, the Group Shot Tuner for a launcher with a camera
+ * that sees the goal, and so on. It finds your robot by itself:
  * every class in {@code org.firstinspires.ftc.teamcode} (and the folders inside it) that extends
  * {@link RobotDefinition}. Two or more robots: D-pad left/right picks one. No robot in five files: the
  * tools that need no robot (Hardware Check, Servo, Motor and Flywheel finders).
@@ -93,6 +93,7 @@ public class TuneAndCheckOpMode extends LinearOpMode {
             Class<? extends RobotDefinition> robotClass = robots.isEmpty() ? null : robots.get(robotAt);
             String robotProblem = null;
             List<Tool> tools;
+            menuModules = new ArrayList<>();   // toolsFor() fills it when Robot.java loads
             try {
                 tools = toolsFor(robotClass);
             } catch (RuntimeException e) {
@@ -105,20 +106,27 @@ public class TuneAndCheckOpMode extends LinearOpMode {
             remember(gamepad1);   // a button still held (BACK, A) must not act at once
             Tool chosen = null;
             while (opModeInInit() && chosen == null) {
+                // Each button is read ONCE a loop. The gamepad changes on another thread: a button read as up
+                // here and as down a moment later (when it is remembered) would be a press that is never seen.
                 Gamepad g = gamepad1;
-                if (pressed(g.dpad_down, downWas)) at = (at + 1) % tools.size();
-                if (pressed(g.dpad_up, upWas)) at = (at + tools.size() - 1) % tools.size();
+                boolean down = g.dpad_down, up = g.dpad_up, right = g.dpad_right, left = g.dpad_left, a = g.a;
+                if (pressed(down, downWas)) at = (at + 1) % tools.size();
+                if (pressed(up, upWas)) at = (at + tools.size() - 1) % tools.size();
                 boolean robotChanged = false;
-                if (robots.size() > 1 && pressed(g.dpad_right, rightWas)) {
+                if (robots.size() > 1 && pressed(right, rightWas)) {
                     robotAt = (robotAt + 1) % robots.size();
                     robotChanged = true;
                 }
-                if (robots.size() > 1 && pressed(g.dpad_left, leftWas)) {
+                if (robots.size() > 1 && pressed(left, leftWas)) {
                     robotAt = (robotAt + robots.size() - 1) % robots.size();
                     robotChanged = true;
                 }
-                if (pressed(g.a, aWas)) chosen = tools.get(at);
-                remember(g);
+                if (pressed(a, aWas)) chosen = tools.get(at);
+                upWas = up;
+                downWas = down;
+                leftWas = left;
+                rightWas = right;
+                aWas = a;
                 if (robotChanged) break;
                 showMenu(t, robots, robotClass, robotProblem, tools, at);
             }
@@ -127,7 +135,9 @@ public class TuneAndCheckOpMode extends LinearOpMode {
                 if (opModeInInit()) continue;   // another robot: make its menu
                 // START with no tool opened: nothing runs.
                 while (opModeIsActive()) {
-                    t.warn("No tool was opened. Press STOP, then INIT: pick a tool with the D-pad, open it with {A}.");
+                    t.warn("No tool was opened, so nothing runs.");
+                    t.text("Next: press STOP (■), then INIT.");
+                    t.text("D-pad = choose a tool. {A} = open it.");
                     t.update();
                 }
                 return;
@@ -135,7 +145,7 @@ public class TuneAndCheckOpMode extends LinearOpMode {
             // ---- The tool: its own INIT screen, then START runs it ----
             lastTool = chosen.name;
             lastRobot = robotClass == null ? null : robotClass.getName();
-            Hosting hosting = new Hosting(this);
+            Hosting hosting = new Hosting(this, robotClass != null, deviceSections(menuModules), partsInDegrees(menuModules));
             LinearOpMode tool = chosen.make.get();
             if (tool instanceof FinderOpMode) ((FinderOpMode) tool).runInside(hosting);
             else ((HardwareCheckOpMode) tool).runInside(hosting);
@@ -157,17 +167,49 @@ public class TuneAndCheckOpMode extends LinearOpMode {
 
     private void showMenu(RobotTelemetry t, List<Class<? extends RobotDefinition>> robots,
                           Class<? extends RobotDefinition> robotClass, String robotProblem, List<Tool> tools, int at) {
-        t.section(NAME);
-        if (robotClass == null) t.text("No Robot.java found: the tools that need no robot.");
-        else t.text("Robot: " + robotClass.getSimpleName() + (robots.size() > 1 ? "  (D-pad left/right = another robot)" : ""));
-        if (robotProblem != null) t.warn(robotProblem);
-        for (int i = 0; i < tools.size(); i++) {
-            Tool tool = tools.get(i);
-            t.text((i == at ? "> " : "  ") + tool.name + ": " + tool.what);
+        t.section(NAME + ": " + (at + 1) + " of " + tools.size());
+        if (robotClass == null) {
+            t.text("No Robot.java found: the tools that need none.");
+        } else {
+            t.text("Robot: " + robotClass.getSimpleName());
+            if (robots.size() > 1) t.text("D-pad left/right = another robot.");
         }
-        t.text("D-pad up/down = pick, {A} = open it. Then {PLAY}.");
-        t.text("In the tool's INIT: {BACK} = back to this menu.");
+        if (robotProblem != null) {
+            t.warn(robotProblem);
+            t.warn("Until you fix it, only some tools are listed.");
+        }
+        // Only names in the list (it must fit the screen), then what the chosen one is for.
+        for (int i = 0; i < tools.size(); i++) t.text((i == at ? "> " : "  ") + tools.get(i).name);
+        t.text("This tool: " + tools.get(at).what + ".");
+        t.text("A new robot: do them from top to bottom.");
+        t.text("D-pad up/down = choose. {A} = open it. Then {PLAY}.");
+        t.text("In a tool's INIT: {BACK} = back to this menu.");
         t.update();
+    }
+
+    // The parts of the robot in the menu now (empty without one, or when Robot.java does not load).
+    private List<Module<?>> menuModules = new ArrayList<>();
+
+    // Each device's class in Tunables.java (tunables("Feeder") makes it differ from the device's name).
+    static Map<String, String> deviceSections(List<Module<?>> modules) {
+        Map<String, String> out = new java.util.HashMap<>();
+        for (Module<?> m : withChildren(modules)) {
+            out.put(m.deviceName(), m.name());
+            String second = null;
+            if (m instanceof com.crossbotics.ftchelper.robot.ServoPositions) second = ((com.crossbotics.ftchelper.robot.ServoPositions<?>) m).secondServoName();
+            else if (m instanceof com.crossbotics.ftchelper.robot.Indexer) second = ((com.crossbotics.ftchelper.robot.Indexer) m).secondServoName();
+            if (second != null) out.put(second, m.name());
+        }
+        return out;
+    }
+
+    // The motors of parts that count in degrees (an arm, a turret): motor counts are not their numbers.
+    static java.util.Set<String> partsInDegrees(List<Module<?>> modules) {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        for (Module<?> m : modules) {
+            if (m instanceof com.crossbotics.ftchelper.robot.Arm || m instanceof com.crossbotics.ftchelper.robot.Turret) out.add(m.deviceName());
+        }
+        return out;
     }
 
     // Each servo part's catalog id (part(...) in Robot.java), its second servo's too (the same servo model).
@@ -205,6 +247,18 @@ public class TuneAndCheckOpMode extends LinearOpMode {
             if (!(m instanceof Launcher)) continue;
             double[] g = ((Launcher) m).writtenGains(tunables);
             if (g != null) out.put(m.deviceName(), g);
+        }
+        return out;
+    }
+
+    // The launchers' flywheel motors with speedControl = "BANG_BANG" written in Tunables.java.
+    static java.util.Set<String> bangBangFlywheels(List<Module<?>> modules, Class<?> tunables) {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        if (tunables == null) return out;
+        for (Module<?> m : withChildren(modules)) {
+            if (m instanceof Launcher && "BANG_BANG".equals(FinderOpMode.codeWord(tunables, m.name(), "speedControl"))) {
+                out.add(m.deviceName());
+            }
         }
         return out;
     }
@@ -265,22 +319,31 @@ public class TuneAndCheckOpMode extends LinearOpMode {
         return out;
     }
 
+    // True when a camera in Robot.java has goal(...): the robot can aim at the goal with it.
+    private static boolean aimsWithCamera(List<Module<?>> modules) {
+        for (Module<?> m : modules) {
+            if (m instanceof com.crossbotics.ftchelper.robot.Camera && ((com.crossbotics.ftchelper.robot.Camera) m).knowsGoal()) return true;
+        }
+        return false;
+    }
+
     // The checks and finders that fit this robot (null: no robot), in the order to use them.
     private List<Tool> toolsFor(final Class<? extends RobotDefinition> robotClass) {
         final RobotDefinition robot = robotClass == null ? null : make(robotClass);
         List<Module<?>> modules = robot == null ? new ArrayList<Module<?>>() : robot.modules();
+        menuModules = modules;
         final Supplier<RobotDefinition> fresh = () -> robotClass == null ? null : make(robotClass);
         List<Tool> out = new ArrayList<>();
-        out.add(new Tool("Hardware Check", "every device found, turns the right way", () -> new HardwareCheckOpMode() {
+        out.add(new Tool("Hardware Check", "test each device", () -> new HardwareCheckOpMode() {
             @Override protected RobotDefinition robot() { return fresh.get(); }
         }));
         // Every robot in five files has a drive (define() needs one): each wheel must roll forward.
         if (robot != null) {
-            out.add(new Tool("Motor Direction Check", "each drive wheel rolls forward", () -> new MotorDirectionCheckOpMode() {
+            out.add(new Tool("Motor Direction Check", "each wheel rolls forward", () -> new MotorDirectionCheckOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
             // Every motor's encoder cable in its own port (a lift, the flywheel, the drive trust it).
-            out.add(new Tool("Encoder Check", "each encoder cable in its own motor's port", () -> new EncoderCheckOpMode() {
+            out.add(new Tool("Encoder Check", "each motor's encoder cable", () -> new EncoderCheckOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
@@ -289,65 +352,81 @@ public class TuneAndCheckOpMode extends LinearOpMode {
             final Map<String, Map.Entry<String, Boolean>> pairs = servoPairs(modules);
             final Map<String, Boolean> directions = servoDirections(modules);
             final Map<String, String> partIds = servoParts(modules);
-            out.add(new Tool("Servo Finder", "a servo's ends and positions", () -> new ServoFinderOpMode() {
+            out.add(new Tool("Servo Finder", "a servo's safe positions", () -> new ServoFinderOpMode() {
                 @Override protected Map<String, Map.Entry<String, Boolean>> pairedServos() { return pairs; }
                 @Override protected Map<String, Boolean> servoDirections() { return directions; }
                 @Override protected Map<String, String> servoParts() { return partIds; }
             }));
         }
-        if (any(modules, Hood.class)) {
-            out.add(new Tool("Hood Finder", "the hood's two stops", () -> new HoodFinderOpMode() {
+        // A launcher's hood (Launcher...hood(...)) is the launcher's child: it counts too.
+        if (any(withChildren(modules), Hood.class)) {
+            out.add(new Tool("Hood Finder", "the hood's two ends", () -> new HoodFinderOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
         if (robot == null || any(modules, MotorPositions.class)) {
-            out.add(new Tool("Motor Finder", "a lift's or arm's limits and positions", () -> new MotorFinderOpMode() { }));
+            out.add(new Tool("Motor Finder", "how far a lift may go", () -> new MotorFinderOpMode() { }));
         }
         if (robot == null || any(modules, Launcher.class)) {
             // Each launcher's motor starts the way Robot.java turns it (reversed() there = reversed here).
             // ...and the finder holds it with the gains in Tunables.java (when written): Y switches to its own.
             final Map<String, Boolean> motorDirs = flywheelDirections(modules);
             final Map<String, double[]> gains = flywheelGains(modules, robot == null ? null : robot.tunablesClass());
-            out.add(new Tool("Flywheel Finder", "the flywheel's gains", () -> new FlywheelFinderOpMode() {
+            final java.util.Set<String> bang = bangBangFlywheels(modules, robot == null ? null : robot.tunablesClass());
+            out.add(new Tool("Flywheel Finder", "hold the flywheel's speed", () -> new FlywheelFinderOpMode() {
+                @Override protected java.util.Set<String> bangBangMotors() { return bang; }
                 @Override protected Map<String, Boolean> motorDirections() { return motorDirs; }
                 @Override protected Map<String, double[]> robotGains() { return gains; }
             }));
         }
+        // It tests PID and bang-bang on the launcher's own flywheel, so it needs Robot.java's launcher.
+        if (any(modules, Launcher.class)) {
+            out.add(new Tool("Flywheel Tuner", "compare PID and bang-bang", () -> new FlywheelTunerOpMode() {
+                @Override protected RobotDefinition robot() { return fresh.get(); }
+            }));
+        }
         if (hasFeedStop(modules)) {
-            out.add(new Tool("Feed Stop Finder", "the feed stop's hold and release", () -> new FeedStopFinderOpMode() {
+            out.add(new Tool("Feed Stop Finder", "feed stop HOLD and LET GO", () -> new FeedStopFinderOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
         if (hasTimedFeeder(modules)) {
-            out.add(new Tool("Feed Time Finder", "how long the feeder runs per shot", () -> new FeedTimeFinderOpMode() {
+            out.add(new Tool("Feed Time Finder", "feed time for each shot", () -> new FeedTimeFinderOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
         if (robot != null) {
-            out.add(new Tool("Drive Tuner", "the wheel size, for the autonomous", () -> new DriveTunerOpMode() {
+            out.add(new Tool("Drive Tuner", "how far the wheels really go", () -> new DriveTunerOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
         if (robot != null && robot.odometrySpec() != null) {
-            out.add(new Tool("Odometry Tuner", "pod directions and offsets", () -> new OdometryTunerOpMode() {
+            out.add(new Tool("Odometry Tuner", "the odometry measures right", () -> new OdometryTunerOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
         if (robot != null) {
-            out.add(new Tool("Move Tuner", "how exactly moves stop and turns end", () -> new MoveTunerOpMode() {
+            out.add(new Tool("Move Tuner", "moves stop in the right place", () -> new MoveTunerOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
         if (any(modules, Launcher.class)) {
-            out.add(new Tool("Shot Tuner", "the shot speed by distance", () -> new ShotTunerOpMode() {
+            out.add(new Tool("Shot Tuner", "shot speed for each distance", () -> new ShotTunerOpMode() {
+                @Override protected RobotDefinition robot() { return fresh.get(); }
+            }));
+        }
+        // Groups of 4 with the Flywheel Tuner's best settings, aimed by the camera: a launcher and a camera with goal(...).
+        if (robot != null && any(modules, Launcher.class) && aimsWithCamera(modules)) {
+            out.add(new Tool("Group Shot Tuner", "PID or bang-bang, with real balls", () -> new GroupShotTunerOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
         // The Camera Fix Check (alpha) is not in the menu: the camera fix is untested and cannot work in
         // BIOBUZZ (its tags move with the HIVEs). A team that tests it runs CameraFixCheckOpMode from its
         // own file (docs/modules/odometry.md, "Camera fix (alpha)"). Look again each new season.
-        if (any(modules, PieceSensor.class)) {
-            out.add(new Tool("Piece Tuner", "what each piece sensor sees", () -> new PieceTunerOpMode() {
+        // The sensors inside a Pieces part count too (the Piece Tuner finds them the same way).
+        if (robot != null && !PieceTunerOpMode.sensorsOf(robot).isEmpty()) {
+            out.add(new Tool("Piece Tuner", "teach the piece sensors", () -> new PieceTunerOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }

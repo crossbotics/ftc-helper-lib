@@ -1,14 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 246" width="520" height="246" font-family="Helvetica, Arial, sans-serif" font-size="15">
-<rect width="520" height="246" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 351" width="520" height="351" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="520" height="351" fill="#ffffff"/>
 <text x="16" y="43" font-size="14" fill="#555">At 24 in to the left, press:</text>
 <rect x="231" y="18" width="41" height="42" rx="21" fill="#ffd54d" stroke="#333" stroke-width="2"/>
 <text x="251.5" y="46" text-anchor="middle" font-size="19" font-weight="bold" fill="#222">B</text>
-<rect x="6" y="70" width="508" height="170" rx="14" fill="#2b2f36"/>
+<rect x="6" y="70" width="508" height="275" rx="14" fill="#2b2f36"/>
 <text x="22" y="100" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
-<rect x="16" y="114" width="488" height="116" rx="6" fill="#ffffff"/>
-<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Odometry Tuner (Pinpoint) ---</text>
-<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Pose : x -23.8, y 0.2 in, heading -0.4</text>
-<rect x="20" y="188" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Left OK: 23.8 in for 24.</text>
+<rect x="16" y="114" width="488" height="221" rx="6" fill="#ffffff"/>
+<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">!! The sticks drive it. Let go = stop.</text>
+<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Odometry tuner: choose a test ---</text>
+<rect x="20" y="167" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Left direction is right.</text>
+<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Measured 23.8 in for 24 (not checked exactly).</text>
+<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Next: 3 Spin.</text>
+<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  1 Forward 48 in</text>
+<text x="26" y="266" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  2 Left 24 in</text>
+<rect x="20" y="272" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="287" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">&gt; 3 Spin 3 turns or more</text>
+<text x="26" y="308" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  4 Loop and back</text>
 </svg>

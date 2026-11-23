@@ -1,17 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 288" width="520" height="288" font-family="Helvetica, Arial, sans-serif" font-size="15">
-<rect width="520" height="288" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 309" width="520" height="309" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="520" height="309" fill="#ffffff"/>
 <text x="16" y="43" font-size="14" fill="#555">After each shot, press:</text>
 <rect x="195" y="18" width="239" height="42" rx="21" fill="#ffd54d" stroke="#333" stroke-width="2"/>
 <text x="314.5" y="46" text-anchor="middle" font-size="19" font-weight="bold" fill="#222">A = HIT or B = MISS</text>
-<rect x="6" y="70" width="508" height="212" rx="14" fill="#2b2f36"/>
+<rect x="6" y="70" width="508" height="233" rx="14" fill="#2b2f36"/>
 <text x="22" y="100" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
-<rect x="16" y="114" width="488" height="158" rx="6" fill="#ffffff"/>
-<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">&gt; Speed : 2600 RPM, measured 2596</text>
-<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Shots fired : 7</text>
+<rect x="16" y="114" width="488" height="179" rx="6" fill="#ffffff"/>
+<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Shot tuner ---</text>
+<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Next: RB = shoot one (hold RT = keep going).</text>
+<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
 <rect x="20" y="188" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Hits at 2600 : 3/4</text>
-<rect x="20" y="209" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Tried here : 2500: 1/3, 2600: 3/4 (best)</text>
-<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
+<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Went in at 2600 RPM : 3 of 4 (shoot 3 to 5)</text>
+<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">HIT at 2600 RPM, hood 5.</text>
+<rect x="20" y="230" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">3 of 4 went in at this speed.</text>
+<text x="26" y="266" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Wrong? Left stick click = undo.</text>
 </svg>

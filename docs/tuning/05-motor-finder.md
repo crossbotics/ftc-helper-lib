@@ -1,9 +1,10 @@
 # Motor Finder: limits, positions, top speed
 
-Find a lift's, an arm's or a turret's limits and named positions, and its top speed.
+Find a lift's limits, named positions and top speed. For an arm or a turret, it shows motor counts only.
 
 **In Tune and check:** yes, when the robot has a lift or an arm (or there is no Robot.java).
-**You need:** the robot on a block, the mechanism at its bottom.
+**You need:** the robot on a block, the part at its bottom, hands clear. The part has no limits in this
+tool until you mark its two ends: the stick can push it into its end.
 
 ## Get to the Motor Finder
 
@@ -18,7 +19,7 @@ Find a lift's, an arm's or a turret's limits and named positions, and its top sp
 3. The Motor Finder's INIT screen shows. Nothing moves yet. Put the mechanism at its bottom, then press
    **▶** (start) on the Driver Hub.
 
-   ![The Motor Finder's INIT screen: Put the mechanism at its BOTTOM before you choose it. Press start](../images/hub-motor-finder-go-start.svg)
+   ![The Motor Finder's INIT screen: no limits yet, RT = full power, put the part at its bottom. Press start](../images/hub-motor-finder-go-start.svg)
 
 4. Press **D-pad up/down** until the arrow is on your motor's name, then press **A**. The names come from
    the robot configuration.
@@ -28,6 +29,7 @@ Find a lift's, an arm's or a turret's limits and named positions, and its top sp
 ## Steps
 
 1. **Put the mechanism at its bottom**, then choose the motor (D-pad, A). Its count starts at 0 there.
+   Let go of the stick: the finder waits for that before it moves the new motor.
 2. Move it slowly with the right stick (max power starts at 0.3). Stop a little before the bottom, and
    press **X**.
 
@@ -42,17 +44,19 @@ Find a lift's, an arm's or a turret's limits and named positions, and its top sp
 4. Press **A** at each height you need. A height outside the two marks gets a warning, because the robot
    stops at min and max and could never get there. **Y** undoes it.
 
-   ![At each height, press A: the Driver Hub shows Tunables.Lift: min = 0, max = 2580, P1 = 1200](../images/hub-motor-finder-step-position.svg)
+   ![At each height, press A: the Driver Hub shows DONE and class Lift with min, max and P1](../images/hub-motor-finder-step-position.svg)
 
-5. Hold **RT** for a speed test: full power up, stopping before the top. The top speed helps you
+5. Let go, then hold **RT** for a speed test: full power up, stopping before the top. The top speed helps you
    choose a max power and PID gains.
 
    ![Hold RT: the Driver Hub shows Top speed : 2310 counts/s](../images/hub-motor-finder-step-speed.svg)
 
-6. Five files: the line `Tunables.Lift: min = 0, max = 2580, P1 = 1200` becomes `min = 0, max = 2580`
-   and `low = 1200` (your name) in `Tunables.Lift`. When it also says `Robot.java: add .reversed()`,
-   add `.reversed()` to that part in `Robot.java`. An `Arm` reads degrees, not counts: see the
-   [reference](../modules/finders.md#motorfinderopmode).
+6. Five files: copy `min`, `max` and each position into class Lift. Write your name (`low`) for `P1`. When
+   the screen also says `Open Robot.java:`, add `.reversed()` to that part in `Robot.java`.
+
+**An arm or a turret uses degrees.** In Tune and check, the finder shows its counts and says not to copy
+them. Change them to degrees with your mentor first
+([reference](../modules/finders.md#motorfinderopmode)).
 
 Watch the current (amps). A high number while the part does not move means it is pushing on something. Stop.
 
@@ -73,8 +77,8 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 
 | The finder shows | Put it in |
 | --- | --- |
-| `Tunables.Lift: min = 0, max = 2580, P1 = 1200` | `Tunables.Lift`. Rename `P1` to a real name: `low = 1200` |
-| `Robot.java: add .reversed()` | the part's line in `Robot.java` |
+| `public static double max = 2580;` (and `min`, `P1`) | class `Lift` in `Tunables.java`. Write a real name for `P1`: `low` |
+| `Open Robot.java:` and `Add .reversed() to the lift part.` | the part's line in `Robot.java` |
 
 ## Done when
 

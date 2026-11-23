@@ -47,11 +47,21 @@ final class SimMotor {
     // FLYWHEEL: its feed wheel (stage=, a CR servo or motor): a push sends a piece only if it ran just before.
     String stage = null;
 
+    // A speed sensor like a real hub's (off unless a scenario or a test sets it: sensor()): the speed the
+    // OpMode reads moves in steps of this many counts per second, and is this old.
+    private double readStep = 0, readLagSec = 0;
+    // The shaft speeds of the last readLagSec: {the motor's own time, speed}, oldest first.
+    private final java.util.ArrayDeque<double[]> speeds = new java.util.ArrayDeque<>();
+    private double stepTime = 0;
+
     // What the OpMode set.
     private DcMotorSimple.Direction direction = DcMotorSimple.Direction.FORWARD;
     private DcMotor.RunMode mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
     private DcMotor.ZeroPowerBehavior zeroPower = DcMotor.ZeroPowerBehavior.BRAKE;
     private double power = 0;
+    // The lowest plain power the code set since INIT (a scenario's "expect motor NAME lowest ..."): a brake or a
+    // reverse anywhere in the run shows here, not only at the moment of a check.
+    private double lowestPower = 0;
     private double targetVelocity = Double.NaN;   // NaN = setPower was used last
     private int targetPosition = 0;
     private boolean targetSet = false;   // RUN_TO_POSITION needs a target first, like the SDK
@@ -84,6 +94,8 @@ final class SimMotor {
     final DcMotorEx device;
     // A dead-wheel odometry pod plugged into this port: its count replaces the motor's own (null = none).
     volatile java.util.function.IntSupplier encoderOverride = null;
+    // True = no encoder cable in this port (set encoder NAME none): the speed reads 0 too.
+    volatile boolean noEncoder = false;
     // From the catalog part (or typical numbers): current when free and when stalled at full power.
     String partName = "";
     double freeAmps = 0.25, stallAmps = 9.2;
@@ -135,6 +147,16 @@ final class SimMotor {
         return power;
     }
 
+    /** The lowest plain power the code set since INIT (0 when none was below 0). */
+    synchronized double lowestPower() {
+        return lowestPower;
+    }
+
+    /** True while the code asks it to turn: a power, or a hub speed command (both 0 or none = false). */
+    synchronized boolean driven() {
+        return power != 0 || (!Double.isNaN(targetVelocity) && targetVelocity != 0);
+    }
+
     synchronized String modeName() {
         return mode.name();
     }
@@ -145,6 +167,7 @@ final class SimMotor {
         mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
         zeroPower = DcMotor.ZeroPowerBehavior.BRAKE;
         power = 0;
+        lowestPower = 0;
         targetVelocity = Double.NaN;
         p = 10; i = 3; d = 0; f = 0;
         integral = 0;
@@ -161,6 +184,46 @@ final class SimMotor {
     synchronized void stopForcedSpin() {
         if (forcedVel != null) shaftVel = 0;
         forcedVel = null;
+    }
+
+    /**
+     * What {@code getVelocity()} answers from now on, like a hub's speed reading: in steps, and late. The
+     * physics and the hub's own speed control still use the true speed.
+     *
+     * @param stepRpm the size of one step, RPM (0 = smooth): a 28 count encoder at 20 counts a second, 43
+     * @param lagSec  how old the reading is, seconds (0 = now)
+     */
+    synchronized void sensor(double stepRpm, double lagSec) {
+        if (!(stepRpm >= 0 && stepRpm <= 1000 && lagSec >= 0 && lagSec <= 1)) {
+            throw new IllegalArgumentException("a speed sensor: a step of 0 to 1000 RPM and a lag of 0 to 1 seconds");
+        }
+        readStep = stepRpm / 60.0 * ticksPerRev;
+        readLagSec = lagSec;
+        speeds.clear();
+        if (lagSec > 0) speeds.add(new double[] {stepTime, shaftVel});
+    }
+
+    /** The speed the OpMode reads (counts per second): {@link #velocity()}, or through the {@link #sensor}. */
+    synchronized double readVelocity() {
+        if (noEncoder) return 0;
+        if (readStep == 0 && readLagSec == 0) return velocity();
+        double v = shaftVel;
+        if (readLagSec > 0 && !speeds.isEmpty()) v = speeds.peekFirst()[1];
+        if (readStep > 0) v = Math.rint(v / readStep) * readStep;
+        return sign() * v;
+    }
+
+    // Remembers this step's speed, and forgets those older than the lag (but the newest of them: it is read).
+    private void rememberSpeed(double dt) {
+        if (readLagSec <= 0) return;
+        stepTime += dt;
+        speeds.addLast(new double[] {stepTime, shaftVel});
+        while (speeds.size() > 1) {
+            java.util.Iterator<double[]> it = speeds.iterator();
+            it.next();
+            if (it.next()[0] > stepTime - readLagSec + 1e-9) break;
+            speeds.removeFirst();
+        }
     }
 
     // The motor type the configuration would name: counts per turn and top speed from the robot file.
@@ -188,6 +251,7 @@ final class SimMotor {
             case "setPower": {
                 double was = Double.isNaN(targetVelocity) ? power : targetVelocity;
                 power = Math.max(-1, Math.min(1, ((Number) a[0]).doubleValue()));
+                lowestPower = Math.min(lowestPower, power);
                 targetVelocity = Double.NaN;
                 // Only forward (positive power): a feeder run backward (an intake pushing out) feeds nothing.
                 if (was <= FEED_ON && power > FEED_ON) starts++;
@@ -215,8 +279,8 @@ final class SimMotor {
             case "getZeroPowerBehavior": return zeroPower;
             case "getCurrentPosition": return encoderOverride != null ? sign() * encoderOverride.getAsInt() : encoder();
             case "getVelocity":
-                if (a != null && a.length == 1 && a[0] instanceof AngleUnit) return perSecondIn((AngleUnit) a[0], velocity());
-                return velocity();
+                if (a != null && a.length == 1 && a[0] instanceof AngleUnit) return perSecondIn((AngleUnit) a[0], readVelocity());
+                return readVelocity();
             case "setVelocity": {
                 double v = ((Number) a[0]).doubleValue();
                 if (a.length == 2 && a[1] instanceof AngleUnit) {
@@ -374,6 +438,11 @@ final class SimMotor {
     }
 
     private void stepFor(double dt, double battery, boolean stopping) {
+        moveFor(dt, battery, stopping);
+        rememberSpeed(dt);
+    }
+
+    private void moveFor(double dt, double battery, boolean stopping) {
         appliedPower = sharedPower(stopping ? 0 : shaftPower(dt));
         if (forcedVel != null) {
             shaftVel = forcedVel;

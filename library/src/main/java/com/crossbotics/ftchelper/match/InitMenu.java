@@ -27,7 +27,8 @@ import java.util.Locale;
  * if (menu.get("Route").equals("Far")) { ... }
  * }</pre>
  *
- * <p>Controls: D-pad up/down = choose a line, D-pad left/right = change it.
+ * <p>Controls: D-pad up/down = choose a line, D-pad left/right = change it. On a {@link #number} or
+ * {@link #angle} line, hold left/right to keep stepping.
  * Shortcuts: X = blue, B = red.
  *
  * <p>Each "add" method returns this same menu, so you can chain them as in the example.
@@ -46,6 +47,10 @@ public class InitMenu {
     // Comparing with this loop tells us the moment a button goes down (a "press"),
     // so holding a button changes the value only once, not 50 times a second.
     private final boolean[] was = new boolean[6];
+    // Held D-pad on a number line: wait this long after the press, then step this often.
+    private static final long REPEAT_WAIT_NANOS = 400_000_000L, REPEAT_EVERY_NANOS = 80_000_000L;
+    // When the next held step is due (System.nanoTime() clock).
+    private long nextRepeatNanos;
 
     // One line of the menu. "abstract" means it is only a pattern: each kind of line below
     // ("extends Item") fills in how it changes and how it shows itself.
@@ -82,6 +87,38 @@ public class InitMenu {
         void change(int d) { value = Math.max(0, Math.min(max, value + d)); }
         // Locale.US makes the number look the same on every phone or hub language setting.
         String show() { return String.format(Locale.US, "%.0f s", value); }
+    }
+
+    // A number line (distance, angle, ...): one step per press; held, it keeps stepping (see update()).
+    // "wrap" = an angle: past +180 it comes back at -180 and the other way, like turning in a circle.
+    private static final class NumberItem extends Item {
+        final double min, max, step;
+        final boolean wrap;
+        double value;
+        NumberItem(String label, double min, double max, double step, double start, boolean wrap) {
+            super(label);
+            this.min = min;
+            this.max = max;
+            this.step = step;
+            this.wrap = wrap;
+            this.value = start;
+        }
+        void change(int d) {
+            double v = value + d * step;
+            if (wrap) {
+                // Keep the angle between -180 (not included) and +180: 185 -> -175, -180 -> 180.
+                v = 180 - (((180 - v) % 360) + 360) % 360;
+            } else {
+                v = Math.max(min, Math.min(max, v));
+            }
+            // Round away tiny errors (0.1 + 0.2 is 0.30000000000000004 in a computer).
+            value = Math.round(v * 1e6) / 1e6;
+        }
+        String show() {
+            // 24.0 shows as "24", 2.5 as "2.5".
+            return value == Math.rint(value) ? String.format(Locale.US, "%.0f", value)
+                    : String.format(Locale.US, "%s", value);
+        }
     }
 
     // The practice/competition line. Either direction flips it, and Profile saves the choice on
@@ -130,6 +167,35 @@ public class InitMenu {
         return this;
     }
 
+    /**
+     * Adds a number, from {@code min} to {@code max} in steps of {@code step}, starting at {@code start}.
+     * D-pad right adds one step, left takes one away. Hold it to keep stepping (about 12 steps a second,
+     * after a short wait). It stops at min and max. Read it with {@link #getNumber}.
+     *
+     * <pre>{@code
+     * menu.number("Distance (in)", 0, 96, 1, 24);
+     * }</pre>
+     */
+    public InitMenu number(String label, double min, double max, double step, double start) {
+        if (!(step > 0) || min > max || start < min || start > max) {
+            throw new IllegalArgumentException("number \"" + label + "\": needs min <= start <= max and a step above 0");
+        }
+        items.add(new NumberItem(label, min, max, step, start, false));
+        return this;
+    }
+
+    /**
+     * Adds an angle in degrees, in steps of {@code stepDeg}, starting at {@code startDeg}. It goes around
+     * the circle: after +180 comes -180 + step. Hold the D-pad to keep stepping, like {@link #number}.
+     */
+    public InitMenu angle(String label, double stepDeg, double startDeg) {
+        if (!(stepDeg > 0) || stepDeg > 180 || startDeg <= -180 || startDeg > 180) {
+            throw new IllegalArgumentException("angle \"" + label + "\": needs a step from 0 to 180 and a start above -180, up to 180");
+        }
+        items.add(new NumberItem(label, -180, 180, stepDeg, startDeg, true));
+        return this;
+    }
+
     /** Adds the practice/competition profile choice (saved on the hub when changed). */
     public InitMenu profile() {
         items.add(new ProfileItem());
@@ -146,8 +212,17 @@ public class InitMenu {
             if (pressed(now, 0)) selected = (selected + items.size() - 1) % items.size();
             if (pressed(now, 1)) selected = (selected + 1) % items.size();
             // Right / left change the line under the cursor.
-            if (pressed(now, 2)) items.get(selected).change(1);
-            if (pressed(now, 3)) items.get(selected).change(-1);
+            Item line = items.get(selected);
+            if (pressed(now, 2)) line.change(1);
+            if (pressed(now, 3)) line.change(-1);
+            // A number line keeps stepping while right or left is held. Other lines change once per press.
+            long t = nanoTime();
+            if (pressed(now, 2) || pressed(now, 3)) nextRepeatNanos = t + REPEAT_WAIT_NANOS;
+            boolean holding = now[2] != now[3] && line instanceof NumberItem;
+            if (holding && !pressed(now, 2) && !pressed(now, 3) && t >= nextRepeatNanos) {
+                line.change(now[2] ? 1 : -1);
+                nextRepeatNanos = t + REPEAT_EVERY_NANOS;
+            }
             // X and B set the alliance directly, from any line (X is blue, B is red, like the
             // button colors on most gamepads).
             ListItem a = find("Alliance");
@@ -182,17 +257,40 @@ public class InitMenu {
         return 0;
     }
 
-    /** The chosen option of a choice line, e.g. {@code get("Route")}. */
+    /** The chosen option of a choice line, e.g. {@code get("Route")}. For a number or angle line: its number as text. */
     public String get(String label) {
-        ListItem item = find(label);
-        // A misspelled label is a bug in the program: say so clearly instead of guessing.
-        if (item == null) {
-            StringBuilder names = new StringBuilder();
-            for (Item i : items) if (i instanceof ListItem) names.append(names.length() == 0 ? "" : ", ").append(i.label);
-            throw new IllegalArgumentException("No choice called \"" + label + "\" in the INIT menu. The choices: "
-                    + (names.length() == 0 ? "none yet" : names) + " (capitals count)");
-        }
+        Item item = find(label);
+        if (item == null) item = findNumber(label);
+        if (item == null) throw missing(label);
         return item.show();
+    }
+
+    /** The number chosen on a {@link #number} or {@link #angle} line, e.g. {@code getNumber("Distance (in)")}. */
+    public double getNumber(String label) {
+        NumberItem item = findNumber(label);
+        if (item == null) throw missing(label);
+        return item.value;
+    }
+
+    // A misspelled label is a bug in the program: say so clearly instead of guessing.
+    private IllegalArgumentException missing(String label) {
+        StringBuilder names = new StringBuilder();
+        for (Item i : items) {
+            if (i instanceof ListItem || i instanceof NumberItem) names.append(names.length() == 0 ? "" : ", ").append(i.label);
+        }
+        return new IllegalArgumentException("No choice called \"" + label + "\" in the INIT menu. The choices: "
+                + (names.length() == 0 ? "none yet" : names) + " (capitals count)");
+    }
+
+    // The number line with this label, or null if there is none.
+    private NumberItem findNumber(String label) {
+        for (Item i : items) if (i instanceof NumberItem && i.label.equals(label)) return (NumberItem) i;
+        return null;
+    }
+
+    // The clock for held buttons. Tests replace it to step time by hand.
+    long nanoTime() {
+        return System.nanoTime();
     }
 
     /** True if a yes/no line is YES. */
