@@ -104,9 +104,66 @@ public class InitMenuNumberTest {
         assertEquals("3", m.get("Distance (in)"));
     }
 
+    @Test public void rightAndLeftTogetherChangeNothing() {
+        Gamepad g = new Gamepad();
+        TimedMenu m = new TimedMenu(g);
+        m.number("Distance (in)", 0, 96, 1, 96);
+        g.dpad_right = true;
+        g.dpad_left = true;
+        for (int i = 0; i < 50; i++) {
+            m.update();
+            m.ms += 20;
+        }
+        assertEquals(96, m.getNumber("Distance (in)"), 1e-9);
+    }
+
+    @Test public void movingTheCursorWhileHoldingChangesNoOtherLine() {
+        Gamepad g = new Gamepad();
+        TimedMenu m = new TimedMenu(g);
+        m.number("Distance (in)", 0, 96, 1, 24);
+        m.angle("Direction (deg)", 5, 0);
+        g.dpad_right = true;
+        for (int i = 0; i < 30; i++) { m.update(); m.ms += 20; }   // 0.6 s on Distance: it repeats
+        g.dpad_down = true;                                          // a diagonal: down while right is held
+        for (int i = 0; i < 30; i++) { m.update(); m.ms += 20; }
+        g.dpad_right = false;
+        g.dpad_down = false;
+        m.update();
+        assertEquals(0, m.getNumber("Direction (deg)"), 1e-9);
+    }
+
+    @Test public void notANumberIsRefused() {
+        InitMenu m = new InitMenu(new Gamepad());
+        try { m.number("D", 0, 10, 1, Double.NaN); fail(); } catch (IllegalArgumentException e) { /* NaN start */ }
+        try { m.number("D", Double.NaN, 10, 1, 5); fail(); } catch (IllegalArgumentException e) { /* NaN min */ }
+        try { m.angle("A", 5, Double.NaN); fail(); } catch (IllegalArgumentException e) { /* NaN start */ }
+        m.number("Distance (in)", 0, 96, 1, 24);
+        try { m.isYes("Distance (in)"); fail(); } catch (IllegalArgumentException e) {
+            assertEquals(true, e.getMessage().contains("getNumber"));
+        }
+    }
+
+    @Test public void roundingNeverPassesTheEnds() {
+        Gamepad g = new Gamepad();
+        TimedMenu m = new TimedMenu(g);
+        m.number("N", 0, 0.1234567, 0.1, 0.1);
+        tap(g, m, true);
+        assertEquals(true, m.getNumber("N") <= 0.1234567);
+        m.angle("A", 0.001, -179.9989996); // one step left rounds to -180, which must show as 180
+        m.update();
+        g.dpad_down = true;
+        m.update();
+        g.dpad_down = false;
+        m.update();
+        tap(g, m, false);
+        double a = m.getNumber("A");
+        assertEquals(180, a, 1e-9);
+    }
+
     @Test public void badSettingsAndMissingLinesSayWhy() {
         InitMenu m = new InitMenu(new Gamepad());
         try { m.number("D", 0, 10, 0, 5); fail(); } catch (IllegalArgumentException e) { /* step 0 */ }
+        try { m.number("D", 0, 10, 0.0000001, 5); fail(); } catch (IllegalArgumentException e) { /* step too small */ }
         try { m.number("D", 0, 10, 1, 11); fail(); } catch (IllegalArgumentException e) { /* start past max */ }
         try { m.angle("A", 5, -180); fail(); } catch (IllegalArgumentException e) { /* -180 is the same as 180 */ }
         m.number("Distance (in)", 0, 96, 1, 24);

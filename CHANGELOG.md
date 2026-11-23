@@ -7,8 +7,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 ### Added
 
 - INIT menu number and angle lines: `InitMenu.number(...)`, `InitMenu.angle(...)`, `getNumber(...)`, and
-  in autos `Steps.menuNumber(...)`, `Steps.menuAngle(...)`, `Steps.number(...)`. Tap the D-pad for one
-  step, hold it to step fast. For fine choices, such as a distance in 1 in steps. Old menu lines do not change.
+  in autos `Steps.menuNumber(...)`, `Steps.menuAngle(...)`, `Steps.number(...)`, `EasyAuto.number(...)`. Tap the D-pad for one
+  step, hold it to step fast. For fine choices, such as a distance in 1 in steps. Right and left together do nothing. The smallest step is 0.001. Old menu lines do not change.
 - The shot table can guess speeds a little past your tested rows, when you turn it on. `Tunables.Launcher`
   `extendTableEnds` (false) continues each end's line up to `extendMaxRpm` (0.8 x the motor's top speed). The screen
   says "estimated", and "estimated, speed limited" past the limit. The aim locks on an estimate that is not limited,

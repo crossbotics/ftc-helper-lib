@@ -196,6 +196,11 @@ public abstract class EasyAuto extends LinearOpMode {
         return menu.get(label);
     }
 
+    /** An INIT number or angle line (from {@link #addChoices}), such as {@code menu.number(...)}. */
+    protected double number(String label) {
+        return menu.getNumber(label);
+    }
+
     /** The drive, for custom steps. */
     protected AutoDrive autoDrive() {
         return autoDrive;

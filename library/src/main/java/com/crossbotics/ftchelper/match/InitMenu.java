@@ -49,8 +49,11 @@ public class InitMenu {
     private final boolean[] was = new boolean[6];
     // Held D-pad on a number line: wait this long after the press, then step this often.
     private static final long REPEAT_WAIT_NANOS = 400_000_000L, REPEAT_EVERY_NANOS = 80_000_000L;
-    // When the next held step is due (System.nanoTime() clock).
+    // When the next held step is due (the library clock), and the line the press was on.
     private long nextRepeatNanos;
+    private Item repeatLine;
+    // The smallest step of a number line: values are kept to 6 decimals, so a smaller step could not show.
+    private static final double MIN_STEP = 0.001;
 
     // One line of the menu. "abstract" means it is only a pattern: each kind of line below
     // ("extends Item") fills in how it changes and how it shows itself.
@@ -111,8 +114,11 @@ public class InitMenu {
             } else {
                 v = Math.max(min, Math.min(max, v));
             }
-            // Round away tiny errors (0.1 + 0.2 is 0.30000000000000004 in a computer).
-            value = Math.round(v * 1e6) / 1e6;
+            // Round away tiny errors (0.1 + 0.2 is 0.30000000000000004 in a computer), then keep the
+            // rounded value inside the range: -180 becomes 180, and a rounded end never passes min or max.
+            v = Math.round(v * 1e6) / 1e6;
+            if (wrap) value = v <= -180 ? v + 360 : v;
+            else value = Math.max(min, Math.min(max, v));
         }
         String show() {
             // 24.0 shows as "24", 2.5 as "2.5".
@@ -170,15 +176,16 @@ public class InitMenu {
     /**
      * Adds a number, from {@code min} to {@code max} in steps of {@code step}, starting at {@code start}.
      * D-pad right adds one step, left takes one away. Hold it to keep stepping (about 12 steps a second,
-     * after a short wait). It stops at min and max. Read it with {@link #getNumber}.
+     * after a short wait). It stops at min and max, so both ends can always be chosen (from an end it counts
+     * on from that end). The step is 0.001 or more. Read it with {@link #getNumber}.
      *
      * <pre>{@code
      * menu.number("Distance (in)", 0, 96, 1, 24);
      * }</pre>
      */
     public InitMenu number(String label, double min, double max, double step, double start) {
-        if (!(step > 0) || min > max || start < min || start > max) {
-            throw new IllegalArgumentException("number \"" + label + "\": needs min <= start <= max and a step above 0");
+        if (!(step >= MIN_STEP) || !(min <= start && start <= max)) {
+            throw new IllegalArgumentException("number \"" + label + "\": needs min <= start <= max and a step of 0.001 or more");
         }
         items.add(new NumberItem(label, min, max, step, start, false));
         return this;
@@ -189,8 +196,8 @@ public class InitMenu {
      * the circle: after +180 comes -180 + step. Hold the D-pad to keep stepping, like {@link #number}.
      */
     public InitMenu angle(String label, double stepDeg, double startDeg) {
-        if (!(stepDeg > 0) || stepDeg > 180 || startDeg <= -180 || startDeg > 180) {
-            throw new IllegalArgumentException("angle \"" + label + "\": needs a step from 0 to 180 and a start above -180, up to 180");
+        if (!(stepDeg >= MIN_STEP) || stepDeg > 180 || !(startDeg > -180 && startDeg <= 180)) {
+            throw new IllegalArgumentException("angle \"" + label + "\": needs a step from 0.001 to 180 and a start above -180, up to 180");
         }
         items.add(new NumberItem(label, -180, 180, stepDeg, startDeg, true));
         return this;
@@ -213,12 +220,18 @@ public class InitMenu {
             if (pressed(now, 1)) selected = (selected + 1) % items.size();
             // Right / left change the line under the cursor.
             Item line = items.get(selected);
-            if (pressed(now, 2)) line.change(1);
-            if (pressed(now, 3)) line.change(-1);
+            // Right and left together on a number line: they cancel, so nothing changes.
+            boolean both = now[2] && now[3] && line instanceof NumberItem;
+            if (pressed(now, 2) && !both) line.change(1);
+            if (pressed(now, 3) && !both) line.change(-1);
             // A number line keeps stepping while right or left is held. Other lines change once per press.
             long t = nanoTime();
-            if (pressed(now, 2) || pressed(now, 3)) nextRepeatNanos = t + REPEAT_WAIT_NANOS;
-            boolean holding = now[2] != now[3] && line instanceof NumberItem;
+            if (pressed(now, 2) || pressed(now, 3)) {
+                nextRepeatNanos = t + REPEAT_WAIT_NANOS;
+                repeatLine = line;
+            }
+            // Only the line the press was on repeats: moving the cursor while holding changes no other line.
+            boolean holding = now[2] != now[3] && line instanceof NumberItem && line == repeatLine;
             if (holding && !pressed(now, 2) && !pressed(now, 3) && t >= nextRepeatNanos) {
                 line.change(now[2] ? 1 : -1);
                 nextRepeatNanos = t + REPEAT_EVERY_NANOS;
@@ -290,11 +303,15 @@ public class InitMenu {
 
     // The clock for held buttons. Tests replace it to step time by hand.
     long nanoTime() {
-        return System.nanoTime();
+        return com.crossbotics.ftchelper.core.Time.nanos();
     }
 
     /** True if a yes/no line is YES. */
     public boolean isYes(String label) {
+        // A number line is never a yes or no: say so, instead of a quiet "no".
+        if (find(label) == null && findNumber(label) != null) {
+            throw new IllegalArgumentException("\"" + label + "\" is a number line: read it with getNumber");
+        }
         return "YES".equals(get(label));
     }
 
