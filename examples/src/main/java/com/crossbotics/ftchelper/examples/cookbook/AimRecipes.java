@@ -94,6 +94,20 @@ public class AimRecipes {
         }
     }
 
+    /** The numbers for the continuous-fire recipe (its own set: it is off until tested on a real robot). */
+    public static class ContinuousNumbers {
+        public static class Launcher {
+            // recipe: tunables-continuous-fire
+            // ADD these lines to your Tunables.Launcher section.
+            public static boolean continuousOnHold = true;              // hold fire: feed nonstop, aimed
+            public static double continuousMaxSec = DEFAULT;            // one hold feeds this long at most, seconds (3)
+            public static double continuousBoostRpm = DEFAULT;          // extra speed once the feed starts, RPM (0)
+            public static String speedControl = "PID";                  // "PID" (normal) or "BANG_BANG" (to test)
+            public static boolean extendTableEnds = false;              // true: guess speeds past the tested rows
+            // end recipe
+        }
+    }
+
     /** The numbers for the speed-trim recipe (its own set, so the other recipes stay short). */
     public static class TrimNumbers {
         public static class Drive {

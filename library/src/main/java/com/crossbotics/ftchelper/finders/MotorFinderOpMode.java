@@ -17,8 +17,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
  * positions you want, and its top speed. Move it slowly with the stick, mark the ends and positions,
  * and copy the code lines it shows. No code to write: it lists every motor in the robot configuration.
  *
- * <p>It shows the code for {@code PositionMotor} and, for the robot in five files, the line for
- * {@code Tunables.java}: {@code Tunables.Lift: min = 0, max = 2580, P1 = 1200} (rename P1 to low...).
+ * <p>In Tune and check, for a robot in five files, it shows the lines for {@code Tunables.java}:
+ * {@code public static double max = 2580;} in class Lift (P1 stands for your name, e.g. low). An arm or a
+ * turret uses degrees: it shows the counts and says not to copy them. On its own it shows the code for
+ * {@code PositionMotor}.
  *
  * <pre>
  * Choose:  D-pad up/down = motor, A = use it (its count starts at 0 HERE: start at the bottom)
@@ -52,6 +54,7 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
     private String note = "";
     // Saved positions outside the two ends (the robot never goes there: positions stay inside min..max).
     private String outside = "";
+    private boolean liftFound = false;   // a part in counts has its min and max to copy
 
     @Override protected String finderName() { return "Motor finder"; }
 
@@ -62,8 +65,12 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
 
     @Override
     protected void showInit(RobotTelemetry t) {
-        t.text("Motor finder: finds a mechanism's limits, positions and top speed.");
-        t.text("Put the mechanism at its BOTTOM (or start) before you choose it. Press {PLAY}.");
+        t.warn("Robot on a block. Hands clear of the part.");
+        t.warn("It has NO limits yet: it can hit its end.");
+        t.warn("Stick = move, let go = stop. {RT} = FULL power.");
+        t.text("Motor finder: for a lift or an arm.");
+        t.text("Finds how far it may go, and its top speed.");
+        t.text("Next: put the part at its BOTTOM now.");
     }
 
     @Override
@@ -75,8 +82,8 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
                     if (motor == null) chooser.next(); else maxPower = Math.max(0.1, maxPower - 0.05);
                 })
          .bindPress(Pad.G1, Btn.A, () -> { if (motor == null) choose(); else savePosition(); })
-         .bindPress(Pad.G1, Btn.X, () -> { if (motor != null) { lowEnd = ticks(); writeResults(); } })
-         .bindPress(Pad.G1, Btn.B, () -> { if (motor != null) { highEnd = ticks(); writeResults(); } })
+         .bindPress(Pad.G1, Btn.X, () -> { if (motor != null) { lowEnd = ticks(); endMarked(); } })
+         .bindPress(Pad.G1, Btn.B, () -> { if (motor != null) { highEnd = ticks(); endMarked(); } })
          .bindPress(Pad.G1, Btn.Y, () -> { if (motor != null) undoPosition(); })
          .bindPress(Pad.G1, Btn.BACK, this::release);
     }
@@ -94,12 +101,23 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
         positions.clear();
         topSpeed = 0;
         note = "";
+        outside = "";
+        waitForRelease();   // SAFETY: a stick still held must not move the motor that was just chosen
+    }
+
+    // X or B: an end is marked.
+    private void endMarked() {
+        // SAFETY: RT held while the second end is marked must not start full power by itself.
+        if (gamepad1.right_trigger > 0.1) waitForRelease();
+        note = "";
+        writeResults();
     }
 
     // BACK: stop this motor and go back to the list.
     private void release() {
         if (motor != null) motor.setPower(0);
         motor = null;
+        waitForRelease();
     }
 
     private int ticks() {
@@ -137,14 +155,15 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
         if (gamepad1.right_trigger > 0.5) {
             // Speed test: full power toward the HIGH end, stopping SPEED_TEST_MARGIN before it.
             if (!bothEnds()) {
-                note = "Mark both ends first ({X} and {B}).";
+                note = "Mark both ends first ({X} and {B}).\nThe speed test needs them.";
                 power = 0;
             } else {
                 double stopAt = highEnd - (highEnd - lowEnd) * SPEED_TEST_MARGIN;
                 boolean before = sign > 0 ? ticks() < stopAt : ticks() > stopAt;
                 power = before ? sign : 0;
                 topSpeed = Math.max(topSpeed, Math.abs(motor.getVelocity()));
-                note = before ? "Speed test..." : "Speed test done. Bring it back down with the stick.";
+                note = before ? "Speed test: FULL power. Let go of {RT} = stop."
+                        : "Speed test done. Let go of {RT}.\nThen bring it down with the right stick.";
                 writeResults();
             }
         } else {
@@ -171,79 +190,112 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
                 if (p.getValue() < lo || p.getValue() > hi) past.add(p.getKey() + " = " + p.getValue());
             }
             if (!past.isEmpty()) {
-                outside = FinderResults.commas(past) + ": outside the ends (" + FinderResults.num(lo, 0) + " to " + FinderResults.num(hi, 0)
-                        + "). The robot stops at min/max, so it never gets there: {Y} undoes the last point, or mark the end again.";
+                outside = FinderResults.commas(past) + ": outside the two ends.\nIt can never get there. {Y} = take it back.";
             }
         }
-        String line = "PositionMotor.create(hardwareMap, \"" + motorName + "\")";
+        boolean degrees = usesDegrees(motorName);
+        if (!bothEnds()) results.notDone("mark both ends ({X} and {B}).");
+        else if (degrees && !liftFound) results.notDone("this part uses degrees, not counts.");
+        else if (!outside.isEmpty()) results.notDone("a saved position is outside the ends.");
+        else results.done();
+
         boolean reversed = false;
+        double min = Double.NaN, max = Double.NaN;
         if (bothEnds()) {
             double[] lim = FinderMath.limits(lowEnd, highEnd);
+            min = lim[0];
+            max = lim[1];
             reversed = lim[2] == 1;
-            if (reversed) line += ".reversed()";
-            line += ".limits(" + FinderResults.num(lim[0], 0) + ", " + FinderResults.num(lim[1], 0) + ")";
         }
-        results.set(key + ":0", line);
-        int n = 1;
+        if (degrees) {
+            // An arm's and a turret's Tunables are degrees: counts copied there would be a wrong limit.
+            List<String> counts = new ArrayList<>();
+            counts.add("LOW end " + count(lowEnd) + ", HIGH end " + count(highEnd));
+            for (Map.Entry<String, Integer> p : positions.entrySet()) counts.add(p.getKey() + " " + p.getValue());
+            counts.add("Next: ask your mentor for these in degrees.");
+            results.setIn(key + ":counts", "Motor counts. Do NOT copy them:", counts.toArray(new String[0]));
+            return;
+        }
+        if (!hasRobotFiles()) {
+            List<String> code = new ArrayList<>();
+            code.add("PositionMotor.create(hardwareMap, \"" + motorName + "\")" + (reversed ? ".reversed()" : "")
+                    + (bothEnds() ? ".limits(" + FinderResults.num(min, 0) + ", " + FinderResults.num(max, 0) + ")" : ""));
+            for (Map.Entry<String, Integer> p : positions.entrySet()) {
+                code.add("    .position(\"" + p.getKey() + "\", " + (reversed ? 0 - p.getValue() : p.getValue()) + ")");
+            }
+            if (topSpeed > 0) code.add("    // top speed up: " + FinderResults.num(topSpeed, 0) + " counts/s");
+            results.setIn(key + ":0", FinderResults.HELPER_CODE, code.toArray(new String[0]));
+            return;
+        }
+        // Until both ends are known the counts' direction is not known: no line to copy yet.
+        if (!bothEnds()) return;
+        liftFound = true;
+        String section = sectionOf(motorName);
+        results.setTunable(key + ":min", section, "min", FinderResults.num(min, 0));
+        results.setTunable(key + ":max", section, "max", FinderResults.num(max, 0));
         for (Map.Entry<String, Integer> p : positions.entrySet()) {
-            int value = reversed ? 0 - p.getValue() : p.getValue();
-            results.set(key + ":" + n++, "    .position(\"" + p.getKey() + "\", " + value + ")");
+            results.setTunable(key + ":" + p.getKey(), section, p.getKey(),
+                    String.valueOf(reversed ? 0 - p.getValue() : p.getValue()));
         }
-        if (topSpeed > 0) {
-            results.set(key + ":speed", "    // top speed up: " + FinderResults.num(topSpeed, 0) + " counts/s");
-        }
-        // The same numbers for the robot in five files (Tunables.java): min, max and the positions.
-        List<String> fields = new ArrayList<>();
-        if (bothEnds()) {
-            double[] lim = FinderMath.limits(lowEnd, highEnd);
-            fields.add("min = " + FinderResults.num(lim[0], 0));
-            fields.add("max = " + FinderResults.num(lim[1], 0));
-        }
-        for (Map.Entry<String, Integer> p : positions.entrySet()) {
-            fields.add(p.getKey() + " = " + (reversed ? 0 - p.getValue() : p.getValue()));
-        }
-        if (fields.isEmpty()) return;
-        results.set(key + ":t0", FinderResults.tunablesLine(motorName, fields));
-        results.set(key + ":t1", "    // encoder counts: right for a Lift; an Arm's numbers are degrees");
-        if (reversed) results.set(key + ":t2", "Robot.java: add .reversed() to the \"" + motorName + "\" part");
+        if (!positions.isEmpty()) results.set(key + ":names", "Write your names for P1, P2 (low, high).");
+        if (!knowsPart(motorName)) results.set(key + ":units", "These are counts: for a Lift, never for an Arm.");
+        if (reversed) results.setIn(key + ":rev", FinderResults.ROBOT_FILE, "Add .reversed() to the " + motorName + " part.");
+    }
+
+    private static String count(double end) {
+        return Double.isNaN(end) ? "not saved" : FinderResults.num(end, 0);
     }
 
     @Override
     protected void show(RobotTelemetry t) {
         if (motor == null) {
-            t.section("Choose a motor (D-pad, then {A})");
+            t.warn("Hands clear. Once chosen, the stick moves it.");
+            t.section("Motor finder: choose a motor");
+            t.text("Next: choose the lift's or arm's motor.");
+            t.text("D-pad up/down = choose. {A} = use it.");
             chooser.addTelemetry(t, "No motors in the robot configuration.");
             return;
         }
-        t.section("Motor \"" + motorName + "\"  ({BACK} = another)");
-        t.line("Count", ticks());
-        t.line("Speed", FinderResults.num(motor.getVelocity(), 0) + " counts/s");
+        t.warn(bothEnds() ? "Hands clear. Let go of the stick = power off." : "No limits yet. Short pushes. Let go = stop.");
+        t.section("Motor \"" + motorName + "\"");
+        if (Double.isNaN(lowEnd)) {
+            t.text("Next: right stick = move just above the bottom.");
+            t.text("{X} = save the LOW end.");
+        } else if (!bothEnds()) {
+            t.text("Next: move to just below the top.");
+            t.text("{B} = save the HIGH end.");
+        } else {
+            t.text("Next: at each height you use: {A} = save it.");
+            t.warn("Hold {RT} = FULL power up (speed test).");
+        }
+        t.line("Motor count", ticks());
         t.line("Current", FinderResults.num(motor.getCurrent(CurrentUnit.AMPS), 1) + " A");
-        t.line("Max power", FinderResults.num(maxPower, 2) + " (D-pad up/down)");
-        t.line("LOW end ({X})", Double.isNaN(lowEnd) ? "-" : FinderResults.num(lowEnd, 0));
-        t.line("HIGH end ({B})", Double.isNaN(highEnd) ? "-" : FinderResults.num(highEnd, 0));
+        t.text("Current high and not moving? Stuck: let go.");
+        if (results.isEmpty()) t.line("Max power", FinderResults.num(maxPower, 2) + "  (D-pad up/down)");
+        t.line("LOW end ({X})", count(lowEnd));
+        t.line("HIGH end ({B})", count(highEnd));
         if (topSpeed > 0) t.line("Top speed", FinderResults.num(topSpeed, 0) + " counts/s");
-        if (!note.isEmpty()) t.text(note);
-        if (!outside.isEmpty()) t.warn(outside);
-        t.text("Stick = move, {A} = save position, {Y} = undo, hold {RT} = speed test");
+        textLines(t, note);
+        warnLines(t, outside);
+        t.text("{BACK} = another motor.");
     }
 
     @Override
     protected String[] helpLines() {
         return new String[] {
-            "Finds limits, positions, top speed (lift/arm...).",
-            "Before: robot on a block, mechanism at its BOTTOM.",
-            "1. D-pad up/down = choose a motor, {A} = use it",
-            "   (its count starts at 0 here).",
-            "2. Right stick = move slowly. D-pad up/down =",
-            "   max power (0.1 to 0.6, starts at 0.3).",
-            "3. Just above the bottom: {X} = LOW end. Just below",
-            "   the top: {B} = HIGH end. Then the power goes off",
-            "   at them; it coasts a bit past ({LB} = go past).",
-            "4. Each height you need: {A} (P1, P2...). {Y} = undo.",
-            "5. After {X} and {B}: hold {RT} = speed test (full power",
-            "   up, stops before the top).",
-            "High amps, not moving = pushing on something: stop.",
+            "Finds how far a lift or an arm may go.",
+            "Robot on a block. The part at its BOTTOM.",
+            "1. Choose its motor. {A} = use it (count 0 here).",
+            "2. Right stick = move slowly. Let go = stop.",
+            "   D-pad up/down = max power (0.1 to 0.6).",
+            "3. Just above the bottom: {X} = LOW end.",
+            "   Just below the top: {B} = HIGH end.",
+            "   Then power goes off there. It rolls a bit.",
+            "   Hold {LB} = go past them (no limit: careful).",
+            "4. Each height you use: {A}. {Y} = take one back.",
+            "5. Hold {RT} = speed test: FULL power up.",
+            "   It stops before the top. Let go = stop.",
+            "An Arm or turret uses degrees, not these counts.",
         };
     }
 

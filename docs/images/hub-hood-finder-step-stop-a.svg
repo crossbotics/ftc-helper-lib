@@ -17,13 +17,13 @@
 <rect x="6" y="190" width="508" height="254" rx="14" fill="#2b2f36"/>
 <text x="22" y="220" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
 <rect x="16" y="234" width="488" height="200" rx="6" fill="#ffffff"/>
-<text x="26" y="260" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Hood "hood" (servo) ---</text>
-<text x="26" y="281" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Position : 0.205</text>
-<text x="26" y="302" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Step : 0.005  (D-pad left = smaller, right = bigger)</text>
-<text x="26" y="323" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<rect x="20" y="329" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="344" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Stop A : 0.205</text>
-<text x="26" y="365" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Stop B : - (B)</text>
-<text x="26" y="386" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="407" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Stop A = 0.205 (no angle)</text>
+<text x="26" y="260" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">!! Every step moves the hood. Hands clear.</text>
+<text x="26" y="281" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Hood "hood": its two ends ---</text>
+<text x="26" y="302" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Next: go to the other end, then back a little.</text>
+<text x="26" y="323" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">B = save it as end B.</text>
+<text x="26" y="344" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Position : 0.205  (0 to 1)</text>
+<rect x="20" y="350" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="365" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">End A : 0.205</text>
+<text x="26" y="386" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">End B : not saved</text>
+<text x="26" y="407" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
 </svg>

@@ -76,7 +76,7 @@ if (!tuning.isOpen()) driver.update(gamepad1, gamepad2);   // gamepad 1 belongs 
    from the menu does not fire.
 
 **Why three button lists:** the menu uses gamepad 1's D-pad, bumpers, A, B, X and Y. If the driver's
-gamepad-1 buttons kept working, Y for "reset all" would also run whatever Y does for the robot. The lift
+gamepad-1 buttons kept working, Y for "erase all" would also run whatever Y does for the robot. The lift
 buttons are on gamepad 2, so a second person can test each change while you tune.
 
 Read the value **every loop** (`LIFT_MAX_POWER.get()`), so that a change acts at once. The menu's buttons,

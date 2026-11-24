@@ -4,22 +4,27 @@
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Tune and check ---",
+        "--- Tune and check: 1 of 14 ---",
         "Robot: Robot",
-        "*> Hardware Check: every device found, turns the right way",
-        "  Motor Direction Check: each drive wheel rolls forward",
-        "  Encoder Check: each encoder cable in its own motor's port",
+        "*> Hardware Check",
+        "*  Motor Direction Check",
+        "*  Encoder Check",
         "  ...",
-        "D-pad up/down = pick, A = open it. Then ▶."
+        "This tool: test each device.",
+        "D-pad up/down = choose. A = open it. Then ▶."
       ]
     },
     "hardware-check-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "*Found 12 devices. Robot on a block! Press ▶.",
-        "Robot.java: every device is in the configuration",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! Robot on a block. Hands clear.",
+        "!! After START the stick and A move parts.",
+        "Hardware Check: test each device, one at a time.",
+        "*Devices found : 12",
+        "*Robot.java: every part it names was found.",
+        "Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "motor-direction-check-step-hold": {
@@ -27,12 +32,16 @@
       "where": "Hold on gamepad 1:",
       "order": "press-first",
       "lines": [
-        "--- Hold a button: that wheel must roll FORWARD ---",
+        "!! Hands off the wheels. Let go = stop.",
+        "--- Motor direction check ---",
+        "Next: hold a button. The TOP of that wheel",
+        "must move toward the FRONT of the robot.",
         "*X front-left : \"front_left\"  RUNNING",
-        "Y front-right : \"front_right\" (reversed)",
-        "A back-left : \"back_left\"",
-        "B back-right : \"back_right\" (reversed)",
-        "Backward? Add its name to reversed(...) on the drive ..."
+        "Y front-right : \"front_right\" (reversed in code)",
+        "...",
+        "\"front_left\" rolled FORWARD? It is right.",
+        "*It rolled BACKWARD? In Robot.java, drive line:",
+        "*  .reversed(\"front_left\", \"front_right\")"
       ]
     },
     "motor-direction-check-step-fixed": {
@@ -40,21 +49,27 @@
       "where": "Check it again, hold:",
       "order": "press-first",
       "lines": [
-        "--- Hold a button: that wheel must roll FORWARD ---",
-        "*X front-left : \"front_left\" (reversed)  RUNNING",
-        "Y front-right : \"front_right\" (reversed)",
-        "A back-left : \"back_left\"",
-        "B back-right : \"back_right\" (reversed)",
-        "..."
+        "!! Hands off the wheels. Let go = stop.",
+        "--- Motor direction check ---",
+        "Next: hold a button. The TOP of that wheel",
+        "must move toward the FRONT of the robot.",
+        "*X front-left : \"front_left\"  RUNNING",
+        "Y front-right : \"front_right\" (reversed in code)",
+        "...",
+        "*\"front_left\" rolled FORWARD? It is right."
       ]
     },
     "encoder-check-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "!! Wheels off the ground! Put the robot on a block. ...",
-        "*Then press ▶. Hold A: each motor gets a short push.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! Wheels off the ground! Put the robot on a block.",
+        "!! Lifts and arms down. Hands clear.",
+        "*!! Holding A moves each part. Let go = stop.",
+        "Encoder check: is each motor's turn counter",
+        "(its encoder) plugged into its own port?",
+        "Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "encoder-check-step-hold": {
@@ -62,26 +77,31 @@
       "where": "Hold on gamepad 1:",
       "order": "press-first",
       "lines": [
-        "--- Encoder check: hold A (let go = stop), Y = again ---",
+        "!! Parts move while you hold A. Let go = stop.",
+        "--- Encoder check: 3 of 5 ---",
+        "Next: hold A until every motor is checked.",
+        "Watch: a lift or an arm must move UP.",
         "\"front_left\" (drive) : OK: counts up (+412)",
         "\"front_right\" (drive) : OK: counts up (+405)",
         "*\"back_left\" (drive) : PUSHING",
         "\"back_right\" (drive) : not yet",
-        "\"lift\" (Lift) : not yet",
-        "Watch each part: a lift or arm must move UP, away from ..."
+        "\"lift\" (Lift) : not yet"
       ]
     },
     "encoder-check-step-again": {
       "button": "Y",
       "where": "Fix the cables, then press:",
       "lines": [
-        "--- Encoder check: hold A (let go = stop), Y = again ---",
-        "\"front_left\" (drive) : OK: counts up (+412)",
+        "!! Parts move while you hold A. Let go = stop.",
+        "*!! 1 problem(s). STOP before you touch a cable.",
+        "--- Encoder check: 5 of 5 ---",
+        "*Fix this one first: lift",
+        "  It turned? Plug in its encoder cable.",
+        "  It did not? Check its power wires, or a jam.",
+        "Then run this check again.",
         "...",
-        "\"back_right\" (drive) : OK: counts up (+410)",
-        "*\"lift\" (Lift) : NO COUNTS: encoder cable missing? ...",
-        "...",
-        "*!! 1 problem(s). Fix the cables, then Y to check again. ..."
+        "\"lift\" (Lift) : NO COUNTS",
+        "*Y = check all again."
       ]
     }
   }

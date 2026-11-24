@@ -49,15 +49,15 @@ camera = add(Camera.webcam("Webcam 1").autoExposure());   // or your own list: a
 
 1. Turn the robot so that the camera sees a tag. Press INIT.
 2. Read the lighting line on the Driver Station, for example
-   `limelight lighting : pipeline 2 (9 of 10 pictures saw tags)`. When the camera sees no tag, this line
-   is a warning.
+   `limelight lighting : pipeline 2 (9 of 10 pictures saw tags)`. While it tests, the screen says to keep a tag in view.
+   When the camera sees no tag, two warnings show: `lighting: no tags yet` and what to do.
 3. Look at the camera's picture: [See what the camera sees](12-aim-tuner.md#see-what-the-camera-sees).
 
 ## At an event
 
 1. In the queue, press INIT with the robot facing a tag. The test stops at ▶ and keeps the best setting so
    far, so a tag must be in view.
-2. The Driver Station shows the result, and two lines for `Tunables.java`. Copy them into the camera's
+2. The Driver Station shows the result, the class and two lines for `Tunables.java`. Copy them into the camera's
    section (`Tunables.Limelight`). Then every match at this venue uses that setting, with no test.
 
    **Where:** `Tunables.java`, inside the camera's section.
@@ -72,9 +72,11 @@ camera = add(Camera.webcam("Webcam 1").autoExposure());   // or your own list: a
 
 ## Fix a mistake
 
-- **The robot started with no tag in view:** the test kept the setting it had. Turn to a tag and INIT
-  again. In a match, a button can run the test again: `relight()`
+- **The robot started with no tag in view:** the test kept the setting it had, and the screen says
+  `lighting: NO TAGS SEEN`. Turn to a tag and INIT again. In a match, a button can run the test again: `relight()`
   ([Buttons to add](../reference/parts/camera.md#buttons-to-add)).
+- **`No pictures from` a setting, or `refused`:** the test skipped that setting. Check it on the Limelight's
+  page, or in Robot.java.
 - **Back home, the camera misses tags:** check that `autoLighting` is `true` again (step 3 above).
 
 ## Done when

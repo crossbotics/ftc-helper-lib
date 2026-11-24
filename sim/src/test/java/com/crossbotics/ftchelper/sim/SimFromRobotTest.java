@@ -521,7 +521,7 @@ public class SimFromRobotTest {
         Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
             s.init("TurretBot Hood Finder");
-            assertTrue(String.join("\n", s.screen()), s.screenHas("Tunables.Hood"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Tunables.java, class Hood"));
             s.start();
             s.press(v -> s.g1().dpad_down = v);                       // start point 0.45
             s.press(v -> s.g1().a = v);                               // move there
@@ -529,7 +529,7 @@ public class SimFromRobotTest {
             s.press(v -> s.g1().x = v);                               // stop A
             for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_up = v);   // 0.55
             s.press(v -> s.g1().b = v);                               // stop B
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("posA = 0.400, posB = 0.550"), 1));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("posA = 0.400;") && s.screenHas("posB = 0.550;"), 1));
             assertTrue("the servo was moved", Math.abs(s.robot().servos.get("hood").target() - 0.55) < 1e-9);
             assertEquals("", s.error());
         }
@@ -549,13 +549,13 @@ public class SimFromRobotTest {
             hoodAngle(s, 20);
             s.press(v -> s.g1().b = v);                               // stop B at 20
             String all = String.join("\n", s.screen());
-            assertTrue(all, SimRun.waitFor(() -> s.screenHas("posA = 0.450, posB = 0.550") && s.screenHas("Angle at stop A missing"), 1));
+            assertTrue(all, SimRun.waitFor(() -> s.screenHas("posA = 0.450;") && s.screenHas("posB = 0.550;") && s.screenHas("Angle at end A missing"), 1));
             assertFalse("no half pair of angles\n" + all, s.screenHas("angleB ="));
             s.press(v -> s.g1().dpad_down = v);
             s.press(v -> s.g1().dpad_down = v);                       // 0.45
             hoodAngle(s, -20);                                        // 0 here
             s.press(v -> s.g1().x = v);                               // stop A at 0
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("angleA = 0, angleB = 20"), 1));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("angleA = 0;") && s.screenHas("angleB = 20;"), 1));
             s.press(v -> s.g1().dpad_up = v);                         // 0.50
             s.press(v -> s.g1().a = v);                               // no angle measured here yet
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Measure the hood's angle here first"), 1));
@@ -568,7 +568,7 @@ public class SimFromRobotTest {
             assertFalse("no stale point", s.screenHas("Point 1: 0.500"));
             hoodAngle(s, -15);                                        // 10
             s.press(v -> s.g1().a = v);
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("calibration = {{0.450, 0}, {0.500, 10}, {0.550, 20}}"), 1));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("calibration = {") && s.screenHas("{0.450, 0}, {0.500, 10}, {0.550, 20}};"), 1));
             assertFalse("the table OR the stops, never both\n" + String.join("\n", s.screen()), s.screenHas("posA ="));
             assertEquals("", s.error());
         }
@@ -975,13 +975,11 @@ public class SimFromRobotTest {
             SimRun.pause(0.3);
             s.press(v -> s.g1().b = v);
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Offsets measured"), 2));
-            String line = "";
-            for (String l : s.screen()) if (l.contains("Offsets measured")) line = l;
-            java.util.regex.Matcher m = java.util.regex.Pattern.compile("X pod (-?[0-9.]+) mm left, Y pod (-?[0-9.]+) mm forward").matcher(line);
-            assertTrue(line, m.find());
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("X pod ([0-9.]+) mm (LEFT|RIGHT), Y pod ([0-9.]+) mm (FRONT|BACK)").matcher(String.join("\n", s.screen()));
+            assertTrue(String.join("\n", s.screen()), m.find());
             // Within 6 mm: the robot drifts a little while it spins, as a real one does.
-            assertEquals(-84, Double.parseDouble(m.group(1)), 6);
-            assertEquals(-168, Double.parseDouble(m.group(2)), 6);
+            assertEquals(-84, Double.parseDouble(m.group(1)) * (m.group(2).equals("LEFT") ? 1 : -1), 6);
+            assertEquals(-168, Double.parseDouble(m.group(3)) * (m.group(4).equals("FRONT") ? 1 : -1), 6);
             assertEquals("", s.error());
         }
     }
@@ -1031,8 +1029,8 @@ public class SimFromRobotTest {
             assertTrue(SimRun.waitFor(() -> !s.robot().pushing(), 10));
             SimRun.pause(0.2);
             s.press(v -> s.g1().b = v);                               // done
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Robot.java: .wheelMm("), 1));
-            assertTrue(s.screenHas("c.wheelDiameterIn = "));          // and the RobotSettings line
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("In drive(...): .wheelMm("), 1));
+            assertFalse("one version only: not the RobotSettings line too", s.screenHas("c.wheelDiameterIn = "));
             assertEquals("", s.error());
         }
     }
@@ -1053,7 +1051,7 @@ public class SimFromRobotTest {
             assertTrue("a shot goes\n" + String.join("\n", s.screen()), SimRun.waitFor(() -> s.robot().shots() > before, 5));
             s.press(v -> s.g1().a = v);                               // A: that shot was a HIT
             assertTrue(String.join("\n", s.screen()), s.screenHas("in at this speed."));
-            assertTrue(String.join("\n", s.screen()), s.screenHas("Points"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Distances saved"));
             s.press(v -> s.g1().b = v);                               // B with no shot left to mark
             assertTrue(String.join("\n", s.screen()), s.screenHas("No shot to mark"));
             s.press(v -> s.g1().x = v);                               // X: try to save a point

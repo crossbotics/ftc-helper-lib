@@ -90,6 +90,7 @@ project, and these recipes go into those files. If you never coded before, read
 - [How do I make the camera work in any venue's light?](06-aiming-and-shooting.md#how-do-i-make-the-camera-work-in-any-venues-light)
 - [How do I find game pieces with a HuskyLens?](06-aiming-and-shooting.md#how-do-i-find-game-pieces-with-a-huskylens)
 - [How do I shoot while the robot is driving?](06-aiming-and-shooting.md#how-do-i-shoot-while-the-robot-is-driving)
+- [How do I fire a group without stopping?](06-aiming-and-shooting.md#how-do-i-fire-a-group-without-stopping)
 - [How do I use one shot table per game piece?](06-aiming-and-shooting.md#how-do-i-use-one-shot-table-per-game-piece)
 - [Every shot is a bit short today. How do I trim the speed (a low battery)?](06-aiming-and-shooting.md#every-shot-is-a-bit-short-today-how-do-i-trim-the-speed-a-low-battery)
 - [How do I add a hood to my launcher?](06-aiming-and-shooting.md#how-do-i-add-a-hood-to-my-launcher)

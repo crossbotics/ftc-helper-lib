@@ -45,7 +45,7 @@ Robot.java devices not in this configuration:
 ```
 
 The check lists a part marked `optional()` ([parts not on the robot yet](../reference/robot-java.md#parts-not-on-the-robot-yet)),
-but it is not an error. When every device is there, it shows `Robot.java: every device is in the configuration`.
+but it is not an error. When every device is there, it shows `Robot.java: every part it names was found.`
 
 | Gamepad 1 | What it does |
 | --- | --- |

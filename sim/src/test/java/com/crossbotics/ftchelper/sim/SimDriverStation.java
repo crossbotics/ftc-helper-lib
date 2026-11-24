@@ -142,6 +142,18 @@ final class SimDriverStation {
         return screen.updates() + iterations;
     }
 
+    // activity() when the last INIT started its OpMode (after the program before it had stopped).
+    private volatile int activityAtInit = 0;
+
+    /**
+     * True once the OpMode of the last INIT has shown a screen (or run a loop). WHY not "activity() went up
+     * since before INIT": INIT first stops the program still running, and its last screen (sent as it stops)
+     * counted as the new one's first. A scenario then went on before the new program had named its start spot.
+     */
+    boolean shownSinceInit() {
+        return activity() > activityAtInit;
+    }
+
     // Every class with @TeleOp or @Autonomous in the examples, the starter kit and the simulator's own.
     @SuppressWarnings("unchecked")
     private void findOpModes() {
@@ -281,6 +293,7 @@ final class SimDriverStation {
             current = e;
             op = o;
             phase = Phase.INIT;
+            activityAtInit = activity();
             thread = o instanceof LinearOpMode
                     ? new Thread(() -> run((LinearOpMode) o), "OpMode " + e.name)
                     : new Thread(() -> runIterative(o), "OpMode " + e.name);

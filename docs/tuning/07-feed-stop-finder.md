@@ -3,7 +3,7 @@
 Find where a launcher's feed stop holds the pieces back, and where it lets one through.
 
 **In Tune and check:** yes, when the launcher has a `.feedStop(...)`.
-**You need:** the launcher's Robot.java line with `.feedStop(...)`, 5 pieces, and eye protection for the
+**You need:** the launcher's Robot.java line with `.feedStop(...)`, 5 pieces, and safety glasses for the
 test shots.
 
 ## Get to the Feed Stop Finder
@@ -34,18 +34,19 @@ launcher with `.feedStop("feed_stop")` in Robot.java. For such a robot, it is in
 
 3. D-pad up/down moves it by the step. Left/right makes the step smaller/bigger (0.1, 0.05, 0.01, 0.005,
    0.001). The step starts at 0.05, and the screen shows it.
-4. Where the stop holds the piece firmly, without straining on the frame, press **X** to save the hold
+4. Where the stop holds the piece firmly, without straining on the frame, press **X** to save the HOLD
    position.
 
-   ![Where it holds the piece, press X: the Driver Hub shows Hold (X) : 0.150](../images/hub-feed-stop-finder-step-hold.svg)
+   ![Where it holds the piece, press X: the Driver Hub shows HOLD (X) : 0.150](../images/hub-feed-stop-finder-step-hold.svg)
 
-5. Move the feed stop with the D-pad until the piece rolls through freely. Press **B** to save the release
-   position. **A** then goes between the two, so you can try them.
+5. Move the feed stop with the D-pad until the piece rolls through freely. Press **B** to save the LET GO
+   position (`feedStopRelease` in Tunables.java). **A** then goes between the two, so you can try them.
 
-   ![Where the piece rolls through, press B: the Driver Hub shows Release (B) : 0.550 and the line to copy](../images/hub-feed-stop-finder-step-release.svg)
+   ![Where the piece rolls through, press B: the Driver Hub shows LET GO (B) : 0.550 and the lines to copy](../images/hub-feed-stop-finder-step-release.svg)
 
-6. Copy the line it shows, for example `Tunables.Launcher: feedStopHold = 0.150, feedStopRelease = 0.550`.
-   The section is your launcher's: a launcher on `shooter` says `Tunables.Shooter`.
+6. The screen shows the lines for `feedStopHold` and `feedStopRelease`, and the class they go in. The class is
+   your launcher's: a launcher on `shooter` says class `Shooter`. Copy them when the screen says DONE, after
+   the test shots below.
 
 ## Find the firing times
 
@@ -72,7 +73,7 @@ part.
 .feedStop("feed_stop", "gobilda-2000-speed")   // the servo's catalog id
 ```
 
-The screen then shows, for example, `Opens in : about 0.25 s (gobilda-2000-speed, +25%)`.
+The screen then shows, for example, `Opens in : about 0.25 s (from the servo's speed)`.
 
 **Why it matters:** a goBILDA torque servo that turns from 0.150 to 0.550 needs about 0.6 s. That is much
 more than the 0.1 s start value. With 0.1 s, the indexer pushes the piece against a stop that is still
@@ -82,20 +83,21 @@ A servo that is not in the catalog: measure the open time with a video (below).
 
 ### The backup time: test shots
 
-1. Wear eye protection, and keep everybody out of the line of fire. Put a piece behind the stop, where it
+1. Wear safety glasses, and keep everybody out of the line of fire. Put a piece behind the stop, where it
    sits in a match.
-2. Press **LB**. The wheel spins up to your `speedRpm`. While the wheel is on, the D-pad, A, X and B do
+2. Press **LB**. The stop moves to HOLD, and the wheel spins up to your `speedRpm`. While the wheel is on, the D-pad, A, X and B do
    nothing, so the positions you saved stay.
 
-   ![Press LB: the wheel spins up, and the Driver Hub shows Wheel (LB = off) : 2990 / 3000 RPM, ready: RB = test shot](../images/hub-feed-stop-finder-step-wheel.svg)
+   ![Press LB: the wheel spins up, and the Driver Hub shows Next: RB = test shot, and Flywheel : 2990 of 3000 RPM, ready](../images/hub-feed-stop-finder-step-wheel.svg)
 
 3. When the screen says `ready`, press **RB**. The stop opens, and the indexer and the pushing parts run as
    in a match. The finder measures the time until the wheel sees the shot.
 4. Put the next piece behind the stop. Do 5 test shots in all. The screen shows each time.
 
-   ![After 5 test shots with RB: the Driver Hub shows Test shots : 0.31, 0.28, 0.35, 0.30, 0.29 s and the times line to copy](../images/hub-feed-stop-finder-step-test.svg)
+   ![After 5 test shots with RB: the Driver Hub shows Test shots : 0.31, 0.28, 0.35, 0.30, 0.29 s and the times lines to copy](../images/hub-feed-stop-finder-step-test.svg)
 
-5. Copy the times line, for example `Tunables.Launcher: feedStopMoveSec = 0.25, feedStopOpenSec = 0.55`.
+5. The screen says DONE and adds the lines for `feedStopMoveSec` and `feedStopOpenSec`. There is no
+   `feedStopOpenSec` line before 5 test shots.
    The backup time is the longest test shot plus 0.2 s, because a low battery or a worn piece is slower.
 6. Press **LB** to stop the wheel.
 
@@ -103,10 +105,10 @@ When you change hold or release after the test shots, the finder clears the old 
 
 ### When the finder warns
 
-- **`No shot seen in 3 s`:** the piece did not reach the wheel. Check the release position (the piece must
-  roll through freely). With `.pushedBy(...)`, try a larger `assistSec`. A heavy wheel that slows by less
+- **`No shot seen in 3 s`:** the finder saw no drop in the wheel's speed. Press LB first: wheel off. When no
+  piece came out, check LET GO (the piece must roll through freely). With `.pushedBy(...)`, try a larger `assistSec`. A heavy wheel that slows by less
   than 150 RPM gives this warning too, even when the piece fired. In that case, measure the time with a video (below).
-- **`2 pieces in one opening`:** the next piece got past before the stop closed. Check that the hold
+- **`2 speed drops in one opening. 2 pieces out?`:** the next piece may have got past before the stop closed. Check that the hold
   position catches the next piece. Pieces that sit tight against each other can slip through together: a
   gap between them, or a faster servo, helps.
 
@@ -159,8 +161,8 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 
 | The finder shows | Put it in |
 | --- | --- |
-| `Tunables.Launcher: feedStopHold = 0.150, feedStopRelease = 0.550` | your launcher's section (a launcher on `shooter`: `Tunables.Shooter`) |
-| `Tunables.Launcher: feedStopMoveSec = 0.25, feedStopOpenSec = 0.55` | the same section |
+| `public static double feedStopHold = 0.150;` and `feedStopRelease` | your launcher's class (a launcher on `shooter`: class `Shooter`) |
+| `public static double feedStopOpenSec = 0.55;` and `feedStopMoveSec` | the same class |
 
 ## Done when
 

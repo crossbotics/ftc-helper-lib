@@ -4,23 +4,27 @@
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Tune and check ---",
+        "--- Tune and check: 9 of 15 ---",
         "Robot: Robot",
         "  ...",
-        "  Flywheel Finder: the flywheel's gains",
-        "*> Feed Stop Finder: the feed stop's hold and release",
+        "*> Feed Stop Finder",
         "  ...",
-        "D-pad up/down = pick, A = open it. Then ▶."
+        "This tool: feed stop HOLD and LET GO.",
+        "D-pad up/down = choose. A = open it. Then ▶."
       ]
     },
     "feed-stop-finder-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "Feed stop finder: where it holds, where it lets a piece ...",
-        "*Nothing moves until you press A. Press ▶.",
-        "The test shot (LB, RB) spins the wheel: eye protection.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! Hands clear of the feed stop: A moves it.",
+        "!! Test shots spin and FIRE: LB, then RB.",
+        "!! Safety glasses. Nobody in front.",
+        "Feed stop finder: the feed stop is the part",
+        "that holds pieces back. Finds its HOLD and",
+        "LET GO positions, and its times.",
+        "*Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "feed-stop-finder-step-start": {
@@ -29,11 +33,12 @@
       "pos": 0.5,
       "note": "the feed stop at the start point",
       "lines": [
-        "*Position : 0.500",
-        "Step : 0.050  (D-pad left = smaller, right = bigger)",
-        "Hold (X) : -",
-        "Release (B) : -",
-        "D-pad up/down = move, X = hold here, B = release here"
+        "!! A = the feed stop JUMPS to this number.",
+        "--- Feed stop finder: first move ---",
+        "Next: set a number near where it sits now.",
+        "*Start point : 0.500",
+        "Step : 0.050  (D-pad left/right)",
+        "Not sure? Take the servo's arm off. Use 0.500."
       ],
       "stops": []
     },
@@ -44,13 +49,17 @@
       "frm": 0.5,
       "note": "hold: the piece stays back",
       "lines": [
-        "Position : 0.150",
-        "Step : 0.010  (D-pad left = smaller, right = bigger)",
-        "*Hold (X) : 0.150",
-        "Release (B) : -",
-        "...",
-        "--- Copy into your code ---",
-        "Tunables.Launcher: feedStopHold = 0.150"
+        "--- Feed stop finder: step 2 of 3, LET GO ---",
+        "Next: move to where a piece rolls through.",
+        "B = save LET GO.",
+        "Position : 0.150  (0 to 1)",
+        "*HOLD (X) : 0.150",
+        "LET GO (B) : not saved",
+        "--- NOT DONE ---",
+        "save both positions (X and B).",
+        "Open Tunables.java, find class Launcher.",
+        "When it says DONE, change these lines:",
+        "  public static double feedStopHold = 0.150;"
       ],
       "stops": []
     },
@@ -61,14 +70,17 @@
       "frm": 0.15,
       "note": "release: the piece rolls through",
       "lines": [
-        "Position : 0.550",
-        "Step : 0.010  (D-pad left = smaller, right = bigger)",
-        "Hold (X) : 0.150",
-        "*Release (B) : 0.550",
-        "D-pad up/down = move, X = hold here, B = release here, ...",
-        "--- Copy into your code ---",
-        "*Tunables.Launcher: feedStopHold = 0.150,",
-        "*    feedStopRelease = 0.550"
+        "--- Feed stop finder: step 3 of 3, test shots ---",
+        "Next: load a piece. LB = flywheel on.",
+        "HOLD (X) : 0.150",
+        "*LET GO (B) : 0.550",
+        "Opens in : about 0.25 s (from the servo's speed)",
+        "--- NOT DONE ---",
+        "0 of 5 test shots done.",
+        "...",
+        "*  public static double feedStopHold = 0.150;",
+        "*  public static double feedStopRelease = 0.550;",
+        "..."
       ],
       "stops": []
     },
@@ -77,9 +89,10 @@
       "where": "Press on gamepad 1:",
       "order": "press-first",
       "lines": [
-        "--- Firing times ---",
-        "Opens in : about 0.25 s (gobilda-2000-speed, +25%)",
-        "*Wheel (LB = off) : 2990 / 3000 RPM, ready: RB = test shot"
+        "!! It shoots. Nobody in front. LB = stop.",
+        "--- Feed stop finder: test shot 1 ---",
+        "*Next: RB = test shot. Hands away.",
+        "Flywheel : 2990 of 3000 RPM, ready"
       ]
     },
     "feed-stop-finder-step-test": {
@@ -87,15 +100,13 @@
       "where": "Press on gamepad 1:",
       "order": "press-first",
       "lines": [
-        "--- Firing times ---",
-        "Opens in : about 0.25 s (gobilda-2000-speed, +25%)",
-        "Wheel (LB = off) : 2995 / 3000 RPM, ready: RB = test shot",
+        "--- Feed stop finder: test shot 6 ---",
+        "Flywheel : 2995 of 3000 RPM, ready",
         "*Test shots : 0.31, 0.28, 0.35, 0.30, 0.29 s  (5)",
+        "--- DONE ---",
         "...",
-        "--- Copy into your code ---",
-        "...",
-        "*Tunables.Launcher: feedStopMoveSec = 0.25,",
-        "*    feedStopOpenSec = 0.55"
+        "*  public static double feedStopMoveSec = 0.25;",
+        "*  public static double feedStopOpenSec = 0.55;"
       ]
     }
   }

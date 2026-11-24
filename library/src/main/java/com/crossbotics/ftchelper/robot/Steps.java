@@ -146,6 +146,36 @@ public final class Steps {
         return this;
     }
 
+    /**
+     * A number in the INIT menu, from {@code min} to {@code max} in steps of {@code step}, starting at
+     * {@code start}. D-pad right/left = one step; hold it to keep stepping. Read it with {@link #number}.
+     *
+     * <pre>{@code
+     * s.menuNumber("Distance (in)", 0, 96, 1, 24);
+     * double inches = s.number("Distance (in)");
+     * }</pre>
+     */
+    public Steps menuNumber(String label, double min, double max, double step, double start) {
+        if (addMenuLines) menu.number(label, min, max, step, start);
+        menuLabels.add(label);
+        return this;
+    }
+
+    /**
+     * An angle in the INIT menu, in degrees, in steps of {@code stepDeg}, starting at {@code startDeg}.
+     * It goes around the circle (after +180 comes -180 + step). Read it with {@link #number}.
+     */
+    public Steps menuAngle(String label, double stepDeg, double startDeg) {
+        if (addMenuLines) menu.angle(label, stepDeg, startDeg);
+        menuLabels.add(label);
+        return this;
+    }
+
+    /** The number chosen on a {@link #menuNumber} or {@link #menuAngle} line. */
+    public double number(String label) {
+        return menu.getNumber(label);
+    }
+
     /** True if the yes/no choice is "yes". */
     public boolean isYes(String label) {
         return menu.isYes(label);

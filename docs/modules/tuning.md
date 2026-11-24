@@ -49,7 +49,8 @@ pid.setGains(LIFT_KP.get(), 0, 0, 0);   // read it every loop
 
 **Saved values come back after a restart.** That makes tuning fast. It is also a risk:
 the robot uses a value tuned in the shop at the event, even when the code says something else. So
-when a number is good, **copy it into the code** and press "reset all". The code is the record.
+when a number is good, **copy it into the code**, install the app, and only then erase the saved values
+(**Y**, then **Y** again). The code is the record.
 
 ## PidTunables
 
@@ -78,8 +79,8 @@ if (menu.isOpen()) menu.addTelemetry(t);   // the menu shows only while it is op
 | D-pad right / left | change by one step (hold a bumper for x10) |
 | A | save all on the hub |
 | X | put the chosen one back to its code value |
-| Y | put ALL back to the code values, and delete the saved values |
-| B | show the changed values as lines to copy into the code. They also go in the robot log, tag `ftc-helper`. Press B again for the list |
+| Y | asks first: the screen says how many tuned values will be lost. **Y** again puts ALL back to the installed code values and deletes the saved values. Any other button keeps them |
+| B | the copy page: the changed values as exact Java lines ("Open Tunables.java, find class X."), in pages, with the order copy, install, check, erase. They also go in the robot log, tag `ftc-helper`. It changes nothing. Press B again for the list |
 
 The menu opens only in the PRACTICE profile. **Do not drive with the same gamepad while it is open.**
 Check `menu.isOpen()`, and stop reading the sticks while it is true. The starter kit's TeleOp shows how.

@@ -6,10 +6,10 @@
 <rect x="6" y="70" width="508" height="233" rx="14" fill="#2b2f36"/>
 <text x="22" y="100" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
 <rect x="16" y="114" width="488" height="179" rx="6" fill="#ffffff"/>
-<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Motor "lift"  (BACK = another) ---</text>
-<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Count : 2580</text>
-<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Max power : 0.30 (D-pad up/down)</text>
+<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">!! Hands clear. Let go of the stick = power off.</text>
+<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Motor "lift" ---</text>
+<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Next: at each height you use: A = save it.</text>
+<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Motor count : 2580</text>
 <text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">LOW end (X) : 0</text>
 <rect x="20" y="230" width="480" height="21" rx="3" fill="#fff3a8"/>
 <text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">HIGH end (B) : 2580</text>

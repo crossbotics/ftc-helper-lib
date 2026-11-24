@@ -281,15 +281,15 @@ the distance.
 | Problem | Why, and the fix |
 | --- | --- |
 | `limelight: not found: no Limelight called "limelight"` | The name in the robot configuration is different (case counts), or the Limelight is not in it. The OpMode still runs, without the camera |
-| `limelight lighting: NO TAGS SEEN` (after ▶) | No pipeline saw a tag at INIT. Have a tag in view at INIT. Check each pipeline on the Limelight's page |
-| `limelight lighting: no pictures from pipeline 2 (missing?)` | That pipeline is not set up on the Limelight. Make it, or take it out of `autoPipelines(...)` |
+| `limelight lighting: NO TAGS SEEN` and `Next: aim at a tag. Run the lighting test again.` (after ▶) | No pipeline saw a tag at INIT. Have a tag in view at INIT. Check each pipeline on the Limelight's page |
+| `limelight lighting: no pictures from pipeline 2 (missing?)` and `Next: fix that camera setting. It was skipped.` | That pipeline is not set up on the Limelight. Make it, or take it out of `autoPipelines(...)` |
 | `Goal : not seen (RED SCORING is upside down (a down CELL))` | The camera sees only a down CELL. Drive to see the up CELL |
 | Aim turns away from the goal, or aims at the down CELL (webcam) | The webcam is mounted upside down. Add `.upsideDown()` to its line in Robot.java |
 | The speed never changes with distance | No goal in view. Check `pipeline` and the `goal(...)` names |
 | INIT stops: `robot.aimMode() ... separate modes` | The turret follows the goal. Remove the `aimMode()` line, or `.follows(...)` on the turret |
 | Whole-robot aim stops a few degrees off | Raise `turnKp`, or set `minTurnPower` in `Tunables.Aim` |
 | It is aimed, but the shots go wide by the same angle | The camera is beside the launcher. Run the Aim Tuner |
-| `limelight lighting: trying 1 of 3: pipeline 0 (no tags yet: face a tag)` (INIT) | No pipeline saw a tag yet. Turn the robot toward a tag. The test goes on until ▶ |
+| `!! limelight lighting: no tags yet` and `Next: face a tag. The test keeps trying.` (INIT) | No pipeline saw a tag yet. Turn the robot toward a tag. The test goes on until ▶ |
 | `Aim: no goal` | Whole-robot aim is on, but the camera does not see the goal, and there is no odometry backup |
 | `following: odometry` points the wrong way | Check `goalX`, `goalY` (seen from your own wall), `mirrorForRed`, and that the pose started right |
 | `Aim odometry: the pose was never set` | TeleOp ran with no autonomous before it. Run the autonomous first, or park on the reset spot and hold gamepad 1 START 1 s |

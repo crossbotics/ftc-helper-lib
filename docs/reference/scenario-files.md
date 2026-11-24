@@ -16,7 +16,7 @@ tests are in `simulator/scenarios/` in the robot project; the library's own are 
 **Each file starts like a robot right after you turn it on**: a fresh simulator, the field at the match
 start, and nothing kept from the file before. It keeps none of these: the alliance and the autonomous
 report, a turret's angle, a launcher's trim, numbers tuned in the tuning menu or saved on the pretend
-Control Hub. The Tunables numbers are the ones in your code. When you run several files, the command ends
+Control Hub, a Flywheel Tuner session. The Tunables numbers are the ones in your code. When you run several files, the command ends
 with a list of which passed.
 
 ## Every command and check
@@ -47,6 +47,9 @@ set device intake_deploy missing       # take a device out of the configuration 
 set encoder lift none                  # a wiring fault for the Encoder Check: lift's port has no encoder
                                        # cable; set encoder lift flywheel = it has the flywheel's cable
                                        # (swapped); set encoder lift own = right again. Works at once
+set sensor launcher 43 0.05            # a flywheel's speed reading: steps of 43 RPM, 0.05 seconds late
+                                       # (off until set); set sensor launcher off = exact again
+set loop 20 60                         # each loop takes 20 to 60 milliseconds; set loop off = fast again
 set tunable IntakeDeploy.deployed 0.6  # a Tunables number for this file only (before init; see below)
 expect screen has "Ready"              # or: screen not "..."
 expect value "Lift" > 500              # the number on the screen line that starts with Lift
@@ -56,7 +59,9 @@ expect error none                      # or: error has "..."
 expect phase RUNNING                   # IDLE | INIT | RUNNING | STOPPED
 expect step 3 done                     # the autonomous report's 3rd step (after "Start"): done, STALLED ...
 expect motor lift power > 0.1          # power | ticks | velocity | amps; > < >= <= =  (= VALUE TOLERANCE)
+expect motor launcher lowest >= 0      # the lowest power the code set since INIT (a brake anywhere in the run)
 expect servo claw target = 0.53 0.01   # target | actual
+expect servo feeder_left power = 0     # a continuous servo (crservo.NAME): the power the code set
 expect light status = GREEN            # what a light (light.NAME = gobilda or blinkin) shows: GREEN, RED, off ...
 expect shape intake_arm < 0            # a shape's angle (arm, turret), inches (slide) or gap (claw)
 expect robot y > -30                   # x | y | heading | imu | shots
@@ -108,6 +113,7 @@ another value sets it: `set tunable IntakeDeploy.deployed 0.6` sets `Tunables.In
 0.6 for this file only. It wins over the stand-in. `set tunable IntakeDeploy.deployed MEASURE` checks
 that INIT stops.
 
+- It sets a word too: `set tunable Launcher.speedControl BANG_BANG`.
 - Put it before `init` (or after `stop`), because the parts read their numbers at INIT. While an OpMode is
   in INIT or running, the line fails.
 - It works for numbers (`double`, `int`, `float`, `long`) and `true`/`false`. `MEASURE` and `DEFAULT` work too.
@@ -120,6 +126,13 @@ that INIT stops.
 
 When you measure the real number, write it in Tunables.java. Delete the `set tunable` line when it only
 stood in for the `MEASURE`.
+
+## A real robot's speed reading: set sensor and set loop
+
+The simulator's speed reading is exact, and its loops are fast. A real hub's reading jumps in steps and
+arrives late, and a camera makes loops longer. `set sensor` and `set loop` copy that, so you can test a
+flywheel's speed control. Only what your program reads changes. The wheel's physics and the hub's own speed
+control still use the true speed. Both end with the file.
 
 ## Check a show(...) line
 

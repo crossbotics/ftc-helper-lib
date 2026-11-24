@@ -114,8 +114,11 @@ public abstract class EncoderCheckOpMode extends FinderOpMode {
 
     @Override
     protected void showInit(RobotTelemetry t) {
-        t.warn("Wheels off the ground! Put the robot on a block. Lifts and arms down, hands clear: they move a little.");
-        t.text("Then press {PLAY}. Hold {A}: each motor gets a short push.");
+        t.warn("Wheels off the ground! Put the robot on a block.");
+        t.warn("Lifts and arms down. Hands clear.");
+        t.warn("Holding {A} moves each part. Let go = stop.");
+        t.text("Encoder check: is each motor's turn counter");
+        t.text("(its encoder) plugged into its own port?");
     }
 
     @Override
@@ -135,39 +138,61 @@ public abstract class EncoderCheckOpMode extends FinderOpMode {
 
     @Override
     protected void show(RobotTelemetry t) {
-        t.section("Encoder check: hold {A} (let go = stop), {Y} = again");
-        int bad = 0;
+        t.warn("Parts move while you hold {A}. Let go = stop.");
         List<EncoderCheck.Job> jobs = check.jobs();
+        t.section("Encoder check: " + Math.min(check.at() + (check.done() ? 0 : 1), jobs.size()) + " of " + jobs.size());
+        int bad = 0, skipped = 0;
+        EncoderCheck.Job firstBad = null;
+        for (EncoderCheck.Job j : jobs) {
+            if (j.result != null && !j.ok) {
+                bad++;
+                if (firstBad == null) firstBad = j;
+            }
+            if (!j.skip.isEmpty() && !j.skipIsFault) skipped++;
+        }
+        if (!check.done()) {
+            t.text("Next: hold {A} until every motor is checked.");
+            t.text("Watch: a lift or an arm must move UP.");
+        } else if (bad == 0) {
+            t.text("Done: no cable fault in the checks it ran.");
+            if (skipped > 0) t.line("Skipped, so not checked", skipped);
+            t.text("A lift or arm moved DOWN? Robot.java is wrong:");
+            t.text("  change reversed() on that part's line.");
+        } else {
+            t.warn(bad + " problem(s). STOP before you touch a cable.");
+            t.text("Fix this one first: " + firstBad.name);
+            for (String line : firstBad.next) t.text("  " + line);
+            t.text("Then run this check again.");
+        }
         for (int i = 0; i < jobs.size(); i++) {
             EncoderCheck.Job j = jobs.get(i);
             String state = j.result != null ? j.result
-                    : i == check.at() ? (check.pushing() ? "PUSHING" : aHeld ? "waiting for everything to stop" : "next: hold {A}")
+                    : i == check.at() ? (check.pushing() ? "PUSHING" : aHeld ? "waiting until all is still" : "next")
                     : "not yet";
-            if (j.result != null && !j.ok) bad++;
             t.line("\"" + j.name + "\" (" + j.part + ")", state);
         }
         String moving = check.stillMoving();
-        if (moving != null) t.text("Waiting: \"" + moving + "\" still moves. It goes on once everything is still.");
-        // The count turns with the direction setting, so only your eyes see a wrong reversed().
-        t.text("Watch each part: a lift or arm must move UP, away from its stop. Wrong way? Fix reversed() in Robot.java.");
-        if (check.done()) {
-            if (bad == 0) t.text("Done: every encoder is in its own port and counts up.");
-            else t.warn(bad + " problem(s). Fix the cables, then {Y} to check again. Steps: docs/tuning/02-wiring-checks.md");
+        if (moving != null) {
+            t.text("\"" + moving + "\" still moves. Wait:");
+            t.text("it goes on when everything is still.");
         }
+        if (check.done()) t.text("{Y} = check all again.");
     }
 
     @Override
     protected String[] helpLines() {
         return new String[] {
             "Checks each motor's encoder cable.",
-            "1. Robot on a block: wheels and lifts move a little.",
-            "2. Hold {A}: one motor at a time gets a short push.",
+            "1. Robot on a block: wheels and lifts move.",
+            "2. Hold {A}: each motor gets a short push.",
             "   Let go of {A}: everything stops.",
-            "3. OK = its own port counted up.",
-            "   NO COUNTS = cable missing (or it did not turn).",
-            "   counts on \"X\" = encoder cables swapped.",
-            "   BACKWARD = power wires or encoder reversed.",
-            "4. Fix it, then {Y} = check again.",
+            "3. OK = its own port counted the right way.",
+            "   NO COUNTS = a cable, or it did not turn.",
+            "   counts on \"X\" = another motor's port.",
+            "   BACKWARD = check its wires.",
+            "4. The counts cannot show a wrong reversed().",
+            "   So watch: a lift or an arm must go UP.",
+            "5. STOP, fix it, check again. {Y} = start over.",
             "Run it after any motor or cable change.",
         };
     }

@@ -53,7 +53,7 @@ When the last column names a finder, run that finder again: a guess is worse tha
 | It feeds two at once, but less `feedSec` feeds none from farther back | [`stopOnShot`](../reference/parts/indexer.md#in-tunablesjava) | true |
 | It feeds no piece | [`feedSec`](../reference/parts/indexer.md#in-tunablesjava) | more |
 | It feeds the near pieces but not the ones far back | [`feedSec`](07-feed-time-finder.md) | the Feed Time Finder's number |
-| The Flywheel Finder's "Shots seen" is less than the pieces fed | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
+| The Flywheel Finder's "Speed drops counted" is less than the pieces pushed in | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
 | With `stopOnShot`, the wheels still run the full `feedSec` after a shot | [`shotDropRpm`](../reference/parts/launcher.md#in-tunablesjava) | less |
 | An eject pushes out two pieces | [`ejectFeedSec`](../reference/parts/launcher.md#in-tunablesjava) | set it, then less |
 | With the speed from the camera, a shot waits while its speed keeps changing | [`lockSpeedWhileFiring`](../reference/parts/launcher.md#in-tunablesjava) | true |
@@ -64,7 +64,7 @@ When the last column names a finder, run that finder again: a guess is worse tha
 | Shots miss although it says "AIMED" | [`Aim.toleranceDeg`](../reference/parts/aim.md#in-tunablesjava) | less |
 | The robot or turret aims a little to one side | [`cameraOffset`](../reference/parts/aim.md#in-tunablesjava) | Aim Tuner |
 | A turret swings too hard | [`Turret.maxPower`](../reference/parts/turret.md#in-tunablesjava) | less |
-| The wires allow a turret to turn more or less | [`Turret.min`, `max`](../reference/parts/turret.md#in-tunablesjava) | Motor Finder |
+| The wires allow a turret to turn more or less | [`Turret.min`, `max`](../reference/parts/turret.md#in-tunablesjava) | measure safe angles in degrees. The Motor Finder shows counts and does not change them to degrees |
 | **Camera and sensors** | - | - |
 | The camera pictures are too dark or noisy | [`Camera.gain`](../reference/parts/camera.md#in-tunablesjava) | more / less |
 | A HuskyLens's turn angles are too big or too small | [`Camera.hfovDeg`](../reference/parts/camera.md#in-tunablesjava) | measure it |

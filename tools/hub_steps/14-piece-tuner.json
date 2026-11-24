@@ -4,32 +4,39 @@
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Tune and check ---",
+        "--- Tune and check: 14 of 14 ---",
         "Robot: Robot",
-        "  Hardware Check: every device found, ...",
         "  ...",
-        "*> Piece Tuner: what each piece sensor sees",
-        "D-pad up/down = pick, A = open it. Then ▶."
+        "*> Piece Tuner",
+        "  ...",
+        "This tool: teach the piece sensors.",
+        "D-pad up/down = choose. A = open it. Then ▶."
       ]
     },
     "piece-tuner-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "*Piece Tuner: 2 sensor(s). Nothing moves. Press ▶.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! Nothing moves in this tool.",
+        "Piece tuner: teaches each sensor what a game",
+        "piece looks like.",
+        "*Piece sensors found : 2",
+        "You need: one piece of each kind.",
+        "Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "piece-tuner-step-choose": {
       "button": "D-pad",
       "where": "Press on gamepad 1:",
       "lines": [
-        "*--- Sensor 1/2: intake_color (color) ---",
+        "*--- Sensor 1 of 2: intake_color ---",
+        "Next: hold POLLEN where it sits. A = measure.",
+        "D-pad left/right = another kind, or EMPTY.",
+        "*Measuring for : < POLLEN >",
         "Distance : 22 mm",
-        "Color : hue 74 deg, saturation 0.61",
-        "It sees : UNKNOWN",
-        "*--- In front of it: < POLLEN >   (D-pad left/right) ---",
-        "A = measure it, B = forget this sensor's, D-pad up/down ..."
+        "Color number : 74 of 360",
+        "Color strength : 0.61 of 1"
       ]
     },
     "piece-tuner-step-measure": {
@@ -37,12 +44,15 @@
       "where": "Hold the piece still, press:",
       "order": "press-first",
       "lines": [
-        "--- In front of it: < POLLEN >   (D-pad left/right) ---",
-        "A = measure it, B = forget this sensor's, D-pad up/down ...",
-        "*Measured POLLEN at intake_color.",
+        "--- Sensor 1 of 2: intake_color ---",
+        "Measuring for : < POLLEN >",
         "...",
-        "--- Copy into your code ---",
-        "*Tunables.IntakeColor: POLLEN = 74   // its color (hue, ..."
+        "*Measured POLLEN at intake_color.",
+        "--- NOT DONE ---",
+        "measure RED_NECTAR at intake_color.",
+        "Open Tunables.java, find class IntakeColor.",
+        "When it says DONE, change these lines:",
+        "*  public static double POLLEN = 74;"
       ]
     },
     "piece-tuner-step-empty": {
@@ -50,15 +60,16 @@
       "where": "With nothing there, press:",
       "order": "press-first",
       "lines": [
-        "--- In front of it: < EMPTY >   (D-pad left/right) ---",
-        "*Measured EMPTY at intake_color.",
+        "--- Sensor 1 of 2: intake_color ---",
+        "Measuring for : < EMPTY >",
         "...",
-        "--- Copy into your code ---",
-        "Tunables.IntakeColor: POLLEN = 74   // its color (hue, ...",
-        "Tunables.IntakeColor: RED_NECTAR = 8   // its color ...",
-        "Tunables.IntakeColor: hueTolerance = 33",
-        "Tunables.IntakeColor: BLUE_NECTAR = 215   // its color ...",
-        "*Tunables.IntakeColor: nearMm = 51   // a piece is there ..."
+        "*Measured EMPTY at intake_color.",
+        "--- DONE ---",
+        "Open Tunables.java, find class IntakeColor.",
+        "Change these lines (not there? add them):",
+        "  public static double POLLEN = 74;",
+        "  ...",
+        "*  public static double nearMm = 51;"
       ]
     }
   }

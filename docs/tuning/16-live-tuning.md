@@ -39,8 +39,8 @@ robot. Gamepad 2 keeps working.
 | D-pad right / left | +/- one step (hold a bumper: x10) |
 | A | save all on the hub |
 | X | the chosen one back to the code value |
-| Y | ALL back to the code values, and deletes the saved values |
-| B | the changed values as lines to copy into `Tunables.java` (also in the robot log, tag `ftc-helper`). B again: the list |
+| Y, then Y again | the first Y asks. The second puts ALL back to the installed code values, and deletes the saved values. Any other button cancels |
+| B | the changed values as lines to copy into `Tunables.java` (also in the robot log, tag `ftc-helper`). Nothing can change on that page. D-pad up/down turns its pages. B again: the list |
 
 Changed values show the code value next to them: `Lift/kP = 0.0050  (code 0.004)`.
 
@@ -49,10 +49,15 @@ Changed values show the code value next to them: `Lift/kP = 0.0050  (code 0.004)
 **The code is the record.** A value saved only on the hub is lost with a new Control Hub. Teammates cannot
 see it, and you can forget it at an event.
 
-1. Press **B** in the menu. It shows the changed values as lines to copy, for example
-   `Lift: kP = 0.0050`. The lines are in the robot log too (tag `ftc-helper`).
-2. Put each value in its section in `Tunables.java`.
-3. Press **Y** to put every value back to the code values and delete the saved values.
+1. Press **B** in the menu. It shows the class and the Java lines to copy, for example
+   `Open Tunables.java, find class Lift.` and `public static double kP = 0.005;`. The robot log has them
+   too, in short (tag `ftc-helper`: `Lift: kP = 0.005`).
+2. Put each line in its class in `Tunables.java`. Then build and install the app. Editing the file on the
+   laptop does not change the robot by itself.
+3. Open the menu and press **B** again. It must say `Nothing differs from the installed code.` When lines
+   still show, the installed code does not have them yet.
+4. Now press **Y**, then **Y** again, to delete the saved values. **Why last:** erasing before you install
+   puts the OLD installed numbers back, and your tuned numbers are lost.
 
 The next INIT lists every value you did not copy yet, under "Tuned on this robot (copy into
 Tunables.java)". A save cannot leave a half-written file: after a power cut, the hub has either the old
@@ -63,7 +68,7 @@ values or the new ones.
 Numbers that set a power (a hold power, a drive gain) are right only for
 about the battery you tuned them on. Tuned on a low battery, they are too strong on a charged one.
 So the menu shows the battery's voltage, and warns below 12.5 V. Each change notes the
-battery: the copy lines say `Lift: kF = 0.06   // tuned at 12.7 V`. Copy that note into
+battery: the copy page says `// tuned at 12.7 V` under that line. Copy that note into
 `Tunables.java` too. Tune on a charged battery (12.5 V or more).
 
 ## Older programs: add the menu yourself
@@ -100,7 +105,7 @@ For a PID controller you made yourself, call `PidTunables.of("Arm", kP, kI, kD, 
 
 **Add the menu to the TeleOp.**
 
-The menu uses gamepad 1's D-pad, A, X, Y and bumpers. Without a pause, pressing Y in the menu ("reset all")
+The menu uses gamepad 1's D-pad, A, X, Y and bumpers. Without a pause, pressing Y in the menu ("erase all")
 would ALSO do whatever Y does for the driver. So give the menu key its own small button
 list. Pause the driver's gamepad-1 buttons (and sticks) while the menu is open:
 

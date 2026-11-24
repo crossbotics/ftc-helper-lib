@@ -17,7 +17,8 @@ import java.util.Map;
  * No code to write: it lists every servo in the robot configuration.
  *
  * <p>It shows the code for {@code PositionServo} and, for the robot in five files, the line for
- * {@code Tunables.java}: {@code Tunables.Claw: P1 = 0.210, P2 = 0.770} (rename P1, P2 to open, closed).
+ * {@code Tunables.java} when Tune and check runs it: the file, the class and
+ * {@code public static double P1 = 0.210;} (P1, P2 stand for your names, e.g. open, closed).
  *
  * <pre>
  * Choose:  D-pad up/down = servo, A = use it, Y = full range on/off (500-2500 us instead of the
@@ -98,7 +99,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         if (p == null || p.biggerTurns() == null) return "";
         boolean rev = servo.getDirection() == Servo.Direction.REVERSE;   // the direction really in use
         String way = rev ? (p.biggerTurns().equals("clockwise") ? "counterclockwise" : "clockwise") : p.biggerTurns();
-        return "bigger = " + way + " (seller" + (rev ? ", reversed" : "") + "); test: D-pad up";
+        return "A bigger number turns it " + way + " (seller)";
     }
 
     // Sends a position to the chosen servo and its second one.
@@ -109,6 +110,8 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
 
     @Override protected String finderName() { return "Servo finder"; }
 
+    @Override protected String stoppedWords() { return "A servo may still move to its last position."; }
+
     @Override
     protected void setup() {
         chooser = new Chooser(new ArrayList<>(hardwareMap.getAllNames(Servo.class)));
@@ -116,8 +119,11 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
 
     @Override
     protected void showInit(RobotTelemetry t) {
-        t.text("Servo finder: finds a servo's safe ends and positions.");
-        t.text("Nothing moves until you nudge it. Press {PLAY}.");
+        t.warn("Robot on a block. Hands clear of the part.");
+        t.warn("The servo can JUMP when you move it with {A}.");
+        t.text("Servo finder: finds a servo's two safe ends");
+        t.text("and the positions you use.");
+        t.text("Nothing moves until you press {A} two times.");
     }
 
     @Override
@@ -146,7 +152,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         for (Map.Entry<String, Map.Entry<String, Boolean>> e : pairs.entrySet()) {
             if (e.getValue().getKey().equals(name)) {
                 // The second servo alone would push against the first: find the positions on the first.
-                chooseNote = name + " moves with " + e.getKey() + " (one part, two servos): choose " + e.getKey();
+                chooseNote = name + " moves with another servo. Choose " + e.getKey() + ".";
                 return;
             }
         }
@@ -161,7 +167,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         otherName = "";
         if (pair != null && !hardwareMap.getAllNames(Servo.class).contains(pair.getKey())) {
             // Only one side would move, and drag the other servo through its gears: do not use it.
-            chooseNote = servoName + " moves with " + pair.getKey() + ", which is not in the configuration: add it first";
+            chooseNote = "Cannot move " + servoName + " alone. Add " + pair.getKey() + " to the robot configuration.";
             servo = null;
             return;
         }
@@ -184,7 +190,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
             ServoSetup.setPulseRange(servo, ServoSetup.SDK_PULSE_LOW_US, ServoSetup.SDK_PULSE_HIGH_US);
             if (other != null) ServoSetup.setPulseRange(other, ServoSetup.SDK_PULSE_LOW_US, ServoSetup.SDK_PULSE_HIGH_US);
         }
-        pulseNote = set ? "" : "This servo cannot change its pulse range: it uses the normal 600-2400 us";
+        pulseNote = set ? "" : "This servo cannot use full range.";
         position = Double.NaN;
         startAt = 0.5;
         step.reset();
@@ -236,33 +242,36 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     private void writeResults() {
         String key = "servo:" + servoName;
         results.removeStartingWith(key + ":");
-        String line = "PositionServo.create(hardwareMap, \"" + servoName + "\")" + (fullRange ? ".fullRange()" : "");
-        if (!Double.isNaN(endA) && !Double.isNaN(endB)) {
-            line += ".limits(" + FinderResults.num(Math.min(endA, endB), 3) + ", "
-                    + FinderResults.num(Math.max(endA, endB), 3) + ")";
-        }
-        results.set(key + ":0", line);
-        int n = 1;
         boolean ends = !Double.isNaN(endA) && !Double.isNaN(endB);
+        double low = Math.min(endA, endB), high = Math.max(endA, endB);
+        List<String> outside = new ArrayList<>();
         for (Map.Entry<String, Double> p : positions.entrySet()) {
-            double v = p.getValue();
-            boolean outside = ends && (v < Math.min(endA, endB) - 1e-9 || v > Math.max(endA, endB) + 1e-9);
-            results.set(key + ":" + n++, "    .position(\"" + p.getKey() + "\", " + FinderResults.num(v, 3) + ")"
-                    + (outside ? "   // OUTSIDE the ends: it will stop at the end" : ""));
+            if (ends && (p.getValue() < low - 1e-9 || p.getValue() > high + 1e-9)) outside.add(p.getKey());
         }
-        // The same positions for the robot in five files (Tunables.java). A servo module has no ends
-        // of its own, so the ends become a reminder: keep every position between them.
-        if (!positions.isEmpty()) {
-            List<String> fields = new ArrayList<>();
+        if (!ends) results.notDone("mark both ends ({X} and {B}).");
+        else if (positions.isEmpty()) results.notDone("save a position you use ({A}).");
+        else if (!outside.isEmpty()) results.notDone("a saved position is outside the ends.");
+        else results.done();
+        if (hasRobotFiles()) {
+            // A servo part has no ends of its own in Tunables: the ends are only a reminder for the positions.
+            if (positions.isEmpty()) return;
+            String section = sectionOf(servoName);
             for (Map.Entry<String, Double> p : positions.entrySet()) {
-                fields.add(p.getKey() + " = " + FinderResults.num(p.getValue(), 3));
+                results.setTunable(key + ":" + p.getKey(), section, p.getKey(), FinderResults.num(p.getValue(), 3));
             }
-            results.set(key + ":t0", FinderResults.tunablesLine(servoName, fields));
-            results.set(key + ":t1", "    // rename P1, P2... (open, closed)"
-                    + (ends ? "; keep them between " + FinderResults.num(Math.min(endA, endB), 3)
-                            + " and " + FinderResults.num(Math.max(endA, endB), 3) : "")
-                    + (fullRange ? "; FULL RANGE: add .fullRange() to it in Robot.java" : ""));
+            results.set(key + ":names", "Write your names for P1, P2 (open, closed).");
+            if (ends) results.set(key + ":ends", "Keep them " + FinderResults.num(low, 3) + " to " + FinderResults.num(high, 3) + " (the safe ends).");
+            if (fullRange) results.setIn(key + ":range", FinderResults.ROBOT_FILE, "Add .fullRange() to " + servoName + "'s part.");
+            return;
         }
+        List<String> code = new ArrayList<>();
+        code.add("PositionServo.create(hardwareMap, \"" + servoName + "\")" + (fullRange ? ".fullRange()" : "")
+                + (ends ? ".limits(" + FinderResults.num(low, 3) + ", " + FinderResults.num(high, 3) + ")" : ""));
+        for (Map.Entry<String, Double> p : positions.entrySet()) {
+            code.add("    .position(\"" + p.getKey() + "\", " + FinderResults.num(p.getValue(), 3) + ")"
+                    + (outside.contains(p.getKey()) ? "   // OUTSIDE the ends" : ""));
+        }
+        results.setIn(key + ":0", FinderResults.HELPER_CODE, code.toArray(new String[0]));
     }
 
     @Override protected void step() { }
@@ -270,51 +279,79 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     @Override
     protected void show(RobotTelemetry t) {
         if (servo == null) {
-            t.section("Choose a servo (D-pad, then {A})");
+            t.warn("Hands clear. Nothing moves in this step.");
+            t.section("Servo finder: choose a servo");
+            t.text("Next: D-pad up/down = choose. {A} = use it.");
             chooser.addTelemetry(t, "No servos in the robot configuration.");
             if (!chooseNote.isEmpty()) t.warn(chooseNote);
-            t.line("Full range ({Y})", fullRange ? "ON: 500-2500 us (goBILDA 2000: 300 deg)" : "off: 600-2400 us, the SDK's normal (goBILDA 2000: 270 deg)");
+            t.line("Full range", fullRange ? "ON" : "off (normal)");
+            t.text("{Y} = change it. ON only if Robot.java has");
+            t.text("  .fullRange() on that servo's part.");
             return;
         }
-        t.section("Servo \"" + servoName + "\"  ({BACK} = another)" + (fullRange ? "  FULL RANGE" : ""));
-        if (!pulseNote.isEmpty()) t.warn(pulseNote);
-        if (Boolean.TRUE.equals(servoDirections().get(servoName))) t.line("Direction", "reversed, as in Robot.java");
-        String hint = directionHint();
-        if (!hint.isEmpty()) t.line("Hint", hint);
-        if (other != null) t.line("Moves with it", otherName + (otherMirrored ? " (mirrored)" : " (same way)") + ", alsoTrim not used here");
         if (Double.isNaN(position)) {
-            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad up/down; {A} = move the servo there)");
-            t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
-            t.text("Choose a start point near where the servo sits now. Nothing moves until {A}.");
-            return;
+            t.warn("{A} = the servo JUMPS to this number.");
+            t.warn("Hands clear. Nothing moves until {A}.");
+            t.section("Servo \"" + servoName + "\": first move");
+            t.text("Next: set a number near where it sits now.");
+            t.text("0 and 1 are its two ends. 0.5 is the middle.");
+            t.line("Start point", FinderResults.num(startAt, 3));
+            t.line("Step", step.label() + "  (D-pad left/right)");
+            t.text("D-pad up/down = change the start point.");
+            t.text("Not sure? Take its arm off first. Use 0.500.");
+        } else {
+            t.warn("Every step moves it. Hands clear.");
+            t.section("Servo \"" + servoName + "\": ends and positions");
+            if (Double.isNaN(endA)) {
+                t.text("Next: move to one end. Stop before it pushes.");
+                t.text("It hums? Move back a little. {X} = save end.");
+            } else if (Double.isNaN(endB)) {
+                t.text("Next: move to the other end the same way.");
+                t.text("{B} = save that end.");
+            } else if (positions.isEmpty()) {
+                t.text("Next: move to a position you use.");
+                t.text("{A} = save that position.");
+            } else {
+                t.text("Next: save the other positions with {A}.");
+            }
+            t.line("Position", FinderResults.num(position, 3) + "  (0 to 1)");
+            t.line("Step", step.label() + "  (D-pad left/right)");
+            t.line("Ends ({X}, {B})", (Double.isNaN(endA) ? "-" : FinderResults.num(endA, 3)) + ", "
+                    + (Double.isNaN(endB) ? "-" : FinderResults.num(endB, 3)));
+            t.text("D-pad up/down = move one step.");
+            if (!positions.isEmpty()) t.text("{Y} = take back the last position.");
+            if (!Double.isNaN(endA) && !Double.isNaN(endB)
+                    && (position < Math.min(endA, endB) - 1e-9 || position > Math.max(endA, endB) + 1e-9)) {
+                t.warn("Outside the marked ends. Move back inside.");
+            }
         }
-        t.line("Position", FinderResults.num(position, 3));
-        t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
-        t.line("End {X}", Double.isNaN(endA) ? "-" : FinderResults.num(endA, 3));
-        t.line("End {B}", Double.isNaN(endB) ? "-" : FinderResults.num(endB, 3));
-        t.text("D-pad up/down = move ({LB} = past the ends), {X}/{B} = ends, {A} = save position, {Y} = undo");
-        if (!Double.isNaN(endA) && !Double.isNaN(endB)
-                && (position < Math.min(endA, endB) - 1e-9 || position > Math.max(endA, endB) + 1e-9)) {
-            t.warn("Outside the marked ends");
+        if (!pulseNote.isEmpty()) t.warn(pulseNote);
+        // Which way it turns matters until the first end is found; then the line only fills the screen.
+        if (Double.isNaN(endA)) {
+            if (Boolean.TRUE.equals(servoDirections().get(servoName))) t.line("Direction", "reversed, as in Robot.java");
+            String hint = directionHint();
+            if (!hint.isEmpty()) t.text(hint);
         }
+        if (other != null) t.line("Moves with it", otherName + (otherMirrored ? " (mirrored)" : " (same way)"));
+        t.text("{BACK} = another servo.");
     }
 
     @Override
     protected String[] helpLines() {
         return new String[] {
             "Finds a servo's safe ends and positions.",
-            "1. D-pad up/down = choose a servo, {A} = use it.",
-            "   {Y} = full range (if Robot.java has .fullRange()).",
-            "2. D-pad up/down = a START POINT near where it is",
-            "   (nothing moves), {A} = move it there.",
-            "3. D-pad up/down = move by the step; left/right =",
-            "   smaller/bigger step (0.1 to 0.001, starts 0.05).",
-            "4. Move to one end until it JUST stops pushing on",
-            "   the frame (a straining servo hums), back off a",
-            "   little: {X}. The other end: {B}. Then it stays",
-            "   between them (hold {LB} to go past).",
-            "5. Each position you need: {A} (P1, P2...). {Y} = undo.",
-            "{BACK} = another servo. STOP saves the code lines.",
+            "1. Choose a servo. {A} = use it. {Y} = full range",
+            "   (only if Robot.java has .fullRange()).",
+            "2. Set a number near where it sits now.",
+            "   Not sure? Take its arm off. Use 0.500.",
+            "   {A} = the servo jumps there.",
+            "3. D-pad up/down = one step. Left/right = size.",
+            "4. One end, before it pushes: {X}. Other: {B}.",
+            "   Then it stays between them.",
+            "   Hold {LB} = go past a saved end (careful).",
+            "5. Each position you use: {A}. {Y} = undo.",
+            "{BACK} = another servo.",
+            "Two servos: alsoTrim is not used in this tool.",
         };
     }
 

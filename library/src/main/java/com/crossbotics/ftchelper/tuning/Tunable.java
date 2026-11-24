@@ -155,6 +155,19 @@ public final class Tunable {
         return hidden;
     }
 
+    // The name without its group: "kP" for "Lift/kP".
+    String fieldName() {
+        String group = group();
+        return group.isEmpty() ? name : name.substring(group.length() + 1);
+    }
+
+    // The shown value without its trailing zeros ("0.004500" -> "0.0045"), as one writes it in code.
+    String asWritten() {
+        String value = display();
+        if (value.contains(".")) value = value.replaceAll("0+$", "").replaceAll("\\.$", ".0");
+        return value;
+    }
+
     /** How many tunables use a saved value that is different from the code. Show it in INIT. */
     public static synchronized int countChanged() {
         int n = 0;
@@ -172,11 +185,7 @@ public final class Tunable {
         for (Tunable t : ALL) {
             if (!t.isChanged()) continue;
             String group = t.group();
-            String field = group.isEmpty() ? t.name : t.name.substring(group.length() + 1);
-            // The shown value without its trailing zeros ("0.004500" -> "0.0045"), as one writes it in code.
-            String value = t.display();
-            if (value.contains(".")) value = value.replaceAll("0+$", "").replaceAll("\\.$", ".0");
-            out.add((group.isEmpty() ? "" : group + ": ") + field + " = " + value + t.voltsNote());
+            out.add((group.isEmpty() ? "" : group + ": ") + t.fieldName() + " = " + t.asWritten() + t.voltsNote());
         }
         return out;
     }

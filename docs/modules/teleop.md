@@ -81,6 +81,7 @@ public class MainTeleOp extends EasyTeleOp {
 | `libraryButtons(lib)` | no | move or free the library's buttons ([below](#moving-the-librarys-buttons)) |
 | `setPoseJob()` | no | the "set pose here" job (it gives the words to show), or null (default). `Controls.java` gives one on a robot with odometry. Its button works in INIT too (held 1 s before ▶) |
 | `allianceChanged(now)` | no | update what uses the alliance when the driver switches it during the match (`Controls.java`: `robot.setAlliance(now)`) |
+| `screensShown(menu, help)` | no | runs every loop before the buttons, with which screens are open. A robot in five files uses it to end continuous fire |
 | `everyLoop()` | no | your code for every loop (sticks for mechanisms, simple rules). It must not wait. |
 | `addTelemetry(t)` | no | extra screen lines |
 | `backTap()` | no | a job for a tap of BACK (a Controls.java TeleOp: pause everything). Then a 1 s hold of BACK resets "forward" |

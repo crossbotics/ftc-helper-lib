@@ -15,7 +15,7 @@ Make the turret or the robot aim at the middle of the goal, when the camera sits
 
 2. The Aim Tuner's INIT screen shows, with the camera's status. Press **▶** (start) on the Driver Hub.
 
-   ![The Aim Tuner's INIT screen: Camera : STREAMING 30 fps. Press start](../images/hub-aim-tuner-go-start.svg)
+   ![The Aim Tuner's INIT screen: what turns and shoots, the offset it starts from, and the camera. Press start](../images/hub-aim-tuner-go-start.svg)
 
 ## What the offset is
 
@@ -52,20 +52,27 @@ dark or too bright.
   USB-C cable into a laptop instead of the Control Hub. Open http://limelight.local:5801: the page shows
   the live picture, with the tags it finds marked. Plug it back into the Control Hub after.
   ([Limelight lighting](../guides/limelight-lighting.md) has more.)
-- **No picture? Use the numbers.** While the tuner runs, the screen shows `Bearing : ... deg (left = +)`
-  when the camera sees the goal, and `No target in view.` when it does not. Turn the robot a little to the
-  left: the bearing must go down.
+- **No picture? Use the numbers.** While the tuner runs, the screen shows `Goal is ... deg LEFT` (or RIGHT)
+  `of the camera's middle.` when the camera sees the goal, and `Next: point the camera at the goal's tag.`
+  when it does not. Turn the robot a little to the left: the goal must move to the right.
 
 ## Steps
 
-**Before you start:** the Aim Tuner uses the older helpers' pieces, not `robot()`. It needs your
+**Before you start:** the Aim Tuner is set up with pieces. It needs your
 `createCamera()`, and `createTurret()` or `robotConfig()` (to aim by turning the robot), and
 `createLauncher()` for test shots ([reference](../modules/finders.md#aimtuneropmode)). For a robot in five
-files, `robotConfig()` is `return new Robot().robotConfig();`. The Characterizer is the same: it needs
-`robotConfig()`.
+files, also give `robot()` (`return new Robot();`): then the tuner starts at the `cameraOffset` in
+Tunables.java, uses that robot's drive, and shows the line for Tunables.java. Without `robot()`, it starts
+at the offset set on your turret or aim controller. The Characterizer needs `robotConfig()`
+(`return new Robot().robotConfig();`).
 
-1. Park the robot 4-6 ft from the target, facing it. For a turret with a home switch, press **X** first.
-2. Hold **A**, and the robot aims.
+The first screen says what it starts from, for example `Starts from : -10.0 deg (Tunables.java)`. Check
+that this is your code's number.
+
+1. Park the robot 4-6 ft from the target, facing it. For a turret with a home switch, press **X** first: the turret
+   turns to find its start. **B** stops it.
+2. Hold **A**. The robot (or the turret) turns by itself to the goal. Let go, and it stops. With a turret,
+   the sticks drive also while it aims: keep the sticks still.
 
    ![Hold A: the Driver Hub shows Still to turn : 0.1 deg](../images/hub-aim-tuner-step-aim.svg)
 
@@ -76,11 +83,11 @@ files, `robotConfig()` is `return new Robot().robotConfig();`. The Characterizer
 4. When shots go LEFT of the middle, press D-pad RIGHT (aim more to the right). When shots go right, press
    LEFT.
 
-   ![Shots go right, so press D-pad left: the Driver Hub shows Offset : -1.5 deg and Tunables.Aim: cameraOffset = -1.5](../images/hub-aim-tuner-step-offset.svg)
+   ![Shots go right, so press D-pad left: the Driver Hub shows Aim offset : 1.5 deg to the LEFT and cameraOffset = -1.5 in class Aim](../images/hub-aim-tuner-step-offset.svg)
 
 5. Repeat until shots go in the middle, at two or three distances. Copy the offset line
-   (five files, with a turret: `Tunables.Turret: cameraOffset = -1.5`; aiming by turning the whole robot:
-   `Tunables.Aim: cameraOffset = -1.5`).
+   (five files: `public static double cameraOffset = -1.5;`, in class Turret with a turret, in class Aim
+   when the whole robot aims).
    When the offset that works changes with distance, the camera is off to the side of the launcher.
    Move the camera onto the launcher's line (or as close as you can), or tune at the distance you shoot
    from most.
@@ -90,7 +97,8 @@ files, `robotConfig()` is `return new Robot().robotConfig();`. The Characterizer
 - **Pressed the D-pad the wrong way:** press it the other way. Each press changes the offset by 0.5 degrees
   (left and right) or 2 degrees (up and down), so the opposite press undoes it.
 
-**Start over:** press STOP, then INIT, and open the tool again. It starts empty: nothing carries over. The lines saved at STOP stay in the results file, the newest at the end.
+**Start over:** press STOP, then INIT, and open the tool again. It starts from the offset in
+your installed code: nothing else carries over. The lines saved at STOP stay in the results file, the newest at the end.
 
 ## Put the numbers in your code
 
@@ -99,8 +107,8 @@ and type each line into the file. Or copy it from the [results file](01-tune-and
 
 | The finder shows | Put it in |
 | --- | --- |
-| `Tunables.Turret: cameraOffset = -1.5` (a turret) | `Tunables.Turret` |
-| `Tunables.Aim: cameraOffset = -1.5` (the whole robot aims) | `Tunables.Aim` |
+| `Open Tunables.java, find class Turret.` and `public static double cameraOffset = -1.5;` (a turret) | `Tunables.Turret` |
+| `Open Tunables.java, find class Aim.` and the same line (the whole robot aims) | `Tunables.Aim` |
 
 ## Done when
 

@@ -2373,6 +2373,88 @@
    }
   },
   {
+   "id": "SET-05",
+   "title": "A first-season student runs every tool from its screens alone",
+   "area": "setup",
+   "priority": "high",
+   "where": "both",
+   "minutes": 60,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "gobilda-strafer",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.48.0",
+   "docs": [
+    {
+     "path": "docs/tuning/01-tune-and-check.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/modules/finders.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/SET-05.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The tuners and checks are made for a student in a first season with no Java. Each screen must say what moves, how to stop it, the one thing to do now, and the exact lines to change. A screen that confuses a new student is a bug, even when the numbers are right."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Eye protection. Robot on a block for every tool that spins a wheel or a flywheel.",
+       "Keep a person ready on STOP. Nobody in front of a launcher."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Your robot in five files, with Tune and check in the TeleOp list.",
+       "A student who did not write the robot's code and did not read the docs. A mentor watches and does not help."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "The student opens Tune and check and runs the Hardware Check, then one more tool for each part the robot has.",
+       "For each tool, before ▶, the student says out loud what will move and how to stop it.",
+       "The student holds a stick or a button while pressing ▶ or picking a device. Nothing may move.",
+       "The student does each tool to its end from the screen alone. Open help (GUIDE, or hold START 1 s) only when stuck.",
+       "At each end screen, the student says DONE or NOT DONE, and which file, class and lines to change.",
+       "Press STOP in the middle of one moving test. Read the STOPPED screen."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In every tool, step 2 names the moving part and the stop, step 3 moves nothing, step 5 names the right file, class and lines, and step 6 stops the motion at once. The mentor helped 0 times."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the robot, the library version, the student's grade and season",
+       "each tool run, and every word or line the student asked about (copy the screen line)",
+       "each time the mentor had to help, and why"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Run only the tools for the parts your robot has. The menu lists only those."
+     }
+    ]
+   }
+  },
+  {
    "id": "SHOT-01",
    "title": "Flywheel Finder - gains that hold the speed",
    "area": "shooter",
@@ -2894,6 +2976,250 @@
     "different": [
      {
       "p": "A geared flywheel or a belt: the catalog speed is the motor's, so say how it is built. A flywheel with no encoder cable cannot use this test: report \"could not run\"."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-22",
+   "title": "continuousOnHold feeds an aimed group and stops when you let go",
+   "area": "shooter",
+   "priority": "high",
+   "where": "both",
+   "minutes": 20,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "webcam",
+     "limelight"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.48.0",
+   "docs": [
+    {
+     "path": "docs/reference/parts/launcher.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/SHOT-22.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Holding fire can run the feeder with no break. It must never start without the goal and the aim, and it must stop as soon as you let go."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Eye protection. Nobody in front of the launcher.",
+       "The robot can turn by itself while you hold fire. Keep room around it.",
+       "Let go of fire to stop. Keep a person ready on STOP."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with a CR servo or motor feeder, `speedFromDistance(camera)` and a shot table.",
+       "`continuousOnHold = true` in the Launcher part of Tunables.java.",
+       "Four game pieces for each group."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "In TeleOp, face away from the goal and hold fire for 1 second. Let go.",
+       "Face the goal and tap fire.",
+       "Load four pieces, aim, and hold fire until they are gone.",
+       "Load four again. Hold fire, and let go after the first piece.",
+       "Hold fire again. While it feeds, open the button list and close it. Keep holding for 1 second.",
+       "Hold fire again. While it feeds, press pause, then press it again. Keep holding for 1 second."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 1 nothing feeds and the screen says the goal is NOT seen, step 2 fires 1 piece, step 3 feeds with no pause, and in 3 of 3 stops (steps 4 to 6) the feeder stops at once and does not start again by itself."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the robot, the camera, the feeder, the library version",
+       "pieces fired in each step, and the screen's words for each stop",
+       "how many of the four pieces scored in step 3"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A push servo cannot feed with no break. INIT must say so, and a tap must still fire one piece."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-24",
+   "title": "The Flywheel Tuner stops at any button and finds both controls' numbers",
+   "area": "shooter",
+   "priority": "high",
+   "where": "real",
+   "minutes": 60,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.48.0",
+   "docs": [
+    {
+     "path": "docs/tuning/06-flywheel-tuner.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/SHOT-24.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The Flywheel Tuner runs the flywheel by itself for a long time. Any button must stop it at once, and it must never start again without a new press. Its numbers are only worth copying when the wheel really holds them on the robot."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses. Robot on a block for runs 1 and 2, nobody in front of the launcher, no balls in the robot.",
+       "The driving check drives the robot: take it off the block, and clear the floor 5 ft around it.",
+       "Keep a person ready on STOP."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot in five files with a launcher. Its `kF` found with the Flywheel Finder.",
+       "A FULL battery (12.6 V or more) and a used battery (12.0 to 12.4 V)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Tune and check, Flywheel Tuner. INIT, then ▶. Press A. During the countdown, press X.",
+       "Press A again. When the wheel spins, press B. Watch the wheel and the screen.",
+       "Press A again, and let run 1 finish. Write down the test number where it stopped in step 2.",
+       "Press STOP, turn the robot off, put in the used battery, open the Flywheel Tuner again. Press A.",
+       "Do both driving checks. Copy the lines from pages 2 and 3 into `Tunables.java`.",
+       "In TeleOp, try the PID numbers, then the bang-bang numbers (`speedControl = \"BANG_BANG\"`). Spin up at your middle shot distance and watch READY."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Step 1: the wheel never moves. Step 2: the power goes off at once, the wheel rolls to a stop, and the screen says STOPPED and \"go on from test N\". Step 3 goes on from that test. Step 4 says run 2 and goes on by itself. Step 6: with each set of numbers the wheel reaches READY and holds it."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the motor, the wheel (its weight), `kF`, `nominalVolts`, both batteries' volts",
+       "the four lines of page 1 (the result), and pages 2 and 3",
+       "any setting that failed, and why (the screen's \"Why:\" line)",
+       "whether the motor felt hot after run 1"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "With no shot table, the tuner uses `speedRpm` and 10% either side. Say so in the record."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-25",
+   "title": "Group Shot Tuner: any button stops it; a bad group is never scored",
+   "area": "shooter",
+   "priority": "high",
+   "where": "real",
+   "minutes": 90,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "webcam"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.48.0",
+   "docs": [
+    {
+     "path": "docs/tuning/14-group-shot-tuner.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/SHOT-25.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The Group Shot Tuner shoots real balls by itself after a countdown, and turns the robot to the goal. Any button must stop it at once. A group that was not aimed, or that lost the goal, must never be scored. Its result is only worth copying when a hold of the fire button in TeleOp really scores every ball."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses for everybody near the robot. Nobody in front of the robot.",
+       "The robot turns by itself to aim, and the sticks drive it on the \"place the robot\" screen: clear the floor.",
+       "Keep a person ready on STOP."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot in five files with a launcher whose speed comes from the camera (`speedFromDistance(camera)`), a camera with `goal(...)`, and a feeder that can feed without a break (a roller, a motor, or spinning servos).",
+       "The shot table and the aim tuned. The Flywheel Tuner done (or not: then it tests today's settings).",
+       "12 balls, a charged battery, the goal on the field."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Tune and check, Group Shot Tuner. In INIT, choose your alliance. Read the `Aim offset` line. Press ▶.",
+       "Drive to the first spot until `Camera distance` says OK. Press A. Load one ball. Press A, and press X during the countdown.",
+       "Press A, then A again. While the wheel speeds up, press B.",
+       "Press A, then A again, and let the check shot fly. Enter where it went. Do all 4 check shots.",
+       "Load 4 balls. Press A. During the group, turn the robot away from the goal by hand.",
+       "Load 4 balls again. Press A, and let the group finish. Enter where the 4 went.",
+       "Finish all 3 spots. Copy the lines from page 2 into `Tunables.java` (only when page 1 says DONE).",
+       "In TeleOp, hold the fire button with 4 balls from each spot."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Step 2: nothing moves. Step 3: the power goes off at once and the screen says STOPPED; nothing starts again until A. Step 5: the screen says `NOT counted` and asks for the same group again; it never asks where those balls went. Step 6 asks where the 4 went. Step 8: with the copied lines, every ball scores from each spot."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the motor, the wheel, the feeder, the table's rows, the aim offset, the battery's volts",
+       "page 1 (the result), page 2 (the lines) and page 3 (each setting's score)",
+       "each `NOT counted` line and what happened then",
+       "how many of the 4 balls scored from each spot in step 8"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A robot whose turret aims: the tool says it cannot run there. Say so in the record."
      }
     ]
    }
@@ -6810,6 +7136,80 @@
     "different": [
      {
       "p": "No gains in Tunables.java: the finder uses its own, as before (step 1 first). Your own finder class (not Tune and check): override `robotGains()`."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-23",
+   "title": "Untuned bang-bang starts from your kF and reaches the speed",
+   "area": "shooter",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 15,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.48.0",
+   "docs": [
+    {
+     "path": "docs/reference/parts/launcher.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/SHOT-23.md",
+   "sections": {
+    "why": [
+     {
+      "p": "With `speedControl = \"BANG_BANG\"` and no `bangKv`, the flywheel starts from the team's written `kF`, not the catalog's guess. A `kF` found on the real wheel must get the wheel to its speed before the Flywheel Tuner is done."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Eye protection. Robot on a block, nobody in front of the launcher, no game pieces loaded.",
+       "Keep a person ready on STOP."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with a tuned `kF` (Flywheel Finder) and `nominalVolts` in the Launcher part of Tunables.java.",
+       "`speedControl = \"BANG_BANG\"`, and no `bangKv` line."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT TeleOp. Read the notes about the wheel power.",
+       "Spin the flywheel at your shortest shot's speed. Watch the speed and READY for 5 s.",
+       "Do step 2 at your longest shot's speed.",
+       "Add `bangKv` with any number. INIT again and read the notes."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Step 1 says \"Wheel power starts from your kF (bangKv).\" and that it is not tuned. In steps 2 and 3 the wheel shows READY and stays within the ready band. Step 4 shows no note about the wheel power."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the motor, `kF`, `nominalVolts`, the battery volts at the start",
+       "the speeds you set and the speeds the screen showed after 5 s",
+       "the notes from steps 1 and 4 (copy them)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "With no `kF` line, step 1 must say \"Wheel power is a catalog guess (bangKv).\" instead."
      }
     ]
    }

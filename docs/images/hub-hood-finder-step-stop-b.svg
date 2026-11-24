@@ -17,15 +17,16 @@
 <rect x="6" y="190" width="508" height="275" rx="14" fill="#2b2f36"/>
 <text x="22" y="220" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
 <rect x="16" y="234" width="488" height="221" rx="6" fill="#ffffff"/>
-<text x="26" y="260" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Hood "hood" (servo) ---</text>
-<text x="26" y="281" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Position : 0.648</text>
-<text x="26" y="302" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="323" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Stop A : 0.205</text>
-<rect x="20" y="329" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="344" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Stop B : 0.648</text>
-<text x="26" y="365" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="386" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Copy into your code ---</text>
+<text x="26" y="260" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Position : 0.648  (0 to 1)</text>
+<text x="26" y="281" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">End A : 0.205</text>
+<rect x="20" y="287" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="302" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">End B : 0.648</text>
+<text x="26" y="323" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
+<text x="26" y="344" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- DONE ---</text>
+<text x="26" y="365" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Open Tunables.java, find class Hood.</text>
+<text x="26" y="386" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Change these lines (not there? add them):</text>
 <rect x="20" y="392" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="407" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Tunables.Hood: posA = 0.205, posB = 0.648</text>
-<text x="26" y="428" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">// Copy into Tunables.java: the robot uses the file, ...</text>
+<text x="26" y="407" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  public static double posA = 0.205;</text>
+<rect x="20" y="413" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="428" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  public static double posB = 0.648;</text>
 </svg>

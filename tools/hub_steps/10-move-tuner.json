@@ -4,37 +4,42 @@
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Tune and check ---",
+        "--- Tune and check: 11 of 14 ---",
         "Robot: Robot",
-        "  Hardware Check: every device found, ...",
         "  ...",
-        "*> Move Tuner: how exactly moves stop and turns end",
+        "*> Move Tuner",
         "  ...",
-        "D-pad up/down = pick, A = open it. Then ▶."
+        "This tool: moves stop in the right place.",
+        "D-pad up/down = choose. A = open it. Then ▶."
       ]
     },
     "move-tuner-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "Move tuner: how exactly autonomous moves stop and turns end.",
-        "*Clear floor: 5 ft around the robot. Press ▶.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! The robot will DRIVE and TURN BY ITSELF.",
+        "*!! Clear 5 ft all around. Everybody back.",
+        "!! GUIDE or START stops any test.",
+        "Move tuner: makes autonomous moves stop",
+        "in the right place.",
+        "Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "move-tuner-go-choose": {
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Move tuner ---",
-        "*> 1 Creep",
-        "  2 Stops",
-        "  3 Turns",
-        "  4 Drift",
-        "  5 Move and turn",
+        "!! A starts moves by itself. Stand back.",
+        "--- Move tuner: choose a test ---",
+        "Next: do the tests in order, from 1.",
+        "*> 1 Creep: least power to move",
+        "  2 Stops: where a move ends",
+        "  3 Turns: how a turn ends",
+        "  4 Drift: is it straight (check only)",
+        "  5 Move and turn: sideways and turning",
         "D-pad up/down = choose, A = start",
-        "*Power : 0.5 (D-pad left/right: your autos' power)",
-        "Measures with : the wheel counts"
+        "*Power : 0.5  (D-pad left/right)"
       ]
     },
     "move-tuner-step-creep": {
@@ -42,12 +47,16 @@
       "where": "With the arrow on 1 Creep, press:",
       "order": "press-first",
       "lines": [
-        "--- Move tuner ---",
+        "--- Move tuner: choose a test ---",
+        "*PASSED: moveMinPower is now 0.10.",
+        "(a little extra, for a low battery)",
+        "Next: 2 Stops.",
         "...",
-        "Rolls forward at 0.07, right at 0.07",
-        "*moveMinPower now 0.10 (with a margin). Next: Stops.",
-        "--- Copy into your code ---",
-        "*Tunables.Drive: moveMinPower = 0.10"
+        "Open Tunables.java, find class Drive.",
+        "*  public static double moveMinPower = 0.10;",
+        "...",
+        "It starts to roll at power 0.07 forward,",
+        "  and 0.07 to the right."
       ]
     },
     "move-tuner-step-stops": {
@@ -55,13 +64,14 @@
       "where": "With the arrow on 2 Stops, press:",
       "order": "press-first",
       "lines": [
-        "--- Move tuner ---",
+        "--- Move tuner: choose a test ---",
+        "*PASSED: slowDownIn 3.",
+        "Next: 3 Turns.",
         "...",
-        "slowDownIn 0: slide 0.6 in, 24 in 1.7 s",
-        "slowDownIn 3: slide 0.5 in, 24 in 1.7 s",
-        "*OK: slowDownIn 3. Copy the lines.",
-        "--- Copy into your code ---",
-        "*Tunables.Drive: slowDownIn = 3"
+        "*  public static double slowDownIn = 3;",
+        "...",
+        "slowDownIn 0: slide 0.6 in past, ...",
+        "slowDownIn 3: slide 0.5 in past, ..."
       ]
     },
     "move-tuner-step-turns": {
@@ -69,14 +79,15 @@
       "where": "With the arrow on 3 Turns, press:",
       "order": "press-first",
       "lines": [
-        "--- Move tuner ---",
+        "--- Move tuner: choose a test ---",
+        "*RUN AGAIN:",
+        "*  turns stop off target: more turnMinPower.",
+        "turnMinPower is now 0.05.",
+        "*Next: run 3 Turns again.",
+        "Worst turn: past 7.6 deg too much, ...",
         "...",
-        "+90: past 7.2, off 6.9 deg, 4.0 s TIMED_OUT",
-        "-90: past 0.6, off 0.7 deg, 2.1 s",
-        "...",
-        "Worst: past 7.6 deg, swings 1, end off 7.4 deg",
-        "*turnMinPower now 0.05: turns stop off target: ...",
-        "*Run Turns again."
+        "Turn 90 left: past 7.2, off 6.9 deg, 4.0 s",
+        "  That turn took too long."
       ]
     },
     "move-tuner-step-drift": {
@@ -84,13 +95,13 @@
       "where": "With the arrow on 4 Drift, press:",
       "order": "press-first",
       "lines": [
-        "--- Move tuner ---",
+        "--- Move tuner: choose a test ---",
+        "*PASSED: the heading stays within 2 deg.",
+        "Next: 5 Move and turn.",
         "...",
-        "Forward 48 in: heading 0.0 deg, slide 0.8 in",
-        "Back 48 in: heading -0.0 deg, slide 0.6 in",
-        "Right 48 in: heading 0.0 deg, slide 0.7 in",
-        "Left 48 in: heading -0.0 deg, slide 0.6 in",
-        "*OK: the heading stays within 2 deg."
+        "Forward 48 in: turned 0.0 deg, 0.8 in past",
+        "Back 48 in: turned 0.0 deg, 0.6 in past",
+        "..."
       ]
     },
     "move-tuner-step-move-turn": {
@@ -98,13 +109,13 @@
       "where": "With the arrow on 5 Move and turn, press:",
       "order": "press-first",
       "lines": [
-        "--- Move tuner ---",
-        "...",
-        "Right to 90 deg: off 22.1 deg at the end of the move",
-        "...",
-        "Worst: off 24.9 deg, past target 0.0 deg",
-        "*moveTurnScale now 0.94: the turn is not done when ...",
-        "*Run Move and turn again."
+        "--- Move tuner: choose a test ---",
+        "*RUN AGAIN:",
+        "  the turn ends late: turn more.",
+        "moveTurnScale is now 0.94.",
+        "*Next: run 5 Move and turn again.",
+        "Worst: off 24.9 deg too much, past 0.0 deg OK",
+        "..."
       ]
     }
   }

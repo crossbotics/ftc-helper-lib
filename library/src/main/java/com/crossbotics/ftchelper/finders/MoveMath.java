@@ -149,21 +149,48 @@ final class MoveMath {
         }
     }
 
-    /** One number to change, its new value and why. {@code field} null = nothing to change. */
+    /** How a test ended. Nothing to change is not the same as right. */
+    enum Outcome {
+        /** It is right. */
+        PASSED("PASSED"),
+        /** A number changed, or a move did not finish: test it again. */
+        RUN_AGAIN("RUN AGAIN"),
+        /** It is wrong and no number here fixes it: the screen says what to do. */
+        CANT_FIX("CAN'T FIX");
+
+        final String words;
+
+        Outcome(String words) {
+            this.words = words;
+        }
+    }
+
+    /** How a test ended, why, and the one number to change ({@code field} null = none). */
     static final class Suggestion {
+        final Outcome outcome;
         final String field;
         final double value;
         final String why;
 
+        /** A number to change: the test must run again with it. */
         Suggestion(String field, double value, String why) {
+            this(Outcome.RUN_AGAIN, field, value, why);
+        }
+
+        private Suggestion(Outcome outcome, String field, double value, String why) {
+            this.outcome = outcome;
             this.field = field;
             this.value = value;
             this.why = why;
         }
 
-        /** True when nothing needs to change. */
+        static Suggestion noChange(Outcome outcome, String why) {
+            return new Suggestion(outcome, null, Double.NaN, why);
+        }
+
+        /** True only when it passed. */
         boolean ok() {
-            return field == null;
+            return outcome == Outcome.PASSED;
         }
     }
 
@@ -192,7 +219,7 @@ final class MoveMath {
             // past each time ("hunting"). A slightly wider tolerance lets the turn end.
             if (minPower > 0 && worstEndErrorDeg <= 2 * toleranceDeg && toleranceDeg < MAX_TOLERANCE_DEG - 1e-9) {
                 return new Suggestion("turnToleranceDeg", Math.min(MAX_TOLERANCE_DEG, toleranceDeg + 0.5),
-                        "turns rock just outside the tolerance: a little wider");
+                        "turns rock: allow a little wider");
             }
             // Stuck off target (short of it, or past it): near the target the push is too weak to move
             // the robot at all. A smallest turn power fixes that; WHY not more kP first: more kP also
@@ -205,7 +232,7 @@ final class MoveMath {
                         break;
                     }
                 }
-                return new Suggestion("turnMinPower", next, "turns stop off target: more smallest turn power");
+                return new Suggestion("turnMinPower", next, "turns stop off target: more turnMinPower");
             }
             return new Suggestion("turnKp", round(kp * 1.2, 4), "turns stop off target: more push");
         }
@@ -215,7 +242,7 @@ final class MoveMath {
         if (slowest90Sec > SLOW_90_SEC) {
             return new Suggestion("turnKp", round(kp * 1.2, 4), "turns are slow: more push");
         }
-        return new Suggestion(null, Double.NaN, "turns end on target, with no swing");
+        return Suggestion.noChange(Outcome.PASSED, "turns end on target, with no swing");
     }
 
     /** The Turns test widens turnToleranceDeg up to this, degrees. */
@@ -257,25 +284,37 @@ final class MoveMath {
      * @param worstOvershootDeg the largest swing past the target heading during a move, degrees
      * @param scale             moveTurnScale now
      * @param maxTurn           moveMaxTurnPower now
-     * @return the one change to try, or an OK (field null)
+     * @return the one change to try, a pass, or "can't fix"
      */
     static Suggestion suggestMoveTurn(double worstLagDeg, double worstOvershootDeg, double scale, double maxTurn) {
         if (worstOvershootDeg > MOVE_TURN_OVERSHOOT_OK_DEG) {
             return new Suggestion("moveTurnScale", round(Math.max(0.1, scale * 0.8), 2),
-                    "the heading swings past its target while moving: turn less");
+                    "it swings past while moving: turn less");
         }
         if (worstLagDeg > TURN_LAG_OK_DEG) {
             if (scale < 1.0) {
                 return new Suggestion("moveTurnScale", round(Math.min(1.0, scale * 1.25), 2),
-                        "the turn is not done when the move ends: turn more");
+                        "the turn ends late: turn more");
             }
             if (maxTurn < 0.8) {
                 return new Suggestion("moveMaxTurnPower", round(Math.min(0.8, maxTurn + 0.1), 2),
-                        "the turn is not done when the move ends: allow more turn power");
+                        "the turn ends late: allow more turn power");
             }
-            return new Suggestion(null, Double.NaN, "the turn lags at the most turn power: move slower or turn first");
+            return Suggestion.noChange(Outcome.CANT_FIX, "the turn lags at the most turn power");
         }
-        return new Suggestion(null, Double.NaN, "the heading arrives with the move, with no swing");
+        return Suggestion.noChange(Outcome.PASSED, "the heading arrives with the move");
+    }
+
+    /**
+     * {@link #suggestMoveTurn(double, double, double, double)}, when a move may not have finished.
+     *
+     * @param didNotFinish a move got stuck or took too long: its numbers prove nothing
+     * @return "run again" with no change if a move did not finish, else the same as the other method
+     */
+    static Suggestion suggestMoveTurn(double worstLagDeg, double worstOvershootDeg, double scale, double maxTurn,
+                                      boolean didNotFinish) {
+        if (didNotFinish) return Suggestion.noChange(Outcome.RUN_AGAIN, "a move did not finish");
+        return suggestMoveTurn(worstLagDeg, worstOvershootDeg, scale, maxTurn);
     }
 
     // ---------------------------------------------------------------------------------------------

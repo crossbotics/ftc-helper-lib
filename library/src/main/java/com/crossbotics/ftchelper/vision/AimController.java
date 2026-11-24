@@ -92,6 +92,11 @@ public class AimController {
         return this;
     }
 
+    /** The offset in use, degrees (what {@link #offset(double)} set, 0 if never set). */
+    public double getOffset() {
+        return offsetDeg;
+    }
+
     /**
      * The turn power toward the target, CLOCKWISE positive: the same sign as every drive's turn
      * ({@code drive.drive(f, s, aim.turnPower(t))}, {@code tank.arcade(f, aim.turnPower(t))}).

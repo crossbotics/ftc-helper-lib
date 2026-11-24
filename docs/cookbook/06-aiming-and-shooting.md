@@ -230,6 +230,36 @@ the shooter and the camera are. The Driver Station says `Aim : moving shot: lead
 it leads.
 **More:** [Add a camera: shooting while moving](../add-to-robot/07-camera.md#shooting-while-moving), [Aim](../reference/parts/aim.md).
 
+## How do I fire a group without stopping?
+
+**Where:** `Tunables.java`, in your `Launcher` section. Fast groups need a feeder that does not stop between
+pieces. The robot needs a CR servo or motor feeder, the speed from the distance, and a camera to aim.
+
+**Safety:** wear eye protection. The robot can turn by itself while you hold fire. Let go to stop.
+
+<!-- recipe: tunables-continuous-fire -->
+```java title="Tunables.java"
+// ADD these lines to your Tunables.Launcher section.
+public static boolean continuousOnHold = true;              // hold fire: feed nonstop, aimed
+public static double continuousMaxSec = DEFAULT;            // one hold feeds this long at most, seconds (3)
+public static double continuousBoostRpm = DEFAULT;          // extra speed once the feed starts, RPM (0)
+public static String speedControl = "PID";                  // "PID" (normal) or "BANG_BANG" (to test)
+public static boolean extendTableEnds = false;              // true: guess speeds past the tested rows
+```
+
+Then:
+
+1. Tap fire. One piece goes.
+2. Hold fire while the goal is in view. The robot aims, waits for the speed, then feeds nonstop.
+3. Let go. The feeder stops at once.
+
+If it does not fire, the screen says what is wrong (for example <samp>NOT aimed</samp>) and what to do.
+Autonomous still fires one piece at a time. This is not proven on a real robot yet.
+
+**More:** [Continuous fire](../reference/parts/launcher.md#continuous-fire),
+[Speed control](../reference/parts/launcher.md#speed-control-pid-or-bang-bang),
+[Table ends](../reference/parts/launcher.md#speeds-past-the-ends-of-the-table).
+
 ## How do I use one shot table per game piece?
 
 **Where:** `Tunables.java` (the tables, in your `Launcher` section), then `Controls.java` (inside

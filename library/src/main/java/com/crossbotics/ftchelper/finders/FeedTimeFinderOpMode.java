@@ -15,8 +15,8 @@ import java.util.List;
  * Finds how long a launcher's feeder must run per shot ({@code feedSec}), for a feeder that runs for a
  * time: a CR servo or a motor ({@code Launcher.feeder(Indexer.crServo("feeder"))} in Robot.java), with no
  * feed stop. It fires test shots and times each piece from the start of the feed to the shot. Fire several,
- * from every place a piece can sit: the longest time sets the number. It shows the line to copy:
- * {@code Tunables.Feeder: feedSec = 0.45}.
+ * from every place a piece can sit: the longest time sets the number. After {@link #ENOUGH_SHOTS} it shows
+ * the line to copy for class Feeder: {@code public static double feedSec = 0.45;}.
  *
  * <p>In "Tune and check" it is in the menu for a robot with such a launcher. On its own:
  * <pre>{@code
@@ -64,20 +64,20 @@ public abstract class FeedTimeFinderOpMode extends FinderOpMode {
             if (m instanceof Launcher && ((Launcher) m).hasTimedFeeder()) { launcher = (Launcher) m; break; }
         }
         if (launcher == null) {
-            problem = "Robot.java has no launcher with a CR servo or motor feeder (and no feed stop)";
+            problem = "No launcher with a timed feeder in Robot.java.\n(A CR servo or motor, no feed stop.)\nPress STOP. Use another tool.";
             return;
         }
         // The whole robot is set up (nothing moves: motors at 0), so the test shot uses the launcher's own wheel and feeder.
         try {
             r.setup(hardwareMap);
         } catch (RuntimeException e) {
-            problem = "Robot.java did not set up: " + e.getMessage();
+            problem = "Robot.java did not set up. Fix this first:\n" + e.getMessage();
             return;
         }
         test = launcher.feedTimeTest(LIMIT_SEC);
         if (!test.works()) {
-            problem = !launcher.isPresent() ? launcher.name() + " is not in the robot configuration"
-                    : launcher.name() + "'s feeder is not in the robot configuration";
+            problem = (!launcher.isPresent() ? launcher.name() : launcher.name() + "'s feeder")
+                    + " is not connected.\nAdd it to the robot configuration.";
             test = null;
         }
     }
@@ -120,10 +120,12 @@ public abstract class FeedTimeFinderOpMode extends FinderOpMode {
 
     @Override
     protected void showInit(RobotTelemetry t) {
-        if (!problem.isEmpty()) t.warn(problem);
-        t.text("Feed time finder: how long the feeder must run per shot (feedSec).");
-        t.warn("The test shots spin the wheel and fire: eye protection, nobody in front.");
-        t.text("Press {PLAY} on the Driver Hub.");
+        warnLines(t, problem);
+        t.warn("{LB} spins the flywheel. {RB} FIRES a piece.");
+        t.warn("Safety glasses. Nobody in front. Hands clear.");
+        t.text("Feed time finder: how long must the feeder");
+        t.text("run for one shot? (That is feedSec.)");
+        t.text("Nothing moves until you press {LB}.");
     }
 
     @Override
@@ -141,11 +143,15 @@ public abstract class FeedTimeFinderOpMode extends FinderOpMode {
 
     private void writeResults() {
         double sec = feedSecFor(times);
-        if (test == null || Double.isNaN(sec)) {
-            results.remove("feedtime");
+        results.remove("feedtime");
+        if (test == null) return;
+        // No line before enough shots: the first one is not the slowest one.
+        if (times.size() < ENOUGH_SHOTS) {
+            results.notDone(times.size() + " of " + ENOUGH_SHOTS + " test shots done.");
             return;
         }
-        results.set("feedtime", "Tunables." + test.feederSection() + ": feedSec = " + FinderResults.num(sec, 2));
+        results.done();
+        results.setTunable("feedtime", test.feederSection(), "feedSec", FinderResults.num(sec, 2));
     }
 
     @Override
@@ -155,10 +161,12 @@ public abstract class FeedTimeFinderOpMode extends FinderOpMode {
         // A test shot just ended: keep its time, or say what went wrong.
         if (wasBusy && !test.isBusy()) {
             if ("stopped".equals(test.lastEnd())) {
-                testNote = "Test shot stopped part way: not counted.";
+                testNote = "Test shot stopped part way: not counted.\nNext: load a piece and test again.";
             } else if (Double.isNaN(test.lastSec())) {
-                testNote = "No shot seen in " + FinderResults.num(LIMIT_SEC, 0) + " s: the piece did not reach the wheel."
-                        + " Check the feeder's direction and power, and that a piece was loaded.";
+                // It watches the wheel's speed: a piece may have gone without a drop that it could see.
+                testNote = "No shot seen in " + FinderResults.num(LIMIT_SEC, 0) + " s. Not counted."
+                        + "\nNo piece came out? Check load and feeder."
+                        + "\nOne came out? The speed drop was too small.";
             } else {
                 times.add(test.lastSec());
                 testNote = "";
@@ -171,57 +179,67 @@ public abstract class FeedTimeFinderOpMode extends FinderOpMode {
     @Override
     protected void show(RobotTelemetry t) {
         if (test == null) {
-            t.warn(problem);
+            warnLines(t, problem);
             return;
         }
-        t.section("Feeder \"" + test.feederSection() + "\"");
-        t.line("Wheel ({LB})", test.isSpinning()
-                ? FinderResults.num(test.rpmNow(), 0) + " / " + FinderResults.num(test.targetRpm(), 0) + " RPM"
-                  + (test.isReady() ? ", ready: {RB} = test shot" : ", spinning up")
-                : "off ({LB} = on; eye protection, nobody in front)");
-        if (test.isBusy()) t.text("Test shot on its way...");
-        if (!testNote.isEmpty()) t.warn(testNote);
-        if (times.isEmpty()) {
-            t.text("Load one piece where a piece sits in a match. {RB} = fire it. Do it "
-                    + ENOUGH_SHOTS + " times or more, from every place, the farthest back too.");
-            return;
+        t.warn(test.isSpinning() ? "It shoots. Nobody in front. {LB} = stop." : "{LB} spins the flywheel. Hands clear.");
+        t.section("Feed time finder: " + times.size() + (times.size() < ENOUGH_SHOTS ? " of " + ENOUGH_SHOTS : "") + " test shots");
+        if (test.isBusy()) {
+            t.text("Test shot on its way. Wait.");
+        } else if (times.size() >= ENOUGH_SHOTS) {
+            t.text("Tested every place, the farthest back too?");
+            t.text("Yes: copy the line. No: fire more.");
+        } else if (!test.isSpinning()) {
+            t.text("Next: load ONE piece, where it sits in a match.");
+            t.text("Then press {LB}: the flywheel turns on.");
+        } else if (!test.isReady()) {
+            t.text("Next: wait for the flywheel's speed.");
+        } else {
+            t.text("Next: one piece loaded? {RB} = test shot.");
+            t.text("Use every place, the farthest back too.");
         }
+        t.line("Flywheel", test.isSpinning()
+                ? FinderResults.num(test.rpmNow(), 0) + " of " + FinderResults.num(test.targetRpm(), 0) + " RPM"
+                  + (test.isReady() ? ", ready" : "")
+                : "off");
+        warnLines(t, testNote);
+        if (times.isEmpty()) return;
         StringBuilder b = new StringBuilder();
         int from = Math.max(0, times.size() - 5);
         for (int i = from; i < times.size(); i++) b.append(i > from ? ", " : "").append(FinderResults.num(times.get(i), 2));
         t.line("Test shots", b + " s  (" + times.size() + (times.size() < ENOUGH_SHOTS ? " of " + ENOUGH_SHOTS : "") + ")");
-        t.line("Shortest / average / longest", FinderResults.num(shortest(times), 2) + " / " + FinderResults.num(average(times), 2)
-                + " / " + FinderResults.num(longest(times), 2) + " s");
-        double now = test.feedSecNow();
-        t.line("feedSec", FinderResults.num(feedSecFor(times), 2) + " s (the longest + " + FinderResults.num(EXTRA_SEC, 1) + ")"
-                + (Double.isNaN(now) ? "" : "; now " + FinderResults.num(now, 2)));
-        if (times.size() < ENOUGH_SHOTS) t.text("Fire more test shots: " + ENOUGH_SHOTS + " or more.");
+        if (times.size() >= ENOUGH_SHOTS) {
+            t.line("Longest", FinderResults.num(longest(times), 2) + " s. feedSec = that + " + FinderResults.num(EXTRA_SEC, 1) + " s");
+            double now = test.feedSecNow();
+            if (!Double.isNaN(now)) t.line("feedSec in use now", FinderResults.num(now, 2) + " s");
+        }
         if (longest(times) + EXTRA_SEC > MAX_FEED_SEC) {
-            t.warn("A piece took almost " + FinderResults.num(MAX_FEED_SEC, 0) + " s: feedSec cannot be longer."
-                    + " Check the feeder's power, and what slows the piece.");
+            t.warn("Almost " + FinderResults.num(MAX_FEED_SEC, 0) + " s: feedSec cannot be longer.");
+            t.warn("Check feeder power, and what slows the piece.");
         }
         double spread = longest(times) - shortest(times);
         if (!test.stopsOnShot() && spread > SPREAD_SEC) {
-            t.warn("The times differ by " + FinderResults.num(spread, 2) + " s: a feedSec long enough for the slowest piece"
-                    + " can feed two of the closest. Add stopOnShot = true to Tunables." + test.feederSection() + ".");
+            t.warn("Times differ by " + FinderResults.num(spread, 2) + " s: 2 may feed at once.");
+            t.warn("Set stopOnShot = true, class " + test.feederSection() + ".");
         }
-        t.text("{X} = clear the times. STOP saves the line.");
+        t.text("{X} = clear the times.");
     }
 
     @Override
     protected String[] helpLines() {
         return new String[] {
-            "Finds feedSec: how long the feeder runs per shot.",
-            "Eye protection. Nobody in front of the launcher.",
-            "1. {LB} = wheel on (to the launcher's speedRpm).",
-            "2. Load ONE piece where a piece sits in a match.",
-            "3. When the wheel is ready: {RB} = test shot.",
-            "   It times the piece until the wheel sees the shot.",
-            "4. Do it " + ENOUGH_SHOTS + " times or more, from every place a piece",
-            "   can sit. The farthest back matters most.",
-            "5. feedSec = the longest + " + FinderResults.num(EXTRA_SEC, 1) + " s. Copy the line.",
-            "{X} = clear the times. {LB} = wheel off.",
-            "STOP saves the line to the results file.",
+            "Finds feedSec: how long the feeder runs a shot.",
+            "(The feeder pushes a piece into the flywheel.)",
+            "Safety glasses. Nobody in front of the launcher.",
+            "1. Load ONE piece where it sits in a match.",
+            "2. {LB} = flywheel on, at your speedRpm.",
+            "3. When it says ready: {RB} = test shot.",
+            "   It times it until the speed drops.",
+            "4. Do it " + ENOUGH_SHOTS + " times or more, from every place.",
+            "   The farthest back matters most.",
+            "5. feedSec = the longest + " + FinderResults.num(EXTRA_SEC, 1) + " s.",
+            "   Copy it when the screen says DONE.",
+            "{LB} = stop. {X} = clear the times.",
         };
     }
 

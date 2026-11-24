@@ -56,6 +56,8 @@ final class EncoderCheck {
         String result = null;
         /** True if the result is fine. */
         boolean ok = false;
+        /** What to do about a problem, a screen line each (none = fine). */
+        String[] next = NOTHING;
 
         Job(String name, String part, boolean encoderRead, String skip) {
             this(name, part, encoderRead, skip, false);
@@ -69,6 +71,8 @@ final class EncoderCheck {
             this.skipIsFault = skipIsFault;
         }
     }
+
+    private static final String[] NOTHING = new String[0];
 
     private enum Phase { SETTLE, PUSH, DONE }
 
@@ -96,6 +100,7 @@ final class EncoderCheck {
         for (Job j : jobs) {
             j.result = null;
             j.ok = false;
+            j.next = NOTHING;
         }
         at = 0;
         phase = Phase.SETTLE;
@@ -149,6 +154,7 @@ final class EncoderCheck {
             Verdict v = judge(job.name, job.mates, job.encoderRead, job.sign, delta);
             job.result = v.text;
             job.ok = v.ok;
+            job.next = v.next;
             at++;
             phase = Phase.SETTLE;
             settleStart = Double.NaN;
@@ -194,6 +200,7 @@ final class EncoderCheck {
             Job j = jobs.get(at);
             j.result = j.skipIsFault ? j.skip : "skipped: " + j.skip;
             j.ok = !j.skipIsFault;
+            if (j.skipIsFault) j.next = new String[] {"Add it to the robot configuration.", "Then start this check again."};
         }
         if (at >= jobs.size()) phase = Phase.DONE;
     }
@@ -240,10 +247,12 @@ final class EncoderCheck {
     static final class Verdict {
         final boolean ok;
         final String text;
+        final String[] next;
 
-        Verdict(boolean ok, String text) {
+        Verdict(boolean ok, String text, String... next) {
             this.ok = ok;
             this.text = text;
+            this.next = next;
         }
     }
 
@@ -259,25 +268,29 @@ final class EncoderCheck {
      */
     static Verdict judge(String motor, Set<String> mates, boolean encoderRead, int sign, Map<String, Integer> delta) {
         Integer ownBox = delta.get(motor);
-        if (ownBox == null) return new Verdict(false, "could not read its encoder: press {Y} to check again");
+        if (ownBox == null) return new Verdict(false, "could not read its encoder",
+                "Press {Y} to check again. The same result?", "Then check that hub's cables.");
         int own = ownBox * (sign < 0 ? -1 : 1);
         String way = sign < 0 ? "down" : "up";
         if (own >= MIN_COUNTS) return new Verdict(true, String.format(Locale.US, "OK: counts %s (%+d)", way, ownBox));
         if (own <= -MIN_COUNTS) {
-            return new Verdict(false, String.format(Locale.US,
-                    "counts BACKWARD (%+d): power wires swapped, or a reversed encoder?", ownBox));
+            return new Verdict(false, String.format(Locale.US, "counts BACKWARD (%+d)", ownBox),
+                    "Check its red and black power wires.", "They are right? Check its encoder cable.");
         }
         // Its own port did not count. Which one did? A port pushed with it (a lift's second motor) first.
         String mate = biggest(delta, mates, null, motor);
         if (mate != null) {
-            if (!encoderRead) return new Verdict(true, "no counts (fine: nothing reads this encoder)");
-            return new Verdict(false, "counts on \"" + mate + "\" instead: plug the encoder cable into \""
-                    + motor + "\"'s port (only its encoder is read)");
+            if (!encoderRead) return new Verdict(true, "no counts (fine: not used)");
+            return new Verdict(false, "counts on \"" + mate + "\" instead: plug the encoder cable into \"" + motor + "\"",
+                    "Only that motor's encoder port is read.");
         }
         String other = biggest(delta, null, mates, motor);
-        if (other != null) return new Verdict(false, "counts on \"" + other + "\" instead: encoder cables swapped?");
-        if (!encoderRead) return new Verdict(true, "no counts (fine: nothing reads this encoder)");
-        return new Verdict(false, "NO COUNTS: encoder cable missing? (Or it did not turn.)");
+        if (other != null) {
+            return new Verdict(false, "counts on \"" + other + "\" instead: swapped?",
+                    "Put each encoder cable in the port of", "its own motor.");
+        }
+        if (!encoderRead) return new Verdict(true, "no counts (fine: not used)");
+        return new Verdict(false, "NO COUNTS", "It turned? Plug in its encoder cable.", "It did not? Check its power wires, or a jam.");
     }
 
     // The port (in "only", or not in "not", never "self") that changed the most, if by MIN_COUNTS or more.

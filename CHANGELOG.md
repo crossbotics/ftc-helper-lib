@@ -2,6 +2,115 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.48.0 - 2026-11-23
+
+### Added
+
+- INIT menu number and angle lines: `InitMenu.number(...)`, `InitMenu.angle(...)`, `getNumber(...)`, and
+  in autos `Steps.menuNumber(...)`, `Steps.menuAngle(...)`, `Steps.number(...)`, `EasyAuto.number(...)`. Tap the D-pad for one
+  step, hold it to step fast. For fine choices, such as a distance in 1 in steps. Right and left together do nothing. The smallest step is 0.001. Old menu lines do not change.
+- The shot table can guess speeds a little past your tested rows, when you turn it on. `Tunables.Launcher`
+  `extendTableEnds` (false) continues each end's line up to `extendMaxRpm` (0.8 x the motor's top speed). The screen
+  says "estimated", and "estimated, speed limited" past the limit. The aim locks on an estimate that is not limited,
+  and not, closer than the first row, under half of the first row's speed.
+  `ShotTable.extendEnds`, `isEstimated`, `reaches`, `isSpeedLimited`; `covers` still means tested.
+- A flywheel can try full power to win back its speed after a shot (bang-bang, not proven on a real robot yet).
+  `speedControl = "BANG_BANG"` (default "PID"), with `bangKs`, `bangKv`, `bangFullBelowRpm`, `bangCoastAboveRpm`,
+  `bangHysteresisRpm`, `bangMaxPower`. It coasts above the speed and never reverses, always writes 0 on stop, skips
+  full power after a late loop, and latches a fault for a bad speed reading until switched off and on. A stop or a
+  pause lets the wheel coast (FLOAT, never brake). An eject waits up to 10 s for the coast. New classes `control.FlywheelBangBang` and `safety.EncoderGuard`.
+  With no `bangKv` written, it starts from the team's written `kF` (`kF` x counts per turn / 60 / 32767 x
+  `nominalVolts`), else from the catalog. INIT says which, and that it is not tuned.
+- Holding fire can feed an aimed group without stopping (not proven on a real robot yet). `continuousOnHold` (false),
+  `continuousMaxSec` (3), `continuousFeedPower`, `continuousBoostRpm` (0). A tap still fires one and tap-then-hold
+  still sprays. It starts only when the camera itself sees the goal (the odometry backup does not count), with a
+  strict aim and READY; it keeps its speed, stops the feed at once on release or a safety end (the camera not seeing
+  the goal for 0.5 s is one), and never restarts by itself. A press let go just after `holdSec`, before the group
+  started, is a tap. New `launcher.ContinuousFire`, `launcher.ShotSight`,
+  `Aim.shotSight()`, a continuous feed in `Feeder`, and `EasyTeleOp.screensShown`.
+- The Flywheel Tuner (experimental, in Tune and check for a robot with a launcher): it tests PID and bang-bang
+  settings on the launcher's own flywheel and gives the best of each, with all six bang-bang numbers and `kP`, `kI`,
+  `kD`, `kF`. It never feeds: a pretend shot turns the power off until the wheel lost one ball's speed: the new
+  `Tunables.Launcher.ballDropRpm` (only the tuners read it), else `shotDropRpm`. When that drop is too small to time
+  (less than `readyBandRpm` + 2 speed-reading steps), it does not rank by the time back at speed, and says so. A 3 s
+  countdown after A; any button, help or STOP stops it at once; A goes on from the test it was on. A FULL battery
+  run, a LOW battery run and a driving check (the sticks at half power; with no drive it is skipped). Safety: over
+  9 A for 1 s in any powered test, or 2 readings in a row under 10 V, stops the run (the finished tests are kept);
+  a PID step down that would brake hard fails before it is sent; full power and the steady powers reach every
+  motor of a two-motor flywheel. Each test is saved in `flywheel-tuner.txt` and read
+  back after a power cycle. New `finders.FlywheelTunerOpMode`, `FlywheelSetting`, `FlywheelTuneResults` (the Group
+  Shot Tuner reads its winners), and `Flywheel.getCountsPerRev`, `getSettleTime`. The Flywheel Finder points to it.
+- The Group Shot Tuner (experimental, in Tune and check for a robot with a launcher and a camera with `goal(...)`):
+  it shoots real balls in groups of 4 fed with no break (Continuous fire), with the Flywheel Tuner's best PID and
+  best bang-bang settings (and today's when they differ), and finds the one that scores every ball. It uses the
+  match's camera, lighting test and alliance, the code's shot table (no trim) and the code's `cameraOffset`; a saved
+  offset that differs stops every shot from counting, and the screen says how to fix it. At each spot (the table's
+  first row, halfway, its last row): 4 check shots with today's settings (3 must score), then 3 counted groups per
+  setting. A group that was not aimed at the start, lost the aim or the goal, saw a setting change or stopped early
+  does not count and runs again. The person enters scored / short / long / left / right; the advice judges whole
+  groups (short while the wheel lost speed: a boost of 50, then 100 RPM; a slower feed of 90%, then 80%, last). The
+  result is DONE with the exact lines (`speedControl`, the control's numbers, `continuousOnHold`,
+  `continuousBoostRpm`, `continuousFeedPower`), or NOT DONE with the best score. Each shot and group is saved in
+  `group-shot-tuner.txt` and read back after a power cycle; a change of the table (speeds or hood angles), aim
+  offset, feed or alliance starts a new session. Flywheel Tuner results made with other settings are not used (the
+  screen says to run it again). The slower feed is tried for every setting it tests. A bad speed reading stops it
+  with the fix on the screen. New `finders.GroupShotTunerOpMode`; the robot `Launcher`'s `nonstopFeedPower()` and
+  `usesDistance()` are public.
+- The tuners that shoot (the Group Shot Tuner after A, the Shot Tuner at LB) start a feed stop and an always-on feed
+  wheel themselves: they set the robot up without starting it, so before this the stop never opened. New
+  `Launcher.startFeedForTuner()`, `Launcher.ballDropRpm()`, `Flywheel.getMotors()`.
+- The simulator can copy a real robot's jumpy, late speed reading: the scenario lines `set sensor` and `set loop`.
+  `set tunable` can set a word too. New checks: `expect motor NAME lowest` (the lowest power since INIT) and
+  `expect servo NAME power` (a continuous servo).
+- For tools of your own: `FinderResults.setTunable` (now also for a word: `"\"PID\""` gives a `String` line), `done` and `notDone`; `FinderOpMode.waitForRelease`
+  and `stoppedWords`; `RobotTelemetry.discard`; `AimController.getOffset`, `Turret.getCameraOffset`, and
+  `AimTunerOpMode.robot()` and `startOffsetDeg()`; `FlywheelFinderOpMode.bangBangMotors()`.
+
+### Changed
+
+- A stop reaches the other devices when one fails: both servos of a two-servo feeder, every part behind a feed stop,
+  and the flywheel when setting its brake fails in a pause.
+
+Nothing old in TeleOp or autonomous changes unless you turn one of the new settings on. The tuners and checks below
+changed for everyone.
+
+- Every tuner and check has new words for a first-season student. Before ▶ each says what moves and how to stop it.
+  Each screen shows the one thing to do now; the rest is on help (GUIDE, or hold START 1 s). Numbers have units,
+  directions are words, and PID and BANG_BANG are "Hub control (PID)" and "On/off control (BANG_BANG)".
+- Results start with DONE or NOT DONE, then "Open Tunables.java, find class X." and the exact Java lines to change,
+  one version only. A standalone Servo, Motor or Flywheel Finder gives helper code; Tune and check gives Tunables
+  lines. Lines that are not ready yet come under "When it says DONE".
+- After STOP, each tool shows a STOPPED screen with its status, its lines and where it saved them.
+- The Motor Direction Check shows the whole `.reversed(...)` line. The Encoder Check gives a next step for each fault.
+- The Characterizer, the Camera Fix Check and the Speed Test say "Advanced: you can skip this".
+- The Aim Tuner starts from the camera offset in your code (not 0) and says so. B also stops the launcher.
+- The Shot Tuner says how many rows in your code its new rows replace. It never mixes old rows in.
+- The tuning menu: Y asks first, and a second Y erases. A copy page shows the exact lines.
+- The flywheel's untuned bang-bang note: "Not tuned yet: it may NOT hold the exact speed."
+- The Flywheel Finder says "This tool tunes PID only." to a robot with `speedControl = "BANG_BANG"`.
+
+### Fixed
+
+- A held stick or button no longer moves a part when a tool starts, when you pick another device, or when help
+  closes (Hardware Check, Odometry Tuner, and every finder).
+- Hood Finder: a motor hood takes its zero when you press A on the stop, not at setup.
+- Move Tuner: it no longer says OK when it could not fix the lag, and a move that did not finish no longer passes.
+  `MoveMath.suggestMoveTurn` has a 5-argument form for that.
+- Odometry Tuner: a failed loop check removes the earlier `checked = true` line.
+- Feed Time Finder: no copy line before 5 shots.
+- Piece Tuner: a failed remeasure removes the old line, and help no longer closes the sensors.
+- Tuning menu: "copy, then Y" no longer goes back to old numbers that were not installed.
+- Shot Tuner: no "-0", and with a following turret it says "point it yourself" (it does not turn the turret).
+- Flywheel Finder help no longer talks about a feeder. Its starting numbers are NOT DONE until the speed holds.
+- Tune and check lists the Hood Finder for a launcher's hood, and the Piece Tuner for sensors in Pieces.
+- Drive Tuner: a rerun or a new wheel size clears the old calibrated and strafe results.
+- Simulator tests: a folder of scenario files run together (`./gradlew :sim:scenario -Pfile=<folder>`) failed a
+  different 1 to 3 files each time, though each passed alone. A `set pose` (or `set piece`, `push`) right after
+  `init` could run before the physics had put the robot on its INIT spot, and the physics then put it there
+  anyway: the robot stood on the start spot, not where the test put it. Now each hand move puts the robot on its
+  INIT spot first. An `init` right after another OpMode's INIT also waits for the new OpMode's own first screen,
+  not the old one's last. The same on the page (a drag right after INIT, the auto builder's Run).
+
 ## v0.47.0 - 2026-11-21
 
 ### Changed

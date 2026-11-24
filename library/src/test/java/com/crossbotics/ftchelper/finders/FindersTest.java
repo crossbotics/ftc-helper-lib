@@ -286,7 +286,7 @@ public class FindersTest {
         tr.fired(2500, 10, 2480, 48.5);
         // The speed and hood are changed now, before marking: the marks still go to 2500 / 10 deg.
         String note = tr.mark(true);
-        assertTrue(note, note.startsWith("HIT at 2500 RPM, hood 10: 1/1"));
+        assertTrue(note, note.startsWith("HIT at 2500 RPM, hood 10.\n1 of 1"));
         tr.mark(false);
         assertEquals(1, tr.tally().hits(2500, 10));
         assertEquals(2, tr.tally().shots(2500, 10));
@@ -300,7 +300,7 @@ public class FindersTest {
         // A phantom: the wheel dipped with no piece. Drop the newest unmarked one.
         tr.fired(2600, 10, 2590, 48);
         tr.fired(2600, 10, 2590, 48);
-        assertTrue(tr.dropLast().startsWith("Dropped the last shot (2600 RPM, hood 10)"));
+        assertTrue(tr.dropLast().startsWith("Forgot the last shot (2600 RPM, hood 10)"));
         assertEquals(1, tr.unmarkedCount());
         assertEquals("No shot waiting to be marked.", new ShotPoints.Trials().dropLast());
         // Undo everything: the spot is forgotten with the last mark.
@@ -318,7 +318,7 @@ public class FindersTest {
         tr.hoodDecimals(1);
         tr.fired(3220, 22.674, 3210, 48);
         String note = tr.mark(true);
-        assertTrue(note, note.startsWith("HIT at 3220 RPM, hood 22.7: 1/1"));
+        assertTrue(note, note.startsWith("HIT at 3220 RPM, hood 22.7.\n1 of 1"));
         assertEquals("3220 @ hood 22.7: 1/1 (best)", tr.tally().summary());
         ShotPoints.Trials servo = new ShotPoints.Trials();
         servo.hoodDecimals(3);
@@ -343,12 +343,12 @@ public class FindersTest {
         tr.fired(2500, Double.NaN, 2500, 48);
         assertEquals("still here", "", tr.check(50));
         assertEquals("no distance: nothing changes", "", tr.check(Double.NaN));
-        assertTrue(tr.check(60).startsWith("Moved: 1 shot fired at the old spot dropped"));
+        assertTrue(tr.check(60).startsWith("Moved: 1 shot from the old spot not counted"));
         assertEquals(0, tr.unmarkedCount());
         tr.fired(2500, Double.NaN, 2500, 60);
         tr.mark(true);
         tr.fired(2500, Double.NaN, 2500, 60);
-        assertTrue(tr.check(72).startsWith("Moved more than 4 in from where the shots were marked: the hit counts start again"));
+        assertTrue(tr.check(72).startsWith("Moved more than 4 in: the counts start again"));
         assertTrue(tr.tally().isEmpty());
         assertEquals(0, tr.unmarkedCount());
     }

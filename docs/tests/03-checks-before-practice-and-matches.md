@@ -63,7 +63,7 @@ active configuration and the battery voltage. Check each device:
 | distance and color sensors | sensible numbers | wiring, I2C port, configuration type |
 | camera | listed; Limelight "connected"; HuskyLens `Answers: yes` and a `Sees` line per box | USB, Ethernet or I2C cable, configuration name; a HuskyLens's Protocol Type |
 | battery | 12.5 V or more when charged | charge or replace it. Never play a match under 12.0 V |
-| `Robot.java`'s devices | `Robot.java: every device is in the configuration`, or only the parts you know are not built yet (`optional, so the part is off`) | add the device to the configuration, or fix its name ([parts not on the robot yet](../reference/robot-java.md#parts-not-on-the-robot-yet)) |
+| `Robot.java`'s devices | `Robot.java: every part it names was found.`, or only the parts you know are not built yet (`optional, so the part is off`) | add the device to the configuration, or fix its name ([parts not on the robot yet](../reference/robot-java.md#parts-not-on-the-robot-yet)) |
 
 **On a lift or an arm:** the Hardware Check has no limits, and RB gives full power. Use short, gentle
 taps. Know where its hard stop is, and keep hands clear.

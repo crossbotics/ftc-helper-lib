@@ -1,17 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 288" width="520" height="288" font-family="Helvetica, Arial, sans-serif" font-size="15">
-<rect width="520" height="288" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 372" width="520" height="372" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="520" height="372" fill="#ffffff"/>
 <text x="16" y="43" font-size="14" fill="#555">With the arrow on 1 Creep, press:</text>
 <rect x="267" y="18" width="41" height="42" rx="21" fill="#ffd54d" stroke="#333" stroke-width="2"/>
 <text x="287.5" y="46" text-anchor="middle" font-size="19" font-weight="bold" fill="#222">A</text>
-<rect x="6" y="70" width="508" height="212" rx="14" fill="#2b2f36"/>
+<rect x="6" y="70" width="508" height="296" rx="14" fill="#2b2f36"/>
 <text x="22" y="100" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
-<rect x="16" y="114" width="488" height="158" rx="6" fill="#ffffff"/>
-<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Move tuner ---</text>
-<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Rolls forward at 0.07, right at 0.07</text>
-<rect x="20" y="188" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">moveMinPower now 0.10 (with a margin). Next: Stops.</text>
-<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Copy into your code ---</text>
-<rect x="20" y="230" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Tunables.Drive: moveMinPower = 0.10</text>
+<rect x="16" y="114" width="488" height="242" rx="6" fill="#ffffff"/>
+<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Move tuner: choose a test ---</text>
+<rect x="20" y="146" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">PASSED: moveMinPower is now 0.10.</text>
+<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">(a little extra, for a low battery)</text>
+<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Next: 2 Stops.</text>
+<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
+<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Open Tunables.java, find class Drive.</text>
+<rect x="20" y="251" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="266" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  public static double moveMinPower = 0.10;</text>
+<text x="26" y="287" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
+<text x="26" y="308" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">It starts to roll at power 0.07 forward,</text>
+<text x="26" y="329" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  and 0.07 to the right.</text>
 </svg>

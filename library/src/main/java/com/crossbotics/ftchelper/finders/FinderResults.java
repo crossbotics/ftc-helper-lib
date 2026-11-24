@@ -24,9 +24,9 @@ import java.util.function.Consumer;
  *
  * <p>Each line has a key: setting the same key again replaces the line, so the newest result wins.
  *
- * <p>Each finder shows its numbers twice: as code for the older helpers ({@code PositionServo.create(...)})
- * and as lines for the robot in five files ({@code Tunables.Claw: P1 = 0.210, P2 = 0.770}): copy each
- * {@code name = value} into that section of {@code Tunables.java}.
+ * <p>Each number is shown once. A robot in five files gets the file, the class and the exact Java line.
+ * A project without Robot.java gets code for the Java helpers ({@code PositionServo.create(...)}).
+ * The tool also says DONE, or NOT DONE and what is still missing ({@link #done()}, {@link #notDone(String)}).
  *
  * Docs: docs/modules/finders.md
  */
@@ -50,8 +50,30 @@ public final class FinderResults {
     private final String finderName;
     // The battery's volts at START (NaN = not known), written in the saved file's header.
     private volatile double volts = Double.NaN;
-    // key -> line, in the order they were first set
-    private final Map<String, String> lines = new LinkedHashMap<>();
+    // key -> what was found, in the order they were first set
+    private final Map<String, Entry> entries = new LinkedHashMap<>();
+    // null = the tool says nothing about it, "" = done, else what is still missing.
+    private volatile String notDone = null;
+
+    /** The heading over code for a project that has no Robot.java. */
+    static final String HELPER_CODE = "For a project with no Robot.java:";
+    static final String ROBOT_FILE = "Open Robot.java:";
+
+    // What one key holds: where it goes (a file and a class, or a place in words; or neither) and its lines.
+    private static final class Entry {
+        final String section, where;
+        final List<String> body;
+
+        Entry(String section, String where, List<String> body) {
+            this.section = section;
+            this.where = where;
+            this.body = body;
+        }
+
+        String group() {
+            return section != null ? "class " + section : where != null ? where : "";
+        }
+    }
 
     /** @param finderName shown above the lines in the saved file, e.g. "Servo finder" */
     public FinderResults(String finderName) {
@@ -65,35 +87,159 @@ public final class FinderResults {
 
     /** Sets (or replaces) the line with this key. */
     public synchronized void set(String key, String line) {
-        lines.put(key, line);
+        entries.put(key, new Entry(null, null, java.util.Collections.singletonList(line)));
+    }
+
+    /** Sets lines under words that say where they go, such as {@link #ROBOT_FILE}. */
+    synchronized void setIn(String key, String where, String... body) {
+        entries.put(key, new Entry(null, where, java.util.Arrays.asList(body)));
+    }
+
+    /**
+     * Sets one exact Java line for {@code Tunables.java}. The screen names the file and the class.
+     *
+     * <pre>{@code
+     * results.setTunable("ready", "Launcher", "readyBandRpm", "100");
+     * // Open Tunables.java, find class Launcher.
+     * //   public static double readyBandRpm = 100;
+     * }</pre>
+     *
+     * @param key     setting the same key again replaces the line
+     * @param section the class inside Tunables.java, e.g. "Launcher"
+     * @param field   the field's name, e.g. "readyBandRpm"
+     * @param value   the value as Java text: "100", "true", "\"PID\"" (a word), "{{48, 2550}, {72, 2900}}"
+     */
+    public synchronized void setTunable(String key, String section, String field, String value) {
+        entries.put(key, new Entry(section, null, javaLines(field, value)));
+    }
+
+    /** The Java for one field. A long table goes on more lines, so that it fits the screen (still valid Java). */
+    static List<String> javaLines(String field, String value) {
+        List<String> out = new ArrayList<>();
+        if (value.startsWith("{{")) {
+            String head = "public static double[][] " + field + " = ";
+            if (head.length() + value.length() < SCREEN_WIDTH) {
+                out.add(head + value + ";");
+                return out;
+            }
+            out.add(head + "{");
+            String inside = value.substring(1, value.length() - 1);
+            StringBuilder row = new StringBuilder();
+            for (String cell : inside.split("(?<=\\}), ")) {
+                if (row.length() > 0 && row.length() + cell.length() > 36) {
+                    out.add("    " + row + ",");
+                    row.setLength(0);
+                }
+                if (row.length() > 0) row.append(", ");
+                row.append(cell);
+            }
+            out.add("    " + row + "};");
+            return out;
+        }
+        String type = value.equals("true") || value.equals("false") ? "boolean" : value.startsWith("\"") ? "String" : "double";
+        out.add("public static " + type + " " + field + " = " + value + ";");
+        return out;
+    }
+
+    /** About as many characters as one line of the Driver Hub shows. */
+    static final int SCREEN_WIDTH = 50;
+
+    /** Says this tool's job is finished: the screen shows DONE over the lines. */
+    public void done() {
+        notDone = "";
+    }
+
+    /**
+     * Says the job is not finished. The screen shows NOT DONE and these words.
+     *
+     * @param why what is missing, or what to do next, in a few plain words
+     */
+    public void notDone(String why) {
+        notDone = why;
+    }
+
+    /** "DONE", "NOT DONE: why", or "" when the tool did not say. */
+    synchronized String status() {
+        return notDone == null ? "" : notDone.isEmpty() ? "DONE" : "NOT DONE: " + notDone;
     }
 
     /** Removes the line with this key (nothing if there is none). */
     public synchronized void remove(String key) {
-        lines.remove(key);
+        entries.remove(key);
     }
 
     /** Removes every line whose key starts with this text, e.g. all of one servo's lines. */
     public synchronized void removeStartingWith(String keyStart) {
-        lines.keySet().removeIf(k -> k.startsWith(keyStart));
+        entries.keySet().removeIf(k -> k.startsWith(keyStart));
     }
 
-    /** The lines, in order (a copy). */
+    /** True if this key has a line now. */
+    synchronized boolean has(String key) {
+        return entries.containsKey(key);
+    }
+
+    /** The lines to copy, each file and class once with its lines under it (a copy). */
     public synchronized List<String> lines() {
-        return new ArrayList<>(lines.values());
+        Map<String, List<Entry>> groups = new LinkedHashMap<>();
+        for (Entry e : entries.values()) {
+            List<Entry> g = groups.get(e.group());
+            if (g == null) {
+                g = new ArrayList<>();
+                groups.put(e.group(), g);
+            }
+            g.add(e);
+        }
+        List<String> out = new ArrayList<>();
+        for (List<Entry> g : groups.values()) {
+            Entry first = g.get(0);
+            if (first.section != null) {
+                // Both on one line when they fit: the screen has few lines.
+                String open = "Open Tunables.java, find class " + first.section + ".";
+                if (open.length() <= SCREEN_WIDTH) {
+                    out.add(open);
+                } else {
+                    out.add("Open Tunables.java. Find this class:");
+                    out.add("  " + first.section);
+                }
+                // Not finished: the lines show what was found, and say when to copy them.
+                out.add(notDone == null || notDone.isEmpty() ? "Change these lines (not there? add them):"
+                        : "When it says DONE, change these lines:");
+            } else if (first.where != null) {
+                out.add(first.where);
+            }
+            String indent = first.section != null || first.where != null ? "  " : "";
+            for (Entry e : g) for (String line : e.body) out.add(indent + line);
+        }
+        return out;
     }
 
     /** True if nothing was found yet. */
     public synchronized boolean isEmpty() {
-        return lines.isEmpty();
+        return entries.isEmpty();
     }
 
-    /** Shows the lines under a "Copy into your code" heading (nothing if empty). */
+    /** Shows DONE or NOT DONE, then the lines to copy (nothing while there are no lines). */
     public void addTelemetry(RobotTelemetry t) {
         List<String> copy = lines();
         if (copy.isEmpty()) return;
-        t.section("Copy into your code");
+        String why = notDone;
+        if (why == null) {
+            t.section("Numbers found");
+        } else if (why.isEmpty()) {
+            t.section("DONE");
+        } else {
+            t.section("NOT DONE");
+            t.text(why);
+        }
         for (String line : copy) t.text(line);
+    }
+
+    /** The lines for the file: DONE or NOT DONE first, so an unfinished number is not trusted later. */
+    private List<String> report() {
+        List<String> out = new ArrayList<>(lines());
+        String status = status();
+        if (!status.isEmpty()) out.add(0, status);
+        return out;
     }
 
     /**
@@ -101,7 +247,7 @@ public final class FinderResults {
      * milliseconds): only for the end of a finder, never in its loop.
      */
     public boolean saveNow() {
-        return append(header(), lines());
+        return append(header(), report());
     }
 
     // "== Servo finder, 2026-10-16 14:05, battery 12.7 V ==" above each saved group of lines.
@@ -116,7 +262,7 @@ public final class FinderResults {
      * @param whenDone gets true if it worked (runs on the background thread); may be null
      */
     public void saveInBackground(Consumer<Boolean> whenDone) {
-        final List<String> copy = lines();
+        final List<String> copy = report();
         final String header = header();
         saver().submit(() -> {
             boolean ok = append(header, copy);
@@ -150,8 +296,8 @@ public final class FinderResults {
     }
 
     /**
-     * A line for the robot in five files: the section of {@code Tunables.java} and its numbers.
-     * Copy each {@code name = value} into that section ({@code public static double ...}).
+     * A short one-line note of some numbers and their section, e.g. for a log of your own. The finders
+     * show exact Java lines ({@link #setTunable}): use that for lines to copy.
      *
      * <pre>{@code
      * tunablesLine("lift", Arrays.asList("min = 0", "max = 2580"))   // "Tunables.Lift: min = 0, max = 2580"
@@ -178,6 +324,19 @@ public final class FinderResults {
 
     /** A number as text with this many decimals, always with a "." (whatever the phone's language). */
     public static String num(double value, int decimals) {
-        return String.format(Locale.US, "%." + decimals + "f", value);
+        String s = String.format(Locale.US, "%." + decimals + "f", value);
+        // Never "-0" or "-0.0": a wheel at rest can read a tiny bit under 0, and that looks like a fault.
+        return s.matches("-0([.]0+)?") ? s.substring(1) : s;
+    }
+
+    /**
+     * A number that is copied back as it was: at least {@code decimals} decimals, more when it needs them
+     * (so a kP of 0.005 does not turn into 0.01).
+     */
+    static String exact(double value, int decimals) {
+        for (int d = decimals; d < 8; d++) {
+            if (Math.abs(Double.parseDouble(num(value, d)) - value) < 1e-9) return num(value, d);
+        }
+        return num(value, 8);
     }
 }

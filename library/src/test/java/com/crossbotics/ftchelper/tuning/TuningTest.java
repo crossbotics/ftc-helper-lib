@@ -191,4 +191,71 @@ public class TuningTest {
         a.tunedAt(0.4);   // a hub that does not measure
         assertEquals(java.util.Arrays.asList("Lift: kP = 0.0045"), Tunable.changedAsCode());
     }
+
+    private static String screenOf(TuningMenu menu) {
+        com.crossbotics.ftchelper.Fakes.FakeTelemetry ft = new com.crossbotics.ftchelper.Fakes.FakeTelemetry();
+        com.crossbotics.ftchelper.telemetry.RobotTelemetry t = new com.crossbotics.ftchelper.telemetry.RobotTelemetry(ft.telemetry, () -> 0L);
+        menu.addTelemetry(t);
+        t.update();
+        return ft.lastScreen.toString();
+    }
+
+    private static void tap(TuningMenu menu, Gamepad g, java.util.function.Consumer<Boolean> button) {
+        button.accept(true);
+        menu.update();
+        button.accept(false);
+        menu.update();
+    }
+
+    // Bug 15: Y erased everything at one press, and the screen said to erase before installing.
+    @Test public void eraseAllNeedsASecondPressAndAnyOtherButtonCancels() throws Exception {
+        Profile.set(Profile.PRACTICE);
+        try {
+            Gamepad g = new Gamepad();
+            Tunable kp = Tunable.number("Lift/kP", 0.004, 0.001);
+            kp.increase();
+            TuningMenu menu = new TuningMenu(g);
+            menu.toggle();
+            tap(menu, g, v -> g.y = v);
+            assertEquals("one press only asks", 0.005, kp.get(), 1e-12);
+            String ask = screenOf(menu);
+            assertTrue(ask, ask.contains("Erase ALL") && ask.contains("INSTALLED code") && ask.contains("LOST"));
+            tap(menu, g, v -> g.dpad_right = v);
+            assertEquals("another button cancels, and changes nothing", 0.005, kp.get(), 1e-12);
+            assertFalse(screenOf(menu).contains("Erase ALL"));
+            tap(menu, g, v -> g.y = v);
+            menu.toggle();
+            menu.toggle();
+            tap(menu, g, v -> g.y = v);                    // closed while it asked: this asks again
+            assertEquals("the question does not stay open", 0.005, kp.get(), 1e-12);
+            tap(menu, g, v -> g.y = v);
+            for (int i = 0; i < 200 && kp.isChanged(); i++) Thread.sleep(10);
+            assertEquals("the second press erases", 0.004, kp.get(), 1e-12);
+        } finally {
+            Profile.resetForTests();
+        }
+    }
+
+    @Test public void theCopyPageHasTheOrderTheExactJavaAndChangesNothing() {
+        Profile.set(Profile.PRACTICE);
+        try {
+            Gamepad g = new Gamepad();
+            Tunable kp = Tunable.number("Lift/kP", 0.004, 0.001);
+            kp.increase();
+            TuningMenu menu = new TuningMenu(g);
+            menu.toggle();
+            tap(menu, g, v -> g.b = v);
+            String page = screenOf(menu);
+            assertTrue(page, page.contains("Open Tunables.java, find class Lift."));
+            assertTrue(page, page.contains("public static double kP = 0.005;"));
+            int change = page.indexOf("1. Change"), install = page.indexOf("2. Build and install"),
+                    check = page.indexOf("3. Look here again"), erase = page.indexOf("4. Then");
+            assertTrue(page, change >= 0 && install > change && check > install && erase > check);
+            tap(menu, g, v -> g.dpad_right = v);
+            tap(menu, g, v -> g.x = v);
+            assertEquals("nothing changes out of sight", 0.005, kp.get(), 1e-12);
+        } finally {
+            Profile.resetForTests();
+        }
+    }
 }

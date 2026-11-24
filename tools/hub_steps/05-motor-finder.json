@@ -4,30 +4,33 @@
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Tune and check ---",
+        "--- Tune and check: 6 of 14 ---",
         "Robot: Robot",
-        "  Hardware Check: every device found, ...",
         "  ...",
-        "*> Motor Finder: a lift's or arm's limits and positions",
+        "*> Motor Finder",
         "  ...",
-        "D-pad up/down = pick, A = open it. Then ▶."
+        "This tool: how far a lift may go.",
+        "D-pad up/down = choose. A = open it. Then ▶."
       ]
     },
     "motor-finder-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "Motor finder: finds a mechanism's limits, positions and ...",
-        "*Put the mechanism at its BOTTOM (or start) before you",
-        "*choose it. Press ▶.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! Robot on a block. Hands clear of the part.",
+        "!! It has NO limits yet: it can hit its end.",
+        "Motor finder: for a lift or an arm.",
+        "*Next: put the part at its BOTTOM now.",
+        "Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "motor-finder-go-choose": {
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Choose a motor (D-pad, then A) ---",
+        "--- Motor finder: choose a motor ---",
+        "D-pad up/down = choose. A = use it.",
         "  ...",
         "  intake",
         "  launcher",
@@ -39,13 +42,14 @@
       "where": "Near the bottom, press:",
       "order": "press-first",
       "lines": [
-        "--- Motor \"lift\"  (BACK = another) ---",
-        "Count : 0",
-        "...",
-        "Current : 0.3 A",
-        "Max power : 0.30 (D-pad up/down)",
+        "!! No limits yet. Short pushes. Let go = stop.",
+        "--- Motor \"lift\" ---",
+        "Next: move to just below the top.",
+        "B = save the HIGH end.",
+        "Motor count : 0",
+        "Max power : 0.30  (D-pad up/down)",
         "*LOW end (X) : 0",
-        "HIGH end (B) : -",
+        "HIGH end (B) : not saved",
         "..."
       ]
     },
@@ -54,10 +58,10 @@
       "where": "Near the top, press:",
       "order": "press-first",
       "lines": [
-        "--- Motor \"lift\"  (BACK = another) ---",
-        "Count : 2580",
-        "...",
-        "Max power : 0.30 (D-pad up/down)",
+        "!! Hands clear. Let go of the stick = power off.",
+        "--- Motor \"lift\" ---",
+        "Next: at each height you use: A = save it.",
+        "Motor count : 2580",
         "LOW end (X) : 0",
         "*HIGH end (B) : 2580",
         "..."
@@ -68,14 +72,16 @@
       "where": "At each height, press:",
       "order": "press-first",
       "lines": [
-        "--- Motor \"lift\"  (BACK = another) ---",
-        "*Count : 1200",
+        "--- Motor \"lift\" ---",
+        "*Motor count : 1200",
         "...",
-        "--- Copy into your code ---",
-        "PositionMotor.create(hardwareMap, \"lift\").limits(0, 2580)",
-        "    .position(\"P1\", 1200)",
-        "*Tunables.Lift: min = 0, max = 2580, P1 = 1200",
-        "    // encoder counts: right for a Lift; an Arm's ..."
+        "--- DONE ---",
+        "Open Tunables.java, find class Lift.",
+        "Change these lines (not there? add them):",
+        "  public static double min = 0;",
+        "  public static double max = 2580;",
+        "*  public static double P1 = 1200;",
+        "Write your names for P1, P2 (low, high)."
       ]
     },
     "motor-finder-step-speed": {
@@ -83,11 +89,12 @@
       "where": "Hold on gamepad 1:",
       "order": "press-first",
       "lines": [
-        "--- Motor \"lift\"  (BACK = another) ---",
-        "Count : 2193",
+        "!! Hands clear. Let go of the stick = power off.",
+        "!! Hold RT = FULL power up (speed test).",
+        "--- Motor \"lift\" ---",
+        "Motor count : 2193",
         "...",
         "*Top speed : 2310 counts/s",
-        "Speed test done. Bring it back down with the stick.",
         "..."
       ]
     }

@@ -6,7 +6,7 @@
 
 How it works. The library reads a team's Tunables.java in one place: the TunableSection class
 (library/.../robot/). Every module asks it for a field by name: t.number("kP", 0.004),
-t.flag("calibrated", false), t.tunable("inPower", 1.0, 0.05), t.table("calibration"),
+t.flag("calibrated", false), t.word("speedControl", "PID"), t.tunable("inPower", 1.0, 0.05), t.table("calibration"),
 t.tables("speedByDistance"), t.require("min", ...), t.has("goalX"), t.others(KNOWN) (named positions).
 This script reads the Java source of the robot package, finds every one of those calls, and builds the
 list of fields per part. It then fails (exit 1) when:
@@ -94,10 +94,10 @@ REQUIRED_EXTRA = {
     "Interlock": {"<part>From", "<part>To", "<part>Above", "<part>Below"},
 }
 
-READ = re.compile(r"\b(?P<var>\w+)\.(?P<m>number|flag|tunable|table|tables|require|has|others)\(\s*")
+READ = re.compile(r"\b(?P<var>\w+)\.(?P<m>number|flag|word|tunable|table|tables|require|has|others)\(\s*")
 CHAINED = re.compile(r"TunableSection\.of\([^;()]*(?:\([^()]*\))?[^;()]*,\s*\"(?P<sec>\w+)\"\)\."
-                     r"(?P<m>number|flag|tunable|table|tables|require|has|others)\(\s*")
-UNPLACED = re.compile(r"\b\w+\(\s*\)\s*\.\s*(?P<m>number|flag|tunable|table|tables|require|others)\(\s*\"")
+                     r"(?P<m>number|flag|word|tunable|table|tables|require|has|others)\(\s*")
+UNPLACED = re.compile(r"\b\w+\(\s*\)\s*\.\s*(?P<m>number|flag|word|tunable|table|tables|require|others)\(\s*\"")
 ASSIGN = re.compile(r"\b(?P<var>\w+)\s*=\s*TunableSection\.of\([^;]*?,\s*\"(?P<sec>\w+)\"\)\s*;")
 NUMBER = re.compile(r"^-?\d+(\.\d+)?$")
 

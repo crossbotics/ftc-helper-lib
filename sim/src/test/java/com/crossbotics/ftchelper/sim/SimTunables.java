@@ -96,7 +96,7 @@ final class SimTunables {
         return out;
     }
 
-    /** The value as the field's type: a number (double, float, int, long), true/false, or MEASURE / DEFAULT. */
+    /** The value as the field's type: a number (double, float, int, long), true/false, a word, or MEASURE / DEFAULT. */
     static Object value(Field f, String value, String name) {
         Class<?> type = f.getType();
         try {
@@ -111,12 +111,13 @@ final class SimTunables {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Tunables." + name + " is a number (" + type.getSimpleName() + "), not \"" + value + "\"");
         }
+        if (type == String.class) return value;   // a word, like speedControl BANG_BANG
         if (type == boolean.class) {
             if (value.equals("true")) return true;
             if (value.equals("false")) return false;
             throw new IllegalArgumentException("Tunables." + name + " is true or false, not \"" + value + "\"");
         }
-        throw new IllegalArgumentException("Tunables." + name + " is a " + type.getSimpleName() + ": only numbers and true/false can be set");
+        throw new IllegalArgumentException("Tunables." + name + " is a " + type.getSimpleName() + ": only numbers, true/false and words can be set");
     }
 
     /**

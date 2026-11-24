@@ -18,6 +18,8 @@ import java.util.Locale;
  * }</pre>
  *
  * <p>Outside your points it uses the nearest end point (it does not guess beyond what you tested).
+ * {@link #extendEnds} changes that, if you choose it: then each end continues the line of its two points,
+ * up to a speed limit. Those speeds are estimates ({@link #isEstimated}): {@link #covers} stays false there.
  * Make one table per game piece if they fly differently. Docs: docs/modules/launcher.md;
  * tutorial 17 measures a table step by step.
  */
@@ -49,6 +51,8 @@ public final class ShotTable {
     private final List<Shot> points = new ArrayList<>();
     // True once a point was added WITH a hood angle: then a launcher with a hood moves it from this table.
     private boolean hasHood = false;
+    // extendEnds(): the most speed an estimate may ask for (NaN = off, the default: the ends stay flat).
+    private double extendMaxRpm = Double.NaN;
 
     /**
      * Adds a measured point (distance in inches, RPM, hood in degrees). Order does not matter. A table
@@ -76,6 +80,10 @@ public final class ShotTable {
     }
 
     private ShotTable addPoint(Shot shot) {
+        // Two speeds for one distance: with extended ends the line would have no slope. Say so now.
+        if (extendsEnds()) {
+            for (Shot p : points) if (p.distance == shot.distance) throw sameDistance(shot.distance);
+        }
         points.add(shot);
         // Sort again after each add, so lookup() can walk the list from short to long.
         // "(a, b) -> ..." tells the sort how to compare two points: by distance.
@@ -85,7 +93,8 @@ public final class ShotTable {
 
     /**
      * The shot for a distance (inches). Between two measured points it fills in on a straight line;
-     * outside them it gives the nearest end point. An unknown distance (NaN, e.g. no target seen)
+     * outside them it gives the nearest end point (or, after {@link #extendEnds}, the end's line continued,
+     * limited to 0..its speed limit). An unknown distance (NaN, e.g. no target seen)
      * gives the shortest point.
      *
      * @throws IllegalStateException if the table has no points
@@ -95,9 +104,15 @@ public final class ShotTable {
         // NaN = "not a number": we do not know the distance, so use the first (shortest) point.
         if (Double.isNaN(distance)) return points.get(0);
         // Closer than the closest point, or farther than the farthest: use that end point.
-        // We never guess beyond what was tested, because a guessed shot could be far off.
-        if (distance <= points.get(0).distance) return points.get(0);
-        Shot last = points.get(points.size() - 1);
+        // We do not guess beyond what was tested (a guessed shot could be far off), unless extendEnds() asks for it.
+        Shot first = points.get(0), last = points.get(points.size() - 1);
+        // Extended ends (opt-in): continue the end's line, never below 0 or above the limit. The hood keeps
+        // its end angle: a line continued past a hood's range could jam it.
+        if (isEstimated(distance)) {
+            double rpm = Math.max(0, Math.min(extendMaxRpm, lineRpm(distance)));
+            return new Shot(distance, rpm, distance < first.distance ? first.hoodDeg : last.hoodDeg);
+        }
+        if (distance <= first.distance) return first;
         if (distance >= last.distance) return last;
         // Find the two measured points the distance falls between (a below, b above).
         for (int i = 1; i < points.size(); i++) {
@@ -113,10 +128,145 @@ public final class ShotTable {
         return last;
     }
 
-    /** True if the distance is inside the tested range. */
+    /** True if the distance is inside the tested range. (An estimate past the ends is never "covered".) */
     public boolean covers(double distance) {
         return !points.isEmpty() && distance >= points.get(0).distance
                 && distance <= points.get(points.size() - 1).distance;
+    }
+
+    // ---- Extended ends (opt-in) ----
+
+    /**
+     * Continues the table past both ends: each end follows the straight line of its two points, up to
+     * {@code maxRpm}. WHY: a goal a little outside the measured rows then gets a sensible speed, with no
+     * made-up rows typed into the table. An end stays flat, as without this, when there are fewer than two
+     * points or its speed falls with distance ({@link #extensionNotes} says so). The hood keeps its end angle.
+     *
+     * <pre>{@code
+     * table.extendEnds(4800);    // a 6000 RPM motor: keep room to recover
+     * }</pre>
+     *
+     * @param maxRpm the most an estimate may ask for, RPM (above 0)
+     * @return this table
+     * @throws IllegalArgumentException if maxRpm is not a number above 0
+     * @throws IllegalStateException    if two points have the same distance
+     */
+    public ShotTable extendEnds(double maxRpm) {
+        if (!(maxRpm > 0) || Double.isInfinite(maxRpm)) {
+            throw new IllegalArgumentException("Wrong table speed limit: " + maxRpm + " RPM.\nUse more than 0.");
+        }
+        for (int i = 1; i < points.size(); i++) {
+            if (points.get(i).distance == points.get(i - 1).distance) throw sameDistance(points.get(i).distance);
+        }
+        extendMaxRpm = maxRpm;
+        return this;
+    }
+
+    /** True after {@link #extendEnds}. */
+    public boolean extendsEnds() {
+        return !Double.isNaN(extendMaxRpm);
+    }
+
+    /** The speed limit of the estimates (RPM), NaN without {@link #extendEnds}. */
+    public double getExtendMaxRpm() {
+        return extendMaxRpm;
+    }
+
+    /**
+     * True if the speed for this distance is an estimate: outside the points, at an end that could be
+     * extended. False with extended ends off, inside the points, and at an end that stays flat.
+     *
+     * @param distance inches (a distance below 0 or not a number is never an estimate)
+     */
+    public boolean isEstimated(double distance) {
+        if (!extendsEnds() || points.size() < 2 || !(distance >= 0) || Double.isInfinite(distance)) return false;
+        if (distance < points.get(0).distance) return canExtend(true);
+        if (distance > points.get(points.size() - 1).distance) return canExtend(false);
+        return false;
+    }
+
+    /**
+     * True if a shot at this distance has a usable speed: measured ({@link #covers}), or an estimate that
+     * did not need more than the speed limit. False past the point where the limit is reached: there the
+     * wheel gets the limit, and nothing says the piece still reaches the goal. Also false closer than the
+     * first row where the estimate falls under {@link #LOWEST_ESTIMATE_SHARE} of the first row's speed: a steep
+     * first pair of rows gives a guess far too slow to trust.
+     *
+     * @param distance inches
+     */
+    public boolean reaches(double distance) {
+        if (covers(distance)) return true;
+        if (!isEstimated(distance)) return false;
+        double rpm = lineRpm(distance);
+        double lowest = distance < points.get(0).distance ? LOWEST_ESTIMATE_SHARE * points.get(0).rpm : 0;
+        // (A tiny margin: 99.55 in must not fail on the last digit of a sum.)
+        return rpm > 0 && rpm >= lowest - 1e-9 && rpm <= extendMaxRpm + 1e-9;
+    }
+
+    /**
+     * Closer than the first row, an estimate under this share of the first row's speed does not "reach"
+     * ({@link #reaches}): the aim does not lock on it, and continuous fire does not start.
+     */
+    public static final double LOWEST_ESTIMATE_SHARE = 0.5;
+
+    /**
+     * True if the estimate for this distance is cut to the speed limit ("estimated, speed limited").
+     *
+     * @param distance inches
+     */
+    public boolean isSpeedLimited(double distance) {
+        return isEstimated(distance) && lineRpm(distance) > extendMaxRpm + 1e-9;
+    }
+
+    /**
+     * What {@link #extendEnds} could not do, for INIT: short plain lines, the problem and then what to do.
+     * Empty when both ends extend, or when it is off.
+     */
+    public List<String> extensionNotes() {
+        List<String> out = new ArrayList<>();
+        if (!extendsEnds()) return out;
+        if (points.size() < 2) {
+            out.add("Only 1 table row: NO speed estimates.");
+            out.add("Add a second tested row.");
+            return out;
+        }
+        if (!canExtend(true)) {
+            out.add("First 2 rows: speed drops with distance.");
+            out.add("NO estimate closer than row 1.");
+            out.add("Check those 2 rows.");
+        }
+        if (!canExtend(false)) {
+            out.add("Last 2 rows: speed drops with distance.");
+            out.add("NO estimate past the last row.");
+            out.add("Check those 2 rows.");
+        }
+        double top = 0;
+        for (Shot p : points) top = Math.max(top, p.rpm);
+        if (top > extendMaxRpm) {
+            out.add(String.format(Locale.US, "Speed limit %.0f RPM is below a tested row.", extendMaxRpm));
+            out.add(String.format(Locale.US, "Set extendMaxRpm to %.0f or more.", top));
+        }
+        return out;
+    }
+
+    // The line through an end's two points can be used: the speed does not fall with distance.
+    private boolean canExtend(boolean near) {
+        Shot a = points.get(near ? 0 : points.size() - 2), b = points.get(near ? 1 : points.size() - 1);
+        // ">=" also says no to NaN (a row that is not a number).
+        return b.rpm - a.rpm >= 0;
+    }
+
+    // The end's line at this distance, with no limit. Only for an estimated distance.
+    private double lineRpm(double distance) {
+        boolean near = distance < points.get(0).distance;
+        Shot a = points.get(near ? 0 : points.size() - 2), b = points.get(near ? 1 : points.size() - 1);
+        Shot end = near ? a : b;
+        return end.rpm + (distance - end.distance) * (b.rpm - a.rpm) / (b.distance - a.distance);
+    }
+
+    private static IllegalStateException sameDistance(double distance) {
+        String inches = distance == Math.rint(distance) ? String.valueOf((long) distance) : String.valueOf(distance);
+        return new IllegalStateException("Two table rows both use " + inches + " inches.\nDelete one of those rows.");
     }
 
     /** The points, sorted by distance. The list cannot be changed (use add(...) instead). */

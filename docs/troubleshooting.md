@@ -171,6 +171,21 @@ Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) o
 
 `RobotSettings.imu()` returned null. Return `ImuSetup.get(...)` there: every Control Hub has an IMU.
 
+**<samp>Flywheel power OFF: bad speed reading</samp>**
+
+Bang-bang cannot trust the flywheel's speed sensor, so it turned the power off. Check the motor and encoder
+wires. Then switch the flywheel off, then on. Holding fire does not clear it.
+
+**<samp>Program too slow: ... seconds (limit 0.08)</samp>**
+
+Bang-bang needs a speed reading at least every 0.08 seconds. It skipped full power that time. If it repeats,
+write `public static String speedControl = "PID";` in `Tunables.java`, class `Launcher`.
+
+**<samp>Did NOT fire: ...</samp>** or **<samp>Firing stopped: ...</samp>**
+
+Continuous fire says what was wrong, and the next line says what to do. Do that, let go of fire and press it
+again. All the reasons: [continuous fire](reference/parts/launcher.md#continuous-fire).
+
 ## Robot behavior
 
 **A lift or arm runs past its stop, never stops, or does not move; the flywheel never gets to speed; the robot drives the wrong distance**

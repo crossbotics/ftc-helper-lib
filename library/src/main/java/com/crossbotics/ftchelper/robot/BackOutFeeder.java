@@ -10,6 +10,9 @@ import java.util.function.BooleanSupplier;
  * feeder would stay stuck there; backward, they come out with the others. A feed always wins: the
  * feeder turns backward only when it is not feeding.
  *
+ * <p>It never starts a continuous feed again: after one is stopped it only turns backward, and only while
+ * the intake pushes out.
+ *
  * <p>It sends a power only when it changes (each write takes time on the hub), and a new power from the
  * tuning menu at once.
  */
@@ -71,6 +74,29 @@ final class BackOutFeeder implements Feeder {
     public void stop() {
         sent = Double.NaN;
         inner.stop();
+    }
+
+    @Override
+    public boolean canFeedContinuously() {
+        return inner.canFeedContinuously();
+    }
+
+    @Override
+    public boolean startContinuous(double power) {
+        // The feed sets its own forward power, so we forget ours.
+        sent = Double.NaN;
+        return inner.startContinuous(power);
+    }
+
+    @Override
+    public void stopContinuous() {
+        sent = Double.NaN;
+        inner.stopContinuous();
+    }
+
+    @Override
+    public boolean isFeedingContinuously() {
+        return inner.isFeedingContinuously();
     }
 
     @Override

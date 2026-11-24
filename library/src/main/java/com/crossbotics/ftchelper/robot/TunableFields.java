@@ -51,9 +51,11 @@ final class TunableFields {
         part("Indexer", "alsoTrim", "alwaysOn", "feedSec", "power", "push", "pushSec", "pushStep", "rest", "returnSec", "stageSec", "stopOnShot", "stopSec");
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
-        part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "distanceJumpAgreeIn", "distanceJumpIn", "distanceMedianOf", "distanceSmoothSec", "ejectFeedSec", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold", "lockSpeedWhileFiring",
+        part("Launcher", "assistSec", "ballDropRpm", "bangCoastAboveRpm", "bangFullBelowRpm", "bangHysteresisRpm", "bangKs", "bangKv", "bangMaxPower",
+                "batteryCompensation", "blueTrimPercent", "continuousBoostRpm", "continuousFeedPower", "continuousMaxSec",
+                "continuousOnHold", "distanceJumpAgreeIn", "distanceJumpIn", "distanceMedianOf", "distanceSmoothSec", "ejectFeedSec", "ejectRpm", "ejectSec", "extendMaxRpm", "extendTableEnds", "fallbackDistanceIn", "feedStopHold", "lockSpeedWhileFiring",
                 "feedStopMoveSec", "feedStopOpenSec", "feedStopRelease", "idleRpm", "kD", "kF", "kI", "kP", "maxFiringQueue", "nominalVolts", "quickBandRpm",
-                "quickMaxWaitSec", "readyBandRpm", "redTrimPercent", "shotDropRpm", "shotIntervalSec", "speedByDistance", "speedRpm",
+                "quickMaxWaitSec", "readyBandRpm", "redTrimPercent", "shotDropRpm", "shotIntervalSec", "speedByDistance", "speedControl", "speedRpm",
                 "spinAtStart", "sprayEnabled", "sprayLastSec", "sprayOnTapHold", "stepRpm", "trimMaxPercent", "trimStepPercent");
         part("LiftArm", "kD", "kF", "kI", "kP", "max", "maxPower", "min", "slowZone", "slowZonePower", "tolerance");
         part("Lights", "allianceAtInit");

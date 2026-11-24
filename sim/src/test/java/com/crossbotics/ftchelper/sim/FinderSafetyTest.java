@@ -84,7 +84,7 @@ public class FinderSafetyTest {
             s.press(v -> s.g1().a = v);                  // save it as P1
             // The line for the older helpers, and the one for the robot in five files.
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(".position(\"P1\", 0.534)"), 1));
-            assertTrue(String.join("\n", s.screen()), s.screenHas("Tunables.Claw: P1 = 0.534"));
+            assertFalse("one version only (Tune and check has the Tunables one)", s.screenHas("Open Tunables.java"));
             assertEquals("", s.error());
         }
     }
@@ -127,7 +127,7 @@ public class FinderSafetyTest {
             s.init("Tuned Flywheel Finder").start();
             assertTrue(String.join("\n", s.screen()), s.screenHas("> flywheel"));
             s.press(v -> s.g1().a = v);
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Gains : Tunables.java (kP 10.00, kI 0.000, kF 14.68)"), 1));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Numbers in use : Tunables.java") && s.screenHas("kP 10.00, kI 0.000, kF 14.68"), 1));
             SimMotor fly = s.robot().motors.get("flywheel");
             s.press(v -> s.g1().b = v);                  // step 2 at once: hold 3000 RPM with Tunables' gains
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Target : 3000 RPM"), 1));
@@ -137,17 +137,17 @@ public class FinderSafetyTest {
             assertTrue(String.join("\n", s.screen()), s.screenHas("kP = 10.00") && s.screenHas("kI = 0.000"));
             s.press(v -> s.g1().b = v);                  // stop holding
             s.press(v -> s.g1().y = v);                  // no top speed measured yet: Y does nothing
-            assertTrue(String.join("\n", s.screen()), s.screenHas("Gains : Tunables.java"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Numbers in use : Tunables.java"));
             SimRun.pause(0.3);
             s.g1().a = true;                             // step 1: the top speed
             SimRun.pause(2.0);
             s.g1().a = false;
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Top speed"), 1));
-            assertTrue("Tunables' gains stay in use", s.screenHas("Gains : Tunables.java (kP 10.00, kI 0.000, kF 14.97)"));
+            assertTrue("Tunables' gains stay in use", s.screenHas("Numbers in use : Tunables.java") && s.screenHas("kP 10.00, kI 0.000, kF 14.97"));
             s.press(v -> s.g1().y = v);                  // Y: the finder's own
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Gains : this finder's"), 1));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Numbers in use : this finder's"), 1));
             s.press(v -> s.g1().y = v);                  // and back, with the fine-tuned F kept
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("kF 14.97)"), 1));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Numbers in use : Tunables.java") && s.screenHas("kF 14.97"), 1));
             assertEquals("", s.error());
         }
     }
@@ -204,7 +204,7 @@ public class FinderSafetyTest {
             s.press(v -> s.g1().a = v);
             assertEquals("0.53 reversed is 0.47 at the servo", 0.47, s.robot().servos.get("claw").target(), 1e-6);
             // goBILDA says clockwise for a bigger number; reversed, it is counterclockwise.
-            assertTrue(String.join("\n", s.screen()), s.screenHas("bigger = counterclockwise (seller, reversed)"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("A bigger number turns it counterclockwise"));
             assertEquals("", s.error());
         }
     }
@@ -251,7 +251,7 @@ public class FinderSafetyTest {
     @Test public void hardwareCheckHasAHelpPageAndStopsForIt() throws Exception {
         try (SimRun s = new SimRun()) {
             s.init("Hardware Check").start();
-            assertTrue(String.join("\n", s.screen()), s.screenHas("GUIDE (or hold START 1 s) = help"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Help: GUIDE, or hold START 1 s."));
             String first = null;
             for (String l : s.screen()) if (l.startsWith("> ")) first = l;
             assertTrue(String.join("\n", s.screen()), first != null && first.contains("(motor)"));

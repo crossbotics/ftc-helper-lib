@@ -289,6 +289,7 @@ under the CELL, and the CELL's opening is about 3 in in front of them (from the 
 | `turretAims()` | whether a turret follows the goal (then `mode()` cannot be used) |
 | `stage()` | NOT_SEEN, SEEN, IN_RANGE or LOCKED now (`Stage.words()`: "not seen" ... "LOCKED") |
 | `aimsOnFire()`, `isTurningToFire()` | whether quick turn on fire is set (`aimOnFire`); whether a fire press is turning the robot now |
+| `shotSight()` | what [continuous fire](launcher.md#continuous-fire) judges by: the goal, its distance and the aim, strictly inside `toleranceDeg` |
 | `errorDeg()` | degrees off now (NaN = unknown). While shooting on the move: off the virtual goal |
 | `isAimed()` | whether it is aimed: the whole robot within `toleranceDeg`, or the following turret's `isAimed()` (on the goal now) |
 | `rumbleDeg()` | the buzz's `rumbleDeg` |

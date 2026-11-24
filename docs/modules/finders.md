@@ -13,10 +13,21 @@ to copy**. Use a finder whenever a part is new or was rebuilt, before you tune b
 the finder also saves those lines on the Control Hub in `/sdcard/FIRST/ftc-helper/finder-results.txt`. So
 nobody copies numbers from the screen by hand. Start with tutorial 21, or with [Add a lift](../add-to-robot/01-lift.md) for the robot in five files.
 
-Each finder shows its numbers in two forms. The first form is code for the older helpers (`PositionServo.create(...)`,
-`PositionMotor.create(...)`, `c.wheelDiameterIn = ...`). The second form is lines for the
-[robot in five files](../reference/robot-java.md). For example, `Tunables.Lift: min = 0, max = 2580, P1 = 1200` means "in
-`Tunables.java`, section `Lift`, set `min = 0`, `max = 2580`, `P1 = 1200`". The section is the
+Each finder's results start with DONE or NOT DONE, then say which file and class to open and give the exact
+Java lines, one version only. In Tune and check (the [robot in five files](../reference/robot-java.md)) they are
+lines for `Tunables.java`:
+
+```java
+Open Tunables.java, find class Lift.
+Change these lines (not there? add them):
+  public static double min = 0;
+  public static double max = 2580;
+  public static double P1 = 1200;
+```
+
+A standalone finder has no Robot.java, so it gives code for the older helpers instead, under "For a project
+with no Robot.java:" (`PositionServo.create(...)`, `PositionMotor.create(...)`, `c.wheelDiameterIn = ...`).
+Lines that are not ready yet come under "When it says DONE, change these lines:". The class is the
 device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 [`RobotDefinition.sectionName`](../reference/robot-java.md)). When you gave the part its own section with
 `.tunables("Name")` in Robot.java, copy the numbers into that section instead. Copy the lines that fit your code.
@@ -30,12 +41,16 @@ device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 | [`HoodFinderOpMode`](#hoodfinderopmode) | find a launcher hood's two stops (`posA`, `posB`) and, if you measure them, its angles (a linkage's calibration table) | `robot()` (five files) or `hoodName()` |
 | [`MotorFinderOpMode`](#motorfinderopmode) | find a lift's, arm's or turret's limits, positions and top speed | no |
 | [`FlywheelFinderOpMode`](#flywheelfinderopmode) | find a flywheel's top speed, speed-control gains (the tuning numbers) and recovery time | no |
+| [`FlywheelTunerOpMode`](#flywheeltuneropmode) | EXPERIMENTAL: compare PID and bang-bang settings on the launcher's flywheel (two batteries and a driving check), and give the best of each | `robot()` (five files, with a launcher) |
+| [`FlywheelSetting`](#flywheelsetting) | one speed-control setting: PID or bang-bang, and the numbers of both | - |
+| [`FlywheelTuneResults`](#flywheeltuneresults) | the Flywheel Tuner's saved tests, and its two winners | - |
 | [`FeedStopFinderOpMode`](#feedstopfinderopmode) | find a feed stop's hold and release positions | `robot()` (five files, with `.feedStop(...)`) |
 | [`DriveTunerOpMode`](#drivetuneropmode) | find the wheel size and strafe correction for autonomous | `robot()` (five files) or `robotConfig()` |
 | [`OdometryTunerOpMode`](#odometrytuneropmode) | check which way each odometry pod counts and measure where it sits (the offsets); a loop check sets `checked` | `robot()` (five files, with an `odometry(...)` line) |
 | [`MoveTunerOpMode`](#movetuneropmode) | measure how exactly autonomous moves stop and turns end, and find `moveMinPower`, `slowDownIn`, the turn numbers and `moveWithTurn`'s numbers | `robot()` (five files) or `robotConfig()` |
 | [`AimTunerOpMode`](#aimtuneropmode) | find the camera offset so shots go in the middle | your camera (+ turret or drive) |
 | [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | `robot()` (five files), or your launcher (+ camera) |
+| [`GroupShotTunerOpMode`](#groupshottuneropmode) | EXPERIMENTAL: shoot groups of 4 real balls (Continuous fire) with the Flywheel Tuner's best PID and bang-bang settings at 3 spots, and find the one that scores every ball | `robot()` (five files, with a launcher and a camera with `goal(...)`) |
 | [`CameraFixCheckOpMode`](#camerafixcheckopmode) | ALPHA: find the camera fix's turn for each alliance | `robot()` (five files, with `cameraFix(camera)`) |
 | [`PieceTunerOpMode`](#piecetuneropmode) | see what each game-piece sensor reads, and measure each kind's color (or size) and the "empty" line | `robot()` (five files, with a `Pieces` or `PieceSensor` line) |
 | [`CharacterizerOpMode`](#characterizeropmode) | measure how the drive, lifts and flywheels move on your robot (feedforward numbers, and the simulator's robot file) | `robotConfig()`, `mechanisms()` |
@@ -186,12 +201,12 @@ Without five files, it uses the servo (or motor) called `hoodName()` ("hood").
 | **A** | save a calibration point here {position, angle} |
 | **Y** | undo the last point |
 
-The output is `Tunables.Hood: posA = 0.205, posB = 0.648`. When you gave the angle at both stops, it adds
-`angleA = 0, angleB = 25`. With 3 or more points, it gives `public static double[][] calibration = {{0.205, 0}, {0.33, 9}, ...};`
+The output is `public static double posA = 0.205;` and `public static double posB = 0.648;` in class `Hood`.
+When you gave the angle at both stops, it adds `angleA` and `angleB` lines. With 3 or more points, it gives `public static double[][] calibration = {{0.205, 0}, {0.33, 9}, ...};`
 for a linkage, and this replaces posA/posB. Copy them into `Tunables.java`, because the robot reads the file,
 not this screen. A number you change in the tuning menu (`Hood/posA`) is lost at the next restart, unless you
 save it with **A**. A saved number stays on this hub and wins over `Tunables.java`. So copy it into
-`Tunables.java`, then put the menu back to the code values (**Y**).
+`Tunables.java`, install the app, then erase the saved values (**Y**, then **Y** again).
 
 ## MotorFinderOpMode
 
@@ -210,20 +225,20 @@ starts at 0 when you choose the motor, so put the mechanism at its bottom first.
 
 The screen shows the count, the speed (counts/s) and the current (amps). A stalled motor draws a lot of
 current. When the HIGH end has a smaller count than the LOW end, the motor counts down as it goes up. Then
-the output adds `.reversed()` and flips the signs. The output:
+the output adds `.reversed()` and flips the signs. A standalone finder gives:
 
 ```java
-PositionMotor.create(hardwareMap, "lift").limits(0, 2580)
-    .position("P1", 1200)
-    // top speed up: 2650 counts/s
-Tunables.Lift: min = 0, max = 2580, P1 = 1200
-    // encoder counts: right for a Lift; an Arm's numbers are degrees
+For a project with no Robot.java:
+  PositionMotor.create(hardwareMap, "lift").limits(0, 2580)
+      .position("P1", 1200)
+      // top speed up: 2650 counts/s
 ```
 
-In five files, put `min = 0, max = 2580` and a named height such as `low = 1200` in `Tunables.Lift`. For a
-reversed motor, the output also says `Robot.java: add .reversed() to the "lift" part`. An `Arm` reads degrees
-from `Tunables.java`. So divide its counts by the counts per degree (motor counts per turn x gear
-ratio / 360).
+In Tune and check it gives `min`, `max` and each height (`P1`) as lines for class `Lift` in Tunables.java,
+after both ends are saved. Write your own names for P1, P2. For a reversed motor, it also says
+`Open Robot.java:` and `Add .reversed() to the lift part.` An `Arm` or a turret reads degrees from
+`Tunables.java`, so the finder gives no lines for it: it shows the counts with "Do NOT copy them" (divide by
+the counts per degree: motor counts per turn x gear ratio / 360).
 
 ## FlywheelFinderOpMode
 
@@ -249,6 +264,10 @@ The list starts on the flywheel: the first motor in `motorDirections()` or `robo
 with the robot's own gains, so step 1 is not needed and **RB** / **LB** fine-tune the kF the robot uses; the
 Tunables line keeps their kP, kI and kD. Tune and check fills it from `Tunables.java` (a launcher with kP, kI and kF).
 
+This finder tunes PID only. `bangBangMotors()` (default: none) names the motors that run with
+`speedControl = "BANG_BANG"`; Tune and check fills it from Tunables.java. For those, the first screen and the
+motor's screen say "This tool tunes PID only." and to use the Flywheel Tuner.
+
 When the speed still rose in the last second before step 1's 5 s limit (a heavy wheel), the finder warns
 `Still speeding up at 5 s` and adds "may be higher" to the top-speed line. F is then a little high: fine-tune
 it in step 2.
@@ -256,38 +275,125 @@ it in step 2.
 When the encoder counts BACKWARD at forward power, the finder warns you to check the encoder cable and port.
 It also blocks step 2, because speed control with a backward encoder would run away.
 
-In step 2, feed a piece with the robot's feeder or a push stick, never with fingers near the wheel. The
+In step 2, push a piece in with a rod, never with fingers near the wheel (this tool has no feeder button). The
 finder then shows the **recovery time** (from the shot until the wheel is ready again), "Shots seen" (the
 drops of more than 150 RPM) and "Shot drop": every drop out of "Ready", counted or not, with the last
 drop, the smallest drop and how many (for `shotDropRpm`). The screen shows the drop; the results file does not.
 It works out the gains as F = 32767 / top speed (counts/s), P = F / 10, I = P / 10, D = 0. This is a common
 starting point for REV hubs. `countsPerRev()` is 28 (the motor's own encoder, wheel on the motor shaft).
-Override it for a geared wheel. The output:
+Override it for a geared wheel. The starting numbers say NOT DONE until step 2 held the speed for 1 s after the
+last change. A standalone finder gives helper code:
 
 ```java
-Flywheel.create(hardwareMap, "flywheel").countsPerRev(28.0).pidf(1.17, 0.117, 0, 11.70).maxRpm(5400)
-    // top speed 6000 RPM; maxRpm = 90% of it
-    // recovery after a shot at 3600 RPM: 0.38 s
-    // tuned at 12.6 V: add .batteryCompensation(Hw.batteryReader(hardwareMap), 12.6)
-Tunables.Flywheel: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6, shotIntervalSec = 0.45
+For a project with no Robot.java:
+  Flywheel.create(hardwareMap, "flywheel").countsPerRev(28.0).pidf(1.17, 0.117, 0, 11.70).maxRpm(5400)
+      // top speed 6000 RPM; maxRpm = 90% of it
+      // back at speed after a piece at 3600 RPM: 0.38 s
+      // tuned at 12.6 V: add .batteryCompensation(Hw.batteryReader(hardwareMap), 12.6)
 ```
 
-The `Tunables` line is for a [`Launcher`](../reference/robot-java.md) module on that motor. Here the motor is
-named `flywheel`. The docs pages call it `launcher`, so their section is `Tunables.Launcher`. The line has
-`shotIntervalSec` only when the recovery is longer than the default 0.25 s. `nominalVolts` is the battery
+In Tune and check, the finder gives the lines for a [`Launcher`](../reference/robot-java.md) module on that
+motor instead:
+
+```java
+Open Tunables.java, find class Launcher.
+Change these lines (not there? add them):
+  public static double kP = 1.17;
+  public static double kI = 0.117;
+  public static double kD = 0;
+  public static double kF = 11.70;
+  public static double nominalVolts = 12.6;
+  public static double shotIntervalSec = 0.45;
+```
+
+The class is the motor's name with a capital letter. There is a `shotIntervalSec` line only when the recovery
+is longer than the default 0.25 s. `nominalVolts` is the battery
 voltage during the top-speed test (the screen shows `Battery: 12.61 V (gains for 12.6 V)`). The gains are
 right for that voltage. The launcher's [battery compensation](launcher.md#battery-compensation) (off until you
 turn it on) scales F from it. Step 2 runs with that compensation, so an F you fine-tune there fits the same
 voltage. Under 11.5 V, the finder warns you to charge the battery first.
 
+## FlywheelTunerOpMode
+
+**Experimental.** `FlywheelTunerOpMode` tests many speed-control settings on the launcher's own flywheel, PID
+and bang-bang, and gives the best of each: `kP`, `kI`, `kD`, `kF` and all six bang-bang numbers (`bangKs`,
+`bangKv`, `bangFullBelowRpm`, `bangCoastAboveRpm`, `bangHysteresisRpm`, `bangMaxPower`) for class `Launcher`.
+It needs `robot()` (five files, with a launcher). Tune and check adds it by itself. Steps and every rule:
+[Flywheel Tuner](../tuning/06-flywheel-tuner.md).
+
+```java
+@TeleOp(name = "Flywheel Tuner", group = "Finders")
+public class FlywheelTuner extends FlywheelTunerOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+- It never feeds. A pretend shot turns the power off until the wheel lost `ballDropRpm` (else `shotDropRpm`), then
+  times how fast the setting gets it back. A drop too small to time does not rank the settings.
+- **A** starts after a 3 s countdown; one press runs a whole battery run. **Any** button, help or STOP stops the
+  flywheel in the same loop. A new **A** press goes on from the test it was on. A button held through START or
+  help does nothing until it is let go.
+- Nothing moves in INIT, and the robot's start actions (`spinAtStart`, `atStart`) do not run: it sets the robot
+  up (`setup`) but never starts it.
+- It changes nothing in `Tunables.java`, so it works the same with `speedControl = "PID"` or `"BANG_BANG"`.
+- 2 readings in a row under 10 V, or the motor over 9 A for 1 s in any powered test, stop the run (the finished
+  tests are kept). A speed that reads 0 or backward with the power on stops it (bang-bang's latched fault too). A
+  PID step down that would brake hard fails before it is sent. With no drive, the driving check is skipped.
+- Each finished test is saved at once on a helper thread ([`FlywheelTuneResults`](#flywheeltuneresults)).
+
+Inside, a pure session (`FlywheelTuneSession`, package-private: no hardware, the readings and the time passed
+in) decides each loop what the flywheel does, and `FlywheelTuneDriver` does it on the launcher's real
+`Flywheel`. Its tests run the whole session on a pretend weighted flywheel: readings in 43 RPM steps, 50 ms
+late, 20 to 60 ms loops, 11 to 13 V, and the wheel 15% weaker or stronger than its `kF` says.
+
+### FlywheelSetting
+
+One setting: `control` (PID or BANG_BANG) and all ten numbers (`kP`, `kI`, `kD`, `kF`, `ks`, `kv`,
+`fullBelowRpm`, `coastAboveRpm`, `hysteresisRpm`, `maxPower`). It never changes: `withPid`, `withBang` and
+`withControl` give a new one.
+
+| Method | What it does |
+| --- | --- |
+| `FlywheelSetting.of(flywheel)` | the setting a flywheel has now |
+| `applyTo(flywheel)` | puts it on the flywheel; a change of control needs `flywheel.stop()` first (false = refused) |
+| `label()` | short plain words for a screen: "PID, push strength (kP) 50" |
+| `text()` / `FlywheelSetting.parse(line)` | one line of text, read back exactly |
+
+### FlywheelTuneResults
+
+The saved file, `/sdcard/FIRST/ftc-helper/flywheel-tuner.txt`: one line per finished test. The tuner writes a new
+file and then puts it in place of the old one, so a power cut leaves a whole file. The Group Shot Tuner reads the
+two winners from it.
+
+```java
+FlywheelTuneResults saved = FlywheelTuneResults.load();                    // at INIT: it reads a file
+FlywheelSetting pid = saved.winner(Flywheel.SpeedControl.PID);             // null: none yet
+FlywheelSetting bang = saved.winner(Flywheel.SpeedControl.BANG_BANG);      // null: none yet
+if (bang != null) {
+    flywheel.stop();
+    bang.applyTo(flywheel);
+}
+```
+
+| Method | What it does |
+| --- | --- |
+| `load()`, `load(file)` | reads the file (empty when there is none) |
+| `winner(control)` | the best setting of PID or BANG_BANG that passed on the FULL battery, the LOW battery and the driving check; null when none did |
+| `winnerTest(control)` | its FULL battery test, with its numbers (`number("recovery")`, `number("ready")`, `number("over")`...) |
+| `ranked(control)` | the FULL battery's passing settings, best first |
+| `tests()`, `find(battery, id)` | every finished test; one by battery (FULL / LOW) and name |
+| `isFinished()` | both runs done |
+| `setup()` | the robot's settings the tests were made with (the tuner starts a new session when they changed) |
+| `saveNow()`, `saveInBackground()` | write the file (at the end; or on a helper thread) |
+
 ## FeedStopFinderOpMode
 
-`FeedStopFinderOpMode` finds a launcher's feed stop positions: `Tunables.Launcher: feedStopHold = ...,
-feedStopRelease = ...`. It needs `robot()` (the robot in five files, with a launcher that has
+`FeedStopFinderOpMode` finds a launcher's feed stop positions: `feedStopHold` and `feedStopRelease` in class
+`Launcher`. It needs `robot()` (the robot in five files, with a launcher that has
 `.feedStop(...)`). Tune and check adds it by itself. Steps: [Feed Stop Finder](../tuning/07-feed-stop-finder.md).
 
-With both positions saved, it also finds the two times: `Tunables.Launcher: feedStopMoveSec = ...,
-feedStopOpenSec = ...`.
+With both positions saved, it also finds the two times: `feedStopMoveSec` and `feedStopOpenSec`. It says NOT
+DONE until 5 test shots.
 
 - `feedStopMoveSec`: from the servo's catalog speed and the angle between hold and release, plus 25%,
   rounded up to 0.05 s. The 25% is there because the seller's speed is with no load. Only with the part in Robot.java:
@@ -323,7 +429,8 @@ if (test.isReady() && !test.isBusy() && gamepad1.right_bumper) test.fire();
 
 ## FeedTimeFinderOpMode
 
-`FeedTimeFinderOpMode` finds how long a launcher's feeder must run per shot: `Tunables.Feeder: feedSec = ...`.
+`FeedTimeFinderOpMode` finds how long a launcher's feeder must run per shot: `feedSec` in class `Feeder`. It gives no line before
+5 test shots.
 It is for a feeder that runs for a time (`Indexer.crServo(...)` or `Indexer.motor(...)`) with no feed stop,
 pushing parts or feed wheel (`Launcher.hasTimedFeeder()`). It needs `robot()` (the robot in five files).
 Tune and check adds it by itself. Steps: [Feed Time Finder](../tuning/07-feed-time-finder.md).
@@ -377,7 +484,7 @@ For a robot with a `RobotSettings` class instead, write `@Override protected Rob
 D-pad up/down chooses a test, and **A** starts it. D-pad left/right sets the power for the Drive and Strafe
 tests (0.3 to 1.0, starts at 0.5). A faster robot slides farther when it stops, so use the power of your
 autonomous moves. After you change the power, the tests must measure right again before the tuner shows
-`Tunables.Drive: calibrated = true`. The results file says which power the numbers fit.
+`public static boolean calibrated = true;`. The results file says which power the numbers fit.
 
 | Test | You do | It finds |
 | --- | --- | --- |
@@ -395,17 +502,22 @@ measure 48, then copy the lines into your code.
 `testDistanceIn()` changes the 48. The output:
 
 ```java
-c.wheelDiameterIn = 3.812;   // RobotSettings.auto()
-Robot.java: .wheelMm(96.8)   // in the drive(...) line
-c.strafeCorrection = 1.180;   // RobotSettings.auto()
-Tunables.Drive: strafeCorrection = 1.180
-// measured at power 0.6: these numbers fit autonomous moves at that power
+--- DONE ---
+Measured at power 0.6: use it in autonomous.
+Open Robot.java:
+  In drive(...): .wheelMm(96.8)
+Open Tunables.java, find class Drive.
+Change these lines (not there? add them):
+  public static double strafeCorrection = 1.180;
+  public static boolean calibrated = true;
 ```
 
 In five files, the wheel size goes in the drive line of `Robot.java` (`.wheelMm(96.8)`, in millimeters). The
-strafe correction goes in `Tunables.Drive`. When the Drive test (and on a mecanum the Strafe test) measures
-48 within 0.5 in, the tuner shows `Tunables.Drive: calibrated = true`. You copy that line into
-`Tunables.java` yourself. Autonomous does not run until it is true.
+strafe correction goes in class `Drive` of `Tunables.java`. Without Robot.java, the lines are for
+`RobotSettings.auto()` (`c.wheelDiameterIn = 3.812;`, `c.strafeCorrection = 1.180;`). When the Drive test (and
+on a mecanum the Strafe test) measures 48 within 0.5 in, the tuner adds `calibrated = true`. A rerun or a new
+wheel size takes it away until the tests measure right again. You copy that line into `Tunables.java`
+yourself. Autonomous does not run until it is true.
 
 ## OdometryTunerOpMode
 
@@ -438,10 +550,18 @@ with the Control Hub's IMU for dead wheels. The Pinpoint's heading is not wrappe
 output:
 
 ```java
-Robot.java: in the odometry(...) line, .offsetsMm(-84.2, -167.5)
-Tunables.Odometry: linearScalar = 1.012   // times the one in use now  (OTOS only)
-Tunables.Odometry: checked = true
+Open Robot.java:
+  In odometry(...):
+    .offsetsMm(-84.2, -167.5)
+Open Tunables.java, find class Odometry.
+Change these lines (not there? add them):
+  public static double linearScalar = 1.012;
+  public static boolean checked = true;
 ```
+
+`linearScalar` is for an OTOS only, and it is the final number (the one in your code times what was
+measured). `checked = true` comes only from a 4 Loop that passed on the installed numbers: with new lines still
+to install, or after a failed loop, the tuner takes it away.
 
 For a reversed pod, the result says which name to add to (or take out of) `.reversed(...)`. While a test
 runs, the screen shows the pose and the raw pod counts since the test began. Walk-through:
@@ -479,15 +599,18 @@ Without it, the tuner measures with the wheel counts.
 Each move and turn WAITS while the robot moves, like autonomous. STOP still works. GUIDE (or the gamepad's
 START button) stops a test at once and opens help. The tuner does not use that test's numbers. Between the
 moves, nothing waits: the tuner waits for the robot to stand still loop by loop, then measures. Run a test
-again until it says OK, then copy the lines. The output:
+again until it says PASSED, then copy the lines. Each test ends PASSED, RUN AGAIN or CAN'T FIX (no number
+fixes it: the screen says what to change instead). A move that did not finish never passes. The output:
 
 ```java
-c.slowDownIn = 6;   // RobotSettings.auto()
-Tunables.Drive: slowDownIn = 6
-c.turnKd = 0.0039;   // RobotSettings.auto()
-Tunables.Drive: turnKd = 0.0039
-// measured at power 0.6: these numbers fit autonomous moves at that power
+Measured at power 0.6: use it in autonomous.
+Open Tunables.java, find class Drive.
+Change these lines (not there? add them):
+  public static double slowDownIn = 6;
+  public static double turnKd = 0.0039;
 ```
+
+Without Robot.java, the lines are for `RobotSettings.auto()` (`c.slowDownIn = 6;`).
 
 ## AimTunerOpMode
 
@@ -501,7 +624,8 @@ camera's view when the LAUNCHER points straight at it (degrees, left = +). Fill 
 | `robotConfig()` | without a turret | to turn the robot, and to drive |
 | `createAimController()` | no | the aiming gains (use your TeleOp's) |
 | `createLauncher()`, `shotRpm()` | no | for test shots (with a table, it uses the camera's distance) |
-| `startOffsetDeg()` | no | the offset in your code now |
+| `startOffsetDeg()` | no | the offset to start from. Default: the one in your code (`robot()`), else 0 |
+| `robot()` | no | your robot in five files, to read the offset from Tunables.java (default: none) |
 
 | Button | Does |
 | --- | --- |
@@ -515,8 +639,11 @@ A camera to the SIDE of the launcher sees the target from a different angle at e
 different offset at each distance. When the offset that works changes with distance, move the camera onto the
 launcher's line. Or tune at the distance you shoot from most.
 
-The output is `new AimController(...).offset(-1.5)` or `turret.cameraOffset(-1.5)`. With a turret, it also
-gives `Tunables.Turret: cameraOffset = -1.5` (the section is the turret motor's name).
+It starts from `startOffsetDeg()`: by default the offset in your code (Tune and check reads Tunables.java), else 0.
+The INIT screen says where it started. **B** stops the turret and the launcher.
+
+The output is `new AimController(...).offset(-1.5)` or `turret.cameraOffset(-1.5)`. In Tune and check it gives
+the `cameraOffset` line for the class in Tunables.java that holds it (`Aim`, or the turret motor's name).
 
 ---
 
@@ -589,8 +716,8 @@ when the D-pad reaches one. So a saved point is what the robot tested. The scree
 
 - the target and measured speed, and whether it is ready (or why not)
 - the shots fired, and how many are still to mark
-- `Hits at 2550: 3/4`, and every speed tried at this spot
-- every table's point count (`Points: POLLEN 3, NECTAR 0  (4-6 per table)`)
+- `Went in at 2550 RPM : 3 of 4 (shoot 3 to 5)`, and every speed tried at this spot (help)
+- every table's count (`Distances saved : NECTAR 0, POLLEN 3 (need 4 to 6)`)
 - the recovery time, the distance and bearing, and the saved points.
 
 The tuner never uses the launcher's speed trim, because the table holds the real speeds. The launcher's
@@ -609,17 +736,53 @@ new ShotTable()
     .add(72.0, 3700, 21.0)   // 4/4 in, measured 3672 RPM
 ```
 
-It also shows the line for five files, one per table, in the launcher's section. With a hood, each row has the
+It also shows the lines for five files, one per table, in the launcher's class. With a hood, each row has the
 hood as its third number, in the hood's scale (degrees, or a servo position):
 
 ```java
-public static double[][] speedByDistance = {{24, 2600}, {48.5, 3100}, {72, 3700}};   // in Tunables.Launcher
-public static double[][] speedByDistanceNectar = {{24, 2800, 4}, {48.5, 3300, 12.5}};   // a named table, with a hood
+Open Tunables.java, find class Launcher.
+Change these lines (not there? add them):
+  public static double[][] speedByDistance = {{24, 2600}, {48.5, 3100}, {72, 3700}};
+  public static double[][] speedByDistanceNectar = {{24, 2800, 4}, {48.5, 3300, 12.5}};
 ```
 
-Copy each line into `Tunables.java`, in place of the line with the same name. The robot reads the file, not
-this screen. At STOP, the tuner also saves the lines on the Control Hub. The screen says what to do next
-(`Next: LB to spin up the flywheel.`).
+Each line holds only this run's rows. It REPLACES the whole table in your code: old rows are never mixed in.
+The screen says how many rows it replaces, and warns when the new table has fewer rows, or fewer than 4.
+It says NOT DONE and "When it says DONE" until a table has 4 distances. The robot reads the file, not this
+screen. At STOP, the tuner also saves the lines on the Control Hub. The screen says what to do next
+(`Next: press LB: the flywheel spins up.`).
+
+## GroupShotTunerOpMode
+
+**Experimental.** `GroupShotTunerOpMode` shoots real balls in groups of 4, fed with no break
+([Continuous fire](launcher.md)), with the Flywheel Tuner's best PID and best bang-bang settings (and today's
+when they differ), and finds the one that scores every ball. It needs `robot()` (five files, with a launcher
+whose speed comes from the camera, a camera with `goal(...)` that turns the whole robot, and a feeder that can
+feed without a break). Tune and check adds it by itself. Steps and every rule:
+[Group Shot Tuner](../tuning/14-group-shot-tuner.md).
+
+```java
+@TeleOp(name = "Group Shot Tuner", group = "Finders")
+public class GroupShotTuner extends GroupShotTunerOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+- It uses the match's camera, lighting test and alliance, the code's shot table (the speed for the camera's
+  distance, with no trim) and the code's `cameraOffset`. A saved offset (the tuning menu) that differs from the
+  code: no shot counts, and the screen says how to fix it. It changes neither.
+- At each spot (the table's first row, halfway, its last row): 4 check shots with today's settings (3 must
+  score), then 3 counted groups for each setting, taking turns. The person enters where the balls went.
+- A group does not count, and runs again, when it was not aimed at the start, the aim moved, the camera lost the
+  goal, a setting changed, or it stopped early.
+- **A** shoots after a 3 s countdown. **Any** button, help or STOP stops it in the same loop. The sticks drive
+  (30%) only on the "place the robot" screen. Nothing moves in INIT, and the robot's start actions do not run.
+- Each check shot and group is saved at once on a helper thread (`group-shot-tuner.txt`, read back after a
+  power cycle). `GroupShotTunerOpMode.savedFile()` is that file.
+
+Inside, a pure session (`GroupShotSession`, package-private: no hardware) works out what comes next from the
+saved shots and groups, judges each group, and gives the advice and the winner. The OpMode runs the real
+`robot.Launcher` (its `update()`, its `continuous()` group) and `Aim`, so it tests the code TeleOp runs.
 
 ## CameraFixCheckOpMode
 
@@ -652,11 +815,16 @@ angle in degrees), the saturation (how strong the color is) and the distance. Un
 `Tunables.java`, the sensor reads that kind as `UNKNOWN`. Measure every kind and EMPTY. The lines to copy:
 
 ```java
-Tunables.IntakeColor: POLLEN = 74   // its color (hue, degrees)
-Tunables.IntakeColor: RED_NECTAR = 6   // its color (hue, degrees)
-Tunables.IntakeColor: hueTolerance = 34
-Tunables.IntakeColor: nearMm = 52   // a piece is there below this
+Open Tunables.java, find class IntakeColor.
+Change these lines (not there? add them):
+  public static double POLLEN = 74;
+  public static double RED_NECTAR = 6;
+  public static double hueTolerance = 34;
+  public static double nearMm = 52;
 ```
+
+`POLLEN` and `RED_NECTAR` are each kind's color (the hue, in degrees). `nearMm`: a piece is there below this.
+A measurement that failed removes the old line for that number.
 
 The tuner warns when two kinds read too close together (under 15 degrees, or 10 mm for a distance sensor). It
 also warns when EMPTY looks like a piece. Then aim a distance sensor at a far wall, or put a gray background
@@ -760,6 +928,8 @@ whether that worked. `runOpMode()` is `final`.
 | `inputsReady()` | false after ▶ and after help, until gamepad 1 was let go. Check it before you act on a stick, trigger or held button that you read directly |
 | `openHelp()` | opens the help page (for example, when a help key stopped a test) |
 | `helpKeyDown()` | whether the gamepad's GUIDE or START is down (for example, as a stop condition for a moving test) |
+| `waitForRelease()` | makes `inputsReady()` false until gamepad 1 is let go (for example, after a test ends or the device changes) |
+| `stoppedWords()` | optional: what is true after the stop, on the help and STOPPED screens (default: "Motor power is off. Parts may still roll.") |
 
 The gamepad's GUIDE and START are the help keys in every finder, so a finder must not bind them itself.
 
@@ -770,11 +940,13 @@ The gamepad's GUIDE and START are the help keys in every finder, so a finder mus
 | `set(key, line)` | sets or replaces the line with this key |
 | `remove(key)`, `removeStartingWith(start)` | removes lines |
 | `lines()`, `isEmpty()` | read the lines |
-| `addTelemetry(t)` | shows them under "Copy into your code" |
+| `addTelemetry(t)` | shows them: DONE or NOT DONE, then the lines by file and class |
 | `saveNow()` | adds them to `/sdcard/FIRST/ftc-helper/finder-results.txt` now (FinderOpMode does this at STOP and shows the result) |
 | `saveInBackground(ok -> ...)` | the same on a background thread |
 | `FinderResults.num(value, decimals)` | a number as text, always with "." |
 | `FinderResults.tunablesLine(deviceName, fields)` | a line for five files: `tunablesLine("lift", Arrays.asList("min = 0", "max = 2580"))` gives `Tunables.Lift: min = 0, max = 2580` |
+| `setTunable(key, section, field, value)` | one exact Java line under "Open Tunables.java, find class X.": `setTunable("lift:max", "Lift", "max", "2580")` gives `public static double max = 2580;` |
+| `done()` / `notDone(why)` | the status the results start with: DONE, or NOT DONE and what is still to do. Lines that are not done come under "When it says DONE" |
 
 ## FinderMath
 

@@ -1,24 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 764 447" width="764" height="447" font-family="Helvetica, Arial, sans-serif" font-size="15">
-<rect width="764" height="447" rx="18" fill="#2b2f36"/>
-<rect x="14" y="14" width="736" height="44" rx="6" fill="#3d434d"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 489" width="720" height="489" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="720" height="489" rx="18" fill="#2b2f36"/>
+<rect x="14" y="14" width="692" height="44" rx="6" fill="#3d434d"/>
 <text x="30" y="42" fill="#ffffff" font-weight="bold">Tune and check: Servo Finder</text>
-<text x="734" y="42" fill="#9fd89f" text-anchor="end">▶ running</text>
-<rect x="14" y="70" width="736" height="363" rx="6" fill="#ffffff"/>
-<text x="30" y="100" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" font-weight="bold" xml:space="preserve">--- Servo "claw"  (BACK = another) ---</text>
-<text x="30" y="121" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Hint : bigger = clockwise (seller); test: D-pad up</text>
-<text x="30" y="142" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Position : 0.770</text>
-<text x="30" y="163" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Step : 0.010  (D-pad left = smaller, right = bigger)</text>
-<text x="30" y="184" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">End X : 0.120</text>
-<text x="30" y="205" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">End B : 0.880</text>
-<text x="30" y="226" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">D-pad up/down = move (LB = past the ends), X/B = ends, A = save position, Y = undo</text>
-<text x="30" y="247" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">GUIDE (or hold START) = help</text>
-<text x="30" y="268" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" font-weight="bold" xml:space="preserve">--- Copy into your code ---</text>
-<text x="30" y="289" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">PositionServo.create(hardwareMap, "claw").limits(0.120, 0.880)</text>
-<text x="30" y="310" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">    .position("P1", 0.210)</text>
-<text x="30" y="331" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">    .position("P2", 0.770)</text>
-<rect x="22" y="337" width="720" height="21" rx="3" fill="#fff3a8"/>
-<text x="30" y="352" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Tunables.Claw: P1 = 0.210, P2 = 0.770</text>
-<rect x="22" y="358" width="720" height="21" rx="3" fill="#fff3a8"/>
-<text x="30" y="373" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">    // rename P1, P2... (open, closed); keep them between 0.120 and 0.880</text>
-<text x="30" y="394" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">(saved to the hub when you press STOP)</text>
+<text x="690" y="42" fill="#9fd89f" text-anchor="end">▶ running</text>
+<rect x="14" y="70" width="692" height="405" rx="6" fill="#ffffff"/>
+<text x="30" y="100" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">!! Every step moves it. Hands clear.</text>
+<text x="30" y="121" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" font-weight="bold" xml:space="preserve">--- Servo "claw": ends and positions ---</text>
+<text x="30" y="142" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Next: save the other positions with A.</text>
+<text x="30" y="163" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Position : 0.770  (0 to 1)</text>
+<text x="30" y="184" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Step : 0.010  (D-pad left/right)</text>
+<text x="30" y="205" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Ends (X, B) : 0.120, 0.880</text>
+<text x="30" y="226" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">D-pad up/down = move one step.</text>
+<text x="30" y="247" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Y = take back the last position.</text>
+<text x="30" y="268" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">BACK = another servo.</text>
+<text x="30" y="289" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" font-weight="bold" xml:space="preserve">--- DONE ---</text>
+<text x="30" y="310" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Open Tunables.java, find class Claw.</text>
+<text x="30" y="331" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Change these lines (not there? add them):</text>
+<rect x="22" y="337" width="676" height="21" rx="3" fill="#fff3a8"/>
+<text x="30" y="352" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">  public static double P1 = 0.210;</text>
+<rect x="22" y="358" width="676" height="21" rx="3" fill="#fff3a8"/>
+<text x="30" y="373" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">  public static double P2 = 0.770;</text>
+<text x="30" y="394" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Write your names for P1, P2 (open, closed).</text>
+<text x="30" y="415" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Keep them 0.120 to 0.880 (the safe ends).</text>
+<text x="30" y="436" font-family="Menlo, Consolas, monospace" font-size="14" fill="#1a1a1a" xml:space="preserve">Help: GUIDE, or hold START 1 s.</text>
 </svg>

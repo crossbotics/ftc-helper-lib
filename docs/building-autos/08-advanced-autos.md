@@ -97,7 +97,14 @@ You can add your own lines.
 - **For an "else",** write a second `onlyIf` with the other option. An `onlyIf` can be inside another one: each
   `end()` closes the last one opened.
 - `choice(name)` and `isYes(name)` read a line in your own Java, with a plain `if` ([below](#a-whole-example-one-auto-the-drivers-choose)).
-- The menu cannot ask for a number. A number goes in the step.
+- **A number line:** `menuNumber(name, min, max, step, start)` lets the drivers choose a number, for
+  example `menuNumber("Distance (in)", 0, 96, 1, 24)`. `menuAngle(name, step, start)` chooses an angle in
+  degrees. Tap the D-pad for one step. Hold it to step fast. Read it with `number(name)`:
+
+  ```java
+          s.menuNumber("Distance (in)", 0, 96, 1, 24);
+          s.forward("Out of the way", s.number("Distance (in)"), 0.5);
+  ```
 
 The indents inside `onlyIf` are only for people. Java does not read them.
 

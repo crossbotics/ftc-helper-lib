@@ -7,10 +7,12 @@ import com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
 import com.crossbotics.ftchelper.hardware.BulkReads;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
+import java.io.File;
 
 /**
- * The shared frame of every finder: INIT, a loop that never waits, the "copy into your code" lines,
- * saving them to the results file, and stopping everything at the end (even after an error).
+ * The shared frame of every finder: INIT (what moves, how to stop), a loop that never waits, the lines
+ * to copy, saving them to the results file, and stopping everything at the end (even after an error).
+ * Every screen has the same order: safety, where you are, the one next thing, the numbers, help.
  * Each finder fills in its own steps. You do not use this class directly: use a finder such as
  * {@link ServoFinderOpMode}.
  *
@@ -42,11 +44,6 @@ public abstract class FinderOpMode extends LinearOpMode {
     protected abstract void stopAll();
 
     /**
-     * The help page: every button and the steps, a line each (at most 13 lines, about 50 characters
-     * each, to fit on the Driver Station). GUIDE (or START held 1 s) shows it, in INIT or while running.
-     * Default: a page that says there is no help yet.
-     */
-    /**
      * True for a finder whose numbers depend on the battery (a power, a gain, a speed): it shows the
      * battery, warns below {@link com.crossbotics.ftchelper.tuning.TuningMenu#LOW_BATTERY_VOLTS}, and
      * says the volts next to its results. Default false (positions and distances do not depend on it).
@@ -55,6 +52,11 @@ public abstract class FinderOpMode extends LinearOpMode {
         return false;
     }
 
+    /**
+     * The help page: every button and the steps, a line each (at most 13 lines, about 50 characters
+     * each, to fit on the Driver Station). GUIDE (or START held 1 s) shows it, in INIT or while running.
+     * Default: a page that says there is no help yet.
+     */
     protected String[] helpLines() {
         return new String[] {"No help page for this finder yet. See its docs."};
     }
@@ -68,9 +70,140 @@ public abstract class FinderOpMode extends LinearOpMode {
         stopAll();
     }
 
-    /** What INIT shows (the controls, a safety note). */
+    /**
+     * What INIT shows: the safety lines with {@code t.warn} (what moves after START, how to stop it), then
+     * what the tool is for and what you need. The frame adds how to start and how to get help.
+     */
     protected void showInit(RobotTelemetry t) {
-        t.text(finderName() + ": press {PLAY} on the Driver Hub.");
+        t.warn("Parts may move. Robot on a block. Hands clear.");
+        t.text(finderName());
+    }
+
+    /**
+     * What is true after everything was told to stop, for the help and STOP screens. A tool with servos or
+     * with nothing that moves says its own words.
+     */
+    protected String stoppedWords() {
+        return "Motor power is off. Parts may still roll.";
+    }
+
+    /**
+     * The sticks, triggers and buttons must be let go before they count again. Call it when what they
+     * control changes (a new motor was chosen) and after a test that kept the loop waiting.
+     */
+    protected final void waitForRelease() {
+        waitingForNeutral = true;
+        ignoreHeldSoon = true;
+    }
+
+    /** True inside "Tune and check" for a robot in five files: the results are then lines for Tunables.java. */
+    final boolean hasRobotFiles() {
+        return hosting != null && hosting.fiveFiles();
+    }
+
+    /** This device's class in Tunables.java: what Robot.java says, else the name in CamelCase. */
+    final String sectionOf(String device) {
+        String s = hosting == null ? null : hosting.section(device);
+        return s != null ? s : com.crossbotics.ftchelper.robot.RobotDefinition.sectionName(device);
+    }
+
+    /** True when Robot.java has a part on this device (so its kind is known). */
+    final boolean knowsPart(String device) {
+        return hosting != null && hosting.section(device) != null;
+    }
+
+    /** True when Robot.java says this device's part uses degrees. */
+    final boolean usesDegrees(String device) {
+        return hosting != null && hosting.inDegrees(device);
+    }
+
+    /** Shows a note with "\n" in it as short screen lines (nothing for ""). */
+    static void textLines(RobotTelemetry t, String note) {
+        if (note.isEmpty()) return;
+        for (String line : note.split("\n")) t.text(line);
+    }
+
+    /** Shows a warning with "\n" in it as short warning lines (nothing for ""). */
+    static void warnLines(RobotTelemetry t, String warning) {
+        if (warning.isEmpty()) return;
+        for (String line : warning.split("\n")) t.warn(line);
+    }
+
+    /**
+     * The number written in Tunables.java (not one saved by the tuning menu): {@code section}'s {@code field}.
+     *
+     * @return the number, or {@code ifNone} when it is not written or says DEFAULT or MEASURE
+     */
+    static double codeValue(Class<?> tunables, String section, String field, double ifNone) {
+        if (tunables == null) return ifNone;
+        for (Class<?> c : tunables.getDeclaredClasses()) {
+            if (!c.getSimpleName().equals(section)) continue;
+            try {
+                java.lang.reflect.Field f = c.getDeclaredField(field);
+                f.setAccessible(true);
+                double v = ((Number) f.get(null)).doubleValue();
+                return Double.isNaN(v) ? ifNone : v;   // DEFAULT and MEASURE are written as special NaN numbers
+            } catch (NoSuchFieldException | IllegalAccessException | ClassCastException notWritten) {
+                return ifNone;
+            }
+        }
+        return ifNone;
+    }
+
+    /**
+     * Why a launcher cannot fire yet, each in words that cannot be read as a pass ("NOT aimed", never the
+     * check's name alone). From {@code Launcher.whyNotReady()}.
+     */
+    static java.util.List<String> notReadyWords(String whyNotReady) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (whyNotReady.isEmpty()) return out;
+        for (String part : whyNotReady.split(", ")) {
+            switch (part) {
+                case "off":
+                case "not spinning": out.add("Flywheel is OFF"); break;
+                case "flywheel": out.add("Flywheel NOT at speed"); break;
+                case "hood": out.add("Hood NOT in place"); break;
+                case "aimed":
+                case "aimed at the goal": out.add("NOT aimed at the goal"); break;
+                default: out.add("Still waiting for: " + part);
+            }
+        }
+        return out;
+    }
+
+    /** False while the lines to copy would only be in the way (a test is moving the robot). */
+    boolean showsResults() {
+        return true;
+    }
+
+    /** Detail that may be off the bottom of the screen: it comes after the lines to copy and the help line. */
+    void showDetails(RobotTelemetry t) {
+    }
+
+    /** The word written in Tunables.java for {@code section}'s {@code field}, or null. */
+    static String codeWord(Class<?> tunables, String section, String field) {
+        for (Class<?> c : tunables.getDeclaredClasses()) {
+            if (!c.getSimpleName().equals(section)) continue;
+            try {
+                java.lang.reflect.Field f = c.getDeclaredField(field);
+                f.setAccessible(true);
+                return (String) f.get(null);
+            } catch (NoSuchFieldException | IllegalAccessException | ClassCastException notWritten) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /** How a move that waits ended, in plain words (never the Java name). */
+    static String howItEnded(com.crossbotics.ftchelper.drive.AutoDrive.Result result) {
+        switch (result) {
+            case DONE: return "finished";
+            case STALLED: return "got stuck";
+            case TIMED_OUT: return "took too long";
+            case NO_ODOMETRY: return "lost the odometry";
+            default: return "was stopped";
+        }
     }
 
     // The help page, or the normal screen. Toggled by GUIDE.
@@ -85,6 +218,8 @@ public abstract class FinderOpMode extends LinearOpMode {
     private boolean startHoldUsed = false;
     // True after START and after help closes, until gamepad 1 is let go (see inputsReady()).
     private boolean waitingForNeutral = true;
+    // waitForRelease(): the bound buttons held now are ignored, done right after this loop's step().
+    private boolean ignoreHeldSoon = false;
 
     /**
      * False after START and after the help page closes, until every stick, trigger and button on
@@ -132,19 +267,41 @@ public abstract class FinderOpMode extends LinearOpMode {
                 && Math.abs(g.right_stick_x) < dead && Math.abs(g.right_stick_y) < dead
                 && g.left_trigger < dead && g.right_trigger < dead
                 && !g.a && !g.b && !g.x && !g.y && !g.left_bumper && !g.right_bumper
-                && !g.dpad_up && !g.dpad_down && !g.dpad_left && !g.dpad_right;
+                && !g.dpad_up && !g.dpad_down && !g.dpad_left && !g.dpad_right
+                && !g.back && !g.start && !g.guide && !g.left_stick_button && !g.right_stick_button;
     }
 
-    // "Battery 12.7 V", a warning when it is low, and (with results) that they are for this battery.
-    private static void showBattery(RobotTelemetry t, double volts, boolean withResults) {
+    // "Battery 12.7 V: OK", or a warning and what to do when it is low.
+    private static void showBattery(RobotTelemetry t, double volts, boolean okLine) {
         if (Double.isNaN(volts)) return;
         double low = com.crossbotics.ftchelper.tuning.TuningMenu.LOW_BATTERY_VOLTS;
         if (volts < low) {
-            t.warn(String.format(java.util.Locale.US, "Battery %.1f V: low. Charge it first (%.1f V or more): "
-                    + "numbers found now are too strong on a charged battery", volts, low));
+            t.warn(String.format(java.util.Locale.US, "Battery %.1f V is low (need %.1f V).", volts, low));
+            t.warn("Change it, or the numbers will be wrong.");
+        } else if (okLine) {
+            t.line("Battery", String.format(java.util.Locale.US, "%.1f V: OK", volts));
         }
-        t.line("Battery", String.format(java.util.Locale.US, "%.1f V%s", volts,
-                withResults ? " (the numbers below are for about this battery)" : ""));
+    }
+
+    // The last screen after STOP: what stopped, then every line that was found (help may have hidden them).
+    private void showStopped(boolean hasLines, boolean saved) {
+        t.discard();
+        t.section(finderName() + ": STOPPED");
+        t.text(stoppedWords());
+        if (hasLines) {
+            results.addTelemetry(t);
+            if (saved) {
+                t.text("Saved on the Control Hub, in");
+                File folder = FinderResults.file.getParentFile();
+                t.text("  " + (folder == null ? "" : folder.getName() + "/") + FinderResults.file.getName());
+            } else {
+                t.text("NOT saved. Write these lines down now.");
+            }
+        } else if (!results.status().isEmpty()) {
+            t.text(results.status());
+            t.text("Nothing to copy from this run.");
+        }
+        t.update();
     }
 
     private void showHelp(RobotTelemetry t) {
@@ -197,6 +354,7 @@ public abstract class FinderOpMode extends LinearOpMode {
         java.util.function.DoubleSupplier battery = com.crossbotics.ftchelper.hardware.Hw.batteryReader(hardwareMap);
         ControllerBindings controls = new ControllerBindings();
         Throwable failure = null;
+        boolean started = false;
         try {
             setup();
             bind(controls);
@@ -206,13 +364,17 @@ public abstract class FinderOpMode extends LinearOpMode {
                     showHelp(t);
                     t.text("Press {PLAY} on the Driver Hub to begin.");
                 } else {
-                    if (batteryMatters()) showBattery(t, battery.getAsDouble(), false);
                     showInit(t);
-                    t.text("{GUIDE} (center button), or hold {START} 1 s = help.");
+                    if (batteryMatters()) showBattery(t, battery.getAsDouble(), true);
+                    t.text("Press {PLAY} on the Driver Hub to start.");
+                    t.text("STOP (■) on the Driver Hub ends it any time.");
+                    if (hosting != null) t.text("{BACK} = back to the menu.");
+                    t.text("Help: {GUIDE}, or hold {START} 1 s.");
                 }
                 t.update();
             }
             if (stopRequested()) return;
+            started = true;
             // A button held through START must not count as a press.
             controls.ignoreHeldButtons(gamepad1, gamepad2);
             boolean helpWasOpen = false;
@@ -229,7 +391,8 @@ public abstract class FinderOpMode extends LinearOpMode {
                     }
                     helpWasOpen = true;
                     showHelp(t);
-                    t.text("Help open: buttons paused, motors stopped.");
+                    t.text("Help is open: the buttons are paused.");
+                    t.text(stoppedWords());
                     t.update();
                     continue;
                 }
@@ -248,13 +411,19 @@ public abstract class FinderOpMode extends LinearOpMode {
                     voltsNoted = true;
                 }
                 step();
-                if (batteryMatters()) showBattery(t, battery.getAsDouble(), !results.isEmpty());
-                if (waitingForNeutral) t.warn("Let go of every stick, trigger and button on gamepad 1 to go on.");
-                if (!controls.getSlowActionWarning().isEmpty()) t.warn(controls.getSlowActionWarning());
+                if (ignoreHeldSoon) {
+                    ignoreHeldSoon = false;
+                    controls.ignoreHeldButtons(gamepad1, gamepad2);
+                }
                 show(t);
-                t.text("{GUIDE} (or hold {START}) = help");
-                results.addTelemetry(t);
-                if (!results.isEmpty()) t.text("(saved to the hub when you press STOP)");
+                // With lines to copy the screen is full: then the battery shows only when it is low.
+                if (batteryMatters()) showBattery(t, battery.getAsDouble(), results.isEmpty());
+                // warnFirst: nothing works until this is done, so it is the one next thing.
+                if (waitingForNeutral) t.warnFirst("Let go of all sticks and buttons.");
+                if (!controls.getSlowActionWarning().isEmpty()) t.warn(controls.getSlowActionWarning());
+                if (showsResults()) results.addTelemetry(t);
+                t.text("Help: {GUIDE}, or hold {START} 1 s.");
+                showDetails(t);
                 t.update();
             }
         } catch (Throwable e) {
@@ -265,14 +434,14 @@ public abstract class FinderOpMode extends LinearOpMode {
             try { stopAll(); } catch (RuntimeException e) { first = e; }
             // Save what was found. The finder is ending, so waiting a few milliseconds for the file is
             // fine here (never in the loop). The result goes to the screen and the robot log.
-            if (results != null && !results.isEmpty()) {
-                boolean ok = results.saveNow();
-                String msg = ok ? "Results saved to " + FinderResults.file.getPath()
-                        : "Could not save the results file: copy the lines from the screen.";
-                RobotLog.ii("ftchelper", msg);
-                telemetry.addLine(msg);
-                telemetry.update();
+            boolean hasLines = results != null && !results.isEmpty();
+            boolean ok = hasLines && results.saveNow();
+            if (hasLines) {
+                RobotLog.ii("ftchelper", ok ? "Results saved to " + FinderResults.file.getPath()
+                        : "Could not save the results file");
             }
+            // After an error the FTC app shows the error: do not cover it.
+            if (failure == null && first == null && started && results != null) showStopped(hasLines, ok);
             if (first != null) {
                 if (failure == null) throw first;
                 RobotLog.ee("ftchelper", first, "stopping failed after an earlier error");

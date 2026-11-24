@@ -41,5 +41,5 @@
   <text x="140" y="330" fill="#2d3446">LB starts the flywheel. Shoot 3-5 (RB), and mark each: A = HIT, B = MISS.</text>
   <text x="140" y="352" fill="#2d3446">Try 2-3 speeds (D-pad). X saves the speed with the best hit ratio.</text>
   <text x="20" y="378" fill="#101c45" font-weight="bold">Then:</text>
-  <text x="140" y="378" fill="#2d3446">4-6 points per table. Copy each table line into Tunables.java.</text>
+  <text x="140" y="378" fill="#2d3446">4-6 distances per table. Each line replaces the whole table.</text>
 </svg>

@@ -6,13 +6,13 @@
 <rect x="6" y="6" width="508" height="254" rx="14" fill="#2b2f36"/>
 <text x="22" y="36" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
 <rect x="16" y="50" width="488" height="200" rx="6" fill="#ffffff"/>
-<text x="26" y="76" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Battery : 12.8 V</text>
-<text x="26" y="97" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Characterizer tests ---</text>
-<rect x="20" y="103" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="118" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">&gt; Drive (forward and back)</text>
-<text x="26" y="139" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  Turn in place</text>
-<text x="26" y="160" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  Lift/arm lift</text>
-<text x="26" y="181" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  Lift/arm arm</text>
-<text x="26" y="202" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  Flywheel flywheel</text>
-<text x="26" y="223" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Choose a test (D-pad), then A.</text>
+<text x="26" y="76" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">!! A starts a test that moves by itself.</text>
+<text x="26" y="97" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Characterizer tests: advanced, can skip ---</text>
+<text x="26" y="118" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Next: choose a test. A = run it.</text>
+<rect x="20" y="124" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="139" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">&gt; Drive (forward and back)</text>
+<text x="26" y="160" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  Turn in place</text>
+<text x="26" y="181" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  Lift or arm: lift</text>
+<text x="26" y="202" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  Lift or arm: arm</text>
+<text x="26" y="223" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  Flywheel: flywheel</text>
 </svg>

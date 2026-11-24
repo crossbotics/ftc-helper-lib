@@ -120,6 +120,45 @@ everything is ready. `shotInterval(0.3)` gives the flywheel 0.3 s to get back to
 
 When it is not ready within `readyTimeout`, it gives up and says why: "gave up: flywheel".
 
+## 6. Optional: a group with no break
+
+`shoot(3)` waits between pieces. A fast group runs the feeder with no break. That only scores when the robot
+is aimed first, so `continuous()` asks you for the aim each loop. It needs a feeder that can run nonstop,
+like the `MotorFeeder` here. It also needs the camera from [tutorial 18](18-vision-aim.md): without a goal
+in view, it feeds nothing. This program does not turn the robot, so the driver aims.
+
+**Safety:** wear eye protection. Let go of the button to stop the feeder.
+
+Add a method that says what the camera sees (`camera` and `goalName` are your camera and your goal's name):
+
+```java
+private ShotSight sight() {
+    TargetObservation goal = TagGroup.goalTarget(camera, goalName);
+    if (goal == null || !goal.isFresh(System.nanoTime(), 150)) return ShotSight.NONE;   // none, or an old picture
+    double off = goal.bearingDeg;                          // degrees off, left is more than 0
+    boolean aimed = Math.abs(off) <= 2;                    // within 2 degrees
+    return new ShotSight(true, goal.distanceIn, off, aimed, 2, 1, Double.NaN);
+}
+```
+
+Set the speed from that same camera distance. Then give the button both jobs:
+
+```java
+controls.bindPress(Pad.G2, Btn.Y, () -> launcher.continuous().start(this::sight))   // press: ask for a group
+        .bindRelease(Pad.G2, Btn.Y, () -> launcher.continuous().stop());            // let go: stop now
+// every loop, before launcher.update():
+camera.update();
+ShotSight now = sight();
+if (now.goalSeen) launcher.setDistance(now.distanceIn);
+```
+
+- `this::sight` hands over the method. The launcher runs it each loop to ask "is it aimed?".
+- `start` never feeds by itself. The feed begins when the goal is seen, the aim is in and the wheel is ready.
+- A group that ends needs a new press. It cannot count the balls that left.
+
+The five-files robot does all of this with one line, `continuousOnHold = true`
+([continuous fire](../reference/parts/launcher.md#continuous-fire)).
+
 ## Run it
 
 1. Put on safety glasses. Start with no game piece. Press ▶ (start on the Driver Hub).

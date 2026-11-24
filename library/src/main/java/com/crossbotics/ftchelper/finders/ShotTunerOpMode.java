@@ -20,7 +20,7 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  * Builds the shot table: the flywheel speed (and hood angle) for each distance. Park the robot at a
  * distance and shoot 3-5 at a speed, marking each shot HIT or MISS; try the next speed; save: the
  * tuner keeps the speed with the best hit ratio at that distance. Do it at 4-6 distances; it writes
- * the {@code ShotTable} code and the {@code Tunables.java} line for you.
+ * the {@code Tunables.java} line for you (without Robot.java: the {@code ShotTable} code).
  *
  * <p>The distance comes from the camera (the same reading the launcher uses in a match), averaged
  * over half a second of fresh pictures so one noisy frame does not go into the table. When the camera
@@ -48,7 +48,7 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  * reads it. RB turns the whole robot to the goal with TeleOp's aim ({@code Tunables.Aim}: toleranceDeg,
  * the saved cameraOffset, the angle aim if on) and shoots once it is aimed and Ready. Not aimed for
  * {@link #AIM_TIMEOUT_SEC}, or the goal not in view: no shot, so the table is built only from aimed shots.
- * (A robot whose turret follows the goal: the turret aims, the tuner shoots where it points.)
+ * (A robot whose turret follows the goal: the tuner does not turn the turret. Point it yourself.)
  *
  * <pre>
  * In INIT:  X = BLUE, B = RED (only that alliance's goal counts). The camera's lighting test runs.
@@ -74,10 +74,11 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  *
  * KEEP PEOPLE OUT OF THE LINE OF FIRE; eye protection on.
  *
- * <p>It shows each table twice: as {@code ShotTable} code and, for the robot in five files, as the
- * line for {@code Tunables.java}: {@code public static double[][] speedByDistance = {{48, 2550}, {72, 2900}};   // in Tunables.Launcher}.
- * Copy each line into {@code Tunables.java} (replace the line that is there): the robot uses the
- * file, not this screen. The lines are also saved on the Control Hub when you press STOP.
+ * <p>For the robot in five files it shows the line for {@code Tunables.java}, class Launcher:
+ * {@code public static double[][] speedByDistance = {{48, 2550}, {72, 2900}};}. It holds ONLY the rows saved
+ * in this run: older rows are never mixed in (only the newest counts are trusted). The screen says how many
+ * rows in your code it replaces, and warns when they are fewer or under {@link #ENOUGH_ROWS}. Without
+ * Robot.java it shows the {@code ShotTable} code. The lines are also saved on the Control Hub at STOP.
  *
  * <p>In your TeamCode, the robot in five files (next to Robot.java). It uses the robot's launcher,
  * camera and drive, with their numbers from Tunables.java:
@@ -118,6 +119,9 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     /** Hold Y this long to run the camera's lighting test again (seconds). A shorter press: the next field. */
     public static final double RELIGHT_HOLD_SEC = 0.5;
+
+    /** A table with fewer rows than this is not done (4 to 6 distances). */
+    static final int ENOUGH_ROWS = 4;
 
     /** Hold BACK this long to delete the saved point here (seconds). */
     public static final double DELETE_HOLD_SEC = 1.0;
@@ -312,6 +316,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     private double shotAt = Double.NaN;
     private double recoverySec = Double.NaN;
     private String note = "";
+    private static final String NO_GOAL = "No shot: the camera does not see the ";
     // X with no shots marked: the first press only warns, a second one within this time saves the speed now.
     private double noShotsAskedAt = Double.NaN;
     static final double CONFIRM_SEC = 3;
@@ -392,8 +397,19 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     @Override
     protected void showInit(RobotTelemetry t) {
-        t.text("Shot tuner: builds the shot table (distance -> speed" + (hood != null ? ", hood" : "") + ").");
-        t.warn("Nobody in the line of fire. Eye protection on.");
+        if (aims) {
+            t.warn("{RB} turns the robot to the goal, then FIRES.");
+        } else if (robotDef != null && robotDef.aim().turretAims()) {
+            t.warn("It does NOT turn the turret. {RB} FIRES.");
+            t.warn("Point the turret at the goal yourself.");
+        } else {
+            t.warn("It does NOT aim. {RB} FIRES where it points.");
+        }
+        t.warn("Safety glasses. Nobody in the line of fire.");
+        if (hood != null) t.warn("The hood moves at START. Hands clear.");
+        if (driving != null) t.warn("The sticks drive. Let go = stop.");
+        t.text("Shot tuner: the flywheel speed for each");
+        t.text("distance (the shot table). {LB} = flywheel on.");
         if (robotDef != null) {
             // X = BLUE, B = RED (a fresh press; not with START held: START + B pairs a gamepad).
             boolean x = gamepad1.x && !gamepad1.start, b = gamepad1.b && !gamepad1.start;
@@ -402,24 +418,25 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             xWasDown = x;
             bWasDown = b;
             robotDef.setAlliance(alliance);
-            t.line("Alliance", alliance + " ({X} blue / {B} red): only its goal counts");
+            t.line("Alliance", alliance + "  ({X} = blue, {B} = red)");
         }
         // The robot's goal camera: TeleOp's INIT work (the lighting test runs now, as in a match).
         if (robotCamera != null && camera == robotCamera.source()) robotCamera.checkInInit(t);
         else if (camera != null) t.line("Camera", camera.status());
-        if (aims) t.text("{RB} turns the robot to the goal, then shoots (as TeleOp aims).");
         if (odometryDistance) {
             double[] spot = startSpotIn();
-            t.line("Odometry", "put the robot at x " + FinderResults.num(spot[0], 0) + ", y " + FinderResults.num(spot[1], 0)
-                    + " in, heading " + FinderResults.num(spot.length > 2 ? spot[2] : 0, 0) + " (seen from your wall), then INIT ("
-                    + robotDef.alliance() + ")");
+            t.line("Odometry", "put the robot at x " + FinderResults.num(spot[0], 0) + ", y " + FinderResults.num(spot[1], 0) + " in");
+            t.text("  (x, y = halfway between its edges, seen");
+            t.text("  from your wall), " + facing(spot.length > 2 ? spot[2] : 0) + ".");
+            t.text("  Not there yet? Move it. Press INIT again.");
         }
-        if (names.size() > 1) t.line("Tables", FinderResults.commas(names) + " ({Y} until > Table, D-pad to choose)");
-        t.text("Steps: 1 pick the table. 2 park at the nearest distance. 3 {LB} spin up, {RB} shoot 3-5,");
-        t.text("{A} = HIT, {B} = MISS for each; D-pad to the next speed, again. {X} saves the best speed.");
-        t.text("4 back 1-2 ft, again: 4-6 points per table.");
-        t.text("5 copy the lines into Tunables.java (also saved on the hub at STOP).");
-        t.text("The flywheel stays off until you press {LB}. Press {PLAY}.");
+        if (names.size() > 1) t.line("Tables", FinderResults.commas(names));
+    }
+
+    // A heading in words: "facing away from you", "turned 90 deg left".
+    private static String facing(double heading) {
+        if (heading == 0) return "facing away from you";
+        return "turned " + FinderResults.num(Math.abs(heading), 0) + " deg " + (heading > 0 ? "left" : "right");
     }
 
     @Override
@@ -431,9 +448,12 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
          .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> change(-1, false))
          .bindPress(Pad.G1, Btn.LB, () -> {
                     spinning = !spinning;
-                    if (!spinning) {
+                    if (spinning) {
+                        startRobotLauncher();
+                    } else {
                         stopAiming();      // first: dropping a waiting shot idles the launcher...
                         launcher.stop();   // ...then fully off (it stays off until spinUp)
+                        stopRobotLauncher();
                     }
                 })
          .bindPress(Pad.G1, Btn.RB, () -> { if (spinning) shootOne(false); })
@@ -461,12 +481,13 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     // aimed (the "aimed at the goal" check, see setup()). No goal in the camera now: no shot.
     private void shootOne(boolean fromRt) {
         if (!aims) {
+            note = "";       // the last problem is not this shot's
             launcher.shoot(1);
             return;
         }
         if (!Double.isNaN(aimingSince) || launcher.isShooting()) return;   // one at a time
         if (target == null) {
-            cancelShot("No shot: the camera does not see the " + alliance + " goal. Point the robot at it.");
+            cancelShot(NO_GOAL + alliance + " goal\nNext: point the robot at it. Press {RB} again.");
             return;
         }
         robotDef.aim().mode().on();   // TeleOp's aim: the turn assist turns to the goal
@@ -474,6 +495,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         aimingSince = nowSec();
         shotAskedAt = aimingSince;
         shotFromRt = fromRt;
+        note = "";           // the last problem is not this shot's
         launcher.shoot(1);            // waits for Ready and "aimed at the goal"
     }
 
@@ -555,7 +577,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             return manualDistance;
         }
         double d = average.average(nowSec());
-        distanceFrom = Double.isNaN(d) ? "" : average.source() + ", " + average.count(nowSec()) + " readings";
+        distanceFrom = Double.isNaN(d) ? "" : average.source() + ", averaged";
         return d;
     }
 
@@ -587,16 +609,16 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     private void savePoint() {
         double d = distance();
         if (Double.isNaN(d)) {
-            note = "No distance: the camera does not see the target.";
+            note = "Not saved: no distance.\nNext: point the camera at the goal.";
             return;
         }
         ShotPoints points = tables.get(tuning);
         if (Double.isNaN(hoodDeg) || Double.isInfinite(hoodDeg)) {
-            note = "No hood angle yet: change it with the D-pad first.";
+            note = "Not saved: no hood angle.\nNext: set it with the D-pad ({Y} chooses).";
             return;
         }
         if (trials.unmarkedCount() > 0) {
-            note = "Mark the " + trials.unmarkedCount() + " shot(s) first ({A} = HIT, {B} = MISS), then {X}.";
+            note = "Not saved: shots wait to be marked.\nNext: mark all " + trials.unmarkedCount() + ", then {X}.";
             return;
         }
         if (tally.isEmpty()) {
@@ -604,7 +626,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             double now = nowSec();
             if (Double.isNaN(noShotsAskedAt) || now - noShotsAskedAt > CONFIRM_SEC) {
                 noShotsAskedAt = now;
-                note = "No shots marked here: shoot and mark 3-5 first ({A} / {B}). Press {X} again to save the speed now anyway.";
+                note = "No shots marked here: shoot 3 to 5 first.\nPress {X} again to save the speed now anyway.";
                 return;
             }
         }
@@ -614,7 +636,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         if (!tally.isEmpty()) {
             double[] best = tally.best();
             if (best == null) {
-                note = "Nothing went in yet at this spot: not saved. Try another speed.";
+                note = "Not saved: none went in at this spot.\nNext: try another speed.";
                 return;
             }
             speed = best[0];
@@ -625,13 +647,13 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             shots = tally.shots(best[0], best[1]);
         }
         points.save(d, speed, hoodSaved, measured, hits, shots);
-        note = "Saved " + FinderResults.num(d, 1) + " in -> " + FinderResults.num(speed, 0) + " RPM"
+        note = "Saved " + FinderResults.num(d, 1) + " in: use " + FinderResults.num(speed, 0) + " RPM"
+                + (names.size() > 1 ? ", " + tuning.toUpperCase(java.util.Locale.US) : "")
                 + (hood != null ? ", hood " + hoodText(hoodSaved) : "")
-                + (shots > 0 ? " (" + hits + "/" + shots + " in)" : " (no shots marked)")
-                + (names.size() > 1 ? " " + tuning.toUpperCase(java.util.Locale.US) : "") + "."
-                + (shots > 0 && shots < 3 ? " Only " + shots + " shots: 3-5 is surer." : "")
+                + (shots > 0 ? "\n" + hits + " of " + shots + " went in." : "\nNOT tested: no shots marked.")
+                + (shots > 0 && shots < 3 ? "\nOnly " + count(shots, "shot") + ": 3 to 5 is surer." : "")
                 + (!Double.isNaN(measured) && speed - measured > sagLimitRpm(speed)
-                        ? " The flywheel sagged to " + FinderResults.num(measured, 0) + " at these shots." : "");
+                        ? "\nThe flywheel fell to " + FinderResults.num(measured, 0) + " RPM at these shots." : "");
         trials.clear();
         writeResults();
     }
@@ -640,7 +662,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     private void deletePoint() {
         double d = distance();
         if (!Double.isNaN(d) && tables.get(tuning).removeNear(d)) {
-            note = "Deleted the point at " + FinderResults.num(d, 1) + " in.";
+            note = "Deleted the saved distance " + FinderResults.num(d, 1) + " in.";
             writeResults();
         }
     }
@@ -648,16 +670,64 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     private void writeResults() {
         results.removeStartingWith("shots:");
         com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
+        boolean fiveFiles = robotDef != null;
         String section = module != null ? module.name() : "Launcher";
+        // The warnings first: they must be read before the line is copied.
+        String missing = null;
+        for (String name : names) {
+            ShotPoints points = tables.get(name);
+            int now = points.size();
+            if (now == 0) continue;
+            String label = names.size() > 1 ? name.toUpperCase(java.util.Locale.US) + ": " : "";
+            if (now < ENOUGH_ROWS && missing == null) missing = label + now + " of " + ENOUGH_ROWS + " distances saved.";
+            int inCode = rowsInCode(module, name);
+            if (inCode >= 0) {
+                results.set("shots:" + name + ":replace", (label.isEmpty() ? "This " : label) + "replaces " + count(inCode, "row") + " in your code with "
+                        + (now == 1 ? "this 1" : "these " + now) + ".");
+                results.set("shots:" + name + ":only", now < inCode
+                        ? "Old rows are NOT kept: you would lose " + (inCode - now) + "."
+                        : "Old rows are NOT kept: only this run's.");
+            }
+        }
+        boolean any = false;
         for (String name : names) {
             ShotPoints points = tables.get(name);
             if (points.points().isEmpty()) continue;
-            int n = 0;
-            if (names.size() > 1) results.set("shots:" + name + ":label", "// " + name.toUpperCase(java.util.Locale.US) + " table");
-            for (String line : points.codeLines()) results.set("shots:" + name + ":" + n++, line);
-            // The same table for the robot in five files ({inches, rpm} or, with a hood, {inches, rpm, hood}).
-            results.set("shots:" + name + ":t", points.tunablesLine(section, fieldFor(module, name)));
+            any = true;
+            if (fiveFiles) {
+                // The table for the robot in five files ({inches, rpm} or, with a hood, {inches, rpm, hood}).
+                results.setTunable("shots:" + name + ":t", section, fieldFor(module, name), points.tableValue());
+            } else {
+                String where = names.size() > 1 ? name.toUpperCase(java.util.Locale.US) + " table:" : FinderResults.HELPER_CODE;
+                results.setIn("shots:" + name + ":t", where, points.codeLines().toArray(new String[0]));
+            }
         }
+        if (!any) results.notDone("no distance saved.");
+        else if (missing != null) results.notDone(missing);
+        else results.done();
+    }
+
+    // The rows this table has in the code (Tunables.java), or -1 without Robot.java.
+    private int rowsInCode(com.crossbotics.ftchelper.robot.Launcher module, String name) {
+        if (module == null) return -1;
+        ShotTable table = module.table(name);
+        return table == null ? 0 : table.points().size();
+    }
+
+    // The warning over the buttons when a line to copy would lose rows, or has too few.
+    private String replaceWarning() {
+        for (String name : names) {
+            int now = tables.get(name).size();
+            if (now == 0) continue;
+            int inCode = rowsInCode(robotLauncher(), name);
+            if (now < inCode) return "Copy now = lose rows: " + inCode + " in code, " + now + " here.";
+            if (now < ENOUGH_ROWS) return "Only " + count(now, "row") + ": you need 4 to 6.";
+        }
+        return "";
+    }
+
+    private static String count(int n, String what) {
+        return n + " " + what + (n == 1 ? "" : "s");
     }
 
     // The Tunables field of a table: the launcher's own (e.g. "speedByDistancePollen"), or made from the name.
@@ -666,6 +736,23 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         if (f != null) return f;
         if (name.equals("main")) return "speedByDistance";
         return "speedByDistance" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    }
+
+    // LB turned the wheel on. The robot's launcher owns the feed stop and the feed wheel; it was set up but not
+    // started, so nothing moved in INIT. Now a person pressed LB: the feed stop goes to hold (it opens for each
+    // feed), and an always-on feed wheel may run while the wheel is spun up.
+    private void startRobotLauncher() {
+        com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
+        if (module == null || module.part() != launcher) return;
+        launcher.setRpm(rpm);
+        module.startFeedForTuner();
+        module.spinUp();
+    }
+
+    // LB turned the wheel off (or help opened): the robot's launcher knows it, so an always-on feed wheel stops.
+    private void stopRobotLauncher() {
+        com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
+        if (module != null && module.part() == launcher) module.stop();
     }
 
     // The first Launcher in Robot.java, or null (no robot() or no launcher).
@@ -690,6 +777,8 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             camera.update();
             TargetObservation seen = findTarget(camera);
             target = seen != null && seen.isFresh(System.nanoTime(), MAX_TARGET_AGE_MS) ? seen : null;
+            // "does not see the goal" is no longer true once it does: the note goes.
+            if (target != null && note.startsWith(NO_GOAL)) note = "";
         }
         readDistance();
         double d = distance();
@@ -756,7 +845,8 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         boolean rt = gamepad1.right_trigger > 0.5 && inputsReady();
         boolean freshPress = rt && !rtWasDown;
         rtWasDown = rt;
-        if (!rt) continuous = false;
+        // SAFETY: RT held before LB turned the flywheel on must not start shooting: a fresh press does.
+        if (!rt || !spinning) continuous = false;
         else if (freshPress) continuous = true;   // a new press tries again (shoot() clears an old jam)
         else if (!launcher.getLastProblem().isEmpty()) continuous = false;
         // RT let go while its shot waits for the aim: that shot is dropped too.
@@ -775,14 +865,17 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
                 aimingSince = Double.NaN;
                 if (!launcher.getLastProblem().isEmpty() || !continuous) cancelShot(null);
             } else if (launcher.getShotsLeft() > 0 && nowSec() - shotAskedAt > SHOT_WAIT_SEC) {   // not while it feeds
-                cancelShot("No shot: not Ready in " + FinderResults.num(SHOT_WAIT_SEC, 0) + " s (" + launcher.whyNotReady()
-                        + "). Check the speed and the battery.");
+                StringBuilder why = new StringBuilder("No shot: not Ready in " + FinderResults.num(SHOT_WAIT_SEC, 0) + " s.");
+                for (String w : notReadyWords(launcher.whyNotReady())) why.append("\n").append(w);
+                cancelShot(why + "\nNext: check the speed and the battery.");
             } else if (aimedNow()) {
                 aimingSince = nowSec();
             } else if (nowSec() - aimingSince > AIM_TIMEOUT_SEC) {
                 double e = robotDef.aim().errorDeg();
-                cancelShot("No shot: not aimed for " + FinderResults.num(AIM_TIMEOUT_SEC, 0) + " s ("
-                        + (target == null || Double.isNaN(e) ? "the camera does not see the goal" : FinderResults.num(e, 1) + " deg off") + ").");
+                cancelShot("No shot: not aimed for " + FinderResults.num(AIM_TIMEOUT_SEC, 0) + " s."
+                        + (target == null || Double.isNaN(e) ? "\nThe camera does not see the goal."
+                           : "\nIt was " + FinderResults.num(Math.abs(e), 1) + " deg off.")
+                        + "\nNext: point it closer, then {RB} again.");
             }
         }
         // No shot waiting and RT not held: the aim is off, so the robot never turns on its own.
@@ -817,13 +910,13 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     // Hold Y: the robot camera's lighting test again (the camera sees no targets until it is done).
     private void relight() {
         if (robotCamera == null || camera != robotCamera.source()) {
-            note = "No lighting test: this tuner's camera is not the robot's.";
+            note = "No lighting test for this camera.";
             return;
         }
         stopAiming();
         continuous = false;
-        note = robotCamera.relight() ? "Lighting test again: aim the camera at a tag; wait for it to finish."
-                : "No lighting test: Robot.java needs autoExposure() (and Tunables autoLighting not false).";
+        note = robotCamera.relight() ? "Lighting test again.\nNext: aim the camera at a tag. Then wait."
+                : "No lighting test. It needs autoExposure() in\nRobot.java, and autoLighting not false.";
     }
 
     // The hood angle for the tally: NaN without a hood.
@@ -833,103 +926,145 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     @Override
     protected void show(RobotTelemetry t) {
-        t.section("Shot tuner  ({Y} = what the D-pad changes)");
-        t.line((field == Field.SPEED ? "> " : "  ") + "Speed", FinderResults.num(rpm, 0) + " RPM, measured "
-                + FinderResults.num(launcher.getFlywheel().getRpm(), 0) + (spinning ? "" : "  (OFF: {LB})"));
-        if (hood != null) t.line((field == Field.HOOD ? "> " : "  ") + "Hood", hoodText(hoodDeg));
-        if (names.size() > 1) t.line((field == Field.TABLE ? "> " : "  ") + "Table", tuning.toUpperCase(java.util.Locale.US)
-                + "  (" + FinderResults.commas(names).toUpperCase(java.util.Locale.US) + ")");   // all in capitals, as the table in use
+        String stop = "{LB} = stop. ";
+        if (spinning) t.warn("Flywheel ON. " + stop + "Nobody in front.");
+        else t.warn("{LB} spins the flywheel. Nobody in front.");
+        if (robotCamera != null && robotCamera.lighting() != null) {
+            com.crossbotics.ftchelper.vision.LightingSweep light = robotCamera.lighting();
+            // Only while the camera still sees nothing: a goal in view means the setting it kept works here.
+            if (light.gaveUp() && target == null) {
+                t.warn("The camera saw NO tag in its lighting test.");
+                t.warn("Point it at the goal's tag. Hold {Y} 0.5 s.");
+            } else if (!light.isDone()) {
+                t.warn("Lighting test runs. Keep a tag in view.");
+            }
+        }
+        if (!Double.isNaN(lastSagRpm)) {
+            t.warn("Last shot: flywheel " + FinderResults.num(lastSagRpm, 0) + " RPM too slow.");
+            t.warn("Wait for Ready : YES before each shot.");
+        }
+        if (atLimit) t.warn("At the limit (maxRpm, or the hood's end).");
+        showProblem(t);
+        String replace = replaceWarning();
+        if (!replace.isEmpty()) t.warn(replace);
+
         double d = distance();
-        String dText = Double.isNaN(d) ? "no target" : FinderResults.num(d, 1) + " in (" + distanceFrom + ")";
+        t.section("Shot tuner");
+        textLines(t, "Next: " + nextStep(d));
+        t.line((field == Field.SPEED ? "> " : "  ") + "Speed", FinderResults.num(rpm, 0) + " RPM, now "
+                + FinderResults.num(launcher.getFlywheel().getRpm(), 0) + (spinning ? "" : "  (OFF)"));
+        if (hood != null) t.line((field == Field.HOOD ? "> " : "  ") + "Hood", hoodText(hoodDeg));
+        if (names.size() > 1) t.line((field == Field.TABLE ? "> " : "  ") + "Table", tuning.toUpperCase(java.util.Locale.US));
+        String dText = Double.isNaN(d) ? "no goal seen" : FinderResults.num(d, 1) + " in (" + distanceFrom + ")";
+        t.line((byHand() && field == Field.DISTANCE ? "> " : "  ") + "Distance", dText);
         TargetObservation odo = odometryGoal();
-        TargetObservation aimedBy = target != null && target.hasDistance() ? target : odo;
-        if (byHand()) t.line((field == Field.DISTANCE ? "> " : "  ") + "Distance", dText);
-        else t.line("  Distance", dText + (aimedBy != null && aimedBy.hasBearing()
-                ? ", bearing " + FinderResults.num(aimedBy.bearingDeg, 1) + " deg" : ""));
         // Both seen: compare them. Far apart = move Tunables.Aim's goal point (one table must fit both).
         if (odo != null && target != null && target.hasDistance()) {
             t.line("  Odometry says", FinderResults.num(odo.distanceIn, 1) + " in");
         }
-        if (robotDef != null) t.line("  Alliance", alliance + (matchGoal() ? " (its goal only)" : ""));
-        if (robotCamera != null && robotCamera.lighting() != null && (!robotCamera.lighting().isDone() || robotCamera.lighting().gaveUp())) {
-            t.warn("Camera lighting test: " + robotCamera.lighting().status()
-                    + (robotCamera.lighting().gaveUp() ? ": aim at a tag, hold Y 0.5 s" : ""));
-        }
-        if (aims) {
+        // With lines to copy the screen is full: the setup lines and key hints make room (the help page has the keys).
+        boolean copying = !results.isEmpty();
+        if (robotDef != null && !copying) t.line("  Alliance", alliance + (matchGoal() ? " (its goal only)" : ""));
+        if (!aims) {
+            if (!copying) t.text(robotDef != null && robotDef.aim().turretAims()
+                    ? "It does NOT turn the turret. Point it yourself." : "It does NOT aim. Point it at the goal yourself.");
+        } else if (!Double.isNaN(aimingSince)) {
             double e = robotDef.aim().errorDeg();
-            t.line("  Aim", !Double.isNaN(aimingSince) ? "turning to the goal" + (Double.isNaN(e) ? "" : ", " + FinderResults.num(e, 1) + " deg off")
-                    : robotDef.aim().mode().isOn() ? (Double.isNaN(e) ? "on, goal not in view" : "on, " + FinderResults.num(e, 1) + " deg off")
-                    : "{RB} turns to the goal first");
+            t.line("  Aim", Double.isNaN(e) ? "goal NOT seen" : "turning, " + FinderResults.num(Math.abs(e), 1) + " deg off");
         }
-        if (atLimit) t.warn("At the flywheel's maxRpm or the hood's limit");
-        if (!Double.isNaN(lastSagRpm)) {
-            t.warn("Last shot: the flywheel was " + FinderResults.num(lastSagRpm, 0)
-                    + " RPM under the speed (sagged). Wait for Ready; charge the battery.");
-        }
-        if (aims) {
-            // The aim check is part of the launcher's Ready, but the aim turns on only at RB: show the rest here.
-            boolean rest = launcher.getFlywheel().isReady() && (hood == null || hood.isDone());
-            t.line("Ready", rest ? "YES (RB turns to the goal, then fires)" : "no: " + launcher.whyNotReady());
-        } else {
-            t.line("Ready", launcher.isReady() ? "YES" : "no: " + launcher.whyNotReady());
-        }
+        t.line("Ready", readyWords());
         int waiting = trials.unmarkedCount();
-        t.line("Shots fired", launcher.getShotsFired() + (waiting == 0 ? "" : ", " + waiting + " to mark ({A} hit / {B} miss)"));
+        if (waiting > 0) t.line("Shots to mark", waiting);
         // The way teams tune: hits / shots at this speed (and hood), and every one tried at this spot.
-        t.line("Hits at " + FinderResults.num(rpm, 0) + (hood != null ? ", hood " + hoodText(hoodDeg) : ""),
-                tally.hits(rpm, hoodNow()) + "/" + tally.shots(rpm, hoodNow()) + (tally.shots(rpm, hoodNow()) < 3 ? "  (shoot 3-5)" : ""));
-        if (!tally.isEmpty()) t.line("Tried here", tally.summary());
+        int shots = tally.shots(rpm, hoodNow());
+        if (!copying || shots > 0) t.line("Went in at " + FinderResults.num(rpm, 0) + " RPM", tally.hits(rpm, hoodNow()) + " of " + shots
+                + (shots < 3 ? " (shoot 3 to 5)" : ""));
+        if (tally.tries() > 1) {
+            String[] tried = tally.summary().split(", ");
+            for (int i = Math.max(0, tried.length - 4); i < tried.length; i++) {
+                t.text("  Tried " + tried[i].replaceAll("(\\d+)/(\\d+)", "$1 of $2").replace(" @", ","));
+            }
+        }
         // Every table's point count, so you know when you are done (4-6 each).
         java.util.List<String> counts = new java.util.ArrayList<>();
         for (String n : names) counts.add((names.size() > 1 ? n.toUpperCase(java.util.Locale.US) + " " : "") + tables.get(n).size());
-        t.line("Points", FinderResults.commas(counts) + "  (4-6 per table)");
-        if (!Double.isNaN(recoverySec)) t.line("Recovery", FinderResults.num(recoverySec, 2) + " s");
-        if (!launcher.getLastProblem().isEmpty()) t.warn(launcher.getLastProblem());
-        t.text("{RB} shoot, hold {RT} keep shooting, {A} HIT, {B} MISS, {X} save best, hold {BACK} 1 s delete");
-        t.text("Left stick click = undo the last mark, right stick click = drop the last shot (no piece)");
-        t.text("Next: " + nextStep(d));
-        if (!note.isEmpty()) t.text(note);
-        for (ShotPoints.Saved s : tables.get(tuning).saved()) {
-            ShotTable.Shot p = s.shot;
-            String extra = ShotPoints.note(s);
-            t.text("  " + FinderResults.num(p.distance, 1) + " in: " + FinderResults.num(p.rpm, 0) + " RPM"
-                    + (hood != null ? ", hood " + hoodText(p.hoodDeg) : "")
-                    + (extra.isEmpty() ? "" : " (" + extra + ")"));
+        if (!copying || names.size() > 1) t.line("Distances saved", FinderResults.commas(counts) + " (need 4 to 6)");
+        t.debug("Back at speed after a piece", Double.isNaN(recoverySec) ? "-" : FinderResults.num(recoverySec, 2) + " s");
+        boolean moreFields = hood != null || byHand() || names.size() > 1;
+        if (!copying) {
+            if (moreFields) t.text("D-pad changes the > line. {Y} = next line.");
+            else t.text("D-pad = change the speed.");
         }
-        if (!results.isEmpty()) {
-            t.text("Copy each line below into Tunables.java (replace the line there): the robot uses the file, not this screen.");
+        textLines(t, note);
+    }
+
+    // The launcher's last problem, in words that cannot read as a pass.
+    private void showProblem(RobotTelemetry t) {
+        String problem = launcher.getLastProblem();
+        if (problem.isEmpty()) return;
+        if (problem.startsWith("gave up: ")) {
+            t.warn("No shot: it waited too long.");
+            for (String w : notReadyWords(problem.substring("gave up: ".length()))) t.warn(w);
+        } else if (problem.equals("feeder jammed")) {
+            t.warn("The feeder is jammed. {LB} = stop.");
+            t.warn("Clear it, then shoot again.");
+        } else {
+            for (String part : problem.split(" / ")) t.warn(part);
         }
+    }
+
+    // "YES", or the first thing that is missing. The aim turns on only at RB, so before that it is not a problem.
+    private String readyWords() {
+        if (!spinning) return "no. Flywheel is OFF";
+        boolean aimLater = aims && Double.isNaN(aimingSince);
+        boolean rest = launcher.getFlywheel().isReady() && (hood == null || hood.isDone());
+        if (aimLater && rest) return "YES ({RB} turns to the goal first)";
+        java.util.List<String> not = notReadyWords(launcher.whyNotReady());
+        if (aimLater) not.remove("NOT aimed at the goal");
+        return not.isEmpty() ? "YES" : "no. " + not.get(0);
     }
 
     // The next thing to do, in a few words, from what the tuner sees now.
     private String nextStep(double d) {
-        if (!spinning) return "{LB} to spin up the flywheel.";
+        if (trials.unmarkedCount() > 0) return "mark the oldest shot.\n{A} = it went IN. {B} = it MISSED.";
+        if (!spinning) return "press {LB}: the flywheel spins up.";
         if (Double.isNaN(d)) {
-            return odometryDistance ? "point the camera at the goal, or check the odometry." : "point the camera at the goal.";
+            return odometryDistance ? "point the camera at the goal.\nStill none? Check the odometry." : "point the camera at the goal.";
         }
-        if (trials.unmarkedCount() > 0) return "{A} = HIT or {B} = MISS for each shot.";
-        if (tally.shots(rpm, hoodNow()) < 3) return "{RB} to shoot 3-5 at this speed, marking each {A} HIT / {B} MISS.";
-        if (tally.tries() < 2) return "D-pad to another speed, shoot 3-5 again; {X} saves the best.";
-        if (tables.get(tuning).points().isEmpty()) return "{X} saves the best speed here.";
-        return "{X} saves; move 1-2 ft and do it again (4-6 points), then copy the lines into Tunables.java.";
+        if (launcher.isShooting()) return "wait for the shot. {LB} = cancel it.";
+        ShotPoints points = tables.get(tuning);
+        boolean savedHere = false;
+        for (ShotTable.Shot p : points.points()) {
+            if (Math.abs(p.distance - d) <= SPOT_MOVE_IN) savedHere = true;
+        }
+        if (savedHere && tally.isEmpty()) {
+            if (points.size() >= ENOUGH_ROWS) return "copy the lines below,\nor move 1-2 ft and add a distance.";
+            return "move 1-2 ft farther. Do the same there.";
+        }
+        if (tally.shots(rpm, hoodNow()) < 3) {
+            return launcher.getFlywheel().isReady() ? "{RB} = shoot one (hold {RT} = keep going)."
+                    : "wait for Ready : YES.";
+        }
+        if (tally.tries() < 2) return "D-pad to another speed. Shoot 3 to 5.\n{X} = save the best speed here.";
+        return "{X} = save the best speed here.";
     }
 
     @Override
     protected String[] helpLines() {
         return new String[] {
-            "Builds the shot table: distance -> speed (+ hood).",
-            "Nobody in the line of fire. Eye protection on.",
-            "In INIT: {X} = BLUE, {B} = RED (its goal only).",
-            "{LB} = flywheel on/off. {Y} = what D-pad sets.",
-            "D-pad up/down: 100 RPM / 1/5 of the hood / 6 in;",
-            "  right/left: 10 RPM / 1/50 / 1 in.",
-            "{RB} = shoot one (aims first), hold {RT} = keep going.",
-            "{A} = HIT, {B} = MISS (the oldest shot not marked).",
-            "L stick click = undo mark, R = drop last shot.",
-            "{X} = save the best speed. Hold {BACK} 1 s = delete.",
-            "Hold {Y} 0.5 s = the lighting test again.",
-            "3-5 shots a speed, 2-3 speeds, {X}; back 1-2 ft.",
-            "4-6 points per table, then copy into Tunables.",
+            "Safety glasses. Nobody in the line of fire.",
+            "1. Park at the nearest distance. {LB} = flywheel.",
+            "2. Ready: {RB} = shoot one. Hold {RT} = keep on.",
+            "3. {A} = went IN, {B} = MISSED (the oldest shot).",
+            "   Left stick click = undo a mark.",
+            "   Right stick click = no piece came out.",
+            "4. 3 to 5 shots a speed, 2 or 3 speeds.",
+            "   D-pad up/down 100 RPM, right/left 10 RPM.",
+            "5. {X} = save. Move 1-2 ft. 4 to 6 distances.",
+            "{Y} = D-pad line. Hold {Y} 0.5 s = lighting test.",
+            "Hood: up/down = a fifth, right/left = a small step.",
+            "Hold {BACK} 1 s = delete the distance saved here.",
+            "The new line REPLACES the whole old table.",
         };
     }
 
@@ -942,6 +1077,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         continuous = false;
         stopAiming();
         launcher.stop();
+        stopRobotLauncher();
         if (driving != null) driving.stop();
         others.stop();
     }

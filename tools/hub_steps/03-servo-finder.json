@@ -4,33 +4,39 @@
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Tune and check ---",
+        "--- Tune and check: 4 of 14 ---",
         "Robot: Robot",
-        "  Hardware Check: every device found, ...",
         "  ...",
-        "*> Servo Finder: a servo's ends and positions",
+        "*> Servo Finder",
         "  ...",
-        "D-pad up/down = pick, A = open it. Then ▶."
+        "This tool: a servo's safe positions.",
+        "D-pad up/down = choose. A = open it. Then ▶."
       ]
     },
     "servo-finder-go-start": {
       "button": "▶ (start)",
       "where": "Press on the Driver Hub:",
       "lines": [
-        "Servo finder: finds a servo's safe ends and positions.",
-        "*Nothing moves until you nudge it. Press ▶.",
-        "GUIDE (center button), or hold START 1 s = help."
+        "!! Robot on a block. Hands clear of the part.",
+        "!! The servo can JUMP when you move it with A.",
+        "Servo finder: finds a servo's two safe ends",
+        "and the positions you use.",
+        "*Nothing moves until you press A two times.",
+        "Press ▶ on the Driver Hub to start.",
+        "..."
       ]
     },
     "servo-finder-go-choose": {
       "button": "D-pad, then A",
       "where": "Press on gamepad 1:",
       "lines": [
-        "--- Choose a servo (D-pad, then A) ---",
+        "!! Hands clear. Nothing moves in this step.",
+        "--- Servo finder: choose a servo ---",
+        "Next: D-pad up/down = choose. A = use it.",
         "  arm",
         "*> claw",
         "  wrist",
-        "Full range (Y) : off: 600-2400 us, the SDK's normal ..."
+        "Full range : off (normal)"
       ]
     },
     "servo-finder-step-middle": {
@@ -39,11 +45,12 @@
       "pos": 0.5,
       "note": "holds the middle: put the arm on here",
       "lines": [
-        "--- Servo \"claw\"  (BACK = another) ---",
-        "*Position : 0.500",
-        "Step : 0.050",
-        "End X : -",
-        "End B : -",
+        "!! A = the servo JUMPS to this number.",
+        "--- Servo \"claw\": first move ---",
+        "Next: set a number near where it sits now.",
+        "0 and 1 are its two ends. 0.5 is the middle.",
+        "*Start point : 0.500",
+        "Not sure? Take its arm off first. Use 0.500.",
         "..."
       ]
     },
@@ -54,10 +61,12 @@
       "frm": 0.5,
       "note": "bigger = clockwise here",
       "lines": [
-        "--- Servo \"claw\"  (BACK = another) ---",
-        "*Hint : bigger = clockwise (seller); test: D-pad up",
-        "*Position : 0.600",
-        "Step : 0.010",
+        "!! Every step moves it. Hands clear.",
+        "--- Servo \"claw\": ends and positions ---",
+        "Next: move to one end. Stop before it pushes.",
+        "*Position : 0.600  (0 to 1)",
+        "Step : 0.010  (D-pad left/right)",
+        "*A bigger number turns it clockwise (seller)",
         "..."
       ]
     },
@@ -68,11 +77,12 @@
       "frm": 0.5,
       "note": "one end: just before the frame",
       "lines": [
-        "--- Servo \"claw\"  (BACK = another) ---",
-        "Position : 0.120",
-        "Step : 0.010",
-        "*End X : 0.120",
-        "End B : -",
+        "!! Every step moves it. Hands clear.",
+        "--- Servo \"claw\": ends and positions ---",
+        "Next: move to the other end the same way.",
+        "B = save that end.",
+        "Position : 0.120  (0 to 1)",
+        "*Ends (X, B) : 0.120, -",
         "..."
       ]
     },
@@ -83,11 +93,12 @@
       "frm": 0.12,
       "note": "the other end: just before the frame",
       "lines": [
-        "--- Servo \"claw\"  (BACK = another) ---",
-        "Position : 0.880",
-        "Step : 0.010",
-        "End X : 0.120",
-        "*End B : 0.880",
+        "!! Every step moves it. Hands clear.",
+        "--- Servo \"claw\": ends and positions ---",
+        "Next: move to a position you use.",
+        "A = save that position.",
+        "Position : 0.880  (0 to 1)",
+        "*Ends (X, B) : 0.120, 0.880",
         "..."
       ]
     },
@@ -97,13 +108,15 @@
       "pos": 0.77,
       "note": "P2 saved at 0.770",
       "lines": [
-        "Position : 0.770",
+        "Position : 0.770  (0 to 1)",
         "...",
-        "--- Copy into your code ---",
-        "...",
-        "*Tunables.Claw: P1 = 0.210, P2 = 0.770",
-        "*    // rename P1, P2... (open, closed);",
-        "*    // keep them between 0.120 and 0.880"
+        "--- DONE ---",
+        "Open Tunables.java, find class Claw.",
+        "Change these lines (not there? add them):",
+        "*  public static double P1 = 0.210;",
+        "*  public static double P2 = 0.770;",
+        "Write your names for P1, P2 (open, closed).",
+        "Keep them 0.120 to 0.880 (the safe ends)."
       ]
     }
   }

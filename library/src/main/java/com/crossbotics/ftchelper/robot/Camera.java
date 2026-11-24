@@ -349,7 +349,8 @@ public final class Camera extends Module<Camera> {
      * match it takes up to 5 s (or Tunables {@code lightingAfterStartMs} when that is set), and the camera sees no targets until it is done (so do not press
      * while you aim to shoot). If no setting sees a tag, it keeps the setting it had. Needs
      * {@link #autoExposure} or {@link #autoPipelines}, and Tunables {@code autoLighting} not false;
-     * without them it does nothing, and the TeleOp screen says so for 5 s.
+     * without them it does nothing, and the TeleOp screen says so for 5 s. It ends a launcher's group of
+     * continuous fire: the camera cannot see the goal during the test.
      *
      * @return true if the test started again
      */
@@ -358,6 +359,8 @@ public final class Camera extends Module<Camera> {
             relightOffAt = com.crossbotics.ftchelper.core.Time.nanos();   // the screen says why nothing happened
             return false;
         }
+        // The camera goes blind now: a group of continuous fire ends first.
+        if (robot != null) robot.interruptFire(com.crossbotics.ftchelper.launcher.ContinuousFire.End.RELIGHT);
         sweep.restart();
         relit = true;
         sawTagAfterGaveUp = false;
@@ -399,14 +402,25 @@ public final class Camera extends Module<Camera> {
             t.warn(device + ": " + source.status());
         }
         if (sweep == null) return;
-        String line = sweep.status();
         if (sweep.isDone() && !sweep.gaveUp()) skipHint = skipLines(sweep.chosen());
-        if (sweep.gaveUp() || sweep.noTagsYet()) t.warn(device + " lighting: " + line);
-        else t.line(device + " lighting", line);
-        for (String p : sweep.problems()) t.warn(device + " lighting: " + p);
+        if (sweep.gaveUp()) {
+            t.warn(device + " lighting: NO TAGS SEEN");
+            t.warn("Next: aim at a tag. Run the lighting test again.");
+        } else if (sweep.noTagsYet()) {
+            t.warn(device + " lighting: no tags yet");
+            t.warn("Next: face a tag. The test keeps trying.");
+        } else {
+            t.line(device + " lighting", sweep.status());
+            if (!sweep.isDone()) t.text("Keep a tag in view until that test is done.");
+        }
+        List<String> broken = sweep.problems();
+        for (String p : broken) t.warn(device + " lighting: " + p);
+        if (!broken.isEmpty()) t.warn("Next: fix that camera setting. It was skipped.");
         t.debug("  scores", sweep.scores());
         if (!skipHint.isEmpty()) {
-            t.text("  To skip this test at this venue: in Tunables." + name() + ", set these (add any that are not there):");
+            t.text("Optional, to skip this test at this venue:");
+            t.text("  open Tunables.java, find class " + name() + ".");
+            t.text("  Change these lines (not there? add them):");
             for (String l : skipHint.split("\n")) t.text("    " + l);
         }
     }
@@ -485,14 +499,19 @@ public final class Camera extends Module<Camera> {
         if (source == null) return;
         source.addTelemetry(t);
         if (relightOffAt >= 0 && com.crossbotics.ftchelper.core.Time.nanos() - relightOffAt < 5_000_000_000L) {
-            t.warn(device + " lighting test is off: nothing to do again (it needs autoExposure() or autoPipelines(...) "
-                    + "in Robot.java, and no exposureMs/pipeline line or autoLighting = false in Tunables)");
+            t.warn(device + " lighting test is off: nothing to run.");
+            t.warn(limelight ? "It needs autoPipelines(...) in Robot.java," : "It needs autoExposure() in Robot.java,");
+            t.warn("and class " + name() + " must not turn it off");
+            t.warn(limelight ? "(a pipeline line, autoLighting = false)." : "(an exposureMs line, autoLighting = false).");
         }
         // A driver must know at once, at the TOP of the screen (warnings go first; a camera that is not working
         // already warns above): a lighting test that saw no tag, and the camera has seen none since.
         if (sweep != null && sweep.gaveUp() && !sawTagAfterGaveUp) {
             if (!source.targets().isEmpty()) sawTagAfterGaveUp = true;
-            else t.warn(device + " lighting: NO TAGS SEEN: aim at a tag and run the lighting test again");
+            else {
+                t.warn(device + " lighting: NO TAGS SEEN");
+                t.warn("Next: aim at a tag. Run the lighting test again.");
+            }
         }
         if (relit && sweep != null && !sweep.gaveUp()) t.line(device + " lighting", sweep.status());
         if (blueGoal != null) {

@@ -47,15 +47,17 @@ The steps, button by button: [Servo Finder](../tuning/03-servo-finder.md). At th
 the lines to copy:
 
 ```java
-PositionServo.create(hardwareMap, "claw").limits(0.180, 0.770)
-    .position("P1", 0.210)
-Tunables.Claw: P1 = 0.210
-    // rename P1, P2... (open, closed); keep them between 0.180 and 0.770
+--- DONE ---
+For a project with no Robot.java:
+  PositionServo.create(hardwareMap, "claw").limits(0.180, 0.770)
+      .position("P1", 0.210)
 ```
 
-Without the five files, copy the first two lines into your code and rename P1 to "OPEN". With the five
-files, copy the `Tunables.Claw` line instead: `open = 0.210` in `Tunables.Claw`. When you press STOP, the
-finder saves the same lines in `/sdcard/FIRST/ftc-helper/finder-results.txt` on the hub.
+This finder of your own knows no Robot.java, so it gives the code for the older helpers. Copy the lines into
+your code and rename P1 to "OPEN". With the five files, open the finder from Tune and check instead. It knows
+your robot and gives the line for `Tunables.java`: "Open Tunables.java, find class Claw." and
+`public static double P1 = 0.210;` (rename it `open`). When you press STOP, the finder saves the same lines in
+`/sdcard/FIRST/ftc-helper/finder-results.txt` on the hub.
 
 ## 4. The finders that need your code
 
@@ -80,6 +82,29 @@ are the numbers your TeleOp uses.
 
 Each finder builds on the ones before it. For example, the Shot Tuner needs a flywheel that holds its
 speed and a camera that aims straight. The order, and one page per finder: [Tuning](../tuning/README.md).
+
+## 6. A tool that runs by itself: the Flywheel Tuner
+
+Most finders wait for your button at each step. The [Flywheel Tuner](../tuning/06-flywheel-tuner.md)
+(experimental) tests many speed-control settings by itself after one press of A. So its safety rules are
+stricter:
+
+- A 3 s countdown before anything moves.
+- **Any** button stops it at once. So does help. Nothing starts again until you press A again.
+- It saves each finished test on the Control Hub, so a stop or a dead battery loses only the test that ran.
+
+For a robot in five files it is in Tune and check. In a file of your own:
+
+```java
+@TeleOp(name = "Flywheel Tuner", group = "Finders")
+public class FlywheelTuner extends FlywheelTunerOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+The [Group Shot Tuner](../tuning/14-group-shot-tuner.md) (experimental) follows the same rules. It shoots
+real balls: after the countdown it turns the robot to the goal and shoots by itself, so any button stops it,
+and the sticks drive only while you place the robot. Each check shot and group is saved at once.
 
 ## If something goes wrong
 

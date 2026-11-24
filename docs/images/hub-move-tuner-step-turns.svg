@@ -1,19 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 330" width="520" height="330" font-family="Helvetica, Arial, sans-serif" font-size="15">
-<rect width="520" height="330" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 351" width="520" height="351" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="520" height="351" fill="#ffffff"/>
 <text x="16" y="43" font-size="14" fill="#555">With the arrow on 3 Turns, press:</text>
 <rect x="267" y="18" width="41" height="42" rx="21" fill="#ffd54d" stroke="#333" stroke-width="2"/>
 <text x="287.5" y="46" text-anchor="middle" font-size="19" font-weight="bold" fill="#222">A</text>
-<rect x="6" y="70" width="508" height="254" rx="14" fill="#2b2f36"/>
+<rect x="6" y="70" width="508" height="275" rx="14" fill="#2b2f36"/>
 <text x="22" y="100" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
-<rect x="16" y="114" width="488" height="200" rx="6" fill="#ffffff"/>
-<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Move tuner ---</text>
-<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">+90: past 7.2, off 6.9 deg, 4.0 s TIMED_OUT</text>
-<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">-90: past 0.6, off 0.7 deg, 2.1 s</text>
-<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Worst: past 7.6 deg, swings 1, end off 7.4 deg</text>
-<rect x="20" y="251" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="266" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">turnMinPower now 0.05: turns stop off target: ...</text>
-<rect x="20" y="272" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="287" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Run Turns again.</text>
+<rect x="16" y="114" width="488" height="221" rx="6" fill="#ffffff"/>
+<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Move tuner: choose a test ---</text>
+<rect x="20" y="146" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">RUN AGAIN:</text>
+<rect x="20" y="167" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  turns stop off target: more turnMinPower.</text>
+<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">turnMinPower is now 0.05.</text>
+<rect x="20" y="209" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Next: run 3 Turns again.</text>
+<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Worst turn: past 7.6 deg too much, ...</text>
+<text x="26" y="266" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
+<text x="26" y="287" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Turn 90 left: past 7.2, off 6.9 deg, 4.0 s</text>
+<text x="26" y="308" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  That turn took too long.</text>
 </svg>

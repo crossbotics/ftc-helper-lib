@@ -27,7 +27,7 @@
   <text x="350" y="142" fill="#2d3446">of C. Right of C = negative: -84.</text>
   <text x="350" y="172" fill="#2d3446">2nd number: the Y pod (rolls sideways), how far</text>
   <text x="350" y="192" fill="#2d3446">FORWARD of C. Behind C = negative: -168.</text>
-  <text x="350" y="222" font-size="13" fill="#4b5563">C = the robot's centre (the middle of the wheels).</text>
+  <text x="350" y="222" font-size="13" fill="#4b5563">C = the robot's center (the middle of the wheels).</text>
   <text x="350" y="240" font-size="13" fill="#4b5563">The tuner measures both: no ruler needed.</text>
   <!-- the tests -->
   <text x="350" y="276" fill="#101c45" font-weight="bold">The tests (D-pad picks, A starts, B ends):</text>

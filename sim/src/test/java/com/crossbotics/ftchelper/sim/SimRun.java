@@ -31,9 +31,9 @@ final class SimRun implements AutoCloseable {
 
     /** INIT, then waits until the OpMode has shown its INIT screen (or stopped with an error). */
     SimRun init(String opMode) throws InterruptedException {
-        int before = sim.ds.screen.updates();
         sim.ds.init(opMode);
-        waitFor(() -> sim.ds.screen.updates() > before || !sim.ds.error().isEmpty()
+        // its own first screen, not the last OpMode's last one (SimDriverStation.shownSinceInit)
+        waitFor(() -> sim.ds.shownSinceInit() || !sim.ds.error().isEmpty()
                 || sim.ds.phase() == SimDriverStation.Phase.STOPPED, 3);
         // The physics runs on its own thread: wait until it has seen the INIT (the robot on its INIT
         // spot, a dropped intake down), so a test never reads the robot before that.

@@ -1,17 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 288" width="520" height="288" font-family="Helvetica, Arial, sans-serif" font-size="15">
-<rect width="520" height="288" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 351" width="520" height="351" font-family="Helvetica, Arial, sans-serif" font-size="15">
+<rect width="520" height="351" fill="#ffffff"/>
 <text x="16" y="43" font-size="14" fill="#555">Shots go right, so press:</text>
 <rect x="210" y="18" width="140" height="42" rx="21" fill="#ffd54d" stroke="#333" stroke-width="2"/>
 <text x="280.0" y="46" text-anchor="middle" font-size="19" font-weight="bold" fill="#222">D-pad left</text>
-<rect x="6" y="70" width="508" height="212" rx="14" fill="#2b2f36"/>
+<rect x="6" y="70" width="508" height="275" rx="14" fill="#2b2f36"/>
 <text x="22" y="100" fill="#ffffff" font-size="14" font-weight="bold">Driver Hub</text>
-<rect x="16" y="114" width="488" height="158" rx="6" fill="#ffffff"/>
-<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Aim tuner  (hold A = aim) ---</text>
+<rect x="16" y="114" width="488" height="221" rx="6" fill="#ffffff"/>
+<text x="26" y="140" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Aim tuner ---</text>
 <rect x="20" y="146" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Offset : -1.5 deg  (D-pad right/up = aim more to the ...</text>
+<text x="26" y="161" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Aim offset : 1.5 deg to the LEFT</text>
 <text x="26" y="182" font-family="Menlo, Consolas, monospace" font-size="13" fill="#999" xml:space="preserve">...</text>
-<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Copy into your code ---</text>
-<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">new AimController(...).offset(-1.5)   // with your aim ...</text>
-<rect x="20" y="230" width="480" height="21" rx="3" fill="#fff3a8"/>
-<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Tunables.Aim: cameraOffset = -1.5   // whole-robot aim ...</text>
+<text x="26" y="203" font-family="Menlo, Consolas, monospace" font-size="13" font-weight="bold" xml:space="preserve">--- Numbers found ---</text>
+<text x="26" y="224" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Open Tunables.java, find class Aim.</text>
+<text x="26" y="245" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Change these lines (not there? add them):</text>
+<rect x="20" y="251" width="480" height="21" rx="3" fill="#fff3a8"/>
+<text x="26" y="266" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">  public static double cameraOffset = -1.5;</text>
+<text x="26" y="287" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">Copy it when shots at 2 or 3 distances</text>
+<text x="26" y="308" font-family="Menlo, Consolas, monospace" font-size="13" fill="#1a1a1a" xml:space="preserve">all go in the middle.</text>
 </svg>

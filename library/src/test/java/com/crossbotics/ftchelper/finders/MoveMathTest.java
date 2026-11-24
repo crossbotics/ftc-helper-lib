@@ -122,7 +122,7 @@ public class MoveMathTest {
         s = MoveMath.suggestMoveTurn(20, 0, 1.0, 0.35);
         assertEquals("moveMaxTurnPower", s.field);
         assertEquals(0.45, s.value, 1e-9);
-        assertTrue(MoveMath.suggestMoveTurn(20, 0, 1.0, 0.8).ok());
+        assertEquals(MoveMath.Outcome.CANT_FIX, MoveMath.suggestMoveTurn(20, 0, 1.0, 0.8).outcome);   // it lags: not a pass
         assertTrue(MoveMath.suggestMoveTurn(4, 2, 0.6, 0.35).ok());
     }
 

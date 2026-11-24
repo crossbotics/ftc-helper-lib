@@ -1262,6 +1262,29 @@ public abstract class RobotDefinition {
         }
     }
 
+    // A screen that ends a group of continuous fire while it is open (the button map, the tuning menu); null = none.
+    com.crossbotics.ftchelper.launcher.ContinuousFire.End fireScreen = null;
+
+    // ControlMap, every loop: a screen that opens ends a running group, and the press that asked for it.
+    void screensShown(boolean menu, boolean help) {
+        com.crossbotics.ftchelper.launcher.ContinuousFire.End now = menu
+                ? com.crossbotics.ftchelper.launcher.ContinuousFire.End.TUNING_MENU
+                : help ? com.crossbotics.ftchelper.launcher.ContinuousFire.End.HELP : null;
+        boolean opened = now != null && now != fireScreen;
+        fireScreen = now;
+        if (opened) interruptFire(now);
+    }
+
+    // Ends every launcher's group of continuous fire (and the press behind it): every one, even if one fails.
+    void interruptFire(com.crossbotics.ftchelper.launcher.ContinuousFire.End why) {
+        RuntimeException first = null;
+        for (Module<?> m : modules) {
+            if (!(m instanceof Launcher) || m.missing) continue;
+            try { ((Launcher) m).interruptFire(why); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (first != null) throw first;
+    }
+
     /** Pauses if running, resumes if paused. */
     public final void togglePause() {
         if (paused) resume();

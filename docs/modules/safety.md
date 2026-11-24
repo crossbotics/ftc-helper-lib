@@ -192,3 +192,21 @@ if (jam.update(power, motor.getVelocity(), amps, getRuntime())) { ...back it out
 
 `SpinMotor` and `MotorFeeder` use it for you.
 
+## EncoderGuard
+
+Finds a flywheel speed sensor that cannot be trusted. A broken cable reads 0, and speed control would then
+give full power forever. [Flywheel](launcher.md#speed-control) uses it in bang-bang.
+
+```java
+String why = guard.update(powerSentLastLoop, measuredRpm, nowSec);
+if (!why.isEmpty()) motor.setPower(0);     // and keep it at 0 until a person switches it off and on
+```
+
+| It trips on | Limit |
+| --- | --- |
+| power with no speed | power 0.3 or more and under 60 RPM, for 0.5 seconds |
+| a backward speed | 60 RPM or more against the power, two readings in a row |
+| a reading that is not a number | at once |
+
+`update(power, rpm, now)` gives an empty text while all is well. Else it says what is wrong. `reset()` starts
+over. It cannot find a wrong speed that looks believable.
