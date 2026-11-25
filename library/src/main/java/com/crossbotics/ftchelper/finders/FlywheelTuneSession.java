@@ -70,6 +70,11 @@ final class FlywheelTuneSession {
     /** PID: the push strengths (kP) after today's, in order. */
     static final double[] PID_KP = {25, 50, 100, 150};
     /**
+     * PID: the kI values tried after the kP list (small first), on the best kP. Only when today's kI is 0. kI
+     * removes a steady error that kF alone leaves (a weaker battery); too much winds up and goes past the target.
+     */
+    static final double[] PID_KI = {0.02, 0.05, 0.15};
+    /**
      * While a setting holds the speed, its steady power moves in steps of this share (PID: of the written kF;
      * bang-bang: of the fitted kv), at most {@link #KF_RANGE} either way, until the average is within 25 RPM.
      */
@@ -585,9 +590,7 @@ final class FlywheelTuneSession {
         if (results.find(b, "today") == null) return trial("today", config.today, false, false);
         // The best of each control again, exactly as it was: the next best when it fails (3 at most).
         for (SpeedControl c : SpeedControl.values()) {
-            int tried = 0;
-            for (Test t : results.ranked(c)) {
-                if (tried++ >= 3) break;
+            for (Test t : forLow(c)) {
                 Test low = results.find(b, t.id);
                 if (low == null) return trial(t.id, t.setting, false, true);
                 if (low.verdict == Verdict.PASS) break;
@@ -604,9 +607,7 @@ final class FlywheelTuneSession {
 
     // The best FULL battery setting of this control that also passed on the LOW battery, or null.
     private Test lowFinalist(SpeedControl c) {
-        int tried = 0;
-        for (Test t : results.ranked(c)) {
-            if (tried++ >= 3) break;
+        for (Test t : forLow(c)) {
             Test low = results.find(Battery.LOW, t.id);
             if (low != null && low.verdict == Verdict.PASS) return t;
         }
@@ -634,9 +635,46 @@ final class FlywheelTuneSession {
             if (r == null) return trial(id, base.withPid(kp, kF), true, true);
             if (r.setting != null) kF = r.setting.kF;
             Reason why = Reason.of(r.why);
+            if (r.verdict == Verdict.FAIL && why != null && why.unsafe) break;
+        }
+        return nextKi(kF);
+    }
+
+    // PID with kI: on the best kP that passed (else today's kP with the last kF), smallest kI first. It stops
+    // at the first unsafe failure (too far past the target: a bigger kI only winds up more).
+    private Plan nextKi(double lastKf) {
+        if (config.today.kI != 0) return null;
+        FlywheelSetting base = config.today.withPid(config.today.kP, lastKf);
+        for (Test t : results.ranked(SpeedControl.PID)) {
+            if (t.setting.kI == 0) {
+                base = t.setting;
+                break;
+            }
+        }
+        for (double ki : PID_KI) {
+            String id = "pid:kP=" + trim(base.kP) + ":kI=" + trim(ki);
+            Test r = results.find(Battery.FULL, id);
+            if (r == null) return trial(id, base.withKi(ki), true, true);
+            Reason why = Reason.of(r.why);
             if (r.verdict == Verdict.FAIL && why != null && why.unsafe) return null;
         }
         return null;
+    }
+
+    // The FULL battery settings the LOW battery checks, best first: the best 3, and for PID also the best one
+    // with kI (kI is there for the weaker battery, so the LOW battery must judge it).
+    List<Test> forLow(SpeedControl c) {
+        List<Test> ranked = results.ranked(c);
+        List<Test> out = new ArrayList<>(ranked.subList(0, Math.min(3, ranked.size())));
+        if (c == SpeedControl.PID) {
+            for (Test t : ranked) {
+                if (t.setting.kI != 0) {
+                    if (!out.contains(t)) out.add(t);
+                    break;
+                }
+            }
+        }
+        return out;
     }
 
     // Bang-bang's numbers that do not change between its candidates: {ks, kv, coast, step}.
@@ -870,6 +908,9 @@ final class FlywheelTuneSession {
         double windowAt = Double.NaN, counts0 = Double.NaN, t0 = Double.NaN, sum = 0, sumSq = 0;
         int n = 0;
         double avgErr = Double.NaN, wobble = Double.NaN, resumeAt = Double.NaN;
+        // The battery while it holds the speed (the average of the last hold's readings), volts.
+        double holdVolts = Double.NaN, voltsSum = 0;
+        int voltsN = 0;
         final List<Double> recoveries = new ArrayList<>();
         double lowSince = Double.NaN, startVolts = Double.NaN, minVolts = Double.NaN, peakAmps = Double.NaN;
         // The number the hold may fine-tune (PID: the written kF; bang-bang: the fitted kv), the middle of its range.
@@ -952,8 +993,11 @@ final class FlywheelTuneSession {
             boolean steady = inBand && t - bandSince >= STEADY_SEC - EPS;
             if (ready && Double.isNaN(readyAt)) readyAt = t;
             if (phase == Phase.DRIVING) return driving(s, err, t);
-            // "At speed", then lost (two readings in a row, so one jumpy reading does not count).
-            if (!Double.isNaN(readyAt) && !inBand) {
+            // "At speed", then lost (two readings in a row, so one jumpy reading does not count). Lost = more than
+            // one reading step out of the band: a reading is whole encoder counts, so a wheel just inside the
+            // band's edge can read one step out of it (R1, 2026-11-24: every test failed on that alone).
+            boolean lost = Math.abs(err) > config.readyBandRpm + readingStep();
+            if (!Double.isNaN(readyAt) && lost) {
                 if (outCount++ == 0) outAt = t;
             } else {
                 outCount = 0;
@@ -1062,6 +1106,12 @@ final class FlywheelTuneSession {
                 counts0 = s.counts;
                 sum = sumSq = 0;
                 n = 0;
+                voltsSum = 0;
+                voltsN = 0;
+            }
+            if (!Double.isNaN(s.volts) && s.volts > 1) {
+                voltsSum += s.volts;
+                voltsN++;
             }
             double err = s.rpm - target;
             sum += err;
@@ -1069,6 +1119,7 @@ final class FlywheelTuneSession {
             n++;
             if (t - t0 < HOLD_WINDOW - EPS) return null;
             double mean = sum / n;
+            if (voltsN > 0) holdVolts = voltsSum / voltsN;
             avgErr = !Double.isNaN(counts0) && !Double.isNaN(s.counts) && t > t0
                     ? (s.counts - counts0) / (t - t0) / config.countsPerRev * 60 - target : mean;
             // The count and the readings tell very different stories (a count that did not move, a clock that
@@ -1166,6 +1217,7 @@ final class FlywheelTuneSession {
             m.put("fullSec", fullSec);
             m.put("volts", startVolts);
             m.put("minVolts", minVolts);
+            m.put("holdVolts", holdVolts);
             m.put("amps", peakAmps);
             return m;
         }

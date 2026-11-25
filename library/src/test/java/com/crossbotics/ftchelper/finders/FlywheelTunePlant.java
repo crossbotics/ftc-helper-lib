@@ -37,6 +37,9 @@ final class FlywheelTunePlant {
     static final double BACK_VOLTS_PER_RPM = 12.0 / 6000, MOTOR_OHMS = 12.0 / 9.2;
     // True = a broken encoder cable: the speed reads 0 and the count stops.
     boolean deadEncoder = false;
+    // True = a real hub's reading: it counts whole encoder counts in a short window, so a speed between two
+    // steps reads as one or the other at random (closer = more often), not always the nearest one.
+    boolean flicker = false;
     private final ArrayDeque<double[]> past = new ArrayDeque<>();
     private double hubPower = 0, hubNext = 0, hubIntegral = 0;
     private final long[] clock = {0};
@@ -116,7 +119,9 @@ final class FlywheelTunePlant {
             past.addLast(new double[] {t, rpm});
             while (past.size() > 2 && past.peekFirst()[0] < t - 1) past.removeFirst();
         }
-        m.velocity = deadEncoder ? 0 : Math.rint(at(t - LAG_SEC) / STEP_RPM) * STEP_RPM * CPR / 60;
+        double steps = at(t - LAG_SEC) / STEP_RPM;
+        steps = flicker ? Math.floor(steps + random.nextDouble()) : Math.rint(steps);
+        m.velocity = deadEncoder ? 0 : steps * STEP_RPM * CPR / 60;
         if (!deadEncoder) m.position = counts;
     }
 

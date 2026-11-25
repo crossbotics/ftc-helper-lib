@@ -2,6 +2,18 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Fixed
+
+- Flywheel Tuner: a speed reading one step out of the ready band no longer counts as "said at speed, then lost it
+  right away". A real hub's reading can jump between two steps, so on a real robot every test could fail on this alone.
+
+### Added
+
+- Flywheel Tuner: when today's `kI` is 0, it also tries the best `kP` with `kI` 0.02, 0.05 and 0.15, and tests the
+  best one with `kI` on the LOW battery too. Each test also saves `holdVolts`, the battery while it held the speed.
+
 ## v0.48.0 - 2026-11-23
 
 ### Added

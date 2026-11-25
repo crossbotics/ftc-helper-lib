@@ -131,6 +131,27 @@ public class FlywheelTuneSessionTest {
         assertTrue(report.toString(), pidWins > 0);
     }
 
+    // A real hub's reading flickers between two steps (R1, 2026-11-24: every FULL test failed "said at speed, then
+    // lost it right away"). A wheel that creeps up to the band's edge reads in and out of the band. That is the
+    // reading, not the setting: a reading counts as "lost" only when it is more than one step out of the band.
+    @org.junit.Test public void aReadingThatFlickersAtTheBandEdgeIsNotLostSpeed() {
+        int seed = 1;
+        StringBuilder report = new StringBuilder();
+        for (double kvs : new double[] {0.95, 1, 1.05}) {
+            for (double ts : new double[] {1, 1.15}) {
+                FlywheelTuneSession s = new FlywheelTuneSession(config(SpeedControl.PID), new FlywheelTuneResults("x"));
+                plant = new FlywheelTunePlant(seed++, kvs, ts, 12.9);
+                plant.flicker = true;
+                runAll(plant, s, 12.3);
+                plant.close();
+                for (Test t : s.results().tests()) {
+                    if (FlywheelTuneSession.Reason.FALSE_READY.words.equals(t.why)) report.append(kvs).append('/').append(ts).append(' ').append(t.battery).append(' ').append(t.id).append('\n');
+                }
+            }
+        }
+        assertEquals(report.toString(), "", report.toString());
+    }
+
     // The picked setting on a fresh wheel: from a stop, hold, 3 pretend shots, up, down. The most REAL RPM past
     // the target (above after a rise, below after the step down).
     private double replay(FlywheelSetting w, long seed, double kvs, double ts, double volts, FlywheelTuneSession.Config c) {
@@ -451,6 +472,53 @@ public class FlywheelTuneSessionTest {
         }
     }
 
+    // kI: after the kP list, on the best kP that passed, smallest first; an unsafe failure ends the kI list.
+    @org.junit.Test public void kITriesSmallFirstOnTheBestKpAndStopsWhenUnsafe() {
+        FlywheelTuneSession.Config c = config(SpeedControl.PID);
+        FlywheelTuneResults r = upToFit(c);
+        Map<String, Double> fit = new LinkedHashMap<>();
+        fit.put("ks", 0.2);
+        fit.put("kv", 0.00216);
+        r.add(new Test(Battery.FULL, "fit", Verdict.INFO, "", null, fit));
+        FlywheelTuneSession s = new FlywheelTuneSession(c, r);
+        for (double kp : s.pidList()) {
+            // kP 50 is back the soonest: the best.
+            r.add(new Test(Battery.FULL, "pid:kP=" + (long) kp, Verdict.PASS, "", c.today.withPid(kp, 12.3),
+                    numbers(kp == 50 ? 0.2 : 0.4, 20)));
+        }
+        s = new FlywheelTuneSession(c, r);
+        assertEquals("pid:kP=50:kI=0.02", s.nextId());
+        assertEquals(0.02, s.nextSetting().kI, 1e-12);
+        assertEquals(50, s.nextSetting().kP, 1e-12);
+        assertEquals("kF from its hold", 12.3, s.nextSetting().kF, 1e-12);
+        r.add(new Test(Battery.FULL, "pid:kP=50:kI=0.02", Verdict.PASS, "", s.nextSetting(), numbers(0.5, 20)));
+        s = new FlywheelTuneSession(c, r);
+        assertEquals("pid:kP=50:kI=0.05", s.nextId());
+        r.add(new Test(Battery.FULL, "pid:kP=50:kI=0.05", Verdict.FAIL, FlywheelTuneSession.Reason.OVERSHOOT.words,
+                s.nextSetting(), numbers(Double.NaN, 20)));
+        s = new FlywheelTuneSession(c, r);
+        assertTrue("no bigger kI after going too far past: " + s.nextId(), s.nextId().startsWith("bang:"));
+        // The LOW battery checks the best 3, and also the best one with kI (it is for a weaker battery).
+        List<String> low = new ArrayList<>();
+        for (Test t : s.forLow(SpeedControl.PID)) low.add(t.id);
+        assertEquals(4, low.size());
+        assertEquals("pid:kP=50:kI=0.02", low.get(3));
+    }
+
+    // A robot that already has a kI tries no other kI.
+    @org.junit.Test public void aRobotWithKiTriesNoOtherKi() {
+        FlywheelTuneSession.Config c = config(SpeedControl.PID);
+        c.today = c.today.withKi(0.1);
+        FlywheelTuneResults r = upToFit(c);
+        r.add(new Test(Battery.FULL, "fit", Verdict.INFO, "", null, new LinkedHashMap<String, Double>()));
+        FlywheelTuneSession s = new FlywheelTuneSession(c, r);
+        for (double kp : s.pidList()) {
+            r.add(new Test(Battery.FULL, "pid:kP=" + (long) kp, Verdict.PASS, "", c.today.withPid(kp, 12.08), numbers(0.3, 20)));
+        }
+        s = new FlywheelTuneSession(c, r);
+        assertTrue(s.nextId(), s.nextId().startsWith("bang:"));
+    }
+
     private static Map<String, Double> numbers(double recovery, double wobble) {
         Map<String, Double> m = new LinkedHashMap<>();
         m.put("recovery", recovery);
@@ -537,6 +605,9 @@ public class FlywheelTuneSessionTest {
         r.add(new Test(Battery.FULL, "fit", Verdict.INFO, "", null, none));
         for (double kp : s.pidList()) {
             r.add(new Test(Battery.FULL, "pid:kP=" + (long) kp, Verdict.FAIL, FlywheelTuneSession.Reason.AVERAGE.words, c.today.withPid(kp, 12.08), none));
+        }
+        for (double ki : FlywheelTuneSession.PID_KI) {
+            r.add(new Test(Battery.FULL, "pid:kP=10:kI=" + ki, Verdict.FAIL, FlywheelTuneSession.Reason.AVERAGE.words, c.today.withKi(ki), none));
         }
         double w = s.bangWidths().get(0);
         List<Double> powers = new ArrayList<>();

@@ -95,6 +95,11 @@ public final class FlywheelSetting {
         return new FlywheelSetting(SpeedControl.PID, p, kI, kD, f, ks, kv, fullBelowRpm, coastAboveRpm, hysteresisRpm, maxPower);
     }
 
+    /** PID with this kI (the other numbers stay). */
+    public FlywheelSetting withKi(double i) {
+        return new FlywheelSetting(SpeedControl.PID, kP, i, kD, kF, ks, kv, fullBelowRpm, coastAboveRpm, hysteresisRpm, maxPower);
+    }
+
     /** BANG_BANG with these numbers (the PID numbers stay). */
     public FlywheelSetting withBang(double s, double v, double fullBelow, double coastAbove, double hysteresis, double most) {
         return new FlywheelSetting(SpeedControl.BANG_BANG, kP, kI, kD, kF, s, v, fullBelow, coastAbove, hysteresis, most);

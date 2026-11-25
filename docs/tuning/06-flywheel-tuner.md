@@ -58,12 +58,16 @@ The tests on the FULL battery (run 1):
 3. Three steady powers: the power each speed needs (bang-bang's `bangKs` and `bangKv`).
 4. PID: today's `kP`, then 25, 50, 100 and 150. `kI` and `kD` stay. `kF` moves in 1% steps (at most 6%) until
    the wheel holds within 25 RPM.
+   Then, when today's `kI` is 0: the best `kP` with `kI` 0.02, 0.05 and 0.15. `kI` removes a steady error that `kF`
+   alone leaves, for example on a weaker battery. Too much `kI` goes past the target, so it stops at the first
+   unsafe result.
 5. Bang-bang: from a wide full-power zone to a narrow one, then the best one with a bigger switching gap.
    `bangKv` moves in 1% steps too (at most 6% from the steady powers' number) until it holds within 25 RPM.
 6. Today's settings again: did the wheel change while it worked (a warm motor)?
 
 A family (PID or bang-bang) stops getting stronger at its first unsafe result. On the LOW battery (run 2), it
-tests today's settings and the best of each family again, then asks for a driving check of each.
+tests today's settings and the best of each family again, then asks for a driving check of each. For PID, the
+best setting with `kI` is also tested on the LOW battery.
 
 **The middle speed:** with a shot table, the speed for the distance halfway between its first and last rows.
 The speed changes go to the first and last rows' speeds. With no table: `speedRpm`, and 10% either side.
@@ -108,7 +112,7 @@ The speed changes go to the first and last rows' speeds. With no table: `speedRp
 | `went more than 100 RPM past the target` | two readings in a row more than 100 RPM past the target (less half a reading step, because each reading is rounded to a step) |
 | `held a speed more than 25 RPM off the target` | the average over 2 s, from the encoder's count |
 | `the speed jumped more than 100 RPM while holding` | two readings in a row more than 100 RPM off while it held the speed |
-| `said "at speed", then lost it right away` | at speed, then out of the ready band within 0.75 s |
+| `said "at speed", then lost it right away` | at speed, then more than one reading step out of the ready band within 0.75 s. A reading is rounded to a step, so a wheel just inside the band's edge can read one step out of it: that does not count |
 | `never got to steady speed in time` | not steady 8 s after the start |
 | `not back at speed after a pretend shot in time` | not back at speed 3 s after a pretend shot |
 | `did not reach a new speed in time` | not steady 8 s after a speed change |
